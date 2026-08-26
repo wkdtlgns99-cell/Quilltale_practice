@@ -80,7 +80,10 @@ YOUR RULES:
    It should describe the visual scene in rich, concrete terms: lighting, mood,
    architecture, characters present, time of day. Do not include player stats.
 
-8. Write narration in second person. Keep it atmospheric, specific, and short.
+8. Write all player-visible narration and dialogue in natural Korean.
+   Write narration in second person. Keep it atmospheric, specific, and short.
+   Use a dark, grounded fantasy tone.
+   Never output player-visible story text in English.
    Let NPC behaviour reflect their memories, do not explain why they act that way,
    just show it.
 
@@ -191,13 +194,13 @@ class GameMasterAgent:
             raw = self._llm.generate_json(prompt, GM_SYSTEM)
             result = json.loads(raw)
             return {
-                "narration": result.get("narration", f"You find yourself in {loc.name}."),
+                "narration": result.get("narration", f"당신은 {loc.name}에 서 있습니다."),
                 "image_prompt": result.get("image_prompt"),
                 "scene_changed": True,
             }
         except Exception:
             return {
-                "narration": f"You find yourself in {loc.name if loc else 'an unknown place'}.",
+                "narration": f"당신은 {loc.name if loc else '알 수 없는 장소'}에 서 있습니다.",
                 "image_prompt": None,
                 "scene_changed": True,
             }

@@ -19,7 +19,7 @@ LLM_NAME = "gemini"  # or "claude"
 ### Game logic ########################################
 
 def load_default_world() -> WorldState:
-    with open("data/worlds/default.json") as f:
+    with open("data/worlds/default.json", encoding="utf-8") as f:
         return WorldState.from_json(f.read())
 
 
@@ -90,7 +90,7 @@ LOAD_JS = """
 
 def toggle_theme(is_light):
     is_light = not is_light
-    label = "🌑 DARK" if is_light else "☀ LIGHT"
+    label = "🌑 어둡게" if is_light else "☀ 밝게"
     return is_light, gr.update(value=label)
 
 
@@ -111,7 +111,7 @@ with gr.Blocks(title="Quilltale") as demo:
             </div>
         """)
         theme_btn = gr.Button(
-            "☀  LIGHT",
+            "☀  밝게",
             variant="secondary",
             scale=0,
             min_width=110,
@@ -131,7 +131,7 @@ with gr.Blocks(title="Quilltale") as demo:
         # Left Column
         with gr.Column(scale=5, elem_classes=["qt-left-col"]):
 
-            gr.HTML('<div class="qt-panel-label">CURRENT SCENE</div>')
+            gr.HTML('<div class="qt-panel-label">현재 장면</div>')
             scene_image = gr.Image(
                 label="",
                 interactive=False,
@@ -140,7 +140,7 @@ with gr.Blocks(title="Quilltale") as demo:
                 elem_classes=["qt-scene"],
             )
 
-            with gr.Accordion("WORLD SNAPSHOT", open=False, elem_classes=["qt-accord"]):
+            with gr.Accordion("세계 현황", open=False, elem_classes=["qt-accord"]):
                 world_state_display = gr.Textbox(
                     label="",
                     interactive=False,
@@ -149,7 +149,7 @@ with gr.Blocks(title="Quilltale") as demo:
                 )
 
             new_game_btn = gr.Button(
-                "↺  Start Over",
+                "↺  처음부터",
                 variant="secondary",
                 elem_classes=["qt-btn-new"],
             )
@@ -157,7 +157,7 @@ with gr.Blocks(title="Quilltale") as demo:
         # Right Column
         with gr.Column(scale=7, elem_classes=["qt-right-col"]):
 
-            gr.HTML('<div class="qt-panel-label">THE CHRONICLE</div>')
+            gr.HTML('<div class="qt-panel-label">이야기</div>')
             chatbot = gr.Chatbot(
                 label="",
                 show_label=False,
@@ -165,10 +165,10 @@ with gr.Blocks(title="Quilltale") as demo:
                 elem_classes=["qt-chronicle"],
             )
 
-            gr.HTML('<div class="qt-input-label">What happens next in your adventure?</div>')
+            gr.HTML('<div class="qt-input-label">다음으로 무엇을 하시겠습니까?</div>')
             with gr.Row(elem_classes=["qt-input-row"]):
                 action_input = gr.Textbox(
-                    placeholder="You are a stranger who has just arrived in a dark medieval city called The Ashen Reach. You wake up in a tavern with an old iron key in your pocket that you don't remember acquiring.Say what you want to do next... look around, talk to Marta, grab the dagger, head north...",
+                    placeholder="무엇을 하고 싶은지 입력하세요... 주변을 살펴보거나, 마르타와 대화하거나, 단검을 집거나, 북쪽으로 향할 수 있습니다...",
                     label="",
                     scale=5,
                     lines=3,
@@ -176,7 +176,7 @@ with gr.Blocks(title="Quilltale") as demo:
                     elem_classes=["qt-action-box"],
                 )
                 submit_btn = gr.Button(
-                    "ACT",
+                    "행동",
                     variant="primary",
                     scale=1,
                     min_width=50,
@@ -189,7 +189,7 @@ with gr.Blocks(title="Quilltale") as demo:
         <div class="qt-footer">
             <span class="qt-footer-rule">— ✦ —</span>
             <span class="qt-footer-text">
-                The story changes with every decision you make, and NPCs remember your actions.
+                당신의 모든 선택이 이야기를 바꾸며, NPC들은 당신의 행동을 기억할 것 입니다...
             </span>
             <span class="qt-footer-rule">— ✦ —</span>
         </div>

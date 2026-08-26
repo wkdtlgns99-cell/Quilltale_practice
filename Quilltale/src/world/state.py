@@ -181,7 +181,7 @@ class WorldState:
         """
         loc = self.current_location()
         if not loc:
-            return "Location unknown."
+            return "현재 위치를 알 수 없습니다."
 
         loc_items = self.items_in_location(self.player.location)
         loc_npcs = self.npcs_in_location(self.player.location)
@@ -204,7 +204,7 @@ class WorldState:
             if loc.visited and loc_id != self.player.location
         ]
 
-        visited_str = ", ".join(visited) if visited else "nowhere yet"
+        visited_str = ", ".join(visited) if visited else "아직 없음"
 
         carrying = ", ".join(i.name for i in player_items) or "nothing"
 
@@ -215,14 +215,14 @@ class WorldState:
             )
 
         return (
-            f"Turn {self.turn}\n\n"
-            f"You are in {loc.name}.\n"
+            f"턴 {self.turn}\n\n"
+            f"현재 위치: {loc.name}.\n"
             f"{loc.description}\n\n"
-            f"You can go: {exits}\n"
-            f"You can see: {items}\n"
-            f"Present: {npcs}\n"
-            f"You have visited: {visited_str}\n"
-            f"You are carrying: {carrying}"
+            f"이동 가능: {exits}\n"
+            f"발견한 물건: {items}\n"
+            f"현재 위치한 인물: {npcs}\n"
+            f"방문한 장소: {visited_str}\n"
+            f"소지품: {carrying}"
             f"{facts}"
         )
 
