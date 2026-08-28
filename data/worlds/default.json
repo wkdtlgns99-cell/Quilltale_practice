@@ -1,0 +1,134 @@
+{
+  "world_name": "잿빛 변경",
+  "player": {
+    "location": "tavern",
+    "inventory": ["old_key"],
+    "health": 100,
+    "known_facts": []
+  },
+  "locations": {
+    "tavern": {
+      "id": "tavern",
+      "name": "부서진 플라곤 선술집",
+      "description": "땀과 장작 연기 냄새가 감도는 어두운 선술집이다. 거칠게 다듬은 탁자들이 방을 가득 채우고 있으며, 벽난로에서는 불길이 타오르고 있다.",
+      "exits": {"north": "street", "upstairs": "room_21"},
+      "items": ["dagger", "wanted_notice"],
+      "npcs": ["barkeep"],
+      "visited": true
+    },
+    "street": {
+      "id": "street",
+      "name": "돌이 깔린 거리",
+      "description": "빗물에 젖은 좁은 거리다. 비뚤어진 건물들이 머리 위로 기울어져 있고, 낮게 깔린 안개가 거리를 뒤덮고 있다.",
+      "exits": {"south": "tavern", "east": "market", "west": "alley"},
+      "items": [],
+      "npcs": [],
+      "visited": false
+    },
+    "room_21": {
+      "id": "room_21",
+      "name": "21번 방",
+      "description": "최소한의 물건만 갖춘 숙박용 방이다. 짚으로 채운 매트리스와 잠긴 궤짝 하나가 놓여 있으며, 창문 너머로 거리가 내려다보인다.",
+      "exits": {"downstairs": "tavern"},
+      "items": ["locked_chest"],
+      "npcs": [],
+      "visited": false
+    },
+    "market": {
+      "id": "market",
+      "name": "시장 광장",
+      "description": "상인들의 노점이 늘어선 활기찬 광장이다. 장사꾼들이 물건을 외쳐 팔고 있으며, 구운 고기 냄새가 공기 가득 퍼져 있다.",
+      "exits": {"west": "street"},
+      "items": ["strange_coin"],
+      "npcs": ["merchant"],
+      "visited": false
+    },
+    "alley": {
+      "id": "alley",
+      "name": "막다른 골목",
+      "description": "무너져가는 벽 앞에서 끝나는 어두운 골목이다. 벽돌에 무언가 긁어 새긴 흔적이 시야에 들어온다.",
+      "exits": {"east": "street"},
+      "items": ["scratched_message"],
+      "npcs": ["hooded_figure"],
+      "visited": false
+    }
+  },
+  "npcs": {
+    "barkeep": {
+      "id": "barkeep",
+      "name": "선술집 주인 마르타",
+      "description": "날카로운 눈빛과 밀가루가 묻은 앞치마를 가진 체격 좋은 여성이다. 그녀는 모든 것을 지켜보지만 말은 적다.",
+      "location": "tavern",
+      "disposition": "neutral",
+      "alive": true,
+      "inventory": [],
+      "memories": []
+    },
+    "merchant": {
+      "id": "merchant",
+      "name": "상인 알드릭",
+      "description": "불안한 기색이 역력한 마른 남자로, 끊임없이 어깨 너머를 힐끗거린다.",
+      "location": "market",
+      "disposition": "friendly",
+      "alive": true,
+      "inventory": ["silver_ring"],
+      "memories": []
+    },
+    "hooded_figure": {
+      "id": "hooded_figure",
+      "name": "후드를 깊이 눌러쓴 인물",
+      "description": "깊은 후드를 뒤집어쓴 인물이다. 미동도 하지 않은 채 서 있다.",
+      "location": "alley",
+      "disposition": "neutral",
+      "alive": true,
+      "inventory": [],
+      "memories": []
+    }
+  },
+  "items": {
+    "old_key": {
+      "id": "old_key",
+      "name": "낡은 철제 열쇠",
+      "description": "오랜 세월에 이빨이 매끄럽게 닳아버린 묵직한 철제 열쇠다.",
+      "location": "inventory",
+      "properties": {"unlocks": "locked_chest"}
+    },
+    "dagger": {
+      "id": "dagger",
+      "name": "녹슨 단검",
+      "description": "녹이 군데군데 슨 짧은 칼날이다. 아직도 충분히 날카롭다.",
+      "location": "tavern",
+      "properties": {"weapon": true, "damage": 5}
+    },
+    "wanted_notice": {
+      "id": "wanted_notice",
+      "name": "수배 전단",
+      "description": "거친 목탄으로 누군가의 얼굴을 그려놓은 양피지 수배 전단이다. 현상금은 금화 200닢.",
+      "location": "tavern",
+      "properties": {"readable": true}
+    },
+    "locked_chest": {
+      "id": "locked_chest",
+      "name": "잠긴 궤짝",
+      "description": "철제 자물쇠가 달린 묵직한 나무 궤짝이다.",
+      "location": "room_21",
+      "properties": {"locked": true, "unlocked_by": "old_key"}
+    },
+    "strange_coin": {
+      "id": "strange_coin",
+      "name": "수상한 동전",
+      "description": "본 적 없는 얼굴이 새겨진 금화다. 손에 쥐자 묘하게 따뜻한 온기가 느껴진다.",
+      "location": "market",
+      "properties": {}
+    },
+    "scratched_message": {
+      "id": "scratched_message",
+      "name": "긁어 새긴 문구",
+      "description": "벽돌에 무언가 긁어 새겨져 있다. '그 열쇠는 하나 이상의 문을 연다.'",
+      "location": "alley",
+      "properties": {"readable": true, "reveals_fact": "the_chest_secret"}
+    }
+  },
+  "turn": 0,
+  "history": []
+}
