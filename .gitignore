@@ -23,6 +23,7 @@ eval_results/
 data/qdrant_storage/
 data/saves/*.json
 data/chronicles/*.json
+data/legacy/*.json
 !data/templates/**
 !data/worlds/**
 

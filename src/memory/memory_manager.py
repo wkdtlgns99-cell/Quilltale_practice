@@ -75,15 +75,58 @@ class MemoryManager:
         for reg in templates:
             rid = reg.get("id", str(uuid.uuid4()))
             name = reg.get("name", "미지의 지역")
+            category = reg.get("category", "")
             genres = ", ".join(reg.get("genre_tags", []))
             elements = ", ".join(reg.get("element_tags", []))
-            env = reg.get("environment", "")
-            origin = reg.get("origin_event", "")
-            twist = reg.get("hidden_twist", "")
+            
+            desc = reg.get("description", {})
+            if isinstance(desc, dict):
+                desc_str = " ".join(str(v) for v in desc.values() if v)
+            else:
+                desc_str = str(desc) if desc else ""
+            env = reg.get("environment") or desc_str
+            
+            lore_raw = reg.get("lore_and_rumors", [])
+            if isinstance(lore_raw, list):
+                lore_strs = []
+                for item in lore_raw:
+                    if isinstance(item, dict):
+                        lore_strs.extend([str(v) for v in item.values() if v])
+                    elif item:
+                        lore_strs.append(str(item))
+                origin_str = " ".join(lore_strs)
+            elif isinstance(lore_raw, dict):
+                origin_str = " ".join(str(v) for v in lore_raw.values() if v)
+            else:
+                origin_str = str(lore_raw) if lore_raw else ""
+            origin = reg.get("origin_event") or origin_str
+            
+            triggers = reg.get("interaction_triggers", [])
+            twist_parts = []
+            if isinstance(triggers, list):
+                for t in triggers:
+                    if isinstance(t, dict):
+                        if t.get("secret_observation"):
+                            twist_parts.append(str(t.get("secret_observation")))
+                        elif t.get("clue"):
+                            twist_parts.append(str(t.get("clue")))
+            twist = reg.get("hidden_twist") or (" ".join(twist_parts) if twist_parts else "")
+            
+            hazards = reg.get("environmental_hazards", [])
+            hazard_strs = []
+            if isinstance(hazards, list):
+                for h in hazards:
+                    if isinstance(h, dict):
+                        h_name = h.get("name") or h.get("hazard") or ""
+                        h_pen = h.get("narrative_penalty") or h.get("penalty") or ""
+                        hazard_strs.append(f"{h_name} {h_pen}".strip())
+                    elif h:
+                        hazard_strs.append(str(h))
+            hazards_str = " ".join(hazard_strs)
             
             search_text = (
-                f"[지역: {name}] 장르: {genres} | 속성: {elements} | "
-                f"환경: {env} | 기원: {origin} | 비밀: {twist}"
+                f"[지역: {name}] 범주: {category} 장르: {genres} 속성: {elements} | "
+                f"환경: {env} | 위험: {hazards_str} | 기원: {origin} | 비밀: {twist}"
             )
             
             vectors = self.embedder.embed_passages([search_text])
@@ -94,6 +137,7 @@ class MemoryManager:
             payload = {
                 "id": rid,
                 "name": name,
+                "category": category,
                 "genre_tags": reg.get("genre_tags", []),
                 "element_tags": reg.get("element_tags", []),
                 "environment": env,

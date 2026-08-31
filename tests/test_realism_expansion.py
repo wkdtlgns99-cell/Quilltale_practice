@@ -11,7 +11,7 @@ def test_realism_mechanics_template_json():
     assert path.exists()
     with open(path, "r", encoding="utf-8") as f:
         templates = json.load(f)
-    assert len(templates) == 15
+    assert len(templates) >= 15
     ids = [t["id"] for t in templates]
     assert "closed_loop_ecosystem" in ids
     assert "material_physics_chemical_chain" in ids

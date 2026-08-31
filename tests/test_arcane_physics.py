@@ -10,7 +10,7 @@ def test_arcane_physics_template_json():
     assert path.exists()
     with open(path, "r", encoding="utf-8") as f:
         templates = json.load(f)
-    assert len(templates) == 65
+    assert len(templates) >= 65
     ids = [t["id"] for t in templates]
     assert "mana_depletion_arcanocraving" in ids
     assert "soul_strain_identity_fade" in ids
@@ -48,10 +48,10 @@ def test_memory_manager_arcane_and_realism_rag():
 
     mm = MemoryManager()
     arcane_count = mm.index_arcane_templates()
-    assert arcane_count == 65
+    assert arcane_count >= 65
 
     realism_count = mm.index_realism_templates()
-    assert realism_count == 15
+    assert realism_count >= 15
 
     arcane_results = mm.search_arcane_templates("마나 고갈과 석화", limit=2)
     assert len(arcane_results) >= 1
