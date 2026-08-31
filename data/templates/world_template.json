@@ -1,0 +1,371 @@
+{
+  "session_id": "default_session",
+  "world_id": "world_001",
+  "world_name": "잿빛 변경",
+  "world_genre": "다크 판타지",
+  "active_world_ended": false,
+  "world_chronicle": "",
+  "player": {
+    "name": "방랑자",
+    "location": "tavern",
+    "inventory": ["old_key"],
+    "health": 100,
+    "max_health": 100,
+    "mana": 50,
+    "max_mana": 50,
+    "level": 1,
+    "exp": 0,
+    "gold": 25,
+    "stat_points": 0,
+    "strength": 12,
+    "agility": 10,
+    "intelligence": 10,
+    "constitution": 12,
+    "wisdom": 10,
+    "luck": 10,
+    "crit_rate_bonus": 0,
+    "crit_damage_bonus": 0,
+    "reputation": 0,
+    "equipment": {
+      "weapon": null,
+      "head": null,
+      "face": null,
+      "chest": null,
+      "legs": null,
+      "boots": null,
+      "gloves": null,
+      "cape": null,
+      "rings": [],
+      "earrings": []
+    },
+    "skills": [],
+    "titles": [],
+    "active_title": null,
+    "known_magic_words": [],
+    "known_facts": []
+  },
+  "skills_db": {},
+  "titles_db": {},
+  "factions": {
+    "border_guard": {
+      "id": "border_guard",
+      "name": "국경 치안 수비대",
+      "system": "군정",
+      "power_level": "지역 공권력",
+      "ruling_race": "인간",
+      "taboos": ["야간 무단 통행", "미등록 마도구 밀수"],
+      "relations": {"shadow_guild": "적대"}
+    },
+    "shadow_guild": {
+      "id": "shadow_guild",
+      "name": "그림자 밀수 연합",
+      "system": "지하 카르텔",
+      "power_level": "지하 세력",
+      "ruling_race": "혼합",
+      "taboos": ["배신자 은닉", "정보 누설"],
+      "relations": {"border_guard": "적대"}
+    }
+  },
+  "world_lore": {
+    "magic_origin": "고대 룬어와 마력 전도성을 지닌 광물 에테라이트의 공명",
+    "races": {
+      "human": "적응력이 뛰어나고 기술/도구를 빠르게 습득함",
+      "elf": "선천적 마력 친화도가 높으나 신체 재생이 느림"
+    }
+  },
+  "world_secrets": {
+    "shadow_conspiracy": {
+      "truth": "치안대장과 그림자 밀수 연합의 수장이 사실 동일한 고대 유물 결사의 일원임",
+      "clues": [
+        "밀수품 상자에 찍힌 인장이 치안대 공식 밀랍 인장과 동일한 규격임"
+      ],
+      "solved": false
+    }
+  },
+  "dilemmas_faced": [],
+  "environment_states": {},
+  "discovered_clues": {},
+
+  "locations": {
+    "tavern": {
+      "id": "tavern",
+      "name": "부서진 플라곤 선술집",
+      "description": "땀과 장작 연기 냄새가 감도는 어두운 선술집이다. 거칠게 다듬은 탁자들이 방을 가득 채우고 있으며, 벽난로에서는 불길이 타오르고 있다.",
+      "exits": {"north": "street", "upstairs": "room_21"},
+      "items": ["dagger", "wanted_notice", "smoke_candle"],
+      "npcs": ["barkeep"],
+      "environmental_hazards": ["천장에 위태롭게 매달린 무거운 쇠사슬 샹들리에", "바닥에 흥건히 흘려진 램프 기름통"],
+      "visited": true
+    },
+
+    "street": {
+      "id": "street",
+      "name": "돌이 깔린 거리",
+      "description": "빗물에 젖은 좁은 거리다. 비뚤어진 건물들이 머리 위로 기울어져 있고, 낮게 깔린 안개가 거리를 뒤덮고 있다.",
+      "exits": {"south": "tavern", "east": "market", "west": "alley"},
+      "items": [],
+      "npcs": [],
+      "visited": false
+    },
+    "room_21": {
+      "id": "room_21",
+      "name": "21번 방",
+      "description": "최소한의 물건만 갖춘 숙박용 방이다. 짚으로 채운 매트리스와 잠긴 궤짝 하나가 놓여 있으며, 창문 너머로 거리가 내려다보인다.",
+      "exits": {"downstairs": "tavern"},
+      "items": ["locked_chest"],
+      "npcs": [],
+      "visited": false
+    },
+    "market": {
+      "id": "market",
+      "name": "시장 광장",
+      "description": "상인들의 노점이 늘어선 활기찬 광장이다. 장사꾼들이 물건을 외쳐 팔고 있으며, 구운 고기 냄새가 공기 가득 퍼져 있다.",
+      "exits": {"west": "street"},
+      "items": ["strange_coin"],
+      "npcs": ["merchant"],
+      "visited": false
+    },
+    "alley": {
+      "id": "alley",
+      "name": "막다른 골목",
+      "description": "무너져가는 벽 앞에서 끝나는 어두운 골목이다. 벽돌에 무언가 긁어 새긴 흔적이 시야에 들어온다.",
+      "exits": {"east": "street"},
+      "items": ["scratched_message"],
+      "npcs": ["hooded_figure"],
+      "visited": false
+    }
+  },
+  "npcs": {
+    "barkeep": {
+      "id": "barkeep",
+      "name": "선술집 주인 마르타",
+      "description": "날카로운 눈빛과 밀가루가 묻은 앞치마를 가진 체격 좋은 여성이다.",
+      "location": "tavern",
+      "tier": "intermediate",
+      "influence_scope": "local",
+      "job": "선술집 주인 및 전직 용병",
+      "disposition": "neutral",
+      "attitude_description": "관찰력이 뛰어나고 무뚝뚝함",
+      "desire": "과거 도적단에게 잃은 남동생의 유품(은제 펜던트)을 되찾는 것",
+      "weakness": "남동생의 이름이나 유품이 언급되면 냉정함을 잃고 크게 흔들림",
+      "appearance_story": "왼쪽 뺨에 비스듬히 긁힌 오래된 도검 흉터가 있으며, 앞치마 안쪽에 손잡이가 닳아 빠진 짧은 손도끼를 차고 있다.",
+      "bonds": {
+        "merchant": "식자재와 술을 납품받는 단골 상인이자 사촌 동생",
+        "dead_brother": "10년 전 변경 도적단 습격으로 사망한 막내 남동생"
+      },
+      "trauma": "과거 용병 시절 지휘 미숙으로 분대원 전원을 잃고 홀로 살아남았던 죄책감",
+      "quirk": "거짓말을 하거나 극도로 긴장하면 오른손으로 앞치마 매듭을 꽉 쥐어뜯는 버릇",
+      "taboo": "선술집 내부에서 아이나 임산부에게 무력을 행사하는 자는 목숨을 걸고 응징함",
+      "tastes": {
+        "likes": ["비 오는 날의 장작 타는 소리", "독한 북부 호밀 위스키", "목각 인형 깎기"],
+        "dislikes": ["거만한 귀족", "단맛 나는 과일주", "음유시인의 시끄러운 노래"]
+      },
+      "physical_condition": "과거 화살상으로 인해 비가 오거나 추운 날이면 왼쪽 무릎을 심하게 절뚝거림",
+      "speech_style": "거칠고 툭툭 끊어지는 북부 국경 방언, 말끝마다 혀를 차며 '쯧, 제기랄'을 붙임",
+      "daily_routine": "새벽 5시에 기상해 장작을 패고, 밤 11시 이후에는 피로감으로 대화가 극도로 거칠어짐",
+      "superstitions": "선술집 바닥에 소금을 흘리면 반드시 왼손으로 세 번 어깨 뒤로 던져야 직성이 풀림",
+      "self_image_vs_reputation": "본인은 '철저히 돈만 밝히는 냉혹한 장사치'라 생각하지만, 마을 주민들은 '과묵하지만 속정 깊은 큰누님'으로 신뢰함",
+      "hidden_side": "밤마다 손님들이 떨어뜨리고 간 잔돈을 모아 국경 고아원에 익명으로 밀가루 포대를 보냄",
+      "education_level": "초보적인 계산과 한 줄짜리 영수증만 겨우 읽는 수준(문맹에 가까움), 용병단 은어에 매우 능통",
+      "financial_state": "지난달 도적단 통행세 탓에 선술집 임대료 25골드가 연체되어 당장 이번 주까지 목돈이 급함",
+      "alive": true,
+
+
+      "health": 60,
+      "max_health": 60,
+      "mana": 30,
+      "max_mana": 30,
+      "armor_class": 12,
+      "inventory": [],
+      "memories": [],
+      "personality": {
+        "altruism": 40,
+        "greed": 60,
+        "courage": 70,
+        "suspicion": 80,
+        "loyalty": 50,
+        "aggression": 40
+      },
+      "skills": [],
+      "titles": [],
+      "interests": ["선술집 치안 유지", "뒷골목 도적단의 동향 파악", "희귀 술 수집"],
+      "current_activity": "탁자를 마른 행주로 닦으며 손님들의 눈치를 살피고 있음",
+      "schedule": [
+        {"turn_start": 1, "turn_end": 5, "location": "tavern", "activity": "선술집 카운터에서 주문을 받고 주위를 경계함"},
+        {"turn_start": 6, "turn_end": 10, "location": "tavern", "activity": "지하 창고에서 식료품과 에일통을 점검함", "trace_left": "지하로 통하는 목재 문이 살짝 열려 있고 에일 냄새가 풍김"}
+      ],
+      "stats_revealed": false,
+      "is_legacy": false,
+      "legacy_id": null,
+      "age_delta": 0
+
+    },
+    "merchant": {
+      "id": "merchant",
+      "name": "상인 알드릭",
+      "description": "불안한 기색이 역력한 마른 남자로, 끊임없이 어깨 너머를 힐끗거린다.",
+      "location": "market",
+      "disposition": "friendly",
+      "attitude_description": "불안해하며 경계심이 많음",
+      "alive": true,
+      "health": 35,
+      "max_health": 35,
+      "mana": 20,
+      "max_mana": 20,
+      "armor_class": 10,
+      "inventory": ["silver_ring"],
+      "memories": [],
+      "personality": {
+        "altruism": 30,
+        "greed": 80,
+        "courage": 20,
+        "suspicion": 90,
+        "loyalty": 40,
+        "aggression": 10
+      },
+      "skills": [],
+      "titles": [],
+      "stats_revealed": false,
+      "is_legacy": false,
+      "legacy_id": null,
+      "age_delta": 0
+    },
+    "hooded_figure": {
+      "id": "hooded_figure",
+      "name": "후드를 깊이 눌러쓴 인물",
+      "description": "깊은 후드를 뒤집어쓴 인물이다. 미동도 하지 않은 채 서 있다.",
+      "location": "alley",
+      "disposition": "neutral",
+      "attitude_description": "신비롭고 속을 알 수 없음",
+      "alive": true,
+      "health": 70,
+      "max_health": 70,
+      "mana": 100,
+      "max_mana": 100,
+      "armor_class": 14,
+      "inventory": [],
+      "memories": [],
+      "personality": {
+        "altruism": 50,
+        "greed": 50,
+        "courage": 80,
+        "suspicion": 60,
+        "loyalty": 50,
+        "aggression": 50
+      },
+      "skills": [],
+      "titles": [],
+      "stats_revealed": false,
+      "is_legacy": false,
+      "legacy_id": null,
+      "age_delta": 0
+    }
+  },
+  "items": {
+    "old_key": {
+      "id": "old_key",
+      "name": "낡은 철제 열쇠",
+      "description": "오랜 세월에 이빨이 매끄럽게 닳아버린 묵직한 철제 열쇠다.",
+      "location": "inventory",
+      "item_type": "key",
+      "damage": 0,
+      "defense": 0,
+      "value": 5,
+      "scaling_stat": "str",
+      "scaling_factor": 1.0,
+      "properties": {"unlocks": "locked_chest"}
+    },
+    "dagger": {
+      "id": "dagger",
+      "name": "녹슨 단검",
+      "description": "녹이 군데군데 슨 짧은 칼날이다. 아직도 충분히 날카롭다.",
+      "location": "tavern",
+      "item_type": "weapon",
+      "damage": 6,
+      "defense": 0,
+      "value": 15,
+      "scaling_stat": "agility",
+      "scaling_factor": 1.5,
+      "properties": {"weapon": true}
+    },
+    "wanted_notice": {
+      "id": "wanted_notice",
+      "name": "수배 전단",
+      "description": "거친 목탄으로 누군가의 얼굴을 그려놓은 양피지 수배 전단이다. 현상금은 금화 200닢.",
+      "location": "tavern",
+      "item_type": "misc",
+      "damage": 0,
+      "defense": 0,
+      "value": 1,
+      "scaling_stat": "str",
+      "scaling_factor": 1.0,
+      "properties": {"readable": true}
+    },
+    "locked_chest": {
+      "id": "locked_chest",
+      "name": "잠긴 궤짝",
+      "description": "철제 자물쇠가 달린 묵직한 나무 궤짝이다.",
+      "location": "room_21",
+      "item_type": "misc",
+      "damage": 0,
+      "defense": 0,
+      "value": 50,
+      "scaling_stat": "str",
+      "scaling_factor": 1.0,
+      "properties": {"locked": true, "unlocked_by": "old_key"}
+    },
+    "strange_coin": {
+      "id": "strange_coin",
+      "name": "수상한 동전",
+      "description": "본 적 없는 얼굴이 새겨진 금화다. 손에 쥐자 묘하게 따뜻한 온기가 느껴진다.",
+      "location": "market",
+      "item_type": "misc",
+      "damage": 0,
+      "defense": 0,
+      "value": 30,
+      "scaling_stat": "str",
+      "scaling_factor": 1.0,
+      "properties": {}
+    },
+    "smoke_candle": {
+      "id": "smoke_candle",
+      "name": "연막 향초",
+      "description": "불을 붙이면 10분 동안 짙은 유황 연막을 내뿜어 시야를 완전히 차단하는 특수 향초다.",
+      "location": "tavern",
+      "item_type": "consumable",
+      "damage": 0,
+      "defense": 0,
+      "value": 15,
+      "scaling_stat": "int",
+      "scaling_factor": 1.0,
+      "properties": {"utility": true},
+      "weight": 0.2,
+      "size": "small",
+      "required_strength": 1,
+      "can_store_in_bag": true,
+      "can_wield_as_weapon": false,
+      "utility_function": "10분간 짙은 연막 살포로 적 시야 차단 및 은신/탈출 지원",
+      "puzzle_hint": "환기구나 좁은 통로에 피워 적을 몰아내거나 시야를 가릴 수 있음"
+    },
+    "scratched_message": {
+
+      "id": "scratched_message",
+      "name": "긁어 새긴 문구",
+      "description": "벽돌에 무언가 긁어 새겨져 있다. '그 열쇠는 하나 이상의 문을 연다.'",
+      "location": "alley",
+      "item_type": "misc",
+      "damage": 0,
+      "defense": 0,
+      "value": 0,
+      "scaling_stat": "str",
+      "scaling_factor": 1.0,
+      "properties": {"readable": true, "reveals_fact": "the_chest_secret"}
+    }
+  },
+  "turn": 0,
+  "world_reputation": 0,
+  "world_facts": ["잿빛 변경 일대에는 정체불명의 도적단이 출몰한다는 소문이 있다."],
+  "history": [],
+  "last_dice_result": null,
+  "last_npc_action": null
+}

@@ -1,0 +1,60 @@
+{
+  "legacy_id": "legacy_20260830_145834_3e5287",
+  "name": "발도르",
+  "reason": "retired",
+  "reason_ko": "기나긴 여정을 마치고 명예롭게 은퇴함",
+  "farewell_note": "",
+  "archived_at": "20260830_145834",
+  "turn_reached": 0,
+  "location": "market",
+  "reputation": 0,
+  "stats": {
+    "level": 1,
+    "health": 100,
+    "max_health": 100,
+    "str_stat": 14,
+    "dex_stat": 12,
+    "con_stat": 13,
+    "int_stat": 10,
+    "wis_stat": 10,
+    "cha_stat": 11,
+    "gold": 25
+  },
+  "equipped_weapon": null,
+  "equipped_armor": null,
+  "inventory_item_ids": [
+    "old_key"
+  ],
+  "inventory_items": [
+    {
+      "id": "old_key",
+      "name": "낡은 철제 열쇠",
+      "description": "오랜 세월에 이빨이 매끄럽게 닳아버린 묵직한 철제 열쇠다.",
+      "location": "inventory",
+      "item_type": "key",
+      "damage": 0,
+      "defense": 0,
+      "value": 5,
+      "scaling_stat": "str",
+      "scaling_factor": 1.0,
+      "properties": {
+        "unlocks": "locked_chest"
+      },
+      "weight": 0.2,
+      "size": "small",
+      "required_strength": 10,
+      "can_store_in_bag": true,
+      "can_wield_as_weapon": true,
+      "improvised_damage": 2,
+      "document_text": "",
+      "utility_function": "21번 방의 잠긴 궤짝 및 구형 잠금장치 해제 가능",
+      "puzzle_hint": ""
+    }
+  ],
+  "known_facts": [],
+  "notable_events": [],
+  "skills": [],
+  "titles": [],
+  "skill_objects": [],
+  "title_objects": []
+}

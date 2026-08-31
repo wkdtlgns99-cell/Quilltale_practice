@@ -3,8 +3,9 @@
 from src.world.state import WorldState
 import json
 
+
 def load_test_state() -> WorldState:
-    with open("data/worlds/default.json") as f:
+    with open("data/worlds/default.json", encoding="utf-8") as f:
         return WorldState.from_json(f.read())
 
 
@@ -48,11 +49,12 @@ def test_serialisation_roundtrip():
     assert restored.player.location == state.player.location
     assert restored.player.inventory == state.player.inventory
     assert restored.turn == state.turn
+    assert restored.player.str_stat == state.player.str_stat
 
 
 def test_context_summary_contains_facts():
     state = load_test_state()
     summary = state.to_context_summary()
-    assert "Broken Flagon" in summary
+    assert "부서진 플라곤" in summary
     assert "north" in summary.lower()
     assert "dagger" in summary.lower()

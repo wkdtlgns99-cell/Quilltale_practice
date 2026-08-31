@@ -7,7 +7,7 @@ import json
 
 
 def load_test_state() -> WorldState:
-    with open("data/worlds/default.json") as f:
+    with open("data/worlds/default.json", encoding="utf-8") as f:
         return WorldState.from_json(f.read())
 
 
@@ -26,7 +26,7 @@ def test_memory_written_on_interaction():
     assert len(barkeep.memories) == 1
     assert barkeep.memories[0].emotional_tone == "suspicious"
     assert barkeep.memories[0].significance == 2
-    assert any("Marta" in c for c in changes)
+    assert any("마르타" in c for c in changes)
 
 
 def test_multiple_memories_accumulate():
@@ -53,14 +53,14 @@ def test_relevant_memories_prioritises_significance():
     # Add memories with different significance levels
     barkeep.memories = [
         MemoryEntry(turn=1, description="minor thing", emotional_tone="neutral", significance=1),
-        MemoryEntry(turn=2, description="very significant thing", emotional_tone="angry", significance=3),
-        MemoryEntry(turn=3, description="notable thing", emotional_tone="wary", significance=2),
+        MemoryEntry(turn=2, description="very significant thing", emotional_tone="angry", significance=5, is_anchor=True),
+        MemoryEntry(turn=3, description="notable thing", emotional_tone="wary", significance=3),
     ]
 
     relevant = barkeep.relevant_memories(max_memories=2)
-    # Should get the significance=3 memory first
-    assert relevant[0].significance == 3
-    assert relevant[1].significance == 2
+    # Should get the significance=5 memory first
+    assert relevant[0].significance == 5
+    assert relevant[1].significance == 3
 
 
 def test_memory_appears_in_context_summary():
@@ -70,7 +70,7 @@ def test_memory_appears_in_context_summary():
         "barkeep": {
             "description": "Player threatened her with the dagger",
             "emotional_tone": "fearful",
-            "significance": 3,
+            "significance": 4,
         }
     }})
 
@@ -120,10 +120,10 @@ def test_memory_summary_format():
 
     barkeep.memories = [
         MemoryEntry(turn=5, description="Gave player information about the chest",
-                   emotional_tone="neutral", significance=1),
+                   emotional_tone="neutral", significance=2),
     ]
 
     summary = barkeep.memory_summary()
-    assert "Marta" in summary
+    assert "마르타" in summary
     assert "Gave player information" in summary
     assert "neutral" in summary

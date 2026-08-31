@@ -1,0 +1,1171 @@
+[
+  {
+    "region_id": "whale_belly_ecosystem",
+    "region_name": "살아있는 거대 고래의 뱃속 생태계",
+    "dominant_elements": [
+      "산성",
+      "생체",
+      "수류"
+    ],
+    "materials": [
+      "고래 키틴질 뼈",
+      "강산성 소화 효소낭",
+      "발광 피막 점액"
+    ],
+    "native_races": [
+      "위벽 기생 유랑민",
+      "침몰선 생존자 연합"
+    ],
+    "monsters": [
+      {
+        "id": "stomach_acid_parasite",
+        "name": "소화벽 거대 침식충",
+        "weakness": [
+          "빙결",
+          "알칼리성 광물"
+        ],
+        "resistance": [
+          "산성",
+          "수류"
+        ],
+        "material_drop": "내산성 키틴질 껍질",
+        "craftable_item": "산호 내산 단검 (갑옷 부식 특성)"
+      }
+    ],
+    "signature_skills": [
+      "아쿠아 글라키에 무루스 (산성 중화 빙벽)",
+      "아쿠아 임팩투스 (소화액 분출)"
+    ],
+    "physics_laws": [
+      "강산성 소화액은 금속과 뼈를 급속 용해함",
+      "심장 박동 파동이 주기적으로 음파를 방출함"
+    ]
+  },
+  {
+    "region_id": "giant_teeth_canyon",
+    "region_name": "썩어가는 거인의 치아 협곡과 충치 동굴",
+    "dominant_elements": [
+      "번개",
+      "뼈",
+      "부패"
+    ],
+    "materials": [
+      "신경 전류 도관",
+      "에나멜질 절벽 조각",
+      "석회화된 골분"
+    ],
+    "native_races": [
+      "치석 요새 거주민",
+      "신경 숭배 기생 부족"
+    ],
+    "monsters": [
+      {
+        "id": "nerve_current_maggot",
+        "name": "충치 신경망 뇌수 구더기",
+        "weakness": [
+          "화염",
+          "절연 도자기"
+        ],
+        "resistance": [
+          "번개",
+          "물리 타격"
+        ],
+        "material_drop": "방전 신경 섬유",
+        "craftable_item": "고전압 신경 편곤 (마비 특성)"
+      }
+    ],
+    "signature_skills": [
+      "풀구르 사기타 볼란스 (신경 전류 화살)",
+      "풀구르 체인 (신경망 연쇄 감전)"
+    ],
+    "physics_laws": [
+      "에나멜질은 고전압을 전도하며 부패 가스는 인화성이 매우 높음"
+    ]
+  },
+  {
+    "region_id": "dwarf_magma_forge",
+    "region_name": "용암 폭포와 드워프 마그마 성채",
+    "dominant_elements": [
+      "화염",
+      "용암",
+      "흑요석"
+    ],
+    "materials": [
+      "고열 마그마 슬래그",
+      "흑요석 장갑판",
+      "드워프 내열 합금"
+    ],
+    "native_races": [
+      "심도 흑요석 드워프",
+      "골렘 정비 공학자"
+    ],
+    "monsters": [
+      {
+        "id": "magma_core_golem",
+        "name": "마그마 코어 중장갑 골렘",
+        "weakness": [
+          "극저온 급랭 (열충격 파쇄)",
+          "강산성 용해"
+        ],
+        "resistance": [
+          "화염",
+          "타격",
+          "관통"
+        ],
+        "material_drop": "맥박 치는 흑요석 핵",
+        "craftable_item": "마그마 단열 흉갑 (화염 무효화)"
+      }
+    ],
+    "signature_skills": [
+      "암플리피코 이그니스 스페라 임팩투스 (마그마 대폭발)",
+      "이그니스 엔시스 인챈트 (화염 검기)"
+    ],
+    "physics_laws": [
+      "고열 상태의 흑요석에 급랭 냉기가 닿으면 열충격으로 즉시 분쇄됨"
+    ]
+  },
+  {
+    "region_id": "frost_fjord_rune_altar",
+    "region_name": "얼어붙은 피오르드와 서리 거인의 룬 제단",
+    "dominant_elements": [
+      "빙결",
+      "냉기",
+      "룬"
+    ],
+    "materials": [
+      "영구 동토 빙정석",
+      "서리 거인의 푸른 뼈",
+      "고래 기름 룬 잉크"
+    ],
+    "native_races": [
+      "설원 바이킹 수호대",
+      "서리 룬 제사장"
+    ],
+    "monsters": [
+      {
+        "id": "frost_giant_revenant",
+        "name": "서리 거인의 빙결 망령",
+        "weakness": [
+          "고열 화염",
+          "산성 화학 부식"
+        ],
+        "resistance": [
+          "빙결",
+          "냉기",
+          "수류"
+        ],
+        "material_drop": "오로라 빙핵",
+        "craftable_item": "영구 결빙 방패 (물리/마법 방어)"
+      }
+    ],
+    "signature_skills": [
+      "글라키에 무루스 임팩투스 (빙하 폭쇄 장벽)",
+      "글라키에 란시아 볼란스 (서리 창 투사)"
+    ],
+    "physics_laws": [
+      "빙결 상태의 물체는 산성 화학 반응에 의해 구조가 급속히 붕괴됨"
+    ]
+  },
+  {
+    "region_id": "mercury_lake_metal_reed",
+    "region_name": "차가운 수은 호수와 은빛 거울 갈대숲",
+    "dominant_elements": [
+      "수은",
+      "액체금속",
+      "전도"
+    ],
+    "materials": [
+      "액체 수은 정수",
+      "은박 코팅 금속 갈대",
+      "크롬 합금 비늘"
+    ],
+    "native_races": [
+      "절연 백자 잠수부 길드",
+      "연금술 크롬 개척단"
+    ],
+    "monsters": [
+      {
+        "id": "chrome_discharge_eel",
+        "name": "크롬 방전 수은 장어",
+        "weakness": [
+          "극저온 고체화",
+          "절연 장벽"
+        ],
+        "resistance": [
+          "금속 타격",
+          "번개 (초전도)"
+        ],
+        "material_drop": "크롬 초전도 지느러미",
+        "craftable_item": "수은 유체 망토 (물리 궤적 굴절)"
+      }
+    ],
+    "signature_skills": [
+      "풀구르 아쿠아 임팩투스 (수은 초전도 방전)",
+      "테라 엔시스 인챈트 (수은 칼날 경화)"
+    ],
+    "physics_laws": [
+      "액체 수은에 전기가 닿으면 전 호수 면으로 초전도 광역 방전이 일어남"
+    ]
+  },
+  {
+    "region_id": "ceramic_kiln_underground",
+    "region_name": "거대 가마터 지하 제국과 백자 회랑",
+    "dominant_elements": [
+      "백자",
+      "점토",
+      "절연"
+    ],
+    "materials": [
+      "킨츠기 금박 접착제",
+      "유약 코팅 백자판",
+      "천년 장작 숯"
+    ],
+    "native_races": [
+      "황금 킨츠기 도공 길드",
+      "도요지 파수꾼"
+    ],
+    "monsters": [
+      {
+        "id": "pottery_wheel_crusher",
+        "name": "살점 분쇄 물레 골렘",
+        "weakness": [
+          "강한 둔기 타격",
+          "공진 음파 파쇄"
+        ],
+        "resistance": [
+          "전기 (완전 절연)",
+          "화염",
+          "산성"
+        ],
+        "material_drop": "고강도 백자 코어",
+        "craftable_item": "완전 절연 백자 장갑 (전기/마비 면역)"
+      }
+    ],
+    "signature_skills": [
+      "테라 무루스 임팩투스 (백자 장벽 분쇄)",
+      "이그니스 테라 인챈트 (고열 점토 구체)"
+    ],
+    "physics_laws": [
+      "유약 코팅 백자는 완벽한 전기 절연체이나 특정 주파수의 음파에 취약함"
+    ]
+  },
+  {
+    "region_id": "silent_pipe_organ_city",
+    "region_name": "침묵의 음악 도시와 거대 파이프오르간 탑",
+    "dominant_elements": [
+      "음파",
+      "진동",
+      "공진"
+    ],
+    "materials": [
+      "소리굽쇠 합금",
+      "공진 파이프 청동",
+      "침묵의 흑요석 귀마개"
+    ],
+    "native_races": [
+      "무언(無言)의 음파 기사단",
+      "조율사 사제단"
+    ],
+    "monsters": [
+      {
+        "id": "resonance_phantom_beast",
+        "name": "공진 음파 파괴마수",
+        "weakness": [
+          "침묵 결계",
+          "점성 점액 흡음"
+        ],
+        "resistance": [
+          "금속 무기",
+          "원거리 투사체"
+        ],
+        "material_drop": "초음파 공명 진동자",
+        "craftable_item": "소리굽쇠 파동검 (방패 무시 진동 타격)"
+      }
+    ],
+    "signature_skills": [
+      "벤투스 볼란스 임팩투스 (음파 충격파)",
+      "룩스 무루스 인챈트 (진동 방어막)"
+    ],
+    "physics_laws": [
+      "고유 진동수와 일치하는 음파는 취성(Brittle) 물질을 일순간에 산산조각 냄"
+    ]
+  },
+  {
+    "region_id": "sinking_toxic_swamp",
+    "region_name": "끝없이 침몰하는 맹독 늪지와 침엽수림",
+    "dominant_elements": [
+      "맹독",
+      "메탄",
+      "부패"
+    ],
+    "materials": [
+      "맹독 포자 낭포",
+      "이끼 침전물",
+      "늪지 마녀의 발효액"
+    ],
+    "native_races": [
+      "수상 가옥 늪지 유랑민",
+      "독초 채집단"
+    ],
+    "monsters": [
+      {
+        "id": "toxic_methane_hydra",
+        "name": "부패 메탄 포자 히드라",
+        "weakness": [
+          "화염 (메탄 폭발 유도)",
+          "강풍 확산"
+        ],
+        "resistance": [
+          "독",
+          "수류",
+          "물리 찌르기"
+        ],
+        "material_drop": "고농축 메탄 독낭",
+        "craftable_item": "포자 독안개 투척병 (지속 중독/시야 차단)"
+      }
+    ],
+    "signature_skills": [
+      "움브라 아쿠아 임팩투스 (맹독 부식 분출)",
+      "벤투스 움브라 볼란스 (독안개 살포)"
+    ],
+    "physics_laws": [
+      "늪지 메탄가스 층에 화염이 닿으면 대규모 연쇄 기화 폭발이 발생함"
+    ]
+  },
+  {
+    "region_id": "red_thread_labyrinth",
+    "region_name": "거대 누에고치 직조 요새와 붉은 실 미궁",
+    "dominant_elements": [
+      "혈관",
+      "실",
+      "진동"
+    ],
+    "materials": [
+      "혈관 결정체",
+      "거대 누에고치 직조 요새와 붉은 실 미궁 부산물"
+    ],
+    "native_races": [
+      "거대 누에고치 직조 요새와 붉은 실 미궁 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_red_thread_labyrinth",
+        "name": "혈관 직조 누에 거미",
+        "weakness": [
+          "화염"
+        ],
+        "resistance": [
+          "혈관",
+          "실",
+          "진동"
+        ],
+        "material_drop": "혈관 직조 누에 거미의 핵심 소재",
+        "craftable_item": "음파 베틀 투척기"
+      }
+    ],
+    "signature_skills": [
+      "혈관 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "혈관과 화염은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "flesh_plain_marrow_spring",
+    "region_name": "부패한 살점 평원과 골수 온천",
+    "dominant_elements": [
+      "피",
+      "지방",
+      "골수"
+    ],
+    "materials": [
+      "피 결정체",
+      "부패한 살점 평원과 골수 온천 부산물"
+    ],
+    "native_races": [
+      "부패한 살점 평원과 골수 온천 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_flesh_plain_marrow_spring",
+        "name": "골수 포식 거대 구더기",
+        "weakness": [
+          "극저온"
+        ],
+        "resistance": [
+          "피",
+          "지방",
+          "골수"
+        ],
+        "material_drop": "골수 포식 거대 구더기의 핵심 소재",
+        "craftable_item": "고밀도 지방질 갑주"
+      }
+    ],
+    "signature_skills": [
+      "피 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "피과 극저온은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "bottomless_slaughterhouse",
+    "region_name": "바닥 없는 나선형 도살장 탑과 피의 수로",
+    "dominant_elements": [
+      "피",
+      "강철",
+      "기계"
+    ],
+    "materials": [
+      "피 결정체",
+      "바닥 없는 나선형 도살장 탑과 피의 수로 부산물"
+    ],
+    "native_races": [
+      "바닥 없는 나선형 도살장 탑과 피의 수로 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_bottomless_slaughterhouse",
+        "name": "갈고리 강철 도살 골렘",
+        "weakness": [
+          "부식산"
+        ],
+        "resistance": [
+          "피",
+          "강철",
+          "기계"
+        ],
+        "material_drop": "갈고리 강철 도살 골렘의 핵심 소재",
+        "craftable_item": "체인 톱니 절단검"
+      }
+    ],
+    "signature_skills": [
+      "피 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "피과 부식산은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "taxidermist_greenhouse",
+    "region_name": "박제사의 스테인드글라스 돔과 목질화 테라리움",
+    "dominant_elements": [
+      "목질화",
+      "포자",
+      "식물"
+    ],
+    "materials": [
+      "목질화 결정체",
+      "박제사의 스테인드글라스 돔과 목질화 테라리움 부산물"
+    ],
+    "native_races": [
+      "박제사의 스테인드글라스 돔과 목질화 테라리움 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_taxidermist_greenhouse",
+        "name": "목질화 거대 사마귀",
+        "weakness": [
+          "도끼 타격"
+        ],
+        "resistance": [
+          "목질화",
+          "포자",
+          "식물"
+        ],
+        "material_drop": "목질화 거대 사마귀의 핵심 소재",
+        "craftable_item": "발광 식물 덩굴 방패"
+      }
+    ],
+    "signature_skills": [
+      "목질화 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "목질화과 도끼 타격은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "inverted_gravity_tower",
+    "region_name": "중력이 뒤집힌 심연의 역전 탑",
+    "dominant_elements": [
+      "역중력",
+      "공간",
+      "번개"
+    ],
+    "materials": [
+      "역중력 결정체",
+      "중력이 뒤집힌 심연의 역전 탑 부산물"
+    ],
+    "native_races": [
+      "중력이 뒤집힌 심연의 역전 탑 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_inverted_gravity_tower",
+        "name": "부유 가고일 파수꾼",
+        "weakness": [
+          "돌풍"
+        ],
+        "resistance": [
+          "역중력",
+          "공간",
+          "번개"
+        ],
+        "material_drop": "부유 가고일 파수꾼의 핵심 소재",
+        "craftable_item": "역중력 부유 닻"
+      }
+    ],
+    "signature_skills": [
+      "역중력 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "역중력과 돌풍은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "frozen_explosion_ruins",
+    "region_name": "찰나에 멈춘 0.01초 폭발 현장과 화쇄류 조각 정원",
+    "dominant_elements": [
+      "시간",
+      "화염",
+      "파편"
+    ],
+    "materials": [
+      "시간 결정체",
+      "찰나에 멈춘 0.01초 폭발 현장과 화쇄류 조각 정원 부산물"
+    ],
+    "native_races": [
+      "찰나에 멈춘 0.01초 폭발 현장과 화쇄류 조각 정원 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_frozen_explosion_ruins",
+        "name": "정지된 화쇄류 정령",
+        "weakness": [
+          "시간 진동"
+        ],
+        "resistance": [
+          "시간",
+          "화염",
+          "파편"
+        ],
+        "material_drop": "정지된 화쇄류 정령의 핵심 소재",
+        "craftable_item": "화염 파편 투척포"
+      }
+    ],
+    "signature_skills": [
+      "시간 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "시간과 시간 진동은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "endless_rain_corridor",
+    "region_name": "영원히 떨어지는 빗방울 속의 수상 회랑",
+    "dominant_elements": [
+      "수류",
+      "시간",
+      "빗방울"
+    ],
+    "materials": [
+      "수류 결정체",
+      "영원히 떨어지는 빗방울 속의 수상 회랑 부산물"
+    ],
+    "native_races": [
+      "영원히 떨어지는 빗방울 속의 수상 회랑 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_endless_rain_corridor",
+        "name": "시간 지연 물방울 골렘",
+        "weakness": [
+          "열풍 증발"
+        ],
+        "resistance": [
+          "수류",
+          "시간",
+          "빗방울"
+        ],
+        "material_drop": "시간 지연 물방울 골렘의 핵심 소재",
+        "craftable_item": "정지 빗방울 디딤화"
+      }
+    ],
+    "signature_skills": [
+      "수류 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "수류과 열풍 증발은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "prism_mirror_palace",
+    "region_name": "프리즘 분광 첨탑과 왜곡된 거울 미궁 궁전",
+    "dominant_elements": [
+      "빛",
+      "거울",
+      "분광"
+    ],
+    "materials": [
+      "빛 결정체",
+      "프리즘 분광 첨탑과 왜곡된 거울 미궁 궁전 부산물"
+    ],
+    "native_races": [
+      "프리즘 분광 첨탑과 왜곡된 거울 미궁 궁전 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_prism_mirror_palace",
+        "name": "거울 속 굴절 도플갱어",
+        "weakness": [
+          "암흑 차단"
+        ],
+        "resistance": [
+          "빛",
+          "거울",
+          "분광"
+        ],
+        "material_drop": "거울 속 굴절 도플갱어의 핵심 소재",
+        "craftable_item": "프리즘 분광 렌즈 망토"
+      }
+    ],
+    "signature_skills": [
+      "빛 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "빛과 암흑 차단은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "memory_bubble_islands",
+    "region_name": "기억을 먹는 비눗방울 군도와 무지갯빛 허공",
+    "dominant_elements": [
+      "기억",
+      "환영",
+      "바람"
+    ],
+    "materials": [
+      "기억 결정체",
+      "기억을 먹는 비눗방울 군도와 무지갯빛 허공 부산물"
+    ],
+    "native_races": [
+      "기억을 먹는 비눗방울 군도와 무지갯빛 허공 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_memory_bubble_islands",
+        "name": "망각의 환영 해파리",
+        "weakness": [
+          "직접 타격"
+        ],
+        "resistance": [
+          "기억",
+          "환영",
+          "바람"
+        ],
+        "material_drop": "망각의 환영 해파리의 핵심 소재",
+        "craftable_item": "기억 봉인 유리병"
+      }
+    ],
+    "signature_skills": [
+      "기억 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "기억과 직접 타격은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "miniature_naturalist_drawer",
+    "region_name": "축소된 박물학자의 서랍장과 먼지 계곡",
+    "dominant_elements": [
+      "먼지",
+      "축소",
+      "곤충"
+    ],
+    "materials": [
+      "먼지 결정체",
+      "축소된 박물학자의 서랍장과 먼지 계곡 부산물"
+    ],
+    "native_races": [
+      "축소된 박물학자의 서랍장과 먼지 계곡 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_miniature_naturalist_drawer",
+        "name": "거대 먼지 집게벌레",
+        "weakness": [
+          "화염"
+        ],
+        "resistance": [
+          "먼지",
+          "축소",
+          "곤충"
+        ],
+        "material_drop": "거대 먼지 집게벌레의 핵심 소재",
+        "craftable_item": "축소 바늘 창"
+      }
+    ],
+    "signature_skills": [
+      "먼지 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "먼지과 화염은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "melting_wax_cathedral",
+    "region_name": "녹아내리는 밀랍 성당과 촛불 종단",
+    "dominant_elements": [
+      "밀랍",
+      "불꽃",
+      "신성"
+    ],
+    "materials": [
+      "밀랍 결정체",
+      "녹아내리는 밀랍 성당과 촛불 종단 부산물"
+    ],
+    "native_races": [
+      "녹아내리는 밀랍 성당과 촛불 종단 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_melting_wax_cathedral",
+        "name": "녹아내린 순교자 골렘",
+        "weakness": [
+          "냉각 응고"
+        ],
+        "resistance": [
+          "밀랍",
+          "불꽃",
+          "신성"
+        ],
+        "material_drop": "녹아내린 순교자 골렘의 핵심 소재",
+        "craftable_item": "영구 연소 심지 횃불"
+      }
+    ],
+    "signature_skills": [
+      "밀랍 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "밀랍과 냉각 응고은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "god_corpse_mine",
+    "region_name": "거대 신의 석화 시체와 골수 채굴 광산",
+    "dominant_elements": [
+      "신성",
+      "에테르",
+      "광물"
+    ],
+    "materials": [
+      "신성 결정체",
+      "거대 신의 석화 시체와 골수 채굴 광산 부산물"
+    ],
+    "native_races": [
+      "거대 신의 석화 시체와 골수 채굴 광산 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_god_corpse_mine",
+        "name": "신성 에테르 결정 괴수",
+        "weakness": [
+          "암흑 부패"
+        ],
+        "resistance": [
+          "신성",
+          "에테르",
+          "광물"
+        ],
+        "material_drop": "신성 에테르 결정 괴수의 핵심 소재",
+        "craftable_item": "신성 에테르 곡괭이"
+      }
+    ],
+    "signature_skills": [
+      "신성 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "신성과 암흑 부패은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "monochrome_ash_desert",
+    "region_name": "화산재로 덮인 흑백의 무채색 사막",
+    "dominant_elements": [
+      "화산재",
+      "무채색",
+      "유령"
+    ],
+    "materials": [
+      "화산재 결정체",
+      "화산재로 덮인 흑백의 무채색 사막 부산물"
+    ],
+    "native_races": [
+      "화산재로 덮인 흑백의 무채색 사막 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_monochrome_ash_desert",
+        "name": "색채를 삼키는 잿빛 유령",
+        "weakness": [
+          "원초의 빛"
+        ],
+        "resistance": [
+          "화산재",
+          "무채색",
+          "유령"
+        ],
+        "material_drop": "색채를 삼키는 잿빛 유령의 핵심 소재",
+        "craftable_item": "무채색 은폐 외투"
+      }
+    ],
+    "signature_skills": [
+      "화산재 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "화산재과 원초의 빛은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "ink_sea_origami_citadel",
+    "region_name": "먹물 바다 위의 부유 활판 서고와 오리가미 성채",
+    "dominant_elements": [
+      "잉크",
+      "종이",
+      "활자"
+    ],
+    "materials": [
+      "잉크 결정체",
+      "먹물 바다 위의 부유 활판 서고와 오리가미 성채 부산물"
+    ],
+    "native_races": [
+      "먹물 바다 위의 부유 활판 서고와 오리가미 성채 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_ink_sea_origami_citadel",
+        "name": "오탈자 먹물 마수",
+        "weakness": [
+          "물/용해"
+        ],
+        "resistance": [
+          "잉크",
+          "종이",
+          "활자"
+        ],
+        "material_drop": "오탈자 먹물 마수의 핵심 소재",
+        "craftable_item": "활판 인쇄 강철 방패"
+      }
+    ],
+    "signature_skills": [
+      "잉크 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "잉크과 물/용해은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "alchemy_slum_steam_canal",
+    "region_name": "유황 연기 자욱한 산업 연금술 슬럼과 증기 운하",
+    "dominant_elements": [
+      "증기",
+      "산성비",
+      "기계"
+    ],
+    "materials": [
+      "증기 결정체",
+      "유황 연기 자욱한 산업 연금술 슬럼과 증기 운하 부산물"
+    ],
+    "native_races": [
+      "유황 연기 자욱한 산업 연금술 슬럼과 증기 운하 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_alchemy_slum_steam_canal",
+        "name": "변이 호문쿨루스 암살자",
+        "weakness": [
+          "정밀 타격"
+        ],
+        "resistance": [
+          "증기",
+          "산성비",
+          "기계"
+        ],
+        "material_drop": "변이 호문쿨루스 암살자의 핵심 소재",
+        "craftable_item": "고압 증기 방출 건틀릿"
+      }
+    ],
+    "signature_skills": [
+      "증기 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "증기과 정밀 타격은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "silkroad_ghost_bazaar",
+    "region_name": "비단길 카라반과 유령 바자르",
+    "dominant_elements": [
+      "환각",
+      "모래",
+      "영혼"
+    ],
+    "materials": [
+      "환각 결정체",
+      "비단길 카라반과 유령 바자르 부산물"
+    ],
+    "native_races": [
+      "비단길 카라반과 유령 바자르 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_silkroad_ghost_bazaar",
+        "name": "황혼의 유령 마신",
+        "weakness": [
+          "은제 무기"
+        ],
+        "resistance": [
+          "환각",
+          "모래",
+          "영혼"
+        ],
+        "material_drop": "황혼의 유령 마신의 핵심 소재",
+        "craftable_item": "환각 향신료 연막탄"
+      }
+    ],
+    "signature_skills": [
+      "환각 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "환각과 은제 무기은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "bone_salt_wasteland",
+    "region_name": "뼈와 소금으로 뒤덮인 마른 소금사막과 망령 해협",
+    "dominant_elements": [
+      "소금",
+      "뼈",
+      "바람"
+    ],
+    "materials": [
+      "소금 결정체",
+      "뼈와 소금으로 뒤덮인 마른 소금사막과 망령 해협 부산물"
+    ],
+    "native_races": [
+      "뼈와 소금으로 뒤덮인 마른 소금사막과 망령 해협 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_bone_salt_wasteland",
+        "name": "소금 결정체 바다괴물 골렘",
+        "weakness": [
+          "담수 용해"
+        ],
+        "resistance": [
+          "소금",
+          "뼈",
+          "바람"
+        ],
+        "material_drop": "소금 결정체 바다괴물 골렘의 핵심 소재",
+        "craftable_item": "소금 결정 절삭도"
+      }
+    ],
+    "signature_skills": [
+      "소금 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "소금과 담수 용해은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "automaton_theater_manor",
+    "region_name": "인형술사의 저택과 오토마톤 극장",
+    "dominant_elements": [
+      "태엽",
+      "마력실",
+      "꼭두각시"
+    ],
+    "materials": [
+      "태엽 결정체",
+      "인형술사의 저택과 오토마톤 극장 부산물"
+    ],
+    "native_races": [
+      "인형술사의 저택과 오토마톤 극장 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_automaton_theater_manor",
+        "name": "벨벳 오토마톤 검사",
+        "weakness": [
+          "태엽 파괴"
+        ],
+        "resistance": [
+          "태엽",
+          "마력실",
+          "꼭두각시"
+        ],
+        "material_drop": "벨벳 오토마톤 검사의 핵심 소재",
+        "craftable_item": "마력 제어 인형 실타래"
+      }
+    ],
+    "signature_skills": [
+      "태엽 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "태엽과 태엽 파괴은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "spice_valley_cuisine_fort",
+    "region_name": "끓어오르는 향신료 계곡과 식재료 성채",
+    "dominant_elements": [
+      "향신료",
+      "화염",
+      "치즈"
+    ],
+    "materials": [
+      "향신료 결정체",
+      "끓어오르는 향신료 계곡과 식재료 성채 부산물"
+    ],
+    "native_races": [
+      "끓어오르는 향신료 계곡과 식재료 성채 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_spice_valley_cuisine_fort",
+        "name": "대식가 고추기름 미식 골렘",
+        "weakness": [
+          "극저온 냉각"
+        ],
+        "resistance": [
+          "향신료",
+          "화염",
+          "치즈"
+        ],
+        "material_drop": "대식가 고추기름 미식 골렘의 핵심 소재",
+        "craftable_item": "치즈 암반 경화 방패"
+      }
+    ],
+    "signature_skills": [
+      "향신료 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "향신료과 극저온 냉각은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "coral_reef_sunken_ruins",
+    "region_name": "산호초 군도와 침몰한 해저 유적 항구",
+    "dominant_elements": [
+      "산호",
+      "진주",
+      "수류"
+    ],
+    "materials": [
+      "산호 결정체",
+      "산호초 군도와 침몰한 해저 유적 항구 부산물"
+    ],
+    "native_races": [
+      "산호초 군도와 침몰한 해저 유적 항구 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_coral_reef_sunken_ruins",
+        "name": "산호 가시 수호 바다사자",
+        "weakness": [
+          "지상 유인"
+        ],
+        "resistance": [
+          "산호",
+          "진주",
+          "수류"
+        ],
+        "material_drop": "산호 가시 수호 바다사자의 핵심 소재",
+        "craftable_item": "진주 마나 증폭 보주"
+      }
+    ],
+    "signature_skills": [
+      "산호 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "산호과 지상 유인은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "world_tree_roots_druid",
+    "region_name": "영혼의 세계수 뿌리와 드루이드 거석 원형진",
+    "dominant_elements": [
+      "생명",
+      "정령",
+      "거석"
+    ],
+    "materials": [
+      "생명 결정체",
+      "영혼의 세계수 뿌리와 드루이드 거석 원형진 부산물"
+    ],
+    "native_races": [
+      "영혼의 세계수 뿌리와 드루이드 거석 원형진 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_world_tree_roots_druid",
+        "name": "오염된 세계수 뿌리 고렘",
+        "weakness": [
+          "정화 성수"
+        ],
+        "resistance": [
+          "생명",
+          "정령",
+          "거석"
+        ],
+        "material_drop": "오염된 세계수 뿌리 고렘의 핵심 소재",
+        "craftable_item": "세계수 껍질 수호갑옷"
+      }
+    ],
+    "signature_skills": [
+      "생명 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "생명과 정화 성수은 강력한 상반 물리 반응을 일으킴"
+    ]
+  },
+  {
+    "region_id": "time_twisted_clocktower",
+    "region_name": "시간이 멈춘 황혼의 시계탑 유적과 침식된 평원",
+    "dominant_elements": [
+      "시간",
+      "모래시계",
+      "황혼"
+    ],
+    "materials": [
+      "시간 결정체",
+      "시간이 멈춘 황혼의 시계탑 유적과 침식된 평원 부산물"
+    ],
+    "native_races": [
+      "시간이 멈춘 황혼의 시계탑 유적과 침식된 평원 토착 부족"
+    ],
+    "monsters": [
+      {
+        "id": "mob_time_twisted_clocktower",
+        "name": "시간 역행 톱니마수",
+        "weakness": [
+          "공간 고정"
+        ],
+        "resistance": [
+          "시간",
+          "모래시계",
+          "황혼"
+        ],
+        "material_drop": "시간 역행 톱니마수의 핵심 소재",
+        "craftable_item": "크로노스 모래시계 펜던트"
+      }
+    ],
+    "signature_skills": [
+      "시간 기반 모듈러 영창"
+    ],
+    "physics_laws": [
+      "시간과 공간 고정은 강력한 상반 물리 반응을 일으킴"
+    ]
+  }
+]

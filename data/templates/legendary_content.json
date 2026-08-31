@@ -1,0 +1,139 @@
+{
+  "legendary_weapons": [
+    {
+      "id": "wpn_excalibur",
+      "name": "엑스칼리버",
+      "description": "빛을 발하는 전설적인 검. 악을 베어낼 때마다 찬란한 성광을 뿜어냅니다.",
+      "item_type": "weapon",
+      "damage": 35,
+      "properties": {
+        "granted_skill": {
+          "name": "약속된 승리의 검",
+          "scaling": "STR×2.5 + INT×1.5",
+          "description": "찬란한 성광을 검신에 둘러 일직선상의 모든 적을 강타하고 방어력을 무시하는 신성 피해를 입힙니다."
+        },
+        "special_effect": "악 성향 적 타격 시 100% 치명타 발동"
+      }
+    },
+    {
+      "id": "wpn_chain_of_time",
+      "name": "시간의 사슬",
+      "description": "과거와 미래의 경계를 묶는 신비로운 사슬 채찍.",
+      "item_type": "weapon",
+      "damage": 25,
+      "properties": {
+        "granted_skill": {
+          "name": "시간 왜곡",
+          "scaling": "AGI×3.0",
+          "description": "적중당한 대상의 행동 순서를 지연시키고 시전자의 재사용 대기시간을 되돌립니다."
+        }
+      }
+    },
+    {
+      "id": "wpn_blade_of_silence",
+      "name": "침묵의 검",
+      "description": "어떠한 소리도 내지 않고 허공을 가르는 칠흑 같은 검.",
+      "item_type": "weapon",
+      "damage": 28,
+      "properties": {
+        "granted_skill": {
+          "name": "절대 침묵",
+          "scaling": "AGI×2.8",
+          "description": "대상의 마력 회로를 강제로 차단하여 영창 중이던 주문을 즉시 캔슬시킵니다."
+        }
+      }
+    }
+  ],
+
+  "legendary_item_effects": [
+    {
+      "effect_id": "eff_reveal_thoughts",
+      "description": "상대방의 마음과 다음 행동을 읽어내어 공격이나 방어에 대비할 수 있게 합니다."
+    },
+    {
+      "effect_id": "eff_detect_power",
+      "description": "상대방이 숨기고 있는 진정한 힘의 크기와 마나의 흐름을 감지합니다."
+    },
+    {
+      "effect_id": "eff_see_all_stats",
+      "description": "대상의 약점, 저항력, 그리고 숨겨진 모든 능력치를 꿰뚫어 봅니다."
+    }
+  ],
+  "unique_skills": [
+    {
+      "id": "skill_fire_eruption",
+      "name": "화염 분출",
+      "skill_type": "active",
+      "description": "대지를 가르고 지하의 맹렬한 용암을 분출시켜 넓은 지역의 적들을 불태웁니다.",
+      "mana_cost": 30,
+      "cooldown_turns": 4
+    },
+    {
+      "id": "skill_soul_devour",
+      "name": "영혼 포식",
+      "skill_type": "active",
+      "description": "적의 생명력과 마나를 흡수하여 자신의 것으로 만듭니다. 적이 죽을 경우 영구적인 능력치 상승을 얻을 수도 있습니다.",
+      "mana_cost": 20,
+      "cooldown_turns": 3
+    },
+    {
+      "id": "skill_time_fracture",
+      "name": "시간 균열",
+      "skill_type": "unique",
+      "description": "주변의 시간 흐름을 비틀어 자신은 두 번 행동하고 적들은 멈추게 합니다.",
+      "mana_cost": 50,
+      "cooldown_turns": 6
+    },
+    {
+      "id": "skill_cursed_chain",
+      "name": "저주의 사슬",
+      "skill_type": "active",
+      "description": "어둠의 마력으로 만들어진 사슬로 적을 속박하고 지속적으로 피해를 줍니다.",
+      "mana_cost": 15,
+      "cooldown_turns": 2
+    },
+    {
+      "id": "skill_void_step",
+      "name": "공허 걸음",
+      "skill_type": "passive",
+      "description": "위험한 순간 공허의 차원으로 몸을 숨겨 모든 물리적인 피해를 회피합니다."
+    }
+  ],
+  "legendary_titles": [
+    {
+      "id": "title_archmage_heir",
+      "name": "대마법사의 계승자",
+      "description": "고대 대마법사의 지식을 물려받은 자.",
+      "stat_bonuses": {"intelligence": 5, "wisdom": 3, "max_mana": 20}
+    },
+    {
+      "id": "title_blood_lord",
+      "name": "피의 군주",
+      "description": "전장에서 수많은 피를 마시며 각성한 지배자.",
+      "stat_bonuses": {"strength": 4, "constitution": 4, "max_health": 30}
+    },
+    {
+      "id": "title_eternal_wanderer",
+      "name": "영원의 방랑자",
+      "description": "시간과 공간을 얽매이지 않고 세상을 떠도는 자.",
+      "stat_bonuses": {"agility": 5, "luck": 5}
+    },
+    {
+      "id": "title_world_witness",
+      "name": "세계의 증인",
+      "description": "세계의 흥망성쇠를 지켜보며 진리를 깨달은 자.",
+      "stat_bonuses": {"wisdom": 5, "intelligence": 2, "luck": 2}
+    },
+    {
+      "id": "title_void_devourer",
+      "name": "공허의 탐식자",
+      "description": "존재하지 않는 차원의 굶주림을 품은 자.",
+      "stat_bonuses": {"strength": 3, "constitution": 3, "crit_damage_bonus": 20}
+    }
+  ],
+  "lore_facts": [
+    "마법의 발현은 단순한 기적이 아니라, 대기 중의 에테르 입자가 시전자의 뇌파와 공명하여 발생하는 양자역학적 붕괴 현상이다.",
+    "용의 불꽃이 뼈까지 태우는 이유는 그 온도가 높아서가 아니라, 불꽃 자체에 화학적 결합을 분해하는 반물질 성분이 섞여 있기 때문이다.",
+    "고대의 텔레포트 게이트는 마력을 소모해 공간을 접는 것이 아니라, 웜홀의 인위적 생성과 유지에 필요한 초중력을 마석을 통해 통제하는 거대한 입자 가속기 구조를 가지고 있다."
+  ]
+}

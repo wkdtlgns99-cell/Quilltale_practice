@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual Environments & Secrets
+.env
+.venv
+env/
+venv/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+eval_results/
+
+# Quilltale Local Database & Dynamic Save Files
+data/qdrant_storage/
+data/saves/*.json
+data/chronicles/*.json
+!data/templates/**
+!data/worlds/**
+
+# IDEs & Logs
+.vscode/
+.idea/
+*.log
+.env

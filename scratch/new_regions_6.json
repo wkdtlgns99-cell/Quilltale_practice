@@ -1,0 +1,512 @@
+[
+  {
+    "id": "region_chronos_infinite_sand_hourglass_05",
+    "name": "끝없이 낙하하는 황금 모래시계의 심연",
+    "category": "temporal_zone",
+    "description": {
+      "visual": "하늘과 땅의 경계가 사라진 채, 수백 미터에 달하는 거대한 황금 모래시계들이 허공에 거꾸로 매달려 끝없이 금빛 모래를 아래로 쏟아붓는 기괴한 협곡.",
+      "auditory": "억억 개의 모래알이 부딪히며 내는 거대한 백색소음, 공간을 울리는 둔탁한 초침의 진동음.",
+      "olfactory": "건조하고 서늘한 고대 유적의 모래 냄새와 정전기 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "쏟아지는 모래가 햇빛을 사방으로 산사태처럼 난반사하여 눈이 멀 정도로 찬란한 황금빛 안개가 대지를 뒤덮음.",
+      "night": "모래시계의 모래가 멈추는 순간 밤이 찾아오며, 사방의 모래가 은하수처럼 허공으로 거꾸로 솟구치는 '시간 역행' 현상 발생."
+    },
+    "weather_events": [
+      {
+        "event_name": "시간 동결의 눈보라 (Temporal Freezing Gale)",
+        "trigger_chance": "낮음 (15%)",
+        "effect": "모래 대신 얼어붙은 시간의 파편이 섞인 강풍이 불어 닥침. 피격 시 1턴 동안 캐릭터의 행동력(AP)과 마법 쿨타임이 완전히 정지함."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "시간의 모래 늪 (Quicksand of Time)",
+        "effect": "발을 디디는 순간 아래로 빨려 들어가는 거대한 모래 소용돌이. 휘말릴 경우 과거의 약했던 상태로 능력치가 고정되며 탈출 시 민첩 판정 필요.",
+        "mitigation": "시간 고정 닻이나 로프를 단단한 바위에 고정하고 우회."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "황금빛 모래 안개 때문에 기본 15m 이내로 시야 제한",
+      "stealth_conditions": "모래가 쏟아지는 소리가 사방에 울려 퍼져 발소리는 완벽히 묻히나, 시각적 엄폐물이 부족해 잠행이 까다로움."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "거대한 모래시계의 받침대를 무기로 가격하거나 마법으로 충격 가하기",
+        "consequence": "모래시계가 깨지며 반경 20m 내의 시간이 급격히 가속되어 파티원과 적 모두 순식간에 수십 년의 노화 피해 또는 스킬 쿨타임 폭주 발생."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "시간(Time) 및 중력(Gravity) 계열 마법 위력 3배 증폭. 일반 원소 마법은 시간선에 갇혀 위력이 일정하게 고정됨.",
+      "spiritual_state": "시간의 무게가 의식을 짓눌러 초조함과 함께 집중력 저하 유발."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "시간의 모래를 지키는 '시계바늘 정령과 모래시계 수호 기사단'",
+      "common_monsters": [
+        "시간의 모래 정령",
+        "모래시계 파수꾼 골렘",
+        "과거의 잔상 스토커"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "우주의 기원을 담은 거대한 마스터 모래시계",
+        "description": "심연의 정중앙에 거꾸로 떠 있는 거대한 성전 크기의 모래시계. 이곳의 모래를 조작하면 역사 속 특정 순간으로 문을 열 수 있음."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "모래가 쌓인 계곡 바닥(저지대)과 모래시계가 매달린 허공의 철제 발판(고지대)으로 구성.",
+      "tactical_advantage": "철제 발판 위에서 아래의 모래 늪으로 적을 유인해 고립 유도 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "모래가 쏟아지는 방향과 역행하여 도주하는 것은 모래에 발이 묶여 불가능하므로 측면의 제단으로 우회해야 함.",
+      "pursuit_risk": "파수꾼 골렘들은 시간의 제약을 받지 않고 모래 위를 미끄러지듯 이동하여 순식간에 추격해 옴."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 모래폭풍과 시간의 변동성 때문에 안전지대가 아니면 야영 중 신체 리듬이 붕괴됨.",
+      "water_safety": "모래시계의 응축 모래는 물이 아니므로 수분 보충 불가, 오직 마법으로만 식수 생성 가능.",
+      "foraging": "식량 조달 불가. 시간의 황금 모래 및 기계 부품 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "시간을 잠시 정지시키는 '모래시계 파편'",
+        "부식되지 않는 고대 황금 장신구",
+        "이동 속도를 높여주는 가속의 부적"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "마스터 모래시계의 꼭대기에 올라가면 세상의 모든 죽은 자를 되살릴 수 있는 시간의 샘이 있다는 소문.",
+        "truth_flag": false,
+        "reality": "샘물 대신 시전자의 남은 수명 전체가 모래시계의 동력원으로 흡수되어 즉사함."
+      }
+    ]
+  },
+  {
+    "id": "region_lucid_dream_fractal_staircase_05",
+    "name": "에셔의 손이 닿은 무한 프랙탈 계단",
+    "category": "dream_realm",
+    "description": {
+      "visual": "오르막길을 계속 오르고 있는데도 어느새 출발했던 아래층으로 되돌아와 있거나, 벽과 천장이 모두 계단으로 이어져 사방으로 사람이 걸어 다니는 기괴한 꿈의 건축물.",
+      "auditory": "허공에서 들려오는 끝없는 발소리, 멀리서 메아리치는 정체 모를 웃음소리와 회전하는 태엽 소리.",
+      "olfactory": "오랫동안 환기로 밀폐된 낡은 목재 계단과 묵직한 양피지 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "시간이 멈춘 듯한 나른한 오후의 빛이 계단 구석구석을 비추며 환상적인 그림자를 만듦.",
+      "night": "계단들이 무한히 분열하며 사방이 거울처럼 서로를 비추는 기하학적 미로로 변함."
+    },
+    "weather_events": [
+      {
+        "event_name": "중력 역전의 소나기 (Gravity Inversion Rain)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "하늘 위로 물방울이 쏟아지며 계단의 중력이 90도로 꺾임. 파티원들이 벽이나 천장으로 강제로 떨어지며 대열이 붕괴하고 낙하 피해."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "무한 루프 계단 함정",
+        "effect": "특정 층계를 올라갈 때 위상이 꼬여 3층과 4층 사이를 영원히 무한 반복하게 됨. 탈출하지 못하면 정신력 소모로 패닉.",
+        "mitigation": "눈을 감고 의지로 공간의 흐름을 상상하며 거꾸로 뒷걸음질쳐 탈출."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "계단 구조가 사방으로 꺾여 있어 정면은 20m이나 측면 시야는 완전히 차단됨",
+      "stealth_conditions": "사방이 울퉁불퉁한 목재 계단이라 발소리가 크게 울려 퍼져 청각적 잠행이 극도로 어려움."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "계단 난간을 무기로 강하게 가격하거나 마법 발사",
+        "consequence": "프랙탈 구조가 공명하며 반경 15m 내의 계단들이 파도처럼 출렁여 파티원 전원 균형 상실 및 낙하 위험."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "환상(Illusion), 공간(Space), 및 정신(Mental) 계열 마법 위력 3배 증폭. 물리 공격은 왜곡된 공간에 흡수되어 위력 반감.",
+      "spiritual_state": "끝없이 오르기만 하는 육체적 피로와 함께 방향 감각 상실로 인한 심리적 공포 증대."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "무한의 계단을 오르내리는 '환상의 망령들과 에셔의 수호자들'",
+      "common_monsters": [
+        "계단을 기어 다니는 테셀레이션 스토커",
+        "무한 루프의 망령",
+        "중력 왜곡 정령"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "모든 층의 꼭대기인 환상의 펜트하우스",
+        "description": "계단의 끝에 존재한다고 믿어지는 방. 문을 열면 꿈의 주인의 가장 깊은 무의식(진실)과 마주하게 됨."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "사방으로 꼬여 있는 계단 바닥(저지대)과 거꾸로 매달린 천장 계단(고지대)으로 구성된 3차원 입체 구조.",
+      "tactical_advantage": "천장 계단 위에서 아래로 걸어오는 적의 머리 위로 기습 공격 수행 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "뒤로 내려가는 것이 곧 위로 올라가는 것이 되는 프랙탈 특성상 물리적 후퇴 도주 불가능.",
+      "pursuit_risk": "망령들은 중력과 공간의 제약을 무시하고 계단의 곡선을 타며 순식간에 추격해 옴."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 계단의 구조가 시시때때로 변하기 때문에 안전지대가 갑자기 낭떠러지로 바뀔 수 있음.",
+      "water_safety": "계단 틈새에서 스며 나오는 결로는 마실 경우 중력 감각을 상실하게 만드는 환각수.",
+      "foraging": "식량 조달 불가. 꿈의 결정 파편 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "중력을 일시적으로 무시하는 '비행의 깃털'",
+        "환상을 꿰뚫어 보는 거울 조각",
+        "정신력을 회복하는 꿈의 넥타르"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "계단을 끝없이 올라 최상층의 문을 열면 현실로 돌아가는 출구가 나온다는 소문.",
+        "truth_flag": false,
+        "reality": "문을 열면 현실 대신 가장 처참했던 과거의 악몽 속으로 다시 떨어짐."
+      }
+    ]
+  },
+  {
+    "id": "region_non_euclidean_mirror_labyrinth_05",
+    "name": "거울이 꺾이는 비유클리드 미로",
+    "category": "spatial_anomaly",
+    "description": {
+      "visual": "사방이 거울로 이루어져 있으나 비춰지는 상이 제각각 왜곡되어 있으며, 복도의 모퉁 돌면 물리적 거리와 상관없이 전혀 다른 공간으로 툭 튀어나오는 기괴한 거울 방.",
+      "auditory": "유리가 미끄러지듯 마찰하는 날카로운 소리, 사방에서 수백 개로 증폭되어 울리는 자신의 발소리.",
+      "olfactory": "서늘하고 깨끗한 유리 표면에서 나는 무기물 고유의 건조한 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "외부의 빛이 거울 면을 따라 무한히 반사되면서 사방이 눈이 멀 정도로 찬란한 은빛 섬광으로 가득 참.",
+      "night": "거울들이 일제히 빛을 흡수하며 사방이 완벽한 암흑 속에서 오직 파란색 레이저 불빛만 교차하는 공간으로 변모."
+    },
+    "weather_events": [
+      {
+        "event_name": "광학 굴절 폭풍 (Optical Refraction Storm)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "사방의 거울들이 일제히 빛을 굴절시켜 파티원들의 시각을 완전히 교란함. 피격 시 아군을 적로 오인하여 공격하거나 이동 방향 상실."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "거울 분신 함정 (Mirror Reflection Trap)",
+        "effect": "거울 속의 분신이 실체화되어 파티원들을 공격함. 분신은 본인과 똑같은 스킬과 장비를 사용해 큰 위협.",
+        "mitigation": "거울을 마법이나 무기로 깨뜨려 분신을 소멸시키거나 진품을 구별하는 마력 탐지 사용."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "사방이 거울이라 반사광 덕분에 기본 50m 이상 환하게 보이나 진짜 위치 파악 불가",
+      "stealth_conditions": "거울 면마다 모습이 여러 개로 복제되어 비치기 때문에 시각적 은신은 완전히 무력화되며, 소리 역시 거울을 타고 사방으로 확산됨."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "미로 중앙의 대형 거울을 무기로 강하게 가격하여 균열 발생",
+        "consequence": "거울이 산산조각 나며 반경 15m 내에 '광학 파편 폭발' 발생, 파티원과 적 모두 광역 절단 피해 및 실명 상태 이상."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "공간(Space), 빛(Light), 및 환상(Illusion) 계열 마법 위력 3배 증폭. 투사체 마법은 거울에 반사되어 여러 개로 복제됨.",
+      "spiritual_state": "사방에 비치는 자신의 일그러진 모습 때문에 정체성 혼란과 극심한 피로 유발."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "거울 미로를 지배하는 '광학 거울 정령과 분신 사냥꾼들'",
+      "common_monsters": [
+        "거울 속의 분신 스토커",
+        "광학 반사 골렘",
+        "유리 파편 정령"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "모든 세계를 비추는 거대한 진실의 거울 방",
+        "description": "미로의 최심부에 위치한, 왜곡되지 않은 유일한 거울이 있는 방. 이 거울을 통해 올바른 경로를 찾아내면 미로를 탈출할 수 있음."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "거울 바닥이 깔린 평탄한 복도(저지대)와 거울 벽면에 반사되어 공중에 떠 있는 것처럼 보이는 발판 구조(고지대)로 구성.",
+      "tactical_advantage": "고지대 발판 위에서 아래의 거울 복도를 내려다보며 복제 투사체 마법으로 적 기습 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "뒤로 물러나 도주하려 할 때 거울에 비친 상과 부딪히며 이동 경로가 왜곡되어 도주 불가능.",
+      "pursuit_risk": "거울 분신들은 거울 면을 자유자재로 통과하며 순식간에 플레이어의 퇴로를 차단함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 거울 미로의 배치가 시시때때로 바뀌기 때문에 안전지대가 갑자기 분신 함정 방으로 바뀔 수 있음.",
+      "water_safety": "거울 표면에서 흘러내리는 결로는 마실 경우 시각이 비정상적으로 확장되어 사방이 복제품으로 보임.",
+      "foraging": "식량 조달 불가. 공간 고정용 거울 조각 및 빛의 결정 파편 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "빛을 굴절시키는 '거울 방패 파편'",
+        "분신을 소멸시키는 정화의 수정",
+        "차원 이동용 기하학 코어"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "진실의 거울 속으로 직접 걸어 들어가면 세상의 모든 비밀을 알 수 있는 도서관으로 이동한다는 소문.",
+        "truth_flag": false,
+        "reality": "거울 속으로 들어가는 순간 육체가 광학 입자로 분해되어 영원히 거울 미로의 벽면에 무늬로 박제됨."
+      }
+    ]
+  },
+  {
+    "id": "region_abyss_of_withering_emotions_01",
+    "name": "시들어가는 감정의 심연",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "회색빛 안개가 자욱하게 깔린 황무지. 대지 곳곳에 사람의 형체를 한 거대한 흑요석 결정들이 눈물 모양으로 박혀 있으며, 대기 중에는 응어리진 슬픔과 공포가 보랏빛 아지랑이처럼 피어오름.",
+      "auditory": "멀리서 메아리치는 억눌린 흐느낌, 누군가 이름을 낮게 부르는 환청, 심장박동처럼 둔탁하게 울리는 대지의 고동 소리.",
+      "olfactory": "오랫동안 눈물에 젖어 곰팡이가 슨 낡은 책과 마른 장미꽃이 썩어가는 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "하늘 대신 빛을 잃은 거대한 유리 구체가 떠 있어, 세상 전체가 차갑고 푸스스한 무채색의 황혼에 잠김.",
+      "night": "흑요석 결정들이 일제히 차가운 푸른빛을 발산하며, 주변을 지나는 자의 가장 깊은 트라우마와 후회를 환영 형태로 허공에 투사함."
+    },
+    "weather_events": [
+      {
+        "event_name": "절망의 눈물비 (Tears of Despair)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "하늘에서 차가운 감정의 액체비가 내림. 닿는 순간 의지력(WIL) 판정 실패 시 '무기력(Lethargy)' 상태에 빠져 모든 행동력(AP)이 절반으로 감소하고 의욕 상실."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "공허의 감정 늪",
+        "effect": "발을 디디는 순간 슬픔과 우울감이 정신을 잠식하는 늪지대. 매 턴 정신력 판정 실패 시 현재 장착 중인 버프가 해제되고 절망 스택 누적.",
+        "mitigation": "동료와 서로 손을 잡고 의지를 북돋우거나 정신 방어 마법 전개."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "회색빛 안개 때문에 기본 15m 이내로 시야 제한",
+      "stealth_conditions": "안개가 두껍고 지형이 복잡해 시각적 은신은 유리하나, 슬픔에 겨워 내쉬는 한숨이나 떨리는 숨소리가 감정의 파동을 일으켜 정신형 괴물에게 쉽게 포착됨."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "흑요석 눈물 결정을 무기로 가격하거나 강제로 파괴",
+        "consequence": "결정에 응어리져 있던 원한과 슬픔이 폭발하며 반경 15m 내에 '감정의 폭풍' 발생, 파티원 전원에게 극심한 정신적 충격 및 공포 상태 이상 부여."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "정신(Mental), 저주(Curse), 및 어둠(Dark) 계열 마법 위력 3배 증폭. 치유 및 회복 마법은 심연의 우울함에 막혀 효율 70% 감소.",
+      "spiritual_state": "지독한 슬픔과 자기 회의감이 영혼을 짓눌러 마나 회복 속도 대폭 저하."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "감정을 잃고 방황하는 '눈물 흘리는 망령들과 공허의 추종자들'",
+      "common_monsters": [
+        "절망의 위스프",
+        "공허의 감정 흡수자",
+        "눈물 흘리는 석상 골렘"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "모든 기억이 눈물이 되어 고인 감정의 호수",
+        "description": "심연의 가장 깊은 곳에 위치한 거대한 호수. 수면을 들여다보면 자신의 인생에서 가장 후회스러운 순간이 파노라마처럼 재생됨."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "슬픔의 진흙이 고인 늪지 바닥(저지대)과 눈물 결정이 솟아오른 암석 언덕(고지대)으로 구성.",
+      "tactical_advantage": "암석 언덕 위에서 늪지 속 괴수들을 내려다보며 정신 방어 마법이나 원거리 공격 수행 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "우울감 때문에 발이 무거워져 뒤로 도주하는 과정에서 속도가 급격히 저하되므로 언덕 위로 대피해야 함.",
+      "pursuit_risk": "공허의 흡수자들은 감정의 파동을 추적하여 도주하는 플레이어의 뒤를 끈질기게 쫓아옴."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 지독한 우울감 때문에 안전한 결계 안이 아니면 휴식 중 체력과 정신력 회복 불가능.",
+      "water_safety": "심연의 물은 마시는 즉시 모든 의욕을 상실하고 영원히 움직이지 않는 돌이 되는 저주 발동.",
+      "foraging": "식량 조달 절대 불가. 감정이 응축된 흑요석 조각 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "정신력을 단단하게 지켜주는 '눈물의 결심 부적'",
+        "감정 마법을 강화하는 흑요석 파편",
+        "오래된 회중시계 (슬픔의 기억 담김)"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "감정의 호수 물을 마시면 마음의 모든 상처와 슬픔이 깨끗이 치유된다는 소문.",
+        "truth_flag": false,
+        "reality": "상처가 치유되는 대신 모든 감정(기쁨, 분노, 슬픔)이 영원히 거세되어 인간성을 잃은 인형으로 변함."
+      }
+    ]
+  },
+  {
+    "id": "region_valley_of_raging_fury_02",
+    "name": "분노가 들끓는 화염의 협곡",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "시뻘건 마그마와 붉은 모래가 뒤섞인 협곡. 협곡의 암벽마다 분노에 찬 인간의 얼굴 형상이 울부짖는 모습으로 새겨져 있으며, 대기는 뜨거운 열기와 살기로 가득함.",
+      "auditory": "끝없이 터져 나오는 폭발음, 사방에서 들려오는 광기 어린 고함과 무기를 부딪히는 환청.",
+      "olfactory": "피비린내와 타오르는 유황 냄새가 섞여 투쟁심을 극도로 자극하는 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "하늘이 피로 물든 듯 붉은 적갈색을 띠며, 태양의 열기가 협곡 바닥의 분노를 가중시킴.",
+      "night": "암벽에 새겨진 분노의 얼굴들에서 붉은 화염이 뿜어져 나와 협곡 전체가 거대한 투기장처럼 불타오름."
+    },
+    "weather_events": [
+      {
+        "event_name": "광기의 붉은 모래바람 (Frenzied Dust Storm)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "날카로운 붉은 모래가 협곡을 강타함. 피격 시 이성을 잃고 눈앞의 적과 아군을 구분하지 못하고 가장 가까운 대상을 공격하는 '광기(Berserk)' 상태 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "분노의 분출구",
+        "effect": "밟거나 자극할 경우 투쟁심을 폭발시키는 붉은 증기를 내뿜는 지대. 흡입 시 방어력이 깎이는 대신 공격력이 급상승하나 매 턴 자가 체력 소모.",
+        "mitigation": "냉각 포션을 마시거나 분노의 파동을 차단하는 마법 방패 전개."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "붉은 모래 먼지와 아지랑이 때문에 기본 20m 이내",
+      "stealth_conditions": "살기와 분노의 기운이 사방에 소용돌이쳐 은신을 시도하더라도 적들이 본능적으로 기척을 알아채어 잠행 극히 불가능."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "암벽에 새겨진 분노의 얼굴 형상을 무기로 가격",
+        "consequence": "형상이 깨지며 반경 10m 내에 '분노의 폭발'이 일어나 파티원 전원에게 화염 피해 및 광기 스택 부여."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "화염(Fire), 파괴(Destruction), 및 분노 계열 마법 위력 3배 증폭. 방어 및 치유 마법은 분노의 기운에 의해 효율 50% 감소.",
+      "spiritual_state": "가슴속에서 치밀어 오르는 주체할 수 없는 분노 때문에 이성을 유지하기가 극도로 어려움."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "분노에 잠식되어 끝없이 싸우는 '광전사 무리와 투쟁의 정령들'",
+      "common_monsters": [
+        "분노의 불꽃 정령",
+        "광기에 찬 투기장 망령",
+        "붉은 사막의 투견 몬스터"
+      ],
+      "encounter_rate": "매우 높음"
+    },
+    "landmarks": [
+      {
+        "name": "영원히 꺼지지 않는 투쟁의 제단",
+        "description": "협곡 중심부에 위치한 거대한 피라미드형 제단. 제단 위에 올라서는 자는 끝없는 힘을 얻는 대신 영원히 분노의 포로가 됨."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "마그마와 붉은 모래가 흐르는 협곡 바닥(저지대)과 암벽에 깎여 나간 좁은 절벽 선반(고지대)으로 구성.",
+      "tactical_advantage": "절벽 선반 위에서 아래의 광전사 무리들을 내려다보며 원거리 공격 및 낙하 기습 수행 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "분노에 사로잡혀 뒤로 도주하는 것 자체가 허용되지 않는 구조이며, 오직 제단 뒤편의 좁은 암문으로 탈출해야 함.",
+      "pursuit_risk": "광전사 망령들은 고통을 느끼지 않고 폭발적인 속도로 추격해 와 도주로를 차단함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "최악. 살기와 열기가 가득해 안전지대가 아니면 휴식 중 체력 회복 전면 불가능.",
+      "water_safety": "협곡의 수원은 모두 끓어오르는 유황수이므로 마시는 즉시 식도 화상.",
+      "foraging": "식량 조달 불가. 분노의 결정이나 투쟁의 광석 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 미디엄 리턴",
+      "scavengeable_items": [
+        "공격력을 극대화하는 '분노의 투구 파편'",
+        "광기를 억제하는 진정의 부적",
+        "고대 투기사 붉은 대검"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "제단 꼭대기의 불꽃을 무기에 담으면 어떤 적이라도 한 방에 쓰러뜨리는 절대적인 파괴력을 얻는다는 소문.",
+        "truth_flag": false,
+        "reality": "무기에 힘이 실리는 순간 시전자의 이성이 완전히 증발하여 영원히 피아 식별을 못 하는 괴물로 변함."
+      }
+    ]
+  },
+  {
+    "id": "region_sanctuary_of_lost_euphoria_03",
+    "name": "환희가 멈춰 선 왜곡된 낙원",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "화려한 파스텔톤의 꽃들과 황금빛 건축물들이 가득하지만, 그 안에 있는 모든 생명체(인간, 동물)가 기괴한 미소를 지은 채 움직이지 않고 굳어 있는 소름 돋는 낙원.",
+      "auditory": "반복 재생되는 경쾌하고 중독성 있는 오르골 멜로디, 멈추지 않는 공허한 웃음소리 메아리.",
+      "olfactory": "지나치게 달콤해서 머리가 아플 정도의 바닐라 향과 인공적인 사탕 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "지나치게 밝고 인위적인 백색 태양빛이 비쳐 모든 풍경이 플라스틱 장난감처럼 비현실적으로 빛남.",
+      "night": "하늘에 보랏빛 불꽃놀이가 터지며, 굳어 있던 멈춘 주민들이 일제히 기괴한 춤을 추기 시작함."
+    },
+    "weather_events": [
+      {
+        "event_name": "환희의 가루눈 (Euphoric Confetti)",
+        "trigger_chance": "낮음 (15%)",
+        "effect": "하늘에서 달콤한 향이 나는 형광빛 가루가 눈처럼 내림. 닿는 순간 모든 경계심이 해제되고 실실 웃으며 무방비 상태가 되는 '중독적 행복감' 상태 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "영원한 미소의 연못",
+        "effect": "아름다운 연못의 물을 마시거나 손을 담글 경우, 얼굴에 영원히 지워지지 않는 미소가 고정되며 감정이 기쁨으로만 강제 통제되어 전투 불능.",
+        "mitigation": "정신을 번쩍 차리게 만드는 쓴 약초를 씹거나 마력 결계로 접근 차단."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "형형색색의 조명 덕분에 기본 40m 이상 환하게 보임",
+      "stealth_conditions": "사방이 탁 트인 정원과 황금빛 광장 구조라 시각적 은신은 원천적으로 불가능하며, 웃음소리가 울려 퍼져 잠행 불가."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "낙원 중앙의 거대한 오르골 태엽을 무기로 가격하거나 파괴",
+        "consequence": "오르골의 멜로디가 깨지며 반경 20m 내의 굳어 있던 주민들이 일제히 폭주하여 파티원을 향해 광기 어린 공격 개시."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "환상(Illusion), 빛(Light), 및 정신(Mental) 계열 마법 위력 3배 증폭. 공격 및 저주 마법은 낙원의 평화로운 기운에 막혀 효율 50% 감소.",
+      "spiritual_state": "비현실적인 행복감과 나른함이 의식을 마비시켜 위기 상황에서의 대처 능력 저하."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "환희에 영혼을 저당 잡힌 '웃는 인형들과 낙원의 관리자'",
+      "common_monsters": [
+        "웃는 얼굴의 태엽 인형",
+        "환희의 정령",
+        "거짓된 미소의 망령"
+      ],
+      "encounter_rate": "보통"
+    },
+    "landmarks": [
+      {
+        "name": "영원한 잔치가 열리는 대광장 오르골탑",
+        "description": "낙원 정중앙에 솟아 있는 거대한 황금 오르골 탑. 이곳의 음악이 멈추지 않는 한 낙원의 환각은 계속됨."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "잘 정돈된 꽃밭과 분수대 광장(저지대)과 화려하게 꾸며진 테라스 발코니(고지대)로 구성.",
+      "tactical_advantage": "테라스 발코니 위에서 광장 전역을 내려다보며 환상 마법을 통제하거나 적의 접근을 원거리에서 견제 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "낙원의 경계선이 시시때때로 접혀 뒤로 도주하면 다시 광장의 중앙으로 되돌아오게 되므로 오직 탑으로 전진해야 함.",
+      "pursuit_risk": "웃는 인형들은 지치지 않고 꺾이지 않는 미소를 지은 채 끈질기게 뒤를 쫓아옴."
+    },
+    "camp_and_survival": {
+      "camp_safety": "보통. 인형들의 시선이 닿지 않는 테라스 그늘 아래에서는 안전하게 휴식 가능하나 꿈자리가 사나움.",
+      "water_safety": "분수대의 물은 향긋한 시럽 맛이 나지만 마실 경우 현실 감각을 잃고 인형으로 변해버림.",
+      "foraging": "식량 조달 불가. 환희의 수정 가루나 오르골 태엽 파편 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "미디엄 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "정신 혼란을 막아주는 '웃음 띤 가면'",
+        "환상 마법을 강화하는 파스텔빛 보석",
+        "오르골의 황금 태엽 부품"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "오르골탑의 최상층 문을 열고 들어가면 세상의 모든 근심이 사라지는 영원한 안식처를 찾을 수 있다는 소문.",
+        "truth_flag": false,
+        "reality": "안식처 대신 방문자의 영혼이 영원히 오르골의 태엽 부품으로 갈려 들어가 인형의 동력원으로 소모됨."
+      }
+    ]
+  }
+]

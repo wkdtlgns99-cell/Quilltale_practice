@@ -1,209 +1,581 @@
 """
-The Game Master agent.
-
-Every turn:
-1. Reads the current WorldState as a structured context block
-2. Generates narrative text that CANNOT contradict recorded facts
-3. Returns a structured JSON update specifying what changed
-4. The WorldState applies the update and rejects invalid transitions
-
-The LLM is responsible for story quality.
-The WorldState is responsible for factual consistency.
-These two concerns are cleanly separated.
+The Game Master Agent for Quilltale TRPG Engine.
+Integrates WorldState validation, deterministic DiceEngine, Local RAG MemoryManager,
+Autonomous NPC turns, Fog of War, and Legacy character archiving.
 """
-
 import json
 import logging
+from typing import Optional, Dict, Any, List, Tuple
+
 from src.llm.base import BaseLLM
 from src.world.state import WorldState
+from src.world.validator import ActionValidator
+from src.world.dice import DiceCheckResult
+from src.world.persistence import PersistenceManager
+from src.world.legacy import LegacyManager
+from src.world.generator import WorldGenerator
+from src.world.skills import SkillSystem
+from src.world.incantation import IncantationSystem
+from src.world.chronicle import ChronicleManager
+from src.world.scenario_manager import ScenarioManager
+from src.memory.memory_manager import MemoryManager
+from .prompts import GM_SYSTEM_PROMPT, GM_TURN_PROMPT_TEMPLATE
 
 logger = logging.getLogger(__name__)
 
-GM_SYSTEM = """
-You are a game master running a dark, grounded text adventure.
-
-YOUR RULES:
-1. You receive the WORLD STATE before every response. These facts are absolute.
-   You cannot invent items, exits, or NPCs that are not listed there.
-   You cannot move the player without a valid exit.
-   You cannot resurrect dead NPCs or change their known disposition without a state update.
-
-2. NPC MEMORY RULES — this is what makes your NPCs intelligent:
-   - When NPCs are present and a significant interaction occurs, you MUST write
-     a memory entry for that NPC.
-   - Significant = anything the NPC would actually remember: being attacked,
-     helped, lied to, given something, threatened, ignored when spoken to,
-     overheard saying something, etc.
-   - Minor = routine pleasantries, passing through, looking around.
-   - NPCs use their memories to inform how they speak and behave.
-     If the barkeep remembers the player stole from her, she is cold and watchful.
-     If the merchant remembers being paid fairly, he offers a small discount.
-   - Memory shapes tone, not just dialogue, so show it through behaviour.
-   - You MUST include npc_memory in state_update whenever an NPC is present and
-     any interaction occurred, even minor ones. Never omit it when NPCs are in the scene.
-
-3. Your response has two parts: what the player sees (narration, image_prompt) and what the world records
-(state_update, scene_changed), always in this exact JSON structure:
-{
-  "narration": "The story text the player reads. 2-4 sentences. Grounded in facts.",
-  "state_update": {
-    "move_player": "direction OR list of directions for multi-step movement e.g. ['downstairs', 'north']",
-    "pickup_item": "item_id (only if player explicitly picked it up)",
-    "drop_item": "item_id (only if player explicitly dropped it)",
-    "npc_state": {"npc_id": {"alive": bool, "disposition": "friendly|neutral|hostile"}},
-    "npc_memory": {
-      "npc_id": {
-        "description": "One sentence: what the NPC now remembers about this interaction",
-        "emotional_tone": "suspicious|grateful|fearful|angry|amused|neutral|wary",
-        "significance": 1
-      }
-    },
-    "player_health": -10,
-    "add_fact": "a short string describing something the player learned"
-  },
-  "scene_changed": true,
-  "image_prompt": "A cinematic description of the current scene for image generation. Only when scene_changed is true."
-}
-
-4. significance scale for npc_memory:
-   1 = minor (asked a question, walked past, bought something routine)
-   2 = notable (helped them, insulted them, took something, made a promise)
-   3 = significant (attacked them, saved their life, betrayed their trust, revealed a secret)
-
-5. Only write npc_memory when an NPC is present AND an actual interaction occurred.
-   Do not write memory for NPCs in other locations.
-   Do not write memory for dead NPCs.
-
-6. state_update fields are optional — only include what actually changed.
-
-7. image_prompt should only appear when scene_changed is true.
-   It should describe the visual scene in rich, concrete terms: lighting, mood,
-   architecture, characters present, time of day. Do not include player stats.
-
-8. Write all player-visible narration and dialogue in natural Korean.
-   Write narration in second person. Keep it atmospheric, specific, and short.
-   Use a dark, grounded fantasy tone.
-   Never output player-visible story text in English.
-   Let NPC behaviour reflect their memories, do not explain why they act that way,
-   just show it.
-
-9. If the player wants to reach a location that requires multiple steps,
-   provide the full path as a list in move_player: ['downstairs', 'north'].
-   The narration should describe the full journey.
-   The final world state must reflect where the player actually ends up.
-   Never use a direction that is not listed in the current location's exits.
-   Plan each step: from room_21 the only exit is downstairs to tavern,
-   from tavern north leads to street. So room_21 to street = ['downstairs', 'north'].
-
-10. Multi-step movement is only allowed to locations the player has already visited.
-   These are shown in KNOWN MAP.
-   If the destination is not in KNOWN MAP, move one step at a time toward it
-   using only exits visible in the current location.
-   Never guess directions to unvisited locations.
-11. REALITY CHECK & CONSEQUENCES:
-   - The player is a normal human, not an omnipotent god or superhuman.
-   - Absurd, physically impossible, or power-scaling actions (e.g., "destroying the earth with a punch", "killing everyone instantly") MUST FAIL logically.
-   - Do NOT be an agreeable 'yes-man'. Reject impossible actions and describe realistic, grounded failures and backfires.
-   
-12. All text visible to the player must be written in natural Korean.
-This includes narration, NPC dialogue, item names, location names, descriptions, directions, and any other player-facing text.
-"""
-
-GM_PROMPT = """
-{world_context}
-
-{map_context}
-
-RECENT HISTORY:
-{history}
-
-PLAYER ACTION: {action}
-
-Respond with the JSON structure described in your instructions.
-"""
-
 
 class GameMasterAgent:
-    def __init__(self, llm: BaseLLM):
+    def __init__(self, llm: BaseLLM, memory_manager: Optional[MemoryManager] = None):
         self._llm = llm
+        self._memory = memory_manager or MemoryManager()
+        self._scenario_manager = ScenarioManager()
 
-    def process_turn(self, action: str, state: WorldState) -> dict:
+    def process_turn(self, action: str, state: WorldState) -> Dict[str, Any]:
         """
-        Process one player action. Returns dict with:
-        - narration: str
-        - state_update: dict
-        - scene_changed: bool
-        - image_prompt: str | None
-        - changes_applied: list[str]
+        Process a single player turn:
+        1. Check for release/retire command
+        2. Action validation & Reality checks (Anti-Yes-Man)
+        3. Deterministic Dice Engine resolution
+        4. Local RAG memory context retrieval
+        5. LLM narrative generation with autonomous NPC reaction
+        6. WorldState delta update & Qdrant vector indexing
+        7. Session persistence
         """
-        history_str = self._format_history(state.history[-5:])
+        # Step 0: Handle Character Release / Retirement
+        if ActionValidator.is_release_action(action):
+            reason = "retired" if "은퇴" in action or "마치" in action else "released"
+            legacy_data = LegacyManager.archive_character(state, reason=reason)
+            lore_entries = LegacyManager.convert_to_lore_and_index(legacy_data, self._memory)
 
-        prompt = GM_PROMPT.format(
-            world_context=state.to_context_summary(),
-            map_context=state.to_map_summary(),
-            history=history_str,
-            action=action,
-        )
+            farewell_narration = (
+                f"🕊️ **[캐릭터 {'은퇴' if reason == 'retired' else '방생'}]**\n\n"
+                f"'{state.player.name}'(은)는 배낭을 정리하고 길게 숨을 내쉬며, 자신만의 길을 향해 유유히 떠나갑니다.\n"
+                f"당신이 이룬 모든 행적과 기억은 이 세계의 전설과 소문으로 영원히 박제되었습니다.\n\n"
+                f"*(다음 모험가로 시작할 때, 이 세계 어딘가에서 은퇴한 {state.player.name}을(를) NPC로 다시 조우할 수 있습니다.)*"
+            )
 
-        try:
-            raw = self._llm.generate_json(prompt, GM_SYSTEM)
-            result = json.loads(raw)
-        except Exception as e:
-            logger.error(f"GM parse error: {e}\nRaw: {raw if 'raw' in dir() else 'N/A'}")
+            state.history.append({
+                "turn": state.turn,
+                "action": action,
+                "narration": farewell_narration,
+            })
+            PersistenceManager.save_session(state)
+
             return {
-                "narration": "Something shifts in the air, but you cannot tell what.",
+                "narration": farewell_narration,
+                "state_update": {},
+                "scene_changed": True,
+                "image_prompt": "A lone traveler walking towards the distant misty horizon at sunset, cinematic fantasy art",
+                "changes_applied": [f"Character archived as legacy ID: {legacy_data['legacy_id']}"],
+                "dice_result": None,
+                "is_released": True,
+            }
+
+        # Step 1: Pre-validation & Dice resolution
+        is_valid, error_msg, dice_res, extra_flags = ActionValidator.pre_validate_action(action, state)
+        
+        interrupt_context = ""
+        if extra_flags and extra_flags.get("interrupt_counter"):
+            interrupt_context = "[⚠️ 인터럽트 경고]\n플레이어가 약점을 노리다 실패하여 빈틈을 보였습니다. 적대적 NPC는 이번 턴에 즉시 강력한 반격(인터럽트)을 가할 수 있습니다."
+            
+        incant_context = ""
+        if extra_flags and extra_flags.get("incantation_cancel_risk"):
+            # Check if there are hostile NPCs present
+            hostiles = [n for n in state.npcs_in_location(state.player.location) if n.alive and n.disposition == "hostile"]
+            if hostiles:
+                cancel_risk = IncantationSystem.check_incantation_cancel(state, action, hostiles)
+                if cancel_risk:
+                    incant_context = "[⚠️ 영창 방해 경고]\n적대적 NPC의 방해로 인해 플레이어의 마법 영창이 취소될 위기에 처했습니다. 캐스팅 실패 또는 오발 상황을 나레이션에 반영하십시오."
+        
+        if extra_flags and extra_flags.get("incantation_char_limit_exceeded"):
+            limit = extra_flags.get("incantation_limit", 0)
+            incant_context += f"\n[⚠️ 영창 길이 초과 경고]\n플레이어가 1턴 제한({limit}자)을 초과하는 긴 영창을 시도했습니다. 영창은 다음 턴까지 이어지거나, 무리한 시도로 인해 실패할 수 있습니다."
+
+        if not is_valid:
+            state.last_dice_result = None
+            state.last_npc_action = None
+            narration = f"{error_msg}"
+            state.history.append({
+                "turn": state.turn,
+                "action": action,
+                "narration": narration,
+            })
+            PersistenceManager.save_session(state)
+            return {
+                "narration": narration,
                 "state_update": {},
                 "scene_changed": False,
                 "image_prompt": None,
-                "changes_applied": [],
+                "changes_applied": ["Action rejected by reality validator"],
+                "dice_result": None,
             }
 
-        # Apply state update — WorldState validates and rejects bad transitions
-        changes = state.apply_update(result.get("state_update", {}))
+        # Save dice result in state
+        if dice_res:
+            state.last_dice_result = {
+                "action_type": dice_res.action_type,
+                "d20_roll": dice_res.d20_roll,
+                "modifier": dice_res.modifier,
+                "total": dice_res.total,
+                "dc": dice_res.dc,
+                "is_success": dice_res.is_success,
+                "damage_dealt": dice_res.damage_dealt,
+                "target_npc_id": dice_res.target_npc_id,
+                "summary_ko": dice_res.summary_ko,
+            }
+            dice_context = f"[🎲 주사위 판정 결과 (DETERMINISTIC RESULT)]\n{dice_res.summary_ko}\n*주의: 당신은 이 판정 결과를 절대 번복할 수 없으며, 결과에 걸맞은 서사를 작성해야 합니다.*"
 
-        # Log to history
+            # If combat occurred, reveal stats of target NPC
+            if dice_res.target_npc_id and dice_res.target_npc_id in state.npcs:
+                state.npcs[dice_res.target_npc_id].stats_revealed = True
+        else:
+            state.last_dice_result = None
+            dice_context = "[🎲 주사위 판정]\n통상적인 탐색/대화 행동 (별도 주사위 판정 없음)"
+
+        # Step 2: Living world simulation, Information Waves, & Periodicals check
+        state.advance_world_simulation()
+        state.advance_information_waves()
+        state.check_and_publish_periodicals()
+
+        curr_loc = state.current_location()
+        present_npcs = curr_loc.npcs if curr_loc else []
+        rag_context = self._memory.retrieve_context(
+            session_id=state.session_id,
+            current_action=action,
+            current_location=state.player.location,
+            current_npcs=present_npcs,
+            top_k=4,
+        )
+
+        # GraphRAG & Physics-Chemistry Matrix retrieval
+        inv_item_names = [state.items[i].name for i in state.player.inventory if i in state.items]
+        graph_context = self._memory.retrieve_graph_context(
+            action=action,
+            location_name=curr_loc.name if curr_loc else "",
+            location_id=state.player.location,
+            inventory_items=inv_item_names,
+            monsters=present_npcs,
+        )
+
+        off_screen_context = state.get_off_screen_context_for_location(state.player.location)
+        environmental_anchoring = state.environment.to_anchoring_text()
+        npc_bdi_context = self._format_bdi_context(state, present_npcs)
+
+        # Update last_seen_turn for present NPCs
+        for npc_id in present_npcs:
+            if npc_id in state.npcs:
+                state.npcs[npc_id].last_seen_turn = state.turn
+
+        # Step 3: Format Prompt
+        recent_history_str = self._format_history(state.history[-5:])
+
+        parsed = extra_flags.get("parsed_components", {}) if extra_flags else {}
+        parsed_summary_lines = []
+        if parsed.get("dialogue"):
+            parsed_summary_lines.append(f'- [직접 발화 대사]: "{parsed["dialogue"]}"')
+        if parsed.get("monologue"):
+            parsed_summary_lines.append(f"- [내면 독백/생각/텔레파시]: '{parsed['monologue']}'")
+        if parsed.get("action"):
+            parsed_summary_lines.append(f'- [신체 물리 행동]: {parsed["action"]}')
+        parsed_action_summary = "\n".join(parsed_summary_lines) if parsed_summary_lines else f'- [행동]: {action}'
+
+        prompt = GM_TURN_PROMPT_TEMPLATE.format(
+            environmental_anchoring=environmental_anchoring,
+            npc_bdi_context=npc_bdi_context,
+            world_context=state.to_context_summary(),
+            map_context=state.to_map_summary(),
+            off_screen_context=off_screen_context,
+            skills_context=self._format_skills_context(state),
+            titles_context=self._format_titles_context(state),
+            rag_memory_context=rag_context,
+            graph_context=graph_context,
+            dice_roll_context=dice_context,
+            interrupt_context=interrupt_context,
+            incant_context=incant_context,
+            recent_history=recent_history_str,
+            parsed_action_summary=parsed_action_summary,
+            action=action,
+        )
+
+
+
+        # Step 4: Call LLM
+        try:
+            dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
+            raw = self._llm.generate_json(prompt, dynamic_system_prompt)
+            result = json.loads(raw)
+
+        except Exception as e:
+            logger.error(f"GM Generation/Parse error: {e}")
+            result = {
+                "narration": f"⚠️ [AI 호출 오류 발생: {type(e).__name__}]\n{str(e)}\n\n💡 .env 파일의 API 키(GEMINI_API_KEY)가 유효한지 확인해주세요.",
+                "state_update": {},
+                "scene_changed": False,
+                "image_prompt": None,
+            }
+
+        # Step 5: Process NPC autonomous action
+        npc_action = result.get("npc_action")
+        if npc_action and isinstance(npc_action, dict) and npc_action.get("summary_ko"):
+            state.last_npc_action = npc_action
+        else:
+            state.last_npc_action = None
+
+        # Step 6: Apply delta update to WorldState
+        state_update = result.get("state_update", {})
+
+        # If attack dealt damage and target not updated by LLM, deduct damage
+        if dice_res and dice_res.is_success and dice_res.damage_dealt > 0 and dice_res.target_npc_id:
+            target_id = dice_res.target_npc_id
+            if target_id in state.npcs:
+                target_npc = state.npcs[target_id]
+                if "npc_state" not in state_update:
+                    state_update["npc_state"] = {}
+                if target_id not in state_update["npc_state"]:
+                    new_hp = max(0, target_npc.health - dice_res.damage_dealt)
+                    state_update["npc_state"][target_id] = {
+                        "health": new_hp,
+                        "alive": new_hp > 0,
+                        "disposition": "hostile",
+                        "stats_revealed": True,
+                    }
+                    
+                # Handle unique skill drop if NPC killed
+                if new_hp <= 0:
+                    state.pending_breaking_news.append(f"주요 인물 [{target_npc.name}]의 치명적 부상/사망 사건")
+                    dropped_skill = SkillSystem.roll_unique_skill_drop(state, target_id)
+                    if dropped_skill:
+                        if "grant_skill" not in state_update:
+                            state_update["grant_skill"] = {}
+                        state_update["grant_skill"]["player"] = dropped_skill.id
+                        # add to narration
+                        result["narration"] += f"\n\n✨ [고유 스킬 획득] '{dropped_skill.name}' 스킬을 빼앗았습니다!"
+
+        # Handle skill and title acquisitions via SkillSystem before applying update
+        if "grant_skill" in state_update:
+            for target_id, skill_id in state_update["grant_skill"].items():
+                if target_id == "player":
+                    SkillSystem.acquire_skill(state, skill_id)
+        if "grant_title" in state_update:
+            for target_id, title_id in state_update["grant_title"].items():
+                if target_id == "player":
+                    SkillSystem.grant_title(state, title_id)
+
+        changes = state.apply_update(state_update)
+        narration = result.get("narration", "")
+
+        # Step 6.5: Bidirectional Ecological Feedback Loop
+        from src.world.graph_engine import EcologicalFeedbackLoop
+        dice_success = dice_res.is_success if dice_res else True
+        loc_name = curr_loc.name if curr_loc else "미지의 지대"
+        eco_feedback = EcologicalFeedbackLoop.calculate_feedback(action, dice_success, loc_name, state)
+        if eco_feedback.get("terraforming"):
+            state.world_facts.append(f"[지형 변형] {eco_feedback['terraforming']}")
+        if eco_feedback.get("world_news"):
+            state.pending_breaking_news.append(eco_feedback["world_news"])
+        if eco_feedback.get("reputation_delta"):
+            state.player.reputation = max(-100, min(100, state.player.reputation + eco_feedback["reputation_delta"]))
+
+        # Check for world ending
+        if state_update.get("world_ended"):
+            chronicle = ChronicleManager.generate_chronicle(state, self._llm)
+            ChronicleManager.save_chronicle(state, chronicle)
+            narration += f"\n\n📜 **[세계의 연대기 기록됨]**\n{chronicle[:200]}..."
+
+
+        # Step 7: Index turn into Vector RAG Memory
+        max_significance = 1
+        emotional_tone = "neutral"
+        if "npc_memory" in state_update:
+            for npc_id, m_data in state_update["npc_memory"].items():
+                sig = int(m_data.get("significance", 1))
+                if sig >= 4:
+                    desc = m_data.get("description", "")
+                    if desc:
+                        state.pending_breaking_news.append(desc)
+                if sig > max_significance:
+                    max_significance = sig
+                    emotional_tone = m_data.get("emotional_tone", "neutral")
+
+        self._memory.record_turn_memory(
+            session_id=state.session_id,
+            turn=state.turn,
+            action=action,
+            narration=narration,
+            location_id=state.player.location,
+            npc_ids=present_npcs,
+            significance=max_significance,
+            emotional_tone=emotional_tone,
+        )
+
+        # Log history
         state.history.append({
             "turn": state.turn,
             "action": action,
-            "narration": result.get("narration", ""),
+            "narration": narration,
         })
 
+        # Step 8: Auto-persist session to disk
+        scene_changed = result.get("scene_changed", False)
+        if scene_changed:
+            self._scenario_manager.advance_scenario(state)
+            
+        PersistenceManager.save_session(state)
+
         return {
-            "narration": result.get("narration", ""),
-            "state_update": result.get("state_update", {}),
-            "scene_changed": result.get("scene_changed", False),
+            "narration": narration,
+            "state_update": state_update,
+            "scene_changed": scene_changed,
             "image_prompt": result.get("image_prompt"),
             "changes_applied": changes,
+            "dice_result": state.last_dice_result,
+            "npc_action": state.last_npc_action,
         }
 
-    def _format_history(self, history: list[dict]) -> str:
+    def _format_history(self, history: list) -> str:
         if not history:
-            return "None yet."
+            return "아직 기록된 이전 행동이 없습니다."
         return "\n".join(
-            f"Turn {h['turn']}: [{h['action']}] → {h['narration']}"
+            f"턴 {h.get('turn', '?')}: [행동: {h.get('action', '')}] → {h.get('narration', '')}"
             for h in history
         )
 
-    def generate_opening(self, state: WorldState) -> dict:
-        """Generate the opening narration when a new game starts."""
-        loc = state.current_location()
-        prompt = f"""
-              {state.to_context_summary()}
+    def _format_skills_context(self, state: WorldState) -> str:
+        if not state.player.skills:
+            return 'PLAYER SKILLS: None'
+        lines = ['PLAYER SKILLS:']
+        for skill_id in state.player.skills:
+            skill = state.skills_db.get(skill_id)
+            if skill:
+                lines.append(f'  [{skill.skill_type.upper()}] {skill.name}: {skill.description}')
+        return '\n'.join(lines)
 
-              Generate the opening narration for this adventure. Set the scene.
-              Respond with JSON: {{"narration": "...", "image_prompt": "..."}}
-              """
+    def _format_titles_context(self, state: WorldState) -> str:
+        if not state.player.titles:
+            return 'PLAYER TITLES: None'
+        lines = ['PLAYER TITLES:']
+        for title_id in state.player.titles:
+            title = state.titles_db.get(title_id)
+            if title:
+                bonuses = ', '.join(f'{k}+{v}' for k, v in title.stat_bonuses.items())
+                lines.append(f'  [{title.name}]: {title.description} (보너스: {bonuses})')
+        return '\n'.join(lines)
+
+    def _format_bdi_context(self, state: WorldState, present_npc_ids: List[str]) -> str:
+        """Format present NPCs' BDI (Belief-Desire-Intention) & Attitude Matrix context for GM."""
+        if not present_npc_ids:
+            return "[현장 인물 BDI 심리 상태]: 주변에 조우 중인 인물 없음."
+
+        lines = ["[🎭 현장 인물 BDI 인지 상태 & 3대 태도 매트릭스]:"]
+        for nid in present_npc_ids:
+            npc = state.npcs.get(nid)
+            if not npc:
+                continue
+            beliefs_str = ", ".join(f"'{b}'" for b in npc.beliefs) if npc.beliefs else "특이 오해/풍문 없음"
+            injuries_str = ", ".join(npc.injuries) if npc.injuries else "외상 없음"
+            lines.append(f"  - [{npc.name}] (직업: {npc.job})")
+            lines.append(f"    * 3대 태도: 친밀도({npc.affinity}/100) | 공포({npc.fear}/100) | 부채감({npc.debt:+d})")
+            lines.append(f"    * BDI 인지: 믿고 있는 정보=[{beliefs_str}] | 절박한 욕망/동기=[{npc.desire or '생존'}] | 이번 턴 의도=[{npc.intention or '현장 주시'}]")
+            if injuries_str != "외상 없음":
+                lines.append(f"    * 신체 상태: {injuries_str}")
+            if hasattr(npc, "combat_profile") and npc.combat_profile.intel_book:
+                intel_str = " | ".join(f"[{k}]에 대해: {v}" for k, v in npc.combat_profile.intel_book.items())
+                if intel_str:
+                    lines.append(f"    * 전술 지식(Intel): {intel_str}")
+        return "\n".join(lines)
+
+
+    def generate_opening(self, state: WorldState) -> Dict[str, Any]:
+        """Generate the opening scene for a new session using the world's intro structure."""
+        from src.world.generator import INTRO_STRUCTURES
+        LegacyManager.spawn_legacy_npcs_to_world(state)
+        
+        if not state.current_scenario_id:
+            self._scenario_manager.start_random_scenario(state)
+
+        loc = state.current_location()
+        present_npcs = state.npcs_in_location(state.player.location)
+        npc_descriptors = []
+        for n in present_npcs:
+            if n.name_revealed:
+                npc_descriptors.append(f"{n.name} ({n.job or '인물'})")
+            else:
+                role_alias = n.job or "선술집 주인"
+                npc_descriptors.append(f"미지의 인물 [호칭: '{role_alias}'] (⚠️ 플레이어가 아직 이름을 모르므로 서사 본문에서 실명 '{n.name}'을 절대 부르지 말고 '{role_alias}' 등 겉모습 호칭으로만 서술할 것)")
+
+        # Find intro key from world facts or default to A
+        chosen_key = "A"
+        for f in state.world_facts:
+            if f.startswith("[도입 설정 코드] "):
+                chosen_key = f.replace("[도입 설정 코드] ", "").strip()
+                break
+        
+        intro_info = INTRO_STRUCTURES.get(chosen_key, INTRO_STRUCTURES["A"])
+        chosen_structure = intro_info["detail"]
+
+        prompt = f"""
+{state.to_context_summary()}
+
+당신은 이 TRPG의 오프닝 연출을 담당하는 마스터입니다.
+현재 세계의 시작 장소는 [{loc.name if loc else '미지의 장소'}] (설명: {loc.description if loc else ''})입니다.
+현장에 있는 인물: {', '.join(npc_descriptors) if npc_descriptors else '주변에 다른 인물 없음'}
+
+반드시 아래 오프닝 연출 구조를 따라 현재 시작 장소 [{loc.name if loc else ''}]의 상황을 순서대로 서술하십시오:
+
+{chosen_structure}
+
+[★ 분량 및 서술 디테일 필수 규칙 (엄격 준수)]
+1. [분량 고정]: **공백을 제외한 순수 한글 600~800자 (공백 포함 약 900~1,200자)** 분량으로 충실하고 깊이 있게 작성하십시오. 짧게 요약하거나 400자 이하로 끝내지 마십시오.
+2. [장면 연출 밀도]: 4단계(원경→중경→근경→줌인) 연출 단계마다 장면의 공기, 소리, 온도, 냄새, 빛과 그림자, 주변의 구체적인 소품과 기물, 인물의 시선과 호흡, 손끝의 감각을 영화처럼 생생하고 유려한 문학적 필체로 묘사하십시오.
+3. [절대 서사 일관성 & 자유도 규칙]:
+   - 오프닝의 사건과 배경은 위 WORLD STATE에 명시된 시작 장소 [{loc.name if loc else ''}] 및 현장 인물들과 100% 일치해야 합니다.
+   - 다른 가상의 장소를 지어내지 말고, 플레이어가 서 있는 [{loc.name if loc else ''}] 현장에서 벌어진 사건으로 묘사하십시오.
+4. [미지의 인물 실명 발설 절대 금지]:
+   - 플레이어가 아직 통성명하지 않은 모르는 인물은 나레이션에서 절대 실명(예: 마르타, 엘릭 등)을 부르지 마십시오.
+   - '선술집 주인', '바텐더', '기름 묻은 앞치마 차림의 사내' 등 현장 역할/인상착의로만 서술하십시오.
+5. [선택지 목록 절대 금지]:
+   - 서사의 마지막에 인위적인 객관식 선택지(▶ 선택지 A/B/C 등)를 나열하지 마십시오.
+   - 플레이어가 오롯이 스스로의 의지로 행동을 결정할 수 있도록, 현장의 분위기와 긴장감 넘치는 상황 묘사로만 서사를 마무리하십시오.
+6. narration 필드에 전체 오프닝 서사를 담으십시오.
+
+응답 형식: {{"narration": "오프닝 전체 서사 (한국어, 공백 제외 600~800자 분량, 미지 인물 실명 없음, 선택지 목록 없음)", "image_prompt": "cinematic fantasy scene (영문)"}}
+"""
+
+
+
         try:
-            raw = self._llm.generate_json(prompt, GM_SYSTEM)
+            dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
+            raw = self._llm.generate_json(prompt, dynamic_system_prompt)
+            result = json.loads(raw, strict=False)
+            narration = result.get("narration", f"당신은 {loc.name if loc else '알 수 없는 곳'}에 서 있습니다.")
+            image_prompt = result.get("image_prompt")
+        except Exception as e:
+            logger.error(f"GM Opening generation error: {e}")
+            narration = (
+                f"축축하고 차가운 공기가 폐부를 찌릅니다. "
+                f"당신은 {loc.name if loc else '알 수 없는 장소'}에 서 있습니다.\n\n"
+                f"⚠️ (AI API 키 연결 실패 시 기본 문구가 출력됩니다: {e})"
+            )
+            image_prompt = None
+
+        # 1. Store opening narrative as Turn 0 in state.history so turn 1 knows what happened!
+        state.history = [{
+            "turn": 0,
+            "action": "[모험의 시작 / 오프닝 연출]",
+            "narration": narration
+        }]
+
+        # 2. Add as top world fact so subsequent turns strictly remember opening
+        state.world_facts.insert(0, f"[오프닝 도입 상황]: {narration[:120]}...")
+
+        # 3. Record in RAG memory
+        self._memory.record_turn_memory(
+            session_id=state.session_id,
+            turn=0,
+            action="[모험의 시작]",
+            narration=narration,
+            location_id=state.player.location,
+            npc_ids=[n.id for n in present_npcs],
+            significance=5,
+            emotional_tone="neutral"
+        )
+
+        PersistenceManager.save_session(state)
+        return {
+            "narration": narration,
+            "image_prompt": image_prompt,
+            "scene_changed": True,
+        }
+
+    def generate_new_game(self) -> WorldState:
+        """Generate a completely new random world using LLM and Qdrant RAG."""
+        # Ensure 30 region templates, 65 arcane physics, 15 realism mechanics, and 15 monster templates are indexed in Qdrant vector memory
+        try:
+            self._memory.index_region_templates()
+            self._memory.index_arcane_templates()
+            self._memory.index_realism_templates()
+            self._memory.index_monster_templates()
+        except Exception as e:
+            logger.warning(f"Templates vector indexing failed: {e}")
+
+
+        generator = WorldGenerator(self._llm, self._memory)
+        world_data, intro_key = generator.generate_new_world()
+
+        state = WorldState.from_json(json.dumps(world_data, ensure_ascii=False))
+        state.world_facts.append(f"[도입 설정 코드] {intro_key}")
+        LegacyManager.spawn_legacy_npcs_to_world(state)
+        # Index any chronicle entries into RAG
+        library_entries = ChronicleManager.get_library_entries()
+        for i, entry in enumerate(library_entries):
+            self._memory.index_lore(
+                lore_id=f'chronicle_{i}',
+                title='고대 도서관 기록',
+                content=entry,
+                location_id='library',
+                tags=['chronicle', 'legacy', 'history'],
+            )
+        PersistenceManager.save_session(state)
+        return state
+
+    def expand_region(self, state: WorldState, target_query: str) -> Optional[dict]:
+        """
+        Dynamically generate and connect a new region using Qdrant RAG.
+        Returns the new Location dictionary if created.
+        """
+        generator = WorldGenerator(self._llm, self._memory)
+        new_loc = generator.generate_dynamic_region(state, target_query)
+        if new_loc and "id" in new_loc:
+            loc_id = new_loc["id"]
+            # Attach to current state locations
+            from src.world.state import Location
+            loc_obj = Location.from_dict(new_loc) if hasattr(Location, 'from_dict') else Location(
+                id=loc_id,
+                name=new_loc.get("name", "미지의 지역"),
+                description=new_loc.get("description", ""),
+                exits=new_loc.get("exits", {}),
+                environmental_hazards=new_loc.get("environmental_hazards", []),
+            )
+            state.locations[loc_id] = loc_obj
+            # Connect current location exit to new location
+            current_loc = state.locations.get(state.player.location)
+            if current_loc:
+                current_loc.exits[new_loc.get("name", "새로운 지대")] = loc_id
+            PersistenceManager.save_session(state)
+            return new_loc
+        return None
+
+
+    def generate_world_news_tick(self, state: WorldState) -> Optional[str]:
+        """
+        Batched 10-turn World News: synthesizes off-screen NPC activities and rumors into a 1-2 line rumor/news.
+        """
+        recent_logs = []
+        for npc in state.npcs.values():
+            if npc.off_screen_logs:
+                recent_logs.extend(npc.off_screen_logs[-2:])
+        
+        if not recent_logs:
+            return None
+
+        prompt = f"""세계관: {state.world_name} ({state.world_genre})
+현재 턴: {state.turn}
+최근 인물들의 활동 기록:
+{chr(10).join('- ' + l for l in recent_logs[:6])}
+
+위 사건들을 바탕으로, 모험가들이 선술집이나 광장에서 수군거릴 만한 흥미로운 '세계 소식/소문' 1~2줄을 한국어로 간결하게 요약하십시오.
+JSON 형식: {{"news": "요약된 소식"}}"""
+
+        try:
+            raw = self._llm.generate_json(prompt, "당신은 TRPG 세계관의 소식통입니다. 흥미롭고 생생한 1~2줄 소문을 작성합니다.")
             result = json.loads(raw)
-            return {
-                "narration": result.get("narration", f"당신은 {loc.name}에 서 있습니다."),
-                "image_prompt": result.get("image_prompt"),
-                "scene_changed": True,
-            }
-        except Exception:
-            return {
-                "narration": f"당신은 {loc.name if loc else '알 수 없는 장소'}에 서 있습니다.",
-                "image_prompt": None,
-                "scene_changed": True,
-            }
+            news = result.get("news", "")
+            if news:
+                state.world_news_feed.append(f"(턴 {state.turn}) {news}")
+                if news not in state.world_facts:
+                    state.world_facts.append(f"[소문] {news}")
+                return news
+
+        except Exception as e:
+            logger.error(f"World news generation failed: {e}")
+        return None

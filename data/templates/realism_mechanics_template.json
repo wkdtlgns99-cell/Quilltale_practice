@@ -1,0 +1,224 @@
+[
+  {
+    "id": "closed_loop_ecosystem",
+    "name": "물리적 자원 보존 및 환경 누적 (Closed Loop Ecosystem)",
+    "category": "환경/물리",
+    "core_principle": "던전 내에서 발생한 물리적 훼손(그을음, 천장 균열, 흘린 피)은 증발하지 않고 후각/청각 어그로로 누적됨.",
+    "triggers": [
+      "화염구 시전",
+      "폭발",
+      "출혈 전투",
+      "벽체 파괴"
+    ],
+    "consequences": [
+      "피 냄새로 인한 인접 구역 야수 유인",
+      "소음으로 인한 던전 전체 경비 레벨 상승",
+      "그을음으로 인한 환기 악화"
+    ]
+  },
+  {
+    "id": "material_physics_chemical_chain",
+    "name": "물질 반응 및 연쇄 상태 전이 (Material Physics & Chemical Chain)",
+    "category": "환경/물리",
+    "core_principle": "원소 전도성 및 물질 간 화학 반응이 연쇄적으로 상태를 전이시킴.",
+    "triggers": [
+      "젖은 지형에 전격 마법",
+      "기름통 파괴 후 점화",
+      "밀폐 공간 횃불 진입"
+    ],
+    "consequences": [
+      "물 웅덩이 광역 연쇄 감전",
+      "즉각적인 화염벽 형성으로 통로 차단",
+      "메탄/분진 밀폐 폭발 및 공간 붕괴"
+    ]
+  },
+  {
+    "id": "sensory_occlusion_blind_spots",
+    "name": "시야·청각 인지 한계와 암전 시뮬레이션 (Sensory Occlusion & Blind Spots)",
+    "category": "환경/물리",
+    "core_principle": "물리적 장애물에 의한 음향 차폐와 조도 차이에 따른 시야 불균형.",
+    "triggers": [
+      "두꺼운 철문 너머 전투",
+      "폭포 옆 비명",
+      "어둠 속 횃불 휴대"
+    ],
+    "consequences": [
+      "옆방 경비병의 소리 인지 불가",
+      "횃불을 든 자는 어둠 속 저격수에게 100% 노출되나 저격수를 보지 못함"
+    ]
+  },
+  {
+    "id": "spatial_ergonomics_encumbrance",
+    "name": "장비 무게 및 부피에 따른 공간 제약 (Spatial Ergonomics & Encumbrance)",
+    "category": "환경/물리",
+    "core_principle": "장비의 물리적 부피와 소지 무게가 지형 통과 및 무기 휘두르기를 물리적으로 간섭함.",
+    "triggers": [
+      "좁은 환풍구/동굴에서 대검/창 사용",
+      "허용 중량 초과 상태로 진흙탕/외나무다리 통과"
+    ],
+    "consequences": [
+      "무기가 벽에 걸려 휘두르기 불능",
+      "하중 초과로 다리 붕괴 및 진흙탕 매몰 확률 급증"
+    ]
+  },
+  {
+    "id": "thermoregulation_exposure",
+    "name": "온도 노출 및 체온 조절 시스템 (Thermoregulation & Exposure)",
+    "category": "환경/물리",
+    "core_principle": "극저온/고열 노출이 신체 생리 및 마력 제어력을 직접적으로 마비시킴.",
+    "triggers": [
+      "폭우/눈보라 속 젖은 옷 방치",
+      "사막/용암 지대 무방비 장시간 행동"
+    ],
+    "consequences": [
+      "저체온증으로 손마비 및 영창 실패율 증가, 마나 회복 중단",
+      "열사병 탈수로 인한 환각 몬스터 내레이션 출력"
+    ]
+  },
+  {
+    "id": "respiratory_suffocation_limits",
+    "name": "호흡 및 산소 결핍 역학 (Respiratory & Suffocation Limits)",
+    "category": "환경/물리",
+    "core_principle": "산소 농도와 호흡 매질에 따른 질식 한계 및 발성 불가.",
+    "triggers": [
+      "화재 건물/수중 진입",
+      "수중/농연 속 발성 영창 시도",
+      "해발 3,000m 고산지대 격렬한 전투"
+    ],
+    "consequences": [
+      "수중 영창 시 즉각 물을 들이마셔 폐 질식 기절",
+      "고산지대 2턴 연속 근접 공격 시 강제 탈진"
+    ]
+  },
+  {
+    "id": "anatomical_trauma_bleeding",
+    "name": "부상 부위별 기능 저하 및 뇌진탕 (Anatomical Trauma & Bleeding)",
+    "category": "인체/장비",
+    "core_principle": "신체 특정 부위 손상에 따른 국소적 운동 및 인지 기능 상실.",
+    "triggers": [
+      "다리 골절/자상",
+      "손목 인대 절단",
+      "머리 둔기 강타(뇌진탕)"
+    ],
+    "consequences": [
+      "이동 턴 소모 2배",
+      "양손 무기/활 사용 불가",
+      "시스템 텍스트 글자 왜곡 및 판단 확률 교란"
+    ]
+  },
+  {
+    "id": "equipment_wear_fouling",
+    "name": "장비 피로도 및 오염 고장 (Equipment Wear & Fouling)",
+    "category": "인체/장비",
+    "core_principle": "물질 경도 차이에 따른 칼날 손상과 이물질 유입에 의한 기계 불발.",
+    "triggers": [
+      "판금 갑옷/암석 골렘에 일반 도검 타격",
+      "진흙/모래탕에서 구른 후 석궁/총기 격발"
+    ],
+    "consequences": [
+      "칼날 이 빠짐으로 참격 대미지 반토막",
+      "방아쇠 모래 끼임으로 불발(잼) 발생"
+    ]
+  },
+  {
+    "id": "hygiene_scent_tracking",
+    "name": "냄새 및 위생 상태에 따른 은폐 실패 (Hygiene, Scent & Tracking)",
+    "category": "인체/장비",
+    "core_principle": "체취와 부패가 야수의 후각 감지 및 신체 면역을 무너뜨림.",
+    "triggers": [
+      "피/오물을 뒤집어쓴 채 미세척 이동",
+      "오래 보관해 상한 육류/식량 섭취"
+    ],
+    "consequences": [
+      "바람 부는 방향의 야수가 수백 미터 밖에서 냄새 맡고 기습",
+      "식중독 복통으로 5턴간 행동 선택지 제한"
+    ]
+  },
+  {
+    "id": "circadian_need_engine",
+    "name": "NPC 생체 리듬 및 일과 루틴 (Circadian Need Engine)",
+    "category": "NPC/사회",
+    "core_principle": "3대 기본 욕구(수면, 식사, 안전)와 날씨/시간대에 따른 자율적 행동 변화.",
+    "triggers": [
+      "심야 시간대 경비병 조우",
+      "식량 창고 전소",
+      "폭우 발생 시 상점가"
+    ],
+    "consequences": [
+      "야간 졸음으로 경계도 급감/뇌물 수용",
+      "주민 사기 붕괴로 폭동 발생",
+      "상인 처마 밑 피신 및 야밤 문전박대"
+    ]
+  },
+  {
+    "id": "morale_surrender_threshold",
+    "name": "전투 중 현실적 심리 붕괴 (Morale & Surrender Threshold)",
+    "category": "NPC/사회",
+    "core_principle": "압도적 무력 격차나 지휘관 상실 시 발생하는 사기 저하 및 자백.",
+    "triggers": [
+      "우두머리 사망",
+      "부대원 50% 이상 전멸",
+      "적 NPC 치명상 상태"
+    ],
+    "consequences": [
+      "무기를 버리고 패주하거나 항복",
+      "목숨을 대가로 상관의 비밀/보물 위치 자백"
+    ]
+  },
+  {
+    "id": "off_screen_domino_progression",
+    "name": "비동기 사건 연쇄 및 경쟁자 개입 (Off-Screen Domino Progression)",
+    "category": "NPC/사회",
+    "core_principle": "플레이어가 지체하는 동안 세계와 경쟁자들이 독자적으로 목표를 진행함.",
+    "triggers": [
+      "의뢰 수락 후 며칠간 방치",
+      "보물 지도 획득 후 장기 지체"
+    ],
+    "consequences": [
+      "의뢰인이 직접 해결하려다 사망/상황 종결",
+      "경쟁 모험가 파티가 유적을 먼저 털어 보물 선점"
+    ]
+  },
+  {
+    "id": "realistic_information_travel",
+    "name": "평판 전파의 물리적 한계 (Realistic Information Travel)",
+    "category": "NPC/사회",
+    "core_principle": "정보는 빛처럼 즉시 퍼지지 않으며, 물리적 전달자(목격자/전령)를 통해서만 이동함.",
+    "triggers": [
+      "외딴곳에서 목격자 전원 차단",
+      "A 도시 범죄 후 B 도시로 고속 이동"
+    ],
+    "consequences": [
+      "목격자가 없으면 수배령 무효화",
+      "전령이 도달하기 전까지 B 도시에서 안전하게 거래 가능"
+    ]
+  },
+  {
+    "id": "dynamic_scarcity_wartime_inflation",
+    "name": "물가 변동과 자원 독점 경제 (Dynamic Scarcity & Wartime Inflation)",
+    "category": "NPC/사회",
+    "core_principle": "수요/공급 법칙 및 전쟁/포위 상황에 따른 현실적 시세 폭등·폭락.",
+    "triggers": [
+      "물약/약초 대량 독점 구매",
+      "인근 성채 포위/전쟁 발발"
+    ],
+    "consequences": [
+      "물약 가격 3배 폭등",
+      "식량/무기 가격 폭등 및 보석/귀금속 헐값 폭락"
+    ]
+  },
+  {
+    "id": "linguistic_cultural_friction",
+    "name": "언어 장벽 및 문화적 제스처 오해 (Linguistic & Cultural Friction)",
+    "category": "NPC/사회",
+    "core_principle": "언어 불통 시 대화 왜곡과 문화권 고유 금기 행동으로 인한 즉각 적대화.",
+    "triggers": [
+      "고대어/이종족 언어 미습득 상태 대화",
+      "특정 종교권에서 왼손으로 물건 전달/신상 응시"
+    ],
+    "consequences": [
+      "대화가 기호(???)로 깨져 출력",
+      "신성모독 판정으로 즉각 전투 돌입"
+    ]
+  }
+]

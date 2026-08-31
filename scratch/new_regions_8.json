@@ -1,0 +1,682 @@
+[
+  {
+    "id": "region_labyrinth_of_obsessive_envy_04",
+    "name": "끝없는 갈망과 집착의 미로",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "사방이 수많은 거울과 탐욕스러운 손 모양의 석조 장식들로 가득한 미로. 복도를 지날 때마다 미로의 벽이 좁아지며 누군가 자신의 것을 빼앗으려 한다는 환각 유발.",
+      "auditory": "가장 아끼는 것을 잃어버릴 듯한 초조한 숨소리, 멀리서 메아리치는 날카로운 비아냥과 속삭임.",
+      "olfactory": "녹슨 철가루 냄새와 탐욕에 찌든 땀 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "차갑고 날카로운 백색광이 미로의 거울들을 반사하며 사방을 예민하게 비춤.",
+      "night": "거울들이 검게 변하며 미로 속의 모든 통로가 탐욕에 눈이 먼 이들의 발소리로 가득 참."
+    },
+    "weather_events": [
+      {
+        "event_name": "탐욕의 모래폭풍 (Storm of Covetousness)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "날카로운 거울 파편이 섞인 바람이 미로를 강타함. 피격 시 장착 중인 무기나 소모품 중 하나가 강제로 파손되거나 다른 곳으로 튕겨 나감."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "집착의 거울 함정",
+        "effect": "거울에 비친 자신의 모습이 환전되어 탐욕스러운 괴물로 변해 파티원을 공격. 동료가 가진 장비나 보물을 빼앗으려 함.",
+        "mitigation": "정신 집중으로 환영을 꿰뚫어 보거나 거울을 마법으로 파괴."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "거울 반사광 덕분에 기본 30m이나 진짜 길을 찾기 어려움",
+      "stealth_conditions": "사방이 거울이라 시각적 은신은 완전히 무력화되며, 탐욕의 기운이 신경을 곤두세워 잠행이 까다로움."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "미로 벽면에 박힌 탐욕의 황금 보석을 무기로 떼어내려 시도",
+        "consequence": "보석이 함정으로 작동하여 반경 10m 내의 공간이 좁아지며 물리적 압박 피해 및 의지력 판정 요구."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "탐욕(Greed), 저주(Curse), 및 공간(Space) 계열 마법 위력 3배 증폭. 회복 마법은 남을 믿지 못하는 의심 때문에 효율 반감.",
+      "spiritual_state": "내 것을 빼앗길지 모른다는 극심한 의심과 집착이 의식을 잠식함."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "탐욕과 집착에 눈이 멀어 미로를 헤매는 '질투의 망령들'",
+      "common_monsters": [
+        "집착의 거울 미믹",
+        "탐욕스러운 손 모양의 정령",
+        "질투의 스토커 망령"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "모든 보물이 쌓여 있는 탐욕의 중앙 제단",
+        "description": "미로의 정중앙에 위치한, 세상의 진귀한 보물들이 가득 쌓인 제단. 손을 대는 순간 미로의 벽이 무너져 내림."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "거울 바닥이 깔린 좁은 평지 복도(저지대)와 거울 벽면에 비쳐 떠 있는 듯 보이는 허공 발판(고지대)으로 구성.",
+      "tactical_advantage": "고지대 발판 위에서 아래의 복도를 지나는 적을 내려다보며 기습 공격 수행 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "탐욕 때문에 뒤로 도주하는 과정에서 보물을 챙기려다 발이 묶이므로 미로의 출구 쪽으로 전진해야 함.",
+      "pursuit_risk": "질투의 망령들은 플레이어가 가진 장비의 가치를 감지하고 순식간에 추격해 옴."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 거울 미로의 구조가 시시때때로 바뀌어 안전지대가 갑자기 함정 방으로 바뀔 수 있음.",
+      "water_safety": "미로 벽에서 스며 나오는 액체는 마실 경우 남의 것을 탐하는 극심한 갈증 유발.",
+      "foraging": "식량 조달 불가. 가짜 황금 가루나 거울 조각 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "적의 아이템을 훔치는 '도둑의 장갑 파편'",
+        "집착을 차단하는 정화의 부적",
+        "가장 비싼 가치의 보석"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "중앙 제단의 보물을 모두 가지면 세상의 모든 부를 독점할 수 있다는 소문.",
+        "truth_flag": false,
+        "reality": "보물을 집어 드는 순간 미로의 거울들이 일제히 무너져 내리며 깔려 죽음."
+      }
+    ]
+  },
+  {
+    "id": "region_chasm_of_paralyzing_fear_05",
+    "name": "공포가 굳어버린 심연의 협곡",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "칠흑 같은 어둠 속에 깎아지른 절벽 사이로, 과거 마주했던 가장 끔찍한 공포가 검은 그림자 형태로 절벽 벽면에 유령처럼 박혀 있는 협곡.",
+      "auditory": "협곡 바닥에서 올라오는 비명 소리, 누군가 뒤에서 쫓아오는 듯한 급박한 발소리 메아리.",
+      "olfactory": "극심한 공포를 느낄 때 나는 식은땀과 차갑고 비릿한 흙먼지 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "하늘은 빛을 잃은 검은 잿빛이며 협곡 아래는 영원히 도달할 수 없는 절대적 암흑.",
+      "night": "절벽에 박힌 검은 그림자들이 실체화되어 협곡 위를 유령처럼 떠돌며 공포감을 극대화함."
+    },
+    "weather_events": [
+      {
+        "event_name": "공포의 한기 (Chill of Terror)",
+        "trigger_chance": "낮음 (15%)",
+        "effect": "협곡 전체에 뼛속까지 얼어붙는 공포의 바람이 붑니다. 피격 시 다리가 풀려 1턴 동안 이동 불가 및 공포 상태 이상."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "심연의 나락 다리",
+        "effect": "협곡을 건너기 위해 놓인 썩은 로프 다리. 건널 때마다 다리가 끊어지며, 추락 시 허우적거리며 공포 스택 누적.",
+        "mitigation": "로프를 단단히 허리에 묶고 마법으로 다리를 보강하며 통과."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "협곡이 깊고 어두워 주야간 불문하고 기본 10m 이내",
+      "stealth_conditions": "어둠 덕분에 시각적 은신은 매우 유리하나, 공포에 질려 거칠어진 숨소리와 떨리는 발소리 때문에 잠행 난이도 최고."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "절벽 벽면에 붙은 거대한 공포의 그림자를 무기로 가격",
+        "consequence": "그림자가 폭발하며 반경 15m 내에 '정신적 쇼크파' 발생, 파티원 전원에게 극심한 공포 및 행동력 대폭 감소."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "공포(Fear), 어둠(Dark), 및 정신(Mental) 계열 마법 위력 3배 증폭. 용기 및 보호 마법은 공포의 기운에 의해 효율 반감.",
+      "spiritual_state": "눈앞의 보이지 않는 위협에 대한 극심한 불안감으로 집중력 붕괴."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "공포를 먹고 사는 '그림자 추적자들과 악몽의 망령들'",
+      "common_monsters": [
+        "공포의 그림자 스토커",
+        "악몽의 거대 거미",
+        "심연의 비명 정령"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "가장 깊은 공포가 도사린 절벽 끝의 제단",
+        "description": "협곡의 가장 좁은 절벽 끝에 위치한 고대 제단. 이곳을 건너야만 협곡을 탈출할 수 있음."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "바닥이 보이지 않는 심연의 계곡(저지대)과 좁은 벼랑 끝 로프 길(고지대)으로 구성.",
+      "tactical_advantage": "벼랑 위에서 아래를 지나는 적을 향해 공포 유발 마법을 투척하여 추락 유도 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "외길 벼랑 구조라 뒤로 도주하는 과정에서 발을 헛디뎌 추락하기 쉬우므로 앞으로 전진해야 함.",
+      "pursuit_risk": "그림자 스토커들은 어둠 속에서 소리 없이 나타나 플레이어의 등 뒤를 기습함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "최악. 공포의 기운이 감돌아 안전지대가 아니면 휴식 중 체력 및 정신력 회복 전면 불가능.",
+      "water_safety": "협곡 바닥에 고인 물은 공포의 환각을 유발하므로 절대 음용 불가.",
+      "foraging": "식량 조달 불가. 공포의 그림자 조각 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "공포를 이겨내는 '용기의 은빛 부적'",
+        "그림자 마법을 강화하는 파편",
+        "고대 탐험가의 부서진 랜턴"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "제단 위에서 자신의 가장 큰 공포를 정면으로 마주하고 이겨내면 모든 심리적 장애가 사라진다는 소문.",
+        "truth_flag": true,
+        "reality": "진짜로 공포를 극복해 내면 더 이상 두려움을 느끼지 않게 되어 무모한 전투에서 사망하게 됨."
+      }
+    ]
+  },
+  {
+    "id": "region_plains_of_lingering_guilt_06",
+    "name": "지워지지 않는 죄책감의 황무지",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "끝없이 펼쳐진 메마른 검은 대지. 대지 바닥에는 과거 저지른 잘못이나 상처의 기록들이 모래처럼 흩어져 있으며, 걸을 때마다 발밑에서 뼈가 바스락거리는 소리가 남.",
+      "auditory": "과거에 외면했던 이들의 원망 섞인 속삭임, 귓가를 때리는 무거운 죄책감의 메아리.",
+      "olfactory": "오랫동안 비가 오지 않은 마른 흙 냄새와 핏빛 녹슨 철가루 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "지평선 너머로 검붉은 태양이 떠올라 황무지 전체를 무거운 회색빛으로 물들임.",
+      "night": "사방이 절대적인 암흑에 잠기며, 발밑의 모래 속에서 과거의 과오들이 손을 뻗어 붙잡으려 함."
+    },
+    "weather_events": [
+      {
+        "event_name": "죄의 무게비 (Rain of Burden)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "무겁고 끈적한 회색비가 내림. 닿는 순간 마음의 짐이 무거워져 이동력(AP)이 절반으로 줄어들고 마법 시전 시 집중력 저하."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "죄책감의 모래 늪",
+        "effect": "과거의 과오를 떠올리게 하며 아래로 끌어당기는 모래 구덩이. 휘말릴 경우 탈출할 때까지 지속적인 정신력 대미지.",
+        "mitigation": "과거를 털어내는 정화 마법이나 서로의 손을 잡고 탈출."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "회색 안개와 먼지 때문에 기본 20m 이내",
+      "stealth_conditions": "지평선이 넓어 시각적 은신은 불가능하나, 죄책감에 짓눌려 숨소리를 죽이고 걸어 잠행 시 소음은 적음."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "황무지 바닥에 흩어진 과거의 기록(뼈와 모래)을 발로 짓밟거나 파헤침",
+        "consequence": "원망의 기운이 폭발하며 반경 10m 내에 '죄책감의 파동'이 발생, 파티원 전원에게 정신적 충격 및 이동 속도 저하."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "저주(Curse), 정신(Mental), 및 정화(Purification) 계열 마법 위력 3배 증폭. 공격 마법은 마음의 짐 때문에 위력 반감.",
+      "spiritual_state": "지독한 자책감과 후회가 영혼을 짓눌러 휴식 중 마나 회복 방해."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "과거의 과오에 사로잡힌 '속죄하지 못한 망령들'",
+      "common_monsters": [
+        "죄책감의 그림자 스토커",
+        "원망 어린 망령 병사",
+        "속죄의 정령"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "속죄를 기다리는 거대한 돌의 저울",
+        "description": "황무지 정중앙에 위치한 거대한 석조 저울. 한쪽에는 자신의 죄책감을, 다른 한쪽에는 생명의 무게를 달아 판정하는 곳."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "모래와 뼈가 쌓인 평탄한 평지(저지대)와 과거의 비석들이 늘어선 낮은 언덕(고지대)으로 구성.",
+      "tactical_advantage": "언덕 위에서 평지를 가로지르는 망령들의 움직임을 관측하고 유리한 지점 선점 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "죄책감 때문에 발이 무거워져 뒤로 도주하는 과정에서 모래 늪에 빠지기 쉬우므로 언덕 쪽으로 우회해야 함.",
+      "pursuit_risk": "망령들은 끈질기게 과거의 상처를 들추며 플레이어의 뒤를 바짝 쫓아옴."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 황무지의 무거운 기운 때문에 안전한 장소가 아니면 휴식 중 정신력 회복 불가능.",
+      "water_safety": "황무지 내에 자연 식수가 없으며, 모래 속에서 스며 나오는 액체는 마실 경우 과거의 악몽 유발.",
+      "foraging": "식량 조달 절대 불가. 속죄의 결정이나 마법 파편 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "마음의 무거움을 덜어주는 '속죄의 부적'",
+        "저주를 정화하는 성수 플라스크",
+        "과거의 기억이 담긴 낡은 일기장"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "돌의 저울 위에 자신의 가장 무거운 비밀을 올려놓으면 모든 죄책감이 사라지고 해방된다는 소문.",
+        "truth_flag": false,
+        "reality": "비밀을 올리는 순간 저울이 기울며 그 비밀에 얽힌 모든 비극이 현실의 재앙으로 되살아남."
+      }
+    ]
+  },
+  {
+    "id": "region_labyrinth_of_boundless_greed_07",
+    "name": "끝없는 탐욕의 황금 미로",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "사방이 눈부신 황금 벽돌과 보석으로 치장된 화려한 미로. 하지만 복도를 지날 때마다 바닥에 흩어진 금화들이 소리 없이 늘어나며 시선을 사로잡음.",
+      "auditory": "금화가 부딪히는 찰랑거리는 맑은 소리, 더 많이 가지라는 누군가의 탐욕스러운 속삭임.",
+      "olfactory": "무겁고 차가운 순금의 냄새와 오래된 보물 상자 속의 퀴퀴한 곰팡이 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "황금 벽에 반사된 태양빛이 미로 전체를 눈멀 정도로 찬란한 금빛으로 가득 채움.",
+      "night": "황금빛이 어두운 잿빛으로 변하며 미로의 벽이 좁아지는 압박감 가중."
+    },
+    "weather_events": [
+      {
+        "event_name": "황금 안개비 (Golden Dust Rain)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "하늘에서 반짝이는 금빛 가루비가 내림. 닿는 순간 무기물에 대한 집착이 강해져 소모품이나 장비를 버리지 못하게 되며 이동력(AP) 대폭 감소."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "황금 늪지 지대",
+        "effect": "바닥에 쌓인 금화들이 유체처럼 변해 발을 딛는 순간 아래로 끌어당김. 무거운 보물을 챙긴 상태일수록 더 깊이 빠져듦.",
+        "mitigation": "소지품을 일부 버리거나 가볍게 만든 후 마법으로 부유하여 통과."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "황금 반사광 덕분에 기본 40m 이상 환함",
+      "stealth_conditions": "사방이 트여 있고 금화 밟는 소리가 크게 울려 퍼져 잠행 불가능."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "복도 바닥의 대형 금괴나 보물 상자를 억지로 뜯어냄",
+        "consequence": "함정이 작동하여 반경 10m 내에 황금 파편 폭발 발생 및 탐욕의 괴수 어그로 집중."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "탐욕(Greed) 및 금전 계열 마법 위력 3배 증폭. 방어 및 정화 마법은 재물의 기운에 가막혀 효율 반감.",
+      "spiritual_state": "더 많은 것을 쥐어야 한다는 끝없는 갈증으로 이성 흐려짐."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "황금의 저주에 사로잡힌 '보물 미믹과 탐욕의 망령들'",
+      "common_monsters": [
+        "황금 미믹",
+        "탐욕의 코보드 스토커",
+        "금화 정령"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "모든 재물이 쌓인 황금 용의 둥지",
+        "description": "미로의 정중앙에 위치한 거대한 보물 산. 이곳의 보물을 취하면 미로의 저주가 영원히 지속됨."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "금화가 쌓인 평탄한 바닥(저지대)과 보석이 박힌 황금 기둥 선반(고지대)으로 구성.",
+      "tactical_advantage": "기둥 선반 위에서 아래의 미로를 지나는 적을 내려다보며 원거리 공격 수행 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "탐욕 때문에 보물을 챙기며 뒤로 도주하는 것은 불가능하므로 중앙 둥지 쪽으로 전진해야 함.",
+      "pursuit_risk": "미믹들은 보물의 가치를 감지하고 변형하여 플레이어의 퇴로를 순식간에 차단함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 재물의 기운이 감돌아 안전한 장소가 아니면 휴식 중 정신력 회복 불가능.",
+      "water_safety": "미로 내에 자연 식수가 존재하지 않으며, 황금 잔에 고인 액체는 독성 탐욕 유발.",
+      "foraging": "식량 조달 불가. 가짜 황금 가루나 보석 파편 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "공격을 강화하는 '황금 보석 반지'",
+        "함정을 감지하는 탐욕의 부적",
+        "순금 장식의 단검"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "황금 용의 둥지에서 가장 큰 금관을 집어 쓰면 세상의 왕이 될 수 있다는 소문.",
+        "truth_flag": false,
+        "reality": "금관을 쓰는 순간 머리가 황금으로 변해 영원히 미로의 동상으로 박제됨."
+      }
+    ]
+  },
+  {
+    "id": "region_chasm_of_gnawing_jealousy_08",
+    "name": "남의 것을 탐하는 질투의 협곡",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "푸르스름한 안개와 거울 바위로 이루어진 협곡. 협곡의 벽면에는 타인의 능력이 부러워 눈이 멀어버린 이들의 형상이 일그러진 채 박혀 있음.",
+      "auditory": "남을 깎아내리는 험담과 시기 어린 속삭임이 메아리처럼 사방에서 울려 퍼지는 소리.",
+      "olfactory": "차가운 철가루와 썩어가는 시기심의 독한 약품 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "푸른빛의 안개가 협곡을 가득 채우며 타인의 장점을 빼앗으려는 묘한 긴장감 조성.",
+      "night": "거울 바위들이 일제히 검푸른 빛을 발하며 파티원 중 가장 강한 자의 능력을 복제해 적을 생성함."
+    },
+    "weather_events": [
+      {
+        "event_name": "시기의 안개바람 (Envious Gale)",
+        "trigger_chance": "낮음 (15%)",
+        "effect": "차가운 푸른 안개바람이 불어 닥침. 피격 시 파티원 간의 버프나 장비 특성이 무작위로 뒤바뀌거나 일시 복제됨."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "질투의 거울 함정",
+        "effect": "거울 바위를 지나갈 때 동료의 뛰어난 능력을 시기하는 마음이 증폭되어 서로를 공격하게 만드는 상태 이상 유발.",
+        "mitigation": "서로를 신뢰하는 의지력 판정에 성공하거나 정화 마법 사용."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "푸른 안개 때문에 기본 15m 이내",
+      "stealth_conditions": "사방이 거울 바위라 시각적 은신은 완전히 무력화되며, 시기심에 찬 숨소리로 인해 잠행 불가능."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "협곡 벽의 거울 바위를 무기로 강하게 가격",
+        "consequence": "바위가 깨지며 반경 15m 내에 '능력 복제 폭발' 발생, 파티원의 무작위 스킬이 적에게 복사됨."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "질투(Envy), 환상(Illusion), 및 복제 계열 마법 위력 3배 증폭. 회복 마법은 남을 시기하는 마음 때문에 효율 반감.",
+      "spiritual_state": "저 사람은 왜 저리 강할까 하는 시기심이 의식을 잠식함."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "능력을 탐하는 '질투의 거울 망령들과 복제 스토커'",
+      "common_monsters": [
+        "질투의 거울 스토커",
+        "능력 복제형 정령",
+        "시기하는 망령 병사"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "타인의 능력을 탐하는 거대한 거울 제단",
+        "description": "협곡 정중앙에 위치한, 남의 힘을 빼앗을 수 있다는 유혹을 주는 사악한 제단."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "거울 바닥이 깔린 협곡 바닥(저지대)과 거울 바위에 깎여 나간 좁은 선반(고지대)으로 구성.",
+      "tactical_advantage": "선반 위에서 아래를 지나는 적을 내려다보며 복제 마법 견제 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "시기심 때문에 뒤로 도주하는 과정에서 발이 묶이므로 제단 쪽으로 전진해야 함.",
+      "pursuit_risk": "거울 스토커들은 플레이어의 장비를 복제하여 끈질기게 추격함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 시기심의 기운이 감돌아 안전한 장소가 아니면 휴식 중 정신력 회복 불가능.",
+      "water_safety": "협곡의 수원은 남을 깎아내리는 독성 물질이 포함되어 마실 경우 불신 유발.",
+      "foraging": "식량 조달 불가. 거울 조각 및 시기심의 결정 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "적의 스킬을 훔치는 '질투의 단검 파편'",
+        "정신 혼란을 막아주는 푸른 부적",
+        "왜곡된 거울 방패"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "거울 제단 위에 손을 올리면 파티원 중 가장 강한 자의 힘을 고스란히 물려받는다는 소문.",
+        "truth_flag": false,
+        "reality": "힘을 물려받는 대신 자신의 모든 오리지널 능력과 스킬이 영구히 소멸함."
+      }
+    ]
+  },
+  {
+    "id": "region_plains_of_empty_apathy_09",
+    "name": "모든 것이 무의미한 무관심의 황무지",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "끝없이 펼쳐진 회색빛 모래와 잿빛 하늘. 대지 위에는 어떠한 생명체도 살지 않으며, 모든 것이 귀찮고 피곤하게 느껴지는 공허한 풍경.",
+      "auditory": "바람 소리조차 들리지 않는 절대적인 침묵, 세상이 멈춰 선 듯한 먹먹한 이명 소리.",
+      "olfactory": "아무런 냄새도 나지 않는 완벽한 무취의 건조하고 낡은 공기."
+    },
+    "time_of_day_variants": {
+      "day": "해와 달의 구분이 없는 잿빛의 희뿌연 낮이 영원히 반복됨.",
+      "night": "별빛조차 없는 암흑이 찾아오나 암흑 속에서도 아무런 두려움이나 감정이 느껴지지 않음."
+    },
+    "weather_events": [
+      {
+        "event_name": "무관심의 안개 (Fog of Apathy)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "회색 안개가 황무지를 덮음. 닿는 순간 싸울 의지를 상실하여 전투 중 행동력(AP)이 매 턴 랜덤하게 생략되거나 공격 포기 상태 발생."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "공허의 모래 늪",
+        "effect": "빠져나가려는 의지조차 상실하게 만드는 무기력한 모래 늪. 탈출할 생각을 하지 않아 가만히 가라앉음.",
+        "mitigation": "동료가 강제로 끌어내거나 정신을 번쩍 차리게 만드는 강력한 자극 마법 사용."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "회색 안개 때문에 기본 20m 이내",
+      "stealth_conditions": "아무런 의욕이 없어 숨소리조차 내지 않고 걸어 잠행 능력은 최고조이나 전투 의지 역시 바닥."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "황무지 한가운데 덩그러니 놓인 낡은 비석을 무기로 가격",
+        "consequence": "비석이 부서지며 반경 15m 내에 '무기력의 파동' 발생, 파티원 전원에게 스킬 쿨타임 초기화 및 행동력 대폭 감소."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "공허(Void), 시간(Time), 및 수면(Sleep) 계열 마법 위력 3배 증폭. 모든 공격 및 치유 마법은 귀찮음 때문에 효율 70% 감소.",
+      "spiritual_state": "살아있다는 것조차 귀찮게 느껴지는 극한의 무기력증과 무관심 지배."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "의욕을 상실한 채 떠도는 '무관심의 망령들과 공허의 정령들'",
+      "common_monsters": [
+        "무기력의 위스프",
+        "공허의 슬라임",
+        "권태로운 망령 병사"
+      ],
+      "encounter_rate": "낮음 (단, 전투가 벌어져도 회피하려 하지 않음)"
+    },
+    "landmarks": [
+      {
+        "name": "모든 활동이 멈춰 선 영원의 비석",
+        "description": "황무지 정중앙에 홀로 꽂혀 있는 거대한 잿빛 비석. 이곳에 다다르면 영원히 쉬고 싶다는 유혹에 휩싸임."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "회색 모래가 깔린 평탄한 평지(저지대)와 깎여 나간 낮은 모래 언덕(고지대)으로 구성.",
+      "tactical_advantage": "모래 언덕 위에서 무기력하게 걸어오는 적들을 관측하고 원거리로 대응 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "도주하려는 의지조차 생기지 않아 뒤로 물러나기보다는 그저 멈춰 서기 쉬우므로 동료의 부축이 필수적.",
+      "pursuit_risk": "공허의 슬라임들은 느리지만 끈질기게 다가와 모든 에너지를 흡수함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "좋음. 몬스터들조차 공격할 의욕을 잃어버려 안전하게 휴식 가능하나 정신력 회복은 안 됨.",
+      "water_safety": "황무지의 수원은 맛도 향도 없으며 마실 경우 세상 모든 것에 대한 흥미를 영원히 상실.",
+      "foraging": "식량 조달 불가. 공허의 모래 결정 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "미디엄 리스크 / 미디엄 리턴",
+      "scavengeable_items": [
+        "정신적 충격을 막아주는 '공허의 부적'",
+        "시간을 늦추는 무기 파편",
+        "아무런 감정이 담기지 않은 은화"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "영원의 비석 아래에 누워 잠들면 모든 고통과 번뇌가 사라지고 완벽한 평화를 얻는다는 소문.",
+        "truth_flag": true,
+        "reality": "진짜로 고통과 번뇌가 사라지며 육체와 의식이 영원히 황무지의 흙으로 동화되어 사망함."
+      }
+    ]
+  },
+  {
+    "id": "region_valley_of_bitter_regret_10",
+    "name": "돌이킬 수 없는 후회의 계곡",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "시간이 거꾸로 흐르듯 부서진 건물 파편들이 하늘로 솟아오르고, 협곡의 바닥에는 과거 내뱉었던 모진 말들과 후회의 한숨이 투명한 유리 조각처럼 깨져 흩어져 있는 지형.",
+      "auditory": "그때 그러지 않았더라면 하는 탄식과, 과거의 선택을 되감으려는 듯 끊임없이 째깍거리는 시계 태엽 소리.",
+      "olfactory": "지나간 세월의 퀴퀴한 먼지 냄새와 눈물이 마른 소금기 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "하늘에 태양 대신 멈춰버린 거대한 회중시계가 걸려 있어, 주변 모든 풍경이 푸르스름한 회색빛 후회에 잠김.",
+      "night": "시계 태엽이 거꾸로 돌아가며 과거의 가장 부끄러웠던 기억들이 협곡 벽면에 거대한 필름처럼 상영됨."
+    },
+    "weather_events": [
+      {
+        "event_name": "회한의 눈물비 (Rain of Remorse)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "과거의 아픔을 자극하는 따뜻한 빗물이 내림. 피격 시 의지력(WIL) 판정 실패 시 현재 턴의 행동을 포기하고 과거의 실수에 절망하여 자가 데미지."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "후회의 유리 파편 바닥",
+        "effect": "지면에 깨진 유리 조각처럼 박힌 후회의 조각들. 밟을 경우 과거의 상처가 물리적 고통으로 재현되며 이동력(AP) 대폭 감소.",
+        "mitigation": "두꺼운 가죽 장화로 발을 보호하거나 부유 마법 사용."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "회색 안개와 깨진 유리 파편의 난반사 덕분에 기본 20m 이내",
+      "stealth_conditions": "유리 조각을 밟을 때마다 바스락거리는 소리가 크게 울려 퍼져 청각적 잠행이 극도로 어려움."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "협곡 바닥에 흩어진 거대한 회중시계 잔해를 무기로 가격",
+        "consequence": "시간의 톱니바퀴가 폭발하며 반경 15m 내에 '후회의 파동' 발생, 파티원 전원의 스킬 쿨타임이 초기화되거나 마나 소모량 2배 증가."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "시간(Time), 정신(Mental), 및 저주(Curse) 계열 마법 위력 3배 증폭. 회복 및 치유 마법은 마음의 응어리 때문에 효율 50% 감소.",
+      "spiritual_state": "내가 왜 그런 선택을 했을까 하는 지독한 자책감이 의식을 짓누름."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "과거에 사로잡혀 헤매는 '후회의 망령들과 시간의 사공들'",
+      "common_monsters": [
+        "후회의 잔상 스토커",
+        "시간을 되감는 태엽 정령",
+        "탄식하는 망령 병사"
+      ],
+      "encounter_rate": "높음"
+    },
+    "landmarks": [
+      {
+        "name": "과거를 되감는 거대한 후회의 회중시계탑",
+        "description": "계곡 정중앙에 붕괴된 채 꽂혀 있는 거대한 시계탑. 이곳의 태엽을 돌리면 과거의 선택을 바꿀 수 있다는 환상을 줌."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "유리 파편이 깔린 협곡 바닥(저지대)과 솟아오른 건물 파편 선반(고지대)으로 구성.",
+      "tactical_advantage": "파편 선반 위에서 아래를 지나는 적을 내려다보며 시간 제어 마법 투척 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "후회 때문에 발목이 잡혀 뒤로 도주하는 과정에서 속도가 급격히 꺾이므로 시계탑 쪽으로 전진해야 함.",
+      "pursuit_risk": "잔상 스토커들은 과거의 기억을 미끼삼아 플레이어의 도주로를 순식간에 차단함."
+    },
+    "camp_and_survival": {
+      "camp_safety": "나쁨. 후회의 기운이 감돌아 안전한 장소가 아니면 휴식 중 정신력 회복 불가능.",
+      "water_safety": "계곡의 수원은 눈물이 모인 것으로 마실 경우 과거의 슬픈 기억이 되살아나 패닉 유발.",
+      "foraging": "식량 조달 불가. 태엽 부품이나 후회의 결정 파편 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "시간을 되감는 '후회의 모래시계 파편'",
+        "정신력을 지켜주는 낡은 회중시계",
+        "과거의 기억이 담긴 보석"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "시계탑의 바늘을 정확히 정오로 맞추면 인생에서 가장 큰 실수를 저지르기 전으로 돌아간다는 소문.",
+        "truth_flag": false,
+        "reality": "바늘을 맞추는 순간 시계탑이 무너지며 그 실수를 저지르던 당시의 고통이 육체에 그대로 재현됨."
+      }
+    ]
+  },
+  {
+    "id": "region_marsh_of_suffocating_anxiety_11",
+    "name": "숨이 조여오는 불안의 늪지",
+    "category": "emotion_realm",
+    "description": {
+      "visual": "앞이 잘 보이지 않는 검붉은 안개와 끈적한 진흙탕. 늪지 곳곳에서 거품이 터지며 다가올 미래에 대한 막연한 두려움과 압박감이 안개 형태로 뿜어져 나옴.",
+      "auditory": "가쁘게 몰아쉬는 숨소리, 멀리서 다가오는 정체불명의 발소리, 심장이 쿵쾅거리는 소리.",
+      "olfactory": "식은땀 냄새와 썩어가는 늪지 유기물의 답답한 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "검붉은 안개가 태양을 가려 늪지 전체가 숨이 막힐 듯한 어스름한 적갈색에 갇힘.",
+      "night": "안개가 차가운 검은색으로 변하며, 다가올 위험에 대한 환각이 귓가에 끊임없이 맴돝."
+    },
+    "weather_events": [
+      {
+        "event_name": "압박의 안개 폭풍 (Fog Storm of Pressure)",
+        "trigger_chance": "보통 (20%)",
+        "effect": "늪지 전체에 무거운 기압차가 발생하며 안개폭풍이 들이침. 피격 시 가슴이 답답해져 1턴 동안 스킬 시전 불가 및 행동력 대폭 감소."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "불안의 퀵샌드 늪",
+        "effect": "앞으로 닥칠 재앙에 대한 공포로 스스로 발버둥 치다 더 깊이 빠져드는 늪지대. 정신을 잃을 경우 완전히 매몰.",
+        "mitigation": "동료가 로프를 던져 끌어올리거나 심호흡을 하며 정신력 판정에 성공하여 탈출."
+      }
+    ],
+    "visibility_and_stealth": {
+      "visibility_range": "검붉은 안개 때문에 기본 10m 이내로 시야가 극도로 제한됨",
+      "stealth_conditions": "안개가 두껍고 시야가 좁아 시각적 은신은 유리하나, 가쁘게 몰아쉬는 숨소리 때문에 청각적 잠행은 불가능에 가까움."
+    },
+    "interaction_triggers": [
+      {
+        "player_action": "늪지 바닥에 솟아오른 불안의 기포 주머니를 무기로 가격",
+        "consequence": "기포가 터지며 반경 10m 내에 '불안의 가스 폭발' 발생, 파티원 전원에게 호흡 곤란 및 공포 상태 이상 부여."
+      }
+    ],
+    "arcane_and_spiritual_aura": {
+      "magic_resonance": "정신(Mental), 공포(Fear), 및 어둠(Dark) 계열 마법 위력 3배 증폭. 보호 및 방어 마법은 불안감 때문에 결계가 쉽게 깨짐.",
+      "spiritual_state": "당장이라도 무슨 일인가 터질 것 같은 극심한 긴장감과 초조함 유발."
+    },
+    "factions_and_encounters": {
+      "dominant_faction": "불안을 먹고 자라는 '그림자 스토커와 악몽의 늪지 몬스터'",
+      "common_monsters": [
+        "불안의 그림자 스토커",
+        "늪지 슬라임 몬스터",
+        "숨통을 조이는 정령"
+      ],
+      "encounter_rate": "매우 높음"
+    },
+    "landmarks": [
+      {
+        "name": "미래의 파멸을 예언하는 불안의 신전",
+        "description": "늪지 중앙에 반쯤 가라앉은 거대한 사원. 이곳에 들어가면 앞으로 겪게 될 최악의 재앙을 보게 됨."
+      }
+    ],
+    "terrain_and_verticality": {
+      "elevation": "끈적한 진흙이 찬 늪지 바닥(저지대)과 썩은 거목의 뿌리가 얽힌 고지대 선반으로 구성.",
+      "tactical_advantage": "거목 뿌리 위에서 늪지 속 괴수들을 내려다보며 원거리 마법 공격 수행 가능."
+    },
+    "escape_and_retreat": {
+      "retreat_options": "진흙 늪지 특성상 뒤로 도주하는 과정에서 발이 묶여 위험에 처하므로 신전 쪽으로 전진해야 함.",
+      "pursuit_risk": "그림자 스토커들은 안개 속에서 숨소리를 추적해 끈질기게 뒤를 밟음."
+    },
+    "camp_and_survival": {
+      "camp_safety": "최악. 불안의 기운이 감돌아 안전한 장소가 아니면 휴식 중 체력 및 정신력 회복 전면 불가능.",
+      "water_safety": "늪지의 물은 심한 악취와 함께 마실 경우 극심한 호흡 곤란과 공황 발작 유발.",
+      "foraging": "식량 조달 불가. 불안의 결정이나 독성 허브 채집 가능."
+    },
+    "loot_and_rewards": {
+      "risk_vs_reward": "하이 리스크 / 하이 리턴",
+      "scavengeable_items": [
+        "불안을 진정시키는 '안정의 허브 약병'",
+        "정신 방어를 높여주는 늪지 부적",
+        "부식되지 않는 탐험가의 나침반"
+      ]
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "불안의 신전 제단에 기도를 올리면 앞으로 일어날 모든 재앙을 피하는 예지력을 얻는다는 소문.",
+        "truth_flag": false,
+        "reality": "기도를 올리는 순간 앞으로 겪을 모든 고통과 죽음의 순간이 머릿속에 강제로 주입되어 쇼크사함."
+      }
+    ]
+  }
+]

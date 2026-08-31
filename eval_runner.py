@@ -238,7 +238,7 @@ def run_evaluation(
     print(f"Running evaluation: {len(scenario)} turns, judge={'on' if run_judge else 'off'}")
     print("-" * 60)
 
-    with open(world_path) as f:
+    with open(world_path, encoding="utf-8") as f:
         state = WorldState.from_json(f.read())
 
     llm = get_llm(llm_name)

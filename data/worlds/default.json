@@ -1,9 +1,63 @@
 {
+  "session_id": "default_session",
   "world_name": "잿빛 변경",
+  "factions": {
+    "border_guard": {
+      "id": "border_guard",
+      "name": "국경 치안 수비대",
+      "system": "군정",
+      "power_level": "지역 공권력",
+      "ruling_race": "인간",
+      "taboos": ["야간 무단 통행", "미등록 마도구 밀수"],
+      "relations": {"shadow_guild": "적대"}
+    },
+    "shadow_guild": {
+      "id": "shadow_guild",
+      "name": "그림자 밀수 연합",
+      "system": "지하 카르텔",
+      "power_level": "지하 세력",
+      "ruling_race": "혼합",
+      "taboos": ["배신자 은닉", "정보 누설"],
+      "relations": {"border_guard": "적대"}
+    }
+  },
+  "world_lore": {
+    "magic_origin": "고대 룬어와 마력 전도성을 지닌 광물 에테라이트의 공명",
+    "races": {
+      "human": "적응력이 뛰어나고 기술/도구를 빠르게 습득함",
+      "elf": "선천적 마력 친화도가 높으나 신체 재생이 느림"
+    }
+  },
+  "environment_states": {},
+  "discovered_clues": {},
+  "world_secrets": {
+    "shadow_conspiracy": {
+      "truth": "치안대장과 그림자 밀수 연합 수장이 동일한 고대 결사 소속임",
+      "clues": ["밀수품 상자의 치안대 밀랍 인장"],
+      "solved": false
+    }
+  },
+  "dilemmas_faced": [],
   "player": {
+
+
+    "name": "방랑자",
     "location": "tavern",
     "inventory": ["old_key"],
     "health": 100,
+    "max_health": 100,
+    "level": 1,
+    "exp": 0,
+    "gold": 25,
+    "str_stat": 14,
+    "dex_stat": 12,
+    "con_stat": 13,
+    "int_stat": 10,
+    "wis_stat": 10,
+    "cha_stat": 11,
+    "reputation": 0,
+    "equipped_weapon": null,
+    "equipped_armor": null,
     "known_facts": []
   },
   "locations": {
@@ -59,11 +113,41 @@
       "name": "선술집 주인 마르타",
       "description": "날카로운 눈빛과 밀가루가 묻은 앞치마를 가진 체격 좋은 여성이다. 그녀는 모든 것을 지켜보지만 말은 적다.",
       "location": "tavern",
+      "tier": "intermediate",
+      "influence_scope": "local",
+      "job": "선술집 주인 및 전직 용병",
       "disposition": "neutral",
+      "desire": "도적단에게 잃은 남동생의 유품(은제 펜던트)을 되찾는 것",
+      "weakness": "남동생의 이름이나 유품이 언급되면 냉정함을 잃고 크게 흔들림",
+      "appearance_story": "왼쪽 뺨에 비스듬히 긁힌 오래된 도검 흉터가 있으며, 앞치마 안쪽에 손잡이가 닳아 빠진 짧은 손도끼를 차고 있다.",
+      "bonds": {
+        "merchant": "식자재와 술을 납품받는 단골 상인이자 사촌 동생",
+        "dead_brother": "10년 전 변경 도적단 습격으로 사망한 막내 남동생"
+      },
+      "trauma": "과거 용병 시절 지휘 미숙으로 분대원 전원을 잃고 홀로 살아남았던 죄책감",
+      "quirk": "거짓말을 하거나 극도로 긴장하면 오른손으로 앞치마 매듭을 꽉 쥐어뜯는 버릇",
+      "taboo": "선술집 내부에서 아이나 임산부에게 무력을 행사하는 자는 목숨을 걸고 응징함",
+      "tastes": {
+        "likes": ["비 오는 날의 장작 타는 소리", "독한 북부 호밀 위스키", "목각 인형 깎기"],
+        "dislikes": ["거만한 귀족", "단맛 나는 과일주", "음유시인의 시끄러운 노래"]
+      },
+      "physical_condition": "과거 화살상으로 인해 비가 오거나 추운 날이면 왼쪽 무릎을 심하게 절뚝거림",
+      "speech_style": "거칠고 툭툭 끊어지는 북부 국경 방언, 말끝마다 혀를 차며 '쯧, 제기랄'을 붙임",
+      "daily_routine": "새벽 5시에 기상해 장작을 패고, 밤 11시 이후에는 피로감으로 대화가 극도로 거칠어짐",
+      "superstitions": "선술집 바닥에 소금을 흘리면 반드시 왼손으로 세 번 어깨 뒤로 던져야 직성이 풀림",
+      "self_image_vs_reputation": "본인은 '철저히 돈만 밝히는 냉혹한 장사치'라 생각하지만, 마을 주민들은 '과묵하지만 속정 깊은 큰누님'으로 신뢰함",
+      "hidden_side": "밤마다 손님들이 떨어뜨리고 간 잔돈을 모아 국경 고아원에 익명으로 밀가루 포대를 보냄",
+      "education_level": "초보적인 계산과 한 줄짜리 영수증만 겨우 읽는 수준(문맹에 가까움), 용병단 은어에 매우 능통",
+      "financial_state": "지난달 도적단 통행세 탓에 선술집 임대료 25골드가 연체되어 당장 이번 주까지 목돈이 급함",
       "alive": true,
+
+      "health": 60,
+      "max_health": 60,
+      "armor_class": 12,
       "inventory": [],
       "memories": []
     },
+
     "merchant": {
       "id": "merchant",
       "name": "상인 알드릭",
@@ -71,6 +155,9 @@
       "location": "market",
       "disposition": "friendly",
       "alive": true,
+      "health": 35,
+      "max_health": 35,
+      "armor_class": 10,
       "inventory": ["silver_ring"],
       "memories": []
     },
@@ -81,6 +168,9 @@
       "location": "alley",
       "disposition": "neutral",
       "alive": true,
+      "health": 70,
+      "max_health": 70,
+      "armor_class": 14,
       "inventory": [],
       "memories": []
     }
@@ -91,6 +181,13 @@
       "name": "낡은 철제 열쇠",
       "description": "오랜 세월에 이빨이 매끄럽게 닳아버린 묵직한 철제 열쇠다.",
       "location": "inventory",
+      "item_type": "key",
+      "damage": 0,
+      "defense": 0,
+      "value": 5,
+      "weight": 0.2,
+      "required_strength": 10,
+      "utility_function": "21번 방의 잠긴 궤짝 및 구형 잠금장치 해제 가능",
       "properties": {"unlocks": "locked_chest"}
     },
     "dagger": {
@@ -98,13 +195,29 @@
       "name": "녹슨 단검",
       "description": "녹이 군데군데 슨 짧은 칼날이다. 아직도 충분히 날카롭다.",
       "location": "tavern",
-      "properties": {"weapon": true, "damage": 5}
+      "item_type": "weapon",
+      "damage": 6,
+      "defense": 0,
+      "value": 15,
+      "scaling_stat": "str",
+      "scaling_factor": 1.5,
+      "weight": 0.8,
+      "required_strength": 8,
+      "utility_function": "밧줄 절단, 좁은 틈새 벌리기, 암습 찌르기 가능",
+      "properties": {"weapon": true}
     },
     "wanted_notice": {
       "id": "wanted_notice",
       "name": "수배 전단",
       "description": "거친 목탄으로 누군가의 얼굴을 그려놓은 양피지 수배 전단이다. 현상금은 금화 200닢.",
       "location": "tavern",
+      "item_type": "document",
+      "damage": 0,
+      "defense": 0,
+      "value": 1,
+      "weight": 0.05,
+      "document_text": "[현상 수배령]\n대상: 붉은 갈기의 엘릭\n죄목: 국경 수비대 보급 마도구 탈취 및 방화\n현상금: 금화 200닢 (생포/사살 불문)\n특이사항: 노련한 검술과 은밀 행동에 능함",
+      "utility_function": "현상범 조우 시 얼굴 대조 및 치안 수비대 현상금 수령 증빙",
       "properties": {"readable": true}
     },
     "locked_chest": {
@@ -112,6 +225,18 @@
       "name": "잠긴 궤짝",
       "description": "철제 자물쇠가 달린 묵직한 나무 궤짝이다.",
       "location": "room_21",
+      "item_type": "furniture",
+      "damage": 0,
+      "defense": 0,
+      "value": 50,
+      "weight": 25.0,
+      "size": "heavy",
+      "required_strength": 16,
+      "can_store_in_bag": false,
+      "can_wield_as_weapon": true,
+      "improvised_damage": 8,
+      "utility_function": "괴력으로 내던져 장애물 파괴 또는 엄폐물로 활용 가능",
+      "puzzle_hint": "낡은 철제 열쇠로 열거나, 괴력 또는 도벽 스킬로 자물쇠 파쇄 가능",
       "properties": {"locked": true, "unlocked_by": "old_key"}
     },
     "strange_coin": {
@@ -119,6 +244,12 @@
       "name": "수상한 동전",
       "description": "본 적 없는 얼굴이 새겨진 금화다. 손에 쥐자 묘하게 따뜻한 온기가 느껴진다.",
       "location": "market",
+      "item_type": "misc",
+      "damage": 0,
+      "defense": 0,
+      "value": 30,
+      "weight": 0.1,
+      "utility_function": "고대 결사 소속 상인과의 은밀한 비밀 거래 시 신분 증표",
       "properties": {}
     },
     "scratched_message": {
@@ -126,9 +257,22 @@
       "name": "긁어 새긴 문구",
       "description": "벽돌에 무언가 긁어 새겨져 있다. '그 열쇠는 하나 이상의 문을 연다.'",
       "location": "alley",
+      "item_type": "structure",
+      "damage": 0,
+      "defense": 0,
+      "value": 0,
+      "weight": 100.0,
+      "size": "massive",
+      "can_store_in_bag": false,
+      "can_wield_as_weapon": false,
+      "document_text": "\"선술집 2층 궤짝의 열쇠는 지하실 비밀 통로의 자물쇠와도 맞물린다.\"",
+      "utility_function": "숨겨진 비밀 통로 위치를 가리키는 지형 단서",
       "properties": {"readable": true, "reveals_fact": "the_chest_secret"}
     }
+
   },
   "turn": 0,
+  "world_reputation": 0,
+  "world_facts": ["잿빛 변경 일대에는 정체불명의 도적단이 출몰한다는 소문이 있다."],
   "history": []
 }
