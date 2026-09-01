@@ -1,0 +1,160 @@
+{
+  "bgm_tracks": [
+    {
+      "id": "bgm_tavern_warmth",
+      "name_ko": "따뜻한 선술집의 불빛",
+      "category": "town",
+      "tags": ["tavern", "inn", "town", "peaceful", "social"],
+      "default_volume": 0.6,
+      "asset_path": "assets/audio/bgm/tavern_warmth.mp3",
+      "description_ko": "통나무 타는 소리와 류트 선율이 흐르는 아늑한 주점 분위기"
+    },
+    {
+      "id": "bgm_dungeon_shadows",
+      "name_ko": "심연 지하감옥의 침묵",
+      "category": "dungeon",
+      "tags": ["dungeon", "cave", "catacomb", "dark", "underground"],
+      "default_volume": 0.5,
+      "asset_path": "assets/audio/bgm/dungeon_shadows.mp3",
+      "description_ko": "물방울 떨어지는 소리와 스산한 바람이 감도는 어두운 지하 분위기"
+    },
+    {
+      "id": "bgm_combat_blades",
+      "name_ko": "교차하는 칼날의 전장",
+      "category": "combat",
+      "tags": ["combat", "battle", "fight", "melee", "action"],
+      "default_volume": 0.7,
+      "asset_path": "assets/audio/bgm/combat_blades.mp3",
+      "description_ko": "심장 박동을 자극하는 빠른 타악기와 금속성 긴장감"
+    },
+    {
+      "id": "bgm_boss_apocalypse",
+      "name_ko": "파멸을 부르는 거수의 진격",
+      "category": "boss",
+      "tags": ["boss", "elite", "fatal", "nemesis", "epic"],
+      "default_volume": 0.8,
+      "asset_path": "assets/audio/bgm/boss_apocalypse.mp3",
+      "description_ko": "장엄한 오케스트라와 합창이 어우러진 절체절명의 보스전"
+    },
+    {
+      "id": "bgm_camp_bonfire",
+      "name_ko": "별빛 아래 야영 모닥불",
+      "category": "camp",
+      "tags": ["camp", "rest", "night", "bonfire", "healing"],
+      "default_volume": 0.5,
+      "asset_path": "assets/audio/bgm/camp_bonfire.mp3",
+      "description_ko": "타닥거리는 장작불과 귀뚜라미 소리의 잔잔한 휴식"
+    },
+    {
+      "id": "bgm_wilderness_journey",
+      "name_ko": "미지의 광야를 걷는 방랑자",
+      "category": "travel",
+      "tags": ["travel", "plains", "forest", "road", "exploration"],
+      "default_volume": 0.6,
+      "asset_path": "assets/audio/bgm/wilderness_journey.mp3",
+      "description_ko": "바람에 흔들리는 풀잎과 끝없는 지평선의 서정적인 모험"
+    },
+    {
+      "id": "bgm_rainy_ruins",
+      "name_ko": "비에 젖은 고대 폐허",
+      "category": "mystery",
+      "tags": ["rain", "ruins", "sad", "ancient", "mystery"],
+      "default_volume": 0.5,
+      "asset_path": "assets/audio/bgm/rainy_ruins.mp3",
+      "description_ko": "떨어지는 빗소리와 잊혀진 문명의 쓸쓸한 잔향"
+    }
+  ],
+  "sfx_cues": [
+    {
+      "id": "sfx_dice_roll",
+      "name_ko": "주사위 굴림",
+      "category": "ui",
+      "trigger_keywords": ["dice_roll", "판정", "주사위"],
+      "asset_path": "assets/audio/sfx/dice_roll.mp3"
+    },
+    {
+      "id": "sfx_critical_hit",
+      "name_ko": "치명타 일격",
+      "category": "combat",
+      "trigger_keywords": ["critical_hit", "대성공", "치명타", "급소"],
+      "asset_path": "assets/audio/sfx/critical_hit.mp3"
+    },
+    {
+      "id": "sfx_sword_slash",
+      "name_ko": "도검 참격",
+      "category": "combat",
+      "trigger_keywords": ["slash", "베기", "칼", "참격", "검"],
+      "asset_path": "assets/audio/sfx/sword_slash.mp3"
+    },
+    {
+      "id": "sfx_blunt_smash",
+      "name_ko": "둔기 강타",
+      "category": "combat",
+      "trigger_keywords": ["bludgeon", "망치", "방패", "후려치기", "강타", "둔기"],
+      "asset_path": "assets/audio/sfx/blunt_smash.mp3"
+    },
+    {
+      "id": "sfx_fireball_cast",
+      "name_ko": "화염 마법 방출",
+      "category": "magic",
+      "trigger_keywords": ["fire", "화염", "불꽃", "이그니스", "폭발", "용암"],
+      "asset_path": "assets/audio/sfx/fireball_cast.mp3"
+    },
+    {
+      "id": "sfx_ice_freeze",
+      "name_ko": "빙결 마법 파쇄",
+      "category": "magic",
+      "trigger_keywords": ["ice", "frost", "빙결", "냉기", "얼음", "동상"],
+      "asset_path": "assets/audio/sfx/ice_freeze.mp3"
+    },
+    {
+      "id": "sfx_lightning_bolt",
+      "name_ko": "번개 뇌격",
+      "category": "magic",
+      "trigger_keywords": ["lightning", "번개", "뇌격", "감전", "전기"],
+      "asset_path": "assets/audio/sfx/lightning_bolt.mp3"
+    },
+    {
+      "id": "sfx_heal_chime",
+      "name_ko": "치유의 성음",
+      "category": "magic",
+      "trigger_keywords": ["heal", "치유", "회복", "정화", "완치"],
+      "asset_path": "assets/audio/sfx/heal_chime.mp3"
+    },
+    {
+      "id": "sfx_gold_coins",
+      "name_ko": "금화 짤랑임",
+      "category": "item",
+      "trigger_keywords": ["gold", "골드", "금화", "구매", "판매", "돈"],
+      "asset_path": "assets/audio/sfx/gold_coins.mp3"
+    },
+    {
+      "id": "sfx_item_pickup",
+      "name_ko": "아이템 획득",
+      "category": "item",
+      "trigger_keywords": ["pickup", "획득", "줍기", "가방", "수납"],
+      "asset_path": "assets/audio/sfx/item_pickup.mp3"
+    },
+    {
+      "id": "sfx_quest_update",
+      "name_ko": "퀘스트 갱신",
+      "category": "ui",
+      "trigger_keywords": ["quest", "퀘스트", "임무", "완료", "수락"],
+      "asset_path": "assets/audio/sfx/quest_update.mp3"
+    },
+    {
+      "id": "sfx_death_groan",
+      "name_ko": "적 처치 및 단말마",
+      "category": "combat",
+      "trigger_keywords": ["killed", "사망", "처치", "쓰러짐", "단말마"],
+      "asset_path": "assets/audio/sfx/death_groan.mp3"
+    },
+    {
+      "id": "sfx_danger_alert",
+      "name_ko": "위기 경보",
+      "category": "ui",
+      "trigger_keywords": ["danger", "실패", "패배", "함정", "기습", "인터럽트"],
+      "asset_path": "assets/audio/sfx/danger_alert.mp3"
+    }
+  ]
+}

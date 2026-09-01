@@ -1,0 +1,73 @@
+{
+  "runes": [
+    {
+      "id": "rune_crimson_flame",
+      "name_ko": "룬: 진홍의 불꽃",
+      "element": "fire",
+      "applicable_types": ["weapon"],
+      "description_ko": "무기에 타오르는 화염 마력을 깃들여 타격 시 30% 확률로 화상(Burn) 틱을 부여합니다.",
+      "effects": {
+        "bonus_fire_damage": 4,
+        "on_hit_status": "burn",
+        "status_chance": 0.3,
+        "status_duration": 3,
+        "status_potency": 3
+      },
+      "value": 150
+    },
+    {
+      "id": "rune_glacial_frost",
+      "name_ko": "룬: 빙하의 서리",
+      "element": "ice",
+      "applicable_types": ["weapon"],
+      "description_ko": "칼날에 냉기를 둘러 타격 시 적의 민첩(AGI)을 -3 둔화시키고 동상(Frostbite)을 유발합니다.",
+      "effects": {
+        "bonus_ice_damage": 3,
+        "on_hit_status": "frostbite",
+        "status_chance": 0.25,
+        "status_duration": 2,
+        "status_potency": 2
+      },
+      "value": 140
+    },
+    {
+      "id": "rune_tempest_lightning",
+      "name_ko": "룬: 태풍의 뇌격",
+      "element": "lightning",
+      "applicable_types": ["weapon"],
+      "description_ko": "타격 시 튀는 스파크로 치명타 확률을 +5% 올리고 감전(Shock)을 일으킵니다.",
+      "effects": {
+        "bonus_lightning_damage": 5,
+        "crit_rate_bonus": 5,
+        "on_hit_status": "shock",
+        "status_chance": 0.2,
+        "status_duration": 2,
+        "status_potency": 2
+      },
+      "value": 180
+    },
+    {
+      "id": "rune_vampiric_thirst",
+      "name_ko": "룬: 흡혈귀의 갈증",
+      "element": "blood",
+      "applicable_types": ["weapon"],
+      "description_ko": "베어낸 적의 피를 흡수하여 가한 최종 물리 피해의 15%만큼 시전자의 체력을 즉시 회복합니다.",
+      "effects": {
+        "lifesteal_ratio": 0.15
+      },
+      "value": 250
+    },
+    {
+      "id": "rune_iron_warding",
+      "name_ko": "룬: 강철 수호의 결계",
+      "element": "physical",
+      "applicable_types": ["armor"],
+      "description_ko": "갑옷 표면에 물리 방호막을 형성하여 방어력을 +5 올리고 피격 피해를 10% 경감합니다.",
+      "effects": {
+        "bonus_defense": 5,
+        "damage_reduction_ratio": 0.1
+      },
+      "value": 160
+    }
+  ]
+}

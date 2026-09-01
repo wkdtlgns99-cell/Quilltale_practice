@@ -12,5 +12,8 @@ def get_llm(provider: str = "gemini") -> BaseLLM:
         from .claude import ClaudeLLM
         return ClaudeLLM()
 
+    elif provider == "ollama":
+        from .ollama import OllamaLLM
+        return OllamaLLM()
 
     raise ValueError(f"Unsupported LLM provider: {provider}")

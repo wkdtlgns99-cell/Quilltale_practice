@@ -1,0 +1,468 @@
+[
+  {
+    "shop_id": "moonlit_apothecary",
+    "shop_name": "달빛 약초원",
+    "npc_id": "herbalist_elara",
+    "location_id": "old_town_alley",
+    "shop_type": "apothecary",
+    "buy_rate": 1.3,
+    "sell_rate": 0.7,
+    "haggling_allowed": true,
+    "restock_interval_turns": 20,
+    "merchant_gold": 900,
+    "services": {
+      "identify_herb": {
+        "enabled": true,
+        "cost_gold": 10,
+        "description_ko": "정체불명의 약초와 식물의 효능 감정"
+      },
+      "brew_potion": {
+        "enabled": true,
+        "cost_gold": 25,
+        "description_ko": "보유한 약초를 사용해 간단한 회복 물약 제작"
+      },
+      "remove_poison": {
+        "enabled": true,
+        "cost_gold": 40,
+        "description_ko": "중독 및 출혈 상태 치료"
+      }
+    },
+    "dialogue": {
+      "greeting": "어서 와요. 상처 냄새가 나는군요. 이번에는 살아서 돌아온 모양이네요.",
+      "haggling_success": "후후, 약초값까지 깎아달라고요? 좋아요. 대신 다음에 희귀한 약초를 가져와요.",
+      "haggling_fail": "약초는 흥정한다고 더 빨리 자라지 않아요.",
+      "no_gold": "돈이 없다면 약초를 캐서 가져오세요. 그게 훨씬 정직하니까.",
+      "secret_unlocked": "그 약초는 일반 손님에게는 보여주지 않아요. 당신이라면… 한 번쯤 써볼 만하겠네요."
+    },
+    "inventory": [
+      {
+        "item_id": "moonleaf",
+        "name_ko": "월광초",
+        "category": "material",
+        "item_tier": "uncommon",
+        "stock": 8,
+        "max_stock": 12,
+        "price": 18,
+        "description_ko": "달빛을 받은 밤에만 자라는 약초. 정신 회복 물약의 재료로 사용된다.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "greater_healing_potion",
+        "name_ko": "상급 회복 물약",
+        "category": "consumable",
+        "item_tier": "rare",
+        "stock": 2,
+        "max_stock": 4,
+        "price": 120,
+        "description_ko": "사용 즉시 상당량의 HP를 회복한다.",
+        "unlock_conditions": {
+          "reputation_min": 15
+        }
+      },
+      {
+        "item_id": "dream_seed",
+        "name_ko": "몽상의 씨앗",
+        "category": "material",
+        "item_tier": "unique",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 350,
+        "description_ko": "먹은 사람의 꿈을 물약에 담을 수 있다는 정체불명의 씨앗.",
+        "unlock_conditions": {
+          "stats": {
+            "WIS": 16
+          },
+          "completed_quest_id": "quest_dream_garden"
+        }
+      }
+    ]
+  },
+  {
+    "shop_id": "iron_bell_forge",
+    "shop_name": "철종 대장간",
+    "npc_id": "blacksmith_goran",
+    "location_id": "merchant_district",
+    "shop_type": "blacksmith",
+    "buy_rate": 1.4,
+    "sell_rate": 0.65,
+    "haggling_allowed": true,
+    "restock_interval_turns": 40,
+    "merchant_gold": 2200,
+    "services": {
+      "repair": {
+        "enabled": true,
+        "cost_gold": 30,
+        "description_ko": "무기와 방어구의 내구도 복구 및 수리"
+      },
+      "reinforce": {
+        "enabled": true,
+        "cost_gold": 150,
+        "description_ko": "무기의 기본 공격력을 소폭 증가"
+      },
+      "reforge": {
+        "enabled": true,
+        "cost_gold": 400,
+        "description_ko": "장비의 부가 옵션 하나를 무작위로 변경"
+      }
+    },
+    "dialogue": {
+      "greeting": "망치질하는 동안 방해하지 마. 살 생각이면 조용히 보고 골라.",
+      "haggling_success": "허! 네 검보다 네 혀가 더 날카롭군. 좋다, 조금 깎아주지.",
+      "haggling_fail": "철값도 모르면서 대장간에 와서 흥정을 해?",
+      "no_gold": "무기를 들고 다닐 실력은 있어 보이는데, 돈은 왜 거지꼴이지?",
+      "secret_unlocked": "이건 주문받은 물건이다. 그런데 주인이 찾으러 오지 않았지. 네가 가져간다면… 모른 척해주마."
+    },
+    "inventory": [
+      {
+        "item_id": "steel_longsword",
+        "name_ko": "강철 장검",
+        "category": "weapon",
+        "item_tier": "uncommon",
+        "stock": 3,
+        "max_stock": 3,
+        "price": 180,
+        "description_ko": "균형이 잘 잡힌 실전용 강철 장검.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "reinforced_chainmail",
+        "name_ko": "보강 사슬갑옷",
+        "category": "armor",
+        "item_tier": "rare",
+        "stock": 1,
+        "max_stock": 2,
+        "price": 420,
+        "description_ko": "일반 사슬갑옷보다 방어력이 높고 내구도가 뛰어나다.",
+        "unlock_conditions": {
+          "level_min": 12
+        }
+      },
+      {
+        "item_id": "unfinished_legendary_blade",
+        "name_ko": "미완성 전설검",
+        "category": "weapon",
+        "item_tier": "unique",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 1000,
+        "description_ko": "아직 완성되지 않은 검. 특정 재료를 추가하면 진정한 능력을 발휘한다.",
+        "unlock_conditions": {
+          "reputation_min": 30,
+          "stats": {
+            "STR": 16
+          }
+        }
+      }
+    ]
+  },
+  {
+    "shop_id": "astral_archive",
+    "shop_name": "별의 서고",
+    "npc_id": "archivist_selene",
+    "location_id": "mage_tower",
+    "shop_type": "magic_emporium",
+    "buy_rate": 1.6,
+    "sell_rate": 0.5,
+    "haggling_allowed": false,
+    "restock_interval_turns": 50,
+    "merchant_gold": 3000,
+    "services": {
+      "spell_identification": {
+        "enabled": true,
+        "cost_gold": 50,
+        "description_ko": "미확인 주문서의 마법 계열과 효과를 분석"
+      },
+      "mana_recovery": {
+        "enabled": true,
+        "cost_gold": 30,
+        "description_ko": "정기와 마나를 가득 회복하는 비전 의식"
+      }
+    },
+    "dialogue": {
+      "greeting": "책을 찾고 있나요? 이곳에서는 지식에도 가격이 붙습니다.",
+      "haggling_success": "이곳의 가격은 흥정으로 정해지지 않습니다.",
+      "haggling_fail": "지식의 가치를 동전으로 깎아내리려 하지 마세요.",
+      "no_gold": "읽을 자격이 없는 것이 아니라, 살 자격이 없는 겁니다.",
+      "secret_unlocked": "이 책은 서고 목록에도 존재하지 않습니다. 어디서 찾았는지는 묻지 않겠습니다."
+    },
+    "inventory": [
+      {
+        "item_id": "spellbook_arcane_bolt",
+        "name_ko": "비전 화살 주문서",
+        "category": "spell_tome",
+        "item_tier": "common",
+        "stock": 4,
+        "max_stock": 5,
+        "price": 80,
+        "description_ko": "기본적인 마력 투사 주문을 습득할 수 있다.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "spellbook_mirror_image",
+        "name_ko": "거울상 주문서",
+        "category": "spell_tome",
+        "item_tier": "rare",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 350,
+        "description_ko": "자신과 동일한 환영을 만들어 적의 공격을 분산시킨다.",
+        "unlock_conditions": {
+          "stats": {
+            "INT": 15
+          }
+        }
+      },
+      {
+        "item_id": "spellbook_memory_edit",
+        "name_ko": "기억 개변의 서",
+        "category": "spell_tome",
+        "item_tier": "cursed",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 900,
+        "description_ko": "대상의 최근 기억 일부를 변경할 수 있는 금단의 마법서.",
+        "unlock_conditions": {
+          "stats": {
+            "INT": 18
+          }
+        }
+      }
+    ]
+  },
+  {
+    "shop_id": "traveling_caravan_of_mirrors",
+    "shop_name": "거울 마차 상단",
+    "npc_id": "merchant_mirabel",
+    "location_id": "random_road",
+    "shop_type": "wandering_merchant",
+    "buy_rate": 1.8,
+    "sell_rate": 0.4,
+    "haggling_allowed": true,
+    "restock_interval_turns": 999,
+    "merchant_gold": 700,
+    "services": {
+      "location_hint": {
+        "enabled": true,
+        "cost_gold": 30,
+        "description_ko": "현재 지역에서 발견 가능한 특수 장소의 위치를 알려준다"
+      }
+    },
+    "dialogue": {
+      "greeting": "어머, 여행자네? 오늘만 여기 있어요. 내일은 저도 어디 있을지 모르거든.",
+      "haggling_success": "좋아요! 당신 얼굴이 마음에 드니까 조금 싸게 드릴게.",
+      "haggling_fail": "흥정 실패! 하지만 너무 실망하지 마요. 다음에 다시 시도해도 되니까.",
+      "no_gold": "돈 대신 재미있는 물건은 없나요?",
+      "secret_unlocked": "쉿. 사실 이건 내가 팔려고 가져온 물건이 아니에요. 그래도 당신에게라면…"
+    },
+    "inventory": [
+      {
+        "item_id": "random_potion_box",
+        "name_ko": "수상한 물약 상자",
+        "category": "consumable",
+        "item_tier": "uncommon",
+        "stock": 2,
+        "max_stock": 2,
+        "price": 60,
+        "description_ko": "무슨 효과가 있는지 판매자조차 정확히 모르는 물약 상자.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "folding_ladder",
+        "name_ko": "접이식 마법 사다리",
+        "category": "relic",
+        "item_tier": "rare",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 280,
+        "description_ko": "벽에 기대지 않아도 허공에 고정할 수 있는 사다리.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "mirror_key",
+        "name_ko": "거울 열쇠",
+        "category": "relic",
+        "item_tier": "unique",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 650,
+        "description_ko": "거울에 비친 장소를 실제 출입구로 바꿀 수 있다는 수수께끼의 열쇠.",
+        "unlock_conditions": {
+          "stats": {
+            "WIS": 17
+          },
+          "reputation_min": 20
+        }
+      }
+    ]
+  },
+  {
+    "shop_id": "silent_tavern",
+    "shop_name": "침묵의 선술집",
+    "npc_id": "innkeeper_mara",
+    "location_id": "dock_district",
+    "shop_type": "tavern",
+    "buy_rate": 1.5,
+    "sell_rate": 0.5,
+    "haggling_allowed": true,
+    "restock_interval_turns": 15,
+    "merchant_gold": 1200,
+    "services": {
+      "rumor": {
+        "enabled": true,
+        "cost_gold": 25,
+        "description_ko": "현재 지역의 소문 하나를 무작위로 획득"
+      },
+      "hideout": {
+        "enabled": true,
+        "cost_gold": 50,
+        "description_ko": "추적 중인 세력의 탐지를 피하고 안전하게 휴식"
+      }
+    },
+    "dialogue": {
+      "greeting": "여기서는 이름도, 과거도, 이유도 묻지 않아요. 술값만 내면 됩니다.",
+      "haggling_success": "좋아요. 오늘은 기분이 좋으니 한 잔 더 얹어드리죠.",
+      "haggling_fail": "술값을 깎는 사람에게는 물도 비싸게 받아요.",
+      "no_gold": "돈이 없다면 이야기를 들려줘요. 좋은 이야기는 돈보다 귀하니까.",
+      "secret_unlocked": "저 문 뒤에 있는 사람들은 당신을 찾고 있어요. 하지만 당신이 원한다면 내가 숨겨줄 수 있죠."
+    },
+    "inventory": [
+      {
+        "item_id": "spiced_ale",
+        "name_ko": "향신료 에일",
+        "category": "consumable",
+        "item_tier": "common",
+        "stock": 10,
+        "max_stock": 15,
+        "price": 12,
+        "description_ko": "마시면 짧은 시간 동안 사기와 피로 회복에 작은 보너스를 준다.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "gamblers_lucky_coin",
+        "name_ko": "도박꾼의 행운 동전",
+        "category": "relic",
+        "item_tier": "rare",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 300,
+        "description_ko": "하루에 한 번 실패한 운 관련 판정을 다시 시도할 수 있다.",
+        "unlock_conditions": {
+          "stats": {
+            "DEX": 14
+          }
+        }
+      },
+      {
+        "item_id": "anonymous_bounty_list",
+        "name_ko": "익명의 현상수배 명단",
+        "category": "relic",
+        "item_tier": "unique",
+        "stock": 1,
+        "max_stock": 1,
+        "price": 500,
+        "description_ko": "도시의 주요 인물 몇 명에게 걸린 비공식 현상금이 기록되어 있다.",
+        "unlock_conditions": {}
+      }
+    ]
+  },
+  {
+    "shop_id": "curse_laundromat",
+    "shop_name": "저주 세탁소",
+    "npc_id": "launderer_milo",
+    "location_id": "witch_district",
+    "shop_type": "apothecary",
+    "buy_rate": 1.2,
+    "sell_rate": 0.4,
+    "haggling_allowed": true,
+    "restock_interval_turns": 40,
+    "merchant_gold": 1500,
+    "services": {
+      "curse_wash": {
+        "enabled": true,
+        "cost_gold": 180,
+        "description_ko": "장비에 붙은 저주 하나를 제거한다."
+      }
+    },
+    "dialogue": {
+      "greeting": "옷은 아니지만 빨아드릴 수 있습니다. 저주도 얼룩과 비슷하거든요.",
+      "haggling_success": "좋아요. 오늘은 세탁비를 조금 빼드리죠.",
+      "haggling_fail": "강한 저주일수록 세탁비도 비쌉니다.",
+      "no_gold": "그렇다면 그냥 저주받은 채로 입고 다니세요.",
+      "secret_unlocked": "이건 제거할 저주가 아니라 보존해야 할 저주입니다. 제대로 다루면 아주 강력한 힘이 되거든요."
+    },
+    "inventory": [
+      {
+        "item_id": "curse_absorbing_cloth",
+        "name_ko": "저주 흡수포",
+        "category": "material",
+        "item_tier": "rare",
+        "stock": 3,
+        "max_stock": 5,
+        "price": 150,
+        "description_ko": "장비에 붙은 약한 저주를 일회성으로 흡수한다.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "blackened_thread",
+        "name_ko": "흑염의 실",
+        "category": "material",
+        "item_tier": "unique",
+        "stock": 2,
+        "max_stock": 2,
+        "price": 500,
+        "description_ko": "저주받은 장비를 강화하는 데 사용할 수 있다.",
+        "unlock_conditions": {}
+      }
+    ]
+  },
+  {
+    "shop_id": "weathered_cookhouse",
+    "shop_name": "전장의 식당",
+    "npc_id": "chef_boros",
+    "location_id": "adventurer_camp",
+    "shop_type": "tavern",
+    "buy_rate": 1.3,
+    "sell_rate": 0.6,
+    "haggling_allowed": true,
+    "restock_interval_turns": 15,
+    "merchant_gold": 900,
+    "services": {
+      "monster_cooking": {
+        "enabled": true,
+        "cost_gold": 50,
+        "description_ko": "몬스터의 고기를 특수한 음식으로 조리한다."
+      }
+    },
+    "dialogue": {
+      "greeting": "오늘 잡은 놈이 뭐야? 용? 트롤? 뭐든 가져와. 내가 먹을 수 있게 만들어주지.",
+      "haggling_success": "좋아, 오늘은 고기 한 점 더 얹어주지.",
+      "haggling_fail": "좋은 음식은 좋은 재료에서 나와. 가격은 그 다음이고.",
+      "no_gold": "돈이 없으면 재료라도 가져와.",
+      "secret_unlocked": "저건 먹지 마. 먹으면 강해지긴 하겠지만… 사람의 입맛을 잃을 수도 있어."
+    },
+    "inventory": [
+      {
+        "item_id": "griffin_roast",
+        "name_ko": "그리핀 구이",
+        "category": "consumable",
+        "item_tier": "rare",
+        "stock": 2,
+        "max_stock": 4,
+        "price": 180,
+        "description_ko": "섭취하면 일정 시간 동안 DEX와 이동 관련 판정에 보너스를 얻는다.",
+        "unlock_conditions": {}
+      },
+      {
+        "item_id": "troll_stew",
+        "name_ko": "트롤 재생 스튜",
+        "category": "consumable",
+        "item_tier": "unique",
+        "stock": 1,
+        "max_stock": 2,
+        "price": 400,
+        "description_ko": "전투 중 일정 시간마다 HP가 회복된다.",
+        "unlock_conditions": {}
+      }
+    ]
+  }
+]

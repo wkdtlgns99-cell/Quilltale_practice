@@ -32,15 +32,17 @@ class GameMasterAgent:
 
     def process_turn(self, action: str, state: WorldState) -> Dict[str, Any]:
         """
-        Process a single player turn:
-        1. Check for release/retire command
-        2. Action validation & Reality checks (Anti-Yes-Man)
-        3. Deterministic Dice Engine resolution
-        4. Local RAG memory context retrieval
-        5. LLM narrative generation with autonomous NPC reaction
-        6. WorldState delta update & Qdrant vector indexing
-        7. Session persistence
+        6-Step Deterministic Turn Pipeline:
+        - Step 1: Status Effect Ticks & Environment Updates (Weather/Living world)
+        - Step 2: Action Pre-Validation & Deterministic Logic (DiceEngine, PhysicsMatrixEngine)
+        - Step 3: WorldState State Pre-Finalization (Damage, Stun, Status Applied)
+        - Step 4: Dynamic Lego-Block Context Assembly
+        - Step 5: LLM Literary Narration Generation (Adhering 100% to confirmed state)
+        - Step 6: WorldState Delta Synchronization & Vector Memory Persistence
         """
+        from src.world.status_engine import StatusEffectEngine
+        from src.world.physics_matrix import PhysicsMatrixEngine
+
         # Step 0: Handle Character Release / Retirement
         if ActionValidator.is_release_action(action):
             reason = "retired" if "은퇴" in action or "마치" in action else "released"
@@ -71,30 +73,23 @@ class GameMasterAgent:
                 "is_released": True,
             }
 
-        # Step 1: Pre-validation & Dice resolution
-        is_valid, error_msg, dice_res, extra_flags = ActionValidator.pre_validate_action(action, state)
-        
-        interrupt_context = ""
-        if extra_flags and extra_flags.get("interrupt_counter"):
-            interrupt_context = "[⚠️ 인터럽트 경고]\n플레이어가 약점을 노리다 실패하여 빈틈을 보였습니다. 적대적 NPC는 이번 턴에 즉시 강력한 반격(인터럽트)을 가할 수 있습니다."
-            
-        incant_context = ""
-        if extra_flags and extra_flags.get("incantation_cancel_risk"):
-            # Check if there are hostile NPCs present
-            hostiles = [n for n in state.npcs_in_location(state.player.location) if n.alive and n.disposition == "hostile"]
-            if hostiles:
-                cancel_risk = IncantationSystem.check_incantation_cancel(state, action, hostiles)
-                if cancel_risk:
-                    incant_context = "[⚠️ 영창 방해 경고]\n적대적 NPC의 방해로 인해 플레이어의 마법 영창이 취소될 위기에 처했습니다. 캐스팅 실패 또는 오발 상황을 나레이션에 반영하십시오."
-        
-        if extra_flags and extra_flags.get("incantation_char_limit_exceeded"):
-            limit = extra_flags.get("incantation_limit", 0)
-            incant_context += f"\n[⚠️ 영창 길이 초과 경고]\n플레이어가 1턴 제한({limit}자)을 초과하는 긴 영창을 시도했습니다. 영창은 다음 턴까지 이어지거나, 무리한 시도로 인해 실패할 수 있습니다."
+        # -------------------------------------------------------------
+        # PASS 1: DETERMINISTIC TRUTH COMPUTATION
+        # (Dice, HP deduction, Combat, Status Ticks, Quests, Party, Ecology)
+        # -------------------------------------------------------------
+        from src.world.two_pass_engine import TwoPassEngine
+        from src.world.quest_engine import QuestEngine
+        from src.world.economy_engine import EconomyEngine
+        from src.world.crafting_engine import CraftingEngine
+        from src.world.party_engine import PartyEngine
 
-        if not is_valid:
+        fact_sheet = TwoPassEngine.compute_pass1(action, state)
+
+        # Handle validation rejection (Anti-Yes-Man, missing item, illegal action)
+        if not fact_sheet.is_valid:
             state.last_dice_result = None
             state.last_npc_action = None
-            narration = f"{error_msg}"
+            narration = fact_sheet.rejection_reason or "그 행동은 현재 상황에서 불가능합니다."
             state.history.append({
                 "turn": state.turn,
                 "action": action,
@@ -111,32 +106,15 @@ class GameMasterAgent:
             }
 
         # Save dice result in state
-        if dice_res:
-            state.last_dice_result = {
-                "action_type": dice_res.action_type,
-                "d20_roll": dice_res.d20_roll,
-                "modifier": dice_res.modifier,
-                "total": dice_res.total,
-                "dc": dice_res.dc,
-                "is_success": dice_res.is_success,
-                "damage_dealt": dice_res.damage_dealt,
-                "target_npc_id": dice_res.target_npc_id,
-                "summary_ko": dice_res.summary_ko,
-            }
-            dice_context = f"[🎲 주사위 판정 결과 (DETERMINISTIC RESULT)]\n{dice_res.summary_ko}\n*주의: 당신은 이 판정 결과를 절대 번복할 수 없으며, 결과에 걸맞은 서사를 작성해야 합니다.*"
-
-            # If combat occurred, reveal stats of target NPC
-            if dice_res.target_npc_id and dice_res.target_npc_id in state.npcs:
-                state.npcs[dice_res.target_npc_id].stats_revealed = True
+        dice_res_dict = fact_sheet.dice_result
+        if dice_res_dict:
+            state.last_dice_result = dice_res_dict
+            dice_context = f"[🎲 주사위 판정 결과 (DETERMINISTIC RESULT)]\n{dice_res_dict.get('summary_ko', '')}\n*주의: 당신은 이 판정 결과를 절대 번복할 수 없으며, 결과에 걸맞은 서사를 작성해야 합니다.*"
         else:
             state.last_dice_result = None
             dice_context = ""
 
-        # Step 2: Living world simulation, Information Waves, & Periodicals check
-        state.advance_world_simulation()
-        state.advance_information_waves()
-        state.check_and_publish_periodicals()
-
+        # Context construction for Pass 2 (RAG, Graph, BDI, Environment)
         curr_loc = state.current_location()
         present_npcs = curr_loc.npcs if curr_loc else []
         rag_context = self._memory.retrieve_context(
@@ -147,7 +125,6 @@ class GameMasterAgent:
             top_k=4,
         )
 
-        # GraphRAG & Physics-Chemistry Matrix retrieval
         inv_item_names = [state.items[i].name for i in state.player.inventory if i in state.items]
         graph_context = self._memory.retrieve_graph_context(
             action=action,
@@ -166,9 +143,9 @@ class GameMasterAgent:
             if npc_id in state.npcs:
                 state.npcs[npc_id].last_seen_turn = state.turn
 
-        # Step 3: Format Prompt
         recent_history_str = self._format_history(state.history[-5:])
 
+        extra_flags = fact_sheet.extra_flags
         parsed = extra_flags.get("parsed_components", {}) if extra_flags else {}
         parsed_summary_lines = []
         if parsed.get("dialogue"):
@@ -179,35 +156,59 @@ class GameMasterAgent:
             parsed_summary_lines.append(f'- [신체 물리 행동]: {parsed["action"]}')
         parsed_action_summary = "\n".join(parsed_summary_lines) if parsed_summary_lines else f'- [행동]: {action}'
 
-        # --- DYNAMIC INJECTION LOGIC ---
+        # Dynamic context pruning
         action_str = action.lower() if action else ""
-        
-        # 1. Skills
         skill_names = [s.name.lower() for s in state.player.skills] if state.player.skills else []
         uses_skill = any(sn in action_str for sn in skill_names) or any(k in action_str for k in ["공격", "마법", "스킬", "사용", "영창", "주문", "때린다", "베기", "쏜다"])
         dyn_skills = self._format_skills_context(state) if uses_skill else ""
-        
-        # 2. Titles (Social Interaction)
+
         social_keywords = ["대화", "인사", "위협", "묻다", "질문", "말한다", "설득", "다가간다", "바라본다", "npc"]
         is_social = any(k in action_str for k in social_keywords)
         dyn_titles = self._format_titles_context(state) if is_social else ""
-        
-        # 3. World Context (Lore/Rumors)
+
         lore_keywords = ["소문", "역사", "흔적", "조사", "책", "문자", "묻다", "주변", "기록", "살핀다", "단서"]
         is_lore = any(k in action_str for k in lore_keywords)
         dyn_world = state.to_context_summary() if is_lore else ""
-        
-        # 4. Off-screen
+
         is_travel = any(k in action_str for k in ["이동", "간다", "도착", "들어간다", "나간다"])
         dyn_off_screen = off_screen_context if (is_social or is_travel) else ""
-        
-        # 5. Graph / Ecosystem
+
         graph_keywords = ["이동", "지도", "세력", "생태", "흔적", "주변", "탐색", "관찰"]
         is_graph = any(k in action_str for k in graph_keywords)
         dyn_graph = graph_context if is_graph else ""
-        
+
+        status_ticks_context = ""
+        if fact_sheet.status_tick_logs:
+            status_ticks_context = "[🩸 턴 시작 상태이상 및 지속 피해/회복 확정 연산]\n" + "\n".join(f"- {l}" for l in fact_sheet.status_tick_logs)
+
+        physics_reaction_context = ""
+        if fact_sheet.physics_reactions:
+            physics_reaction_context = "[⚗️ 환경 물리/화학 상호작용]\n" + "\n".join(f"- {l}" for l in fact_sheet.physics_reactions)
+
+        interrupt_context = ""
+        if extra_flags and extra_flags.get("interrupt_counter"):
+            interrupt_context = "[⚠️ 인터럽트 경고]\n플레이어가 약점을 노리다 실패하여 빈틈을 보였습니다. 적대적 NPC는 이번 턴에 즉시 강력한 반격(인터럽트)을 가할 수 있습니다."
+
+        incant_context = ""
+        if extra_flags and extra_flags.get("incantation_cancel_risk"):
+            hostiles = [n for n in state.npcs_in_location(state.player.location) if n.alive and n.disposition == "hostile"]
+            if hostiles:
+                cancel_risk = IncantationSystem.check_incantation_cancel(state, action, hostiles)
+                if cancel_risk:
+                    incant_context = "[⚠️ 영창 방해 경고]\n적대적 NPC의 방해로 인해 플레이어의 마법 영창이 취소될 위기에 처했습니다. 캐스팅 실패 또는 오발 상황을 나레이션에 반영하십시오."
+
+        if extra_flags and extra_flags.get("incantation_char_limit_exceeded"):
+            limit = extra_flags.get("incantation_limit", 0)
+            incant_context += f"\n[⚠️ 영창 길이 초과 경고]\n플레이어가 1턴 제한({limit}자)을 초과하는 긴 영창을 시도했습니다. 영창은 다음 턴까지 이어지거나, 무리한 시도로 인해 실패할 수 있습니다."
+
+        quest_context = QuestEngine.format_prompt_context(state)
+        shop_context = EconomyEngine.format_shop_context_for_prompt(state)
+        crafting_context = CraftingEngine.format_crafting_context_for_prompt(state)
+        party_context = PartyEngine.format_party_context_for_prompt(state)
+
         prompt = GM_TURN_PROMPT_TEMPLATE.format(
             environmental_anchoring=environmental_anchoring,
+            deterministic_fact_sheet=fact_sheet.to_prompt_context(),
             npc_bdi_context=npc_bdi_context,
             world_context=dyn_world,
             map_context=state.to_map_summary(),
@@ -216,6 +217,12 @@ class GameMasterAgent:
             titles_context=dyn_titles,
             rag_memory_context=rag_context,
             graph_context=dyn_graph,
+            quest_context=quest_context,
+            shop_context=shop_context,
+            crafting_context=crafting_context,
+            party_context=party_context,
+            status_ticks_context=status_ticks_context,
+            physics_reaction_context=physics_reaction_context,
             dice_roll_context=dice_context,
             interrupt_context=interrupt_context,
             incant_context=incant_context,
@@ -224,9 +231,9 @@ class GameMasterAgent:
             action=action,
         )
 
-
-
-        # Step 4: Call LLM
+        # -------------------------------------------------------------
+        # PASS 2: NARRATIVE GENERATION & CONSISTENCY SANITIZATION
+        # -------------------------------------------------------------
         try:
             dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
             try:
@@ -238,79 +245,31 @@ class GameMasterAgent:
             except Exception:
                 pass
 
+            from src.llm.resilience import JSONRepairEngine
             raw = self._llm.generate_json(prompt, dynamic_system_prompt)
-            result = json.loads(raw)
+            raw_result = JSONRepairEngine.repair_and_parse(raw)
 
         except Exception as e:
             logger.error(f"GM Generation/Parse error: {e}")
-            result = {
-                "narration": f"⚠️ [AI 호출 오류 발생: {type(e).__name__}]\n{str(e)}\n\n💡 .env 파일의 API 키(GEMINI_API_KEY)가 유효한지 확인해주세요.",
-                "state_update": {},
-                "scene_changed": False,
-                "image_prompt": None,
-            }
+            from src.llm.resilience import JSONRepairEngine
+            raw_result = JSONRepairEngine.repair_and_parse(str(e))
+            if not raw_result.get("narration"):
+                raw_result["narration"] = "당신은 주변을 둘러보며 다음 행동을 신중하게 가늠합니다."
 
-        # Step 5: Process NPC autonomous action
+        # Sanitize and reconcile Pass 2 output with Pass 1 deterministic truth
+        result = TwoPassEngine.sanitize_pass2_result(raw_result, fact_sheet, state)
+
+        # Process NPC autonomous action
         npc_action = result.get("npc_action")
         if npc_action and isinstance(npc_action, dict) and npc_action.get("summary_ko"):
             state.last_npc_action = npc_action
         else:
             state.last_npc_action = None
 
-        # Step 6: Apply delta update to WorldState
+        # Apply reconciled state update
         state_update = result.get("state_update", {})
-
-        # If attack dealt damage and target not updated by LLM, deduct damage
-        if dice_res and dice_res.is_success and dice_res.damage_dealt > 0 and dice_res.target_npc_id:
-            target_id = dice_res.target_npc_id
-            if target_id in state.npcs:
-                target_npc = state.npcs[target_id]
-                if "npc_state" not in state_update:
-                    state_update["npc_state"] = {}
-                if target_id not in state_update["npc_state"]:
-                    new_hp = max(0, target_npc.health - dice_res.damage_dealt)
-                    state_update["npc_state"][target_id] = {
-                        "health": new_hp,
-                        "alive": new_hp > 0,
-                        "disposition": "hostile",
-                        "stats_revealed": True,
-                    }
-                    
-                # Handle unique skill drop if NPC killed
-                if new_hp <= 0:
-                    state.pending_breaking_news.append(f"주요 인물 [{target_npc.name}]의 치명적 부상/사망 사건")
-                    dropped_skill = SkillSystem.roll_unique_skill_drop(state, target_id)
-                    if dropped_skill:
-                        if "grant_skill" not in state_update:
-                            state_update["grant_skill"] = {}
-                        state_update["grant_skill"]["player"] = dropped_skill.id
-                        # add to narration
-                        result["narration"] += f"\n\n✨ [고유 스킬 획득] '{dropped_skill.name}' 스킬을 빼앗았습니다!"
-
-        # Handle skill and title acquisitions via SkillSystem before applying update
-        if "grant_skill" in state_update:
-            for target_id, skill_id in state_update["grant_skill"].items():
-                if target_id == "player":
-                    SkillSystem.acquire_skill(state, skill_id)
-        if "grant_title" in state_update:
-            for target_id, title_id in state_update["grant_title"].items():
-                if target_id == "player":
-                    SkillSystem.grant_title(state, title_id)
-
         changes = state.apply_update(state_update)
         narration = result.get("narration", "")
-
-        # Step 6.5: Bidirectional Ecological Feedback Loop
-        from src.world.graph_engine import EcologicalFeedbackLoop
-        dice_success = dice_res.is_success if dice_res else True
-        loc_name = curr_loc.name if curr_loc else "미지의 지대"
-        eco_feedback = EcologicalFeedbackLoop.calculate_feedback(action, dice_success, loc_name, state)
-        if eco_feedback.get("terraforming"):
-            state.world_facts.append(f"[지형 변형] {eco_feedback['terraforming']}")
-        if eco_feedback.get("world_news"):
-            state.pending_breaking_news.append(eco_feedback["world_news"])
-        if eco_feedback.get("reputation_delta"):
-            state.player.reputation = max(-100, min(100, state.player.reputation + eco_feedback["reputation_delta"]))
 
         # Check for world ending
         if state_update.get("world_ended"):
@@ -318,8 +277,7 @@ class GameMasterAgent:
             ChronicleManager.save_chronicle(state, chronicle)
             narration += f"\n\n📜 **[세계의 연대기 기록됨]**\n{chronicle[:200]}..."
 
-
-        # Step 7: Index turn into Vector RAG Memory
+        # Index turn into Vector RAG Memory
         max_significance = 1
         emotional_tone = "neutral"
         if "npc_memory" in state_update:
@@ -351,12 +309,17 @@ class GameMasterAgent:
             "narration": narration,
         })
 
-        # Step 8: Auto-persist session to disk
+        # Auto-persist session to disk
         scene_changed = result.get("scene_changed", False)
         if scene_changed:
             self._scenario_manager.advance_scenario(state)
-            
+
         PersistenceManager.save_session(state)
+
+        # Audio triggers evaluation (BGM & SFX)
+        from src.world.audio_engine import AudioEngine
+        audio_data = AudioEngine.determine_turn_audio(state, fact_sheet=fact_sheet, action=action)
+        audio_html = AudioEngine.format_audio_html(audio_data)
 
         return {
             "narration": narration,
@@ -366,6 +329,8 @@ class GameMasterAgent:
             "changes_applied": changes,
             "dice_result": state.last_dice_result,
             "npc_action": state.last_npc_action,
+            "audio": audio_data,
+            "audio_html": audio_html,
         }
 
     def _format_history(self, history: list) -> str:
@@ -490,17 +455,14 @@ class GameMasterAgent:
             except Exception:
                 pass
 
+            from src.llm.resilience import JSONRepairEngine
             raw = self._llm.generate_json(prompt, dynamic_system_prompt)
-            result = json.loads(raw, strict=False)
+            result = JSONRepairEngine.repair_and_parse(raw)
             narration = result.get("narration", f"당신은 {loc.name if loc else '알 수 없는 곳'}에 서 있습니다.")
             image_prompt = result.get("image_prompt")
         except Exception as e:
             logger.error(f"GM Opening generation error: {e}")
-            narration = (
-                f"축축하고 차가운 공기가 폐부를 찌릅니다. "
-                f"당신은 {loc.name if loc else '알 수 없는 장소'}에 서 있습니다.\n\n"
-                f"⚠️ (AI API 키 연결 실패 시 기본 문구가 출력됩니다: {e})"
-            )
+            narration = f"축축하고 차가운 공기가 폐부를 찌릅니다. 당신은 {loc.name if loc else '알 수 없는 장소'}에 서 있습니다."
             image_prompt = None
 
         # 1. Store opening narrative as Turn 0 in state.history so turn 1 knows what happened!
@@ -534,11 +496,9 @@ class GameMasterAgent:
 
     def generate_new_game(self) -> WorldState:
         """Generate a completely new random world using LLM and Qdrant RAG."""
-        # Ensure 30 region templates, 65 arcane physics, 15 realism mechanics, and 15 monster templates are indexed in Qdrant vector memory
+        # Only index lean region templates & monster templates for CPU performance
         try:
             self._memory.index_region_templates()
-            self._memory.index_arcane_templates()
-            self._memory.index_realism_templates()
             self._memory.index_monster_templates()
         except Exception as e:
             logger.warning(f"Templates vector indexing failed: {e}")

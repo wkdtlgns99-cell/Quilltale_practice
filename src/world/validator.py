@@ -103,6 +103,17 @@ class ActionValidator:
                     extra_flags
                 )
 
+        # 1.5 Status Effect Action Block Check (Stun, Freeze, Paralysis)
+        from src.world.status_engine import StatusEffectEngine
+        can_act, block_reason = StatusEffectEngine.can_act(state.player)
+        if not can_act and action_clean:
+            return (
+                False,
+                f"⚠️ {block_reason}",
+                None,
+                extra_flags
+            )
+
         # 2. Inventory check: Cannot use or drop items not owned
         for item_id, item in state.items.items():
             if item.name.lower() in action_lower or item_id in action_lower:

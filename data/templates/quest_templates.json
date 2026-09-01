@@ -1,0 +1,1315 @@
+[
+  {
+    "id": "quest_wolf_hunt",
+    "title": "안개 숲의 굶주린 늑대 무리",
+    "category": "hunt",
+    "giver_npc_id": "marta",
+    "description": "선술집 뒤편 숲에서 가축을 물어가는 늑대 무리를 처치해야 합니다.",
+    "prerequisites": {
+      "level_min": 1
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "kill",
+        "target": "dire_wolf",
+        "required_count": 3,
+        "description_ko": "안개 숲의 굶주린 늑대 3마리 처치"
+      },
+      {
+        "stage_id": 2,
+        "type": "kill",
+        "target": "dire_wolf_alpha",
+        "required_count": 1,
+        "description_ko": "늑대 우두머리 처치"
+      },
+      {
+        "stage_id": 3,
+        "type": "talk",
+        "target": "marta",
+        "required_count": 1,
+        "description_ko": "마르타에게 토벌 완료 보고"
+      }
+    ],
+    "branch_choices": [],
+    "optional_objectives": [],
+    "time_limit_minutes": 1440,
+    "rewards": {
+      "gold": 50,
+      "exp": 40,
+      "items": ["iron_dagger"],
+      "reputation": 10
+    },
+    "faction_impact": {
+      "village": 10
+    },
+    "failure_penalty": {
+      "reputation": -15,
+      "world_news": "늑대 무리가 상단을 습격하여 숲으로 향하는 도로가 폐쇄됨"
+    }
+  },
+  {
+    "id": "quest_moonflower_gather",
+    "title": "달빛 아래 피는 약초",
+    "category": "gather",
+    "giver_npc_id": "elena",
+    "description": "약초상 엘레나는 희귀한 달빛꽃이 필요하다고 합니다. 꽃은 밤이 되면 안개 숲 깊은 곳에서만 피어납니다.",
+    "prerequisites": {
+      "level_min": 1
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "mist_forest_deep",
+        "required_count": 1,
+        "description_ko": "안개 숲 깊은 곳에 도달"
+      },
+      {
+        "stage_id": 2,
+        "type": "collect",
+        "target": "moonflower",
+        "required_count": 5,
+        "description_ko": "달빛꽃 5송이 채집"
+      },
+      {
+        "stage_id": 3,
+        "type": "talk",
+        "target": "elena",
+        "required_count": 1,
+        "description_ko": "엘레나에게 달빛꽃 전달"
+      }
+    ],
+    "branch_choices": [],
+    "optional_objectives": [],
+    "time_limit_minutes": 720,
+    "rewards": {
+      "gold": 35,
+      "exp": 30,
+      "items": ["minor_health_potion", "herbalism_manual"],
+      "reputation": 5
+    },
+    "faction_impact": {
+      "alchemists_guild": 5
+    },
+    "failure_penalty": {
+      "reputation": -5,
+      "world_news": "달빛꽃이 부족해 마을의 약초 상점이 며칠간 문을 닫음"
+    }
+  },
+  {
+    "id": "quest_merchant_escort",
+    "title": "위험한 산길의 상인",
+    "category": "escort",
+    "giver_npc_id": "roland",
+    "description": "상인 로랜드가 산맥 너머의 도시로 이동하려 합니다. 최근 산길에서 도적들이 출몰하고 있어 호위가 필요합니다.",
+    "prerequisites": {
+      "level_min": 3
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "mountain_pass",
+        "required_count": 1,
+        "description_ko": "상인과 함께 산길 입구에 도착"
+      },
+      {
+        "stage_id": 2,
+        "type": "kill",
+        "target": "bandit",
+        "required_count": 4,
+        "description_ko": "습격한 산적 4명 처치"
+      },
+      {
+        "stage_id": 3,
+        "type": "reach",
+        "target": "mountain_city_gate",
+        "required_count": 1,
+        "description_ko": "상인을 산맥 너머 도시까지 호위"
+      },
+      {
+        "stage_id": 4,
+        "type": "talk",
+        "target": "roland",
+        "required_count": 1,
+        "description_ko": "로랜드와 대화하여 호위 완료"
+      }
+    ],
+    "branch_choices": [],
+    "optional_objectives": [],
+    "time_limit_minutes": 1440,
+    "rewards": {
+      "gold": 100,
+      "exp": 80,
+      "items": ["merchant_token"],
+      "reputation": 15
+    },
+    "faction_impact": {
+      "merchant_guild": 15
+    },
+    "failure_penalty": {
+      "reputation": -20,
+      "world_news": "로랜드의 마차가 산적에게 습격당해 무역로가 일시적으로 폐쇄됨"
+    }
+  },
+  {
+    "id": "quest_missing_child",
+    "title": "사라진 아이의 흔적",
+    "category": "investigation",
+    "giver_npc_id": "hanna",
+    "description": "마을의 어린아이가 숲에서 사라졌습니다. 마지막으로 아이를 본 사람은 숲 입구의 나무꾼이었다고 합니다.",
+    "prerequisites": {
+      "level_min": 4
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "woodcutter",
+        "required_count": 1,
+        "description_ko": "나무꾼에게 아이의 행방을 질문"
+      },
+      {
+        "stage_id": 2,
+        "type": "reach",
+        "target": "abandoned_hut",
+        "required_count": 1,
+        "description_ko": "숲속의 버려진 오두막 조사"
+      },
+      {
+        "stage_id": 3,
+        "type": "collect",
+        "target": "child_necklace",
+        "required_count": 1,
+        "description_ko": "아이의 목걸이 발견"
+      },
+      {
+        "stage_id": 4,
+        "type": "kill",
+        "target": "forest_ogre",
+        "required_count": 1,
+        "description_ko": "아이를 붙잡고 있는 숲의 오우거 처치"
+      },
+      {
+        "stage_id": 5,
+        "type": "talk",
+        "target": "hanna",
+        "required_count": 1,
+        "description_ko": "아이를 무사히 데려왔다고 한나에게 보고"
+      }
+    ],
+    "branch_choices": [],
+    "optional_objectives": [],
+    "time_limit_minutes": 2880,
+    "rewards": {
+      "gold": 80,
+      "exp": 100,
+      "items": ["silver_charm"],
+      "reputation": 20
+    },
+    "faction_impact": {
+      "village": 20
+    },
+    "failure_penalty": {
+      "reputation": -30,
+      "world_news": "실종된 아이가 돌아오지 않아 마을 전체가 숲을 봉쇄함"
+    }
+  },
+  {
+    "id": "quest_royal_letter",
+    "title": "늦어서는 안 될 편지",
+    "category": "delivery",
+    "giver_npc_id": "captain_aldric",
+    "description": "국경 요새의 지휘관에게 반드시 전달해야 하는 군사 기밀 서신입니다. 도중에 편지를 열어보거나 분실해서는 안 됩니다.",
+    "prerequisites": {
+      "level_min": 5
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "border_fortress",
+        "required_count": 1,
+        "description_ko": "국경 요새에 도착"
+      },
+      {
+        "stage_id": 2,
+        "type": "talk",
+        "target": "fortress_commander",
+        "required_count": 1,
+        "description_ko": "요새 지휘관에게 군사 서신 전달"
+      }
+    ],
+    "branch_choices": [],
+    "optional_objectives": [],
+    "time_limit_minutes": 360,
+    "rewards": {
+      "gold": 150,
+      "exp": 60,
+      "items": ["royal_seal"],
+      "reputation": 25
+    },
+    "faction_impact": {
+      "royal_guard": 25
+    },
+    "failure_penalty": {
+      "reputation": -40,
+      "world_news": "국경 요새가 적군의 움직임을 파악하지 못해 방어 태세가 늦어짐"
+    }
+  },
+  {
+    "id": "quest_cursed_well",
+    "title": "우물에서 들려오는 목소리",
+    "category": "investigation",
+    "giver_npc_id": "village_elder",
+    "description": "마을의 오래된 우물에서 밤마다 사람의 목소리가 들려옵니다. 우물물을 마신 주민들은 악몽에 시달리기 시작했습니다.",
+    "prerequisites": {
+      "level_min": 6
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "village_well",
+        "required_count": 1,
+        "description_ko": "밤에 마을 우물 조사"
+      },
+      {
+        "stage_id": 2,
+        "type": "collect",
+        "target": "cursed_well_fragment",
+        "required_count": 3,
+        "description_ko": "우물 내부에서 저주받은 파편 3개 발견"
+      },
+      {
+        "stage_id": 3,
+        "type": "kill",
+        "target": "well_wraith",
+        "required_count": 1,
+        "description_ko": "우물에 깃든 망령 처치"
+      },
+      {
+        "stage_id": 4,
+        "type": "talk",
+        "target": "village_elder",
+        "required_count": 1,
+        "description_ko": "마을 장로에게 사건의 진상을 보고"
+      }
+    ],
+    "branch_choices": [],
+    "optional_objectives": [],
+    "time_limit_minutes": 4320,
+    "rewards": {
+      "gold": 120,
+      "exp": 130,
+      "items": ["wraith_essence", "blessed_ring"],
+      "reputation": 20
+    },
+    "faction_impact": {
+      "village": 20
+    },
+    "failure_penalty": {
+      "reputation": -25,
+      "world_news": "우물의 저주가 마을 전체로 퍼져 주민들이 마을을 떠나기 시작함"
+    }
+  },
+  {
+    "id": "quest_goblin_prisoner",
+    "title": "동굴에 갇힌 고블린",
+    "category": "investigation",
+    "giver_npc_id": "village_guard_rolf",
+    "description": "광산 근처에서 발견된 고블린 한 마리가 마을 사람들에게 붙잡혔습니다. 경비대는 고블린을 심문해 최근 광산에서 발생한 사건의 정보를 얻으려 합니다.",
+    "prerequisites": {
+      "level_min": 5,
+      "reputation": {
+        "village": 10
+      },
+      "stats": {
+        "INT": 10
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "village_guard_rolf",
+        "required_count": 1,
+        "description_ko": "로르프에게 붙잡힌 고블린에 대한 정보 확인"
+      },
+      {
+        "stage_id": 2,
+        "type": "talk",
+        "target": "goblin_prisoner",
+        "required_count": 1,
+        "description_ko": "붙잡힌 고블린에게 광산에 대해 질문"
+      },
+      {
+        "stage_id": 3,
+        "type": "reach",
+        "target": "goblin_cave",
+        "required_count": 1,
+        "description_ko": "고블린 동굴 조사"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "kill_goblins",
+        "description_ko": "고블린들을 위험한 존재로 판단하고 처치한다.",
+        "requirements": {},
+        "outcome": {
+          "stages": [
+            {
+              "type": "kill",
+              "target": "goblin_warrior",
+              "required_count": 5
+            }
+          ],
+          "rewards": {
+            "gold": 100,
+            "exp": 100,
+            "items": ["goblin_chief_axe"],
+            "reputation": 15
+          },
+          "faction_impact": {
+            "village_guard": 20,
+            "goblin_clan": -40
+          }
+        }
+      },
+      {
+        "choice_id": "spare_goblins",
+        "description_ko": "고블린들과 협상하여 서로 공격하지 않기로 한다.",
+        "requirements": {
+          "stats": {
+            "INT": 12
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 60,
+            "exp": 130,
+            "items": ["goblin_trade_token"],
+            "reputation": 10
+          },
+          "faction_impact": {
+            "village_guard": -10,
+            "goblin_clan": 30
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "save_goblin_prisoner",
+        "type": "talk",
+        "target": "goblin_prisoner",
+        "required_count": 1,
+        "description_ko": "고블린 포로를 죽이지 않고 풀어준다.",
+        "bonus_rewards": {
+          "gold": 30,
+          "exp": 50,
+          "items": ["goblin_favor"]
+        }
+      }
+    ],
+    "time_limit_minutes": 2880,
+    "rewards": {
+      "gold": 80,
+      "exp": 100,
+      "items": ["iron_ring"],
+      "reputation": 10
+    },
+    "faction_impact": {
+      "village_guard": 10,
+      "goblin_clan": -10
+    },
+    "failure_penalty": {
+      "reputation": -20,
+      "world_news": "광산 주변의 고블린 문제가 해결되지 않아 광부들이 작업을 중단함"
+    }
+  },
+  {
+    "id": "quest_bandit_hostage",
+    "title": "산적들의 인질",
+    "category": "rescue",
+    "giver_npc_id": "merchant_helena",
+    "description": "산적들에게 붙잡힌 상인의 딸을 구출해야 합니다. 산적들은 금화를 가져오면 인질을 풀어주겠다고 제안했지만, 다른 방법도 있을 수 있습니다.",
+    "prerequisites": {
+      "level_min": 8,
+      "reputation": {
+        "merchant_guild": 5
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "bandit_hideout",
+        "required_count": 1,
+        "description_ko": "산적들의 은신처 발견"
+      },
+      {
+        "stage_id": 2,
+        "type": "talk",
+        "target": "bandit_leader",
+        "required_count": 1,
+        "description_ko": "산적 두목과 협상"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "pay_ransom",
+        "description_ko": "산적들에게 몸값을 지불하고 인질을 데려온다.",
+        "requirements": {
+          "gold_min": 200
+        },
+        "outcome": {
+          "rewards": {
+            "gold": -200,
+            "exp": 80,
+            "reputation": 15
+          },
+          "faction_impact": {
+            "merchant_guild": 20,
+            "bandit_clan": 10
+          }
+        }
+      },
+      {
+        "choice_id": "attack_bandits",
+        "description_ko": "몸값을 거부하고 산적들을 공격한다.",
+        "outcome": {
+          "stages": [
+            {
+              "type": "kill",
+              "target": "bandit",
+              "required_count": 6
+            },
+            {
+              "type": "kill",
+              "target": "bandit_leader",
+              "required_count": 1
+            }
+          ],
+          "rewards": {
+            "gold": 150,
+            "exp": 180,
+            "items": ["bandit_key"],
+            "reputation": 25
+          },
+          "faction_impact": {
+            "merchant_guild": 25,
+            "bandit_clan": -50
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "rescue_without_damage",
+        "type": "condition",
+        "description_ko": "인질이 피해를 입지 않은 상태로 구출",
+        "bonus_rewards": {
+          "gold": 100,
+          "exp": 80,
+          "reputation": 10
+        }
+      }
+    ],
+    "time_limit_minutes": 1440,
+    "rewards": {
+      "gold": 100,
+      "exp": 100,
+      "items": ["merchant_token"],
+      "reputation": 15
+    },
+    "faction_impact": {
+      "merchant_guild": 15,
+      "bandit_clan": -20
+    },
+    "failure_penalty": {
+      "reputation": -30,
+      "world_news": "인질이 살해되어 상인 길드가 산적 토벌을 위한 용병을 고용함"
+    }
+  },
+  {
+    "id": "quest_cursed_mage",
+    "title": "저주받은 마법사의 탑",
+    "category": "investigation",
+    "giver_npc_id": "mage_councilor",
+    "description": "한때 왕국의 마법사였던 에드리안이 탑 안에서 금지된 마법을 연구하고 있습니다. 마법사 의회는 그를 제거하라고 명령했지만, 그의 연구에 다른 목적이 있을 가능성도 있습니다.",
+    "prerequisites": {
+      "level_min": 15,
+      "stats": {
+        "INT": 14
+      },
+      "reputation": {
+        "mage_council": 20
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "cursed_mage_tower",
+        "required_count": 1,
+        "description_ko": "저주받은 마법사의 탑에 도착"
+      },
+      {
+        "stage_id": 2,
+        "type": "collect",
+        "target": "forbidden_research_note",
+        "required_count": 3,
+        "description_ko": "금지된 연구 기록 3개 확보"
+      },
+      {
+        "stage_id": 3,
+        "type": "talk",
+        "target": "mage_adrian",
+        "required_count": 1,
+        "description_ko": "마법사 에드리안과 대화"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "kill_adrian",
+        "description_ko": "의회의 명령에 따라 에드리안을 처치한다.",
+        "outcome": {
+          "stages": [
+            {
+              "type": "kill",
+              "target": "mage_adrian",
+              "required_count": 1
+            }
+          ],
+          "rewards": {
+            "gold": 300,
+            "exp": 300,
+            "items": ["mage_council_seal"],
+            "reputation": 30
+          },
+          "faction_impact": {
+            "mage_council": 30,
+            "adrian_followers": -50
+          }
+        }
+      },
+      {
+        "choice_id": "help_adrian",
+        "description_ko": "에드리안의 연구가 저주를 치료하기 위한 것임을 믿고 그를 돕는다.",
+        "requirements": {
+          "stats": {
+            "INT": 16
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 100,
+            "exp": 350,
+            "items": ["cursed_spellbook"]
+          },
+          "faction_impact": {
+            "mage_council": -40,
+            "adrian_followers": 50
+          }
+        }
+      },
+      {
+        "choice_id": "destroy_research",
+        "description_ko": "어느 편에도 서지 않고 금지된 연구 기록을 파괴한다.",
+        "outcome": {
+          "rewards": {
+            "gold": 200,
+            "exp": 250,
+            "items": ["purified_crystal"]
+          },
+          "faction_impact": {
+            "mage_council": 5,
+            "adrian_followers": -10
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "preserve_library",
+        "type": "condition",
+        "description_ko": "탑의 마법 서고를 파괴하지 않고 보존",
+        "bonus_rewards": {
+          "exp": 150,
+          "items": ["rare_spell_scroll"]
+        }
+      }
+    ],
+    "time_limit_minutes": 10080,
+    "rewards": {
+      "gold": 200,
+      "exp": 250,
+      "items": ["mana_crystal"],
+      "reputation": 20
+    },
+    "faction_impact": {
+      "mage_council": 10
+    },
+    "failure_penalty": {
+      "reputation": -30,
+      "world_news": "저주가 탑 밖으로 퍼져 주변 지역의 마법 생태계가 변하기 시작함"
+    }
+  },
+  {
+    "id": "quest_ancient_forest_spirit",
+    "title": "숲의 마지막 수호자",
+    "category": "investigation",
+    "giver_npc_id": "woodcutter_guild_master",
+    "description": "벌목 길드가 새로운 벌목지를 개척하려는 순간, 숲의 정령이 나타나 사람들을 공격하기 시작했습니다. 길드는 정령을 제거해 달라고 요청하지만 숲의 엘프들은 다른 주장을 하고 있습니다.",
+    "prerequisites": {
+      "level_min": 12,
+      "reputation": {
+        "woodcutter_guild": 10
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "reach",
+        "target": "ancient_forest",
+        "required_count": 1,
+        "description_ko": "고대 숲에 진입"
+      },
+      {
+        "stage_id": 2,
+        "type": "talk",
+        "target": "forest_spirit",
+        "required_count": 1,
+        "description_ko": "숲의 정령과 대화"
+      },
+      {
+        "stage_id": 3,
+        "type": "collect",
+        "target": "corrupted_tree_core",
+        "required_count": 1,
+        "description_ko": "숲을 오염시킨 원인 조사"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "kill_spirit",
+        "description_ko": "정령을 위협으로 판단하고 처치한다.",
+        "outcome": {
+          "stages": [
+            {
+              "type": "kill",
+              "target": "ancient_forest_spirit",
+              "required_count": 1
+            }
+          ],
+          "rewards": {
+            "gold": 250,
+            "exp": 250,
+            "items": ["spirit_core"]
+          },
+          "faction_impact": {
+            "woodcutter_guild": 40,
+            "elf_tribe": -50
+          }
+        }
+      },
+      {
+        "choice_id": "protect_forest",
+        "description_ko": "벌목을 중단하고 정령과 협력한다.",
+        "requirements": {
+          "reputation": {
+            "elf_tribe": 15
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 80,
+            "exp": 300,
+            "items": ["forest_blessing"]
+          },
+          "faction_impact": {
+            "woodcutter_guild": -40,
+            "elf_tribe": 50
+          }
+        }
+      },
+      {
+        "choice_id": "find_compromise",
+        "description_ko": "벌목 길드와 정령 양쪽을 설득해 제한적인 벌목에 합의한다.",
+        "requirements": {
+          "stats": {
+            "CHA": 14,
+            "INT": 12
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 180,
+            "exp": 350,
+            "items": ["enchanted_wood"]
+          },
+          "faction_impact": {
+            "woodcutter_guild": 20,
+            "elf_tribe": 20
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "avoid_forest_damage",
+        "type": "condition",
+        "description_ko": "숲의 생태계에 추가 피해를 주지 않고 퀘스트 완료",
+        "bonus_rewards": {
+          "gold": 100,
+          "exp": 100,
+          "reputation": 15
+        }
+      }
+    ],
+    "time_limit_minutes": 7200,
+    "rewards": {
+      "gold": 150,
+      "exp": 200,
+      "items": ["forest_herb"],
+      "reputation": 15
+    },
+    "faction_impact": {
+      "woodcutter_guild": 10,
+      "elf_tribe": 10
+    },
+    "failure_penalty": {
+      "reputation": -25,
+      "world_news": "고대 숲의 오염이 확산되어 벌목지와 엘프 영토 사이의 충돌이 시작됨"
+    }
+  },
+  {
+    "id": "quest_01_suspected_traitor",
+    "title": "성벽 안의 배신자",
+    "category": "investigation",
+    "giver_npc_id": "captain_theron",
+    "description": "국경 요새의 군사 기밀이 적군에게 계속 유출되고 있습니다. 지휘관은 성벽 안에 배신자가 있다고 의심하고 있습니다.",
+    "prerequisites": {
+      "level_min": 10,
+      "reputation": {
+        "royal_guard": 15
+      },
+      "stats": {
+        "INT": 12
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "captain_theron",
+        "required_count": 1,
+        "description_ko": "테론 대위에게 최근 기밀 유출 사건에 대해 듣기"
+      },
+      {
+        "stage_id": 2,
+        "type": "talk",
+        "target": "fortress_soldier",
+        "required_count": 3,
+        "description_ko": "병사 3명에게 사건에 대해 조사"
+      },
+      {
+        "stage_id": 3,
+        "type": "collect",
+        "target": "secret_letter",
+        "required_count": 1,
+        "description_ko": "배신자의 것으로 추정되는 비밀 서신 확보"
+      },
+      {
+        "stage_id": 4,
+        "type": "talk",
+        "target": "suspected_traitor",
+        "required_count": 1,
+        "description_ko": "배신 혐의를 받고 있는 병사와 대화"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "arrest_soldier",
+        "description_ko": "증거를 근거로 의심받는 병사를 체포한다.",
+        "outcome": {
+          "rewards": {
+            "gold": 180,
+            "exp": 220,
+            "reputation": 25
+          },
+          "faction_impact": {
+            "royal_guard": 30
+          }
+        }
+      },
+      {
+        "choice_id": "investigate_deeper",
+        "description_ko": "증거가 조작되었을 가능성을 의심하고 수사를 계속한다.",
+        "requirements": {
+          "stats": {
+            "INT": 16
+          }
+        },
+        "outcome": {
+          "stages": [
+            {
+              "type": "talk",
+              "target": "fortress_spymaster",
+              "required_count": 1
+            },
+            {
+              "type": "collect",
+              "target": "real_traitor_evidence",
+              "required_count": 1
+            }
+          ],
+          "rewards": {
+            "gold": 300,
+            "exp": 350,
+            "items": ["royal_spy_badge"],
+            "reputation": 40
+          },
+          "faction_impact": {
+            "royal_guard": 40,
+            "merchant_guild": 10
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "avoid_false_arrest",
+        "type": "condition",
+        "description_ko": "무고한 병사를 체포하지 않고 진짜 배신자를 밝혀낸다.",
+        "bonus_rewards": {
+          "gold": 100,
+          "exp": 150,
+          "reputation": 15
+        }
+      }
+    ],
+    "time_limit_minutes": 4320,
+    "rewards": {
+      "gold": 150,
+      "exp": 180,
+      "items": ["fortress_key"],
+      "reputation": 15
+    },
+    "faction_impact": {
+      "royal_guard": 15
+    },
+    "failure_penalty": {
+      "reputation": -30,
+      "world_news": "기밀 유출이 계속되어 국경 요새의 방어 계획이 적군에게 노출됨"
+    }
+  },
+  {
+    "id": "quest_clocktower_that_stopped",
+    "title": "멈춰버린 시계탑",
+    "category": "investigation",
+    "giver_npc_id": "clockmaker_otto",
+    "description": "도시의 거대한 시계탑이 매일 정오가 되면 정확히 13번 종을 울립니다. 종이 울린 뒤에는 도시의 일부 사람들이 지난 하루의 기억을 잃는다는 소문이 돌고 있습니다.",
+    "prerequisites": {
+      "level_min": 10,
+      "stats": {
+        "INT": 13
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "clockmaker_otto",
+        "required_count": 1,
+        "description_ko": "시계공에게 시계탑의 이상 현상에 대해 듣기"
+      },
+      {
+        "stage_id": 2,
+        "type": "reach",
+        "target": "clocktower_interior",
+        "required_count": 1,
+        "description_ko": "시계탑 내부 조사"
+      },
+      {
+        "stage_id": 3,
+        "type": "collect",
+        "target": "broken_clock_gear",
+        "required_count": 3,
+        "description_ko": "이상 현상의 원인으로 보이는 부품 3개 확보"
+      },
+      {
+        "stage_id": 4,
+        "type": "reach",
+        "target": "clocktower_core",
+        "required_count": 1,
+        "description_ko": "시계탑 가장 깊은 곳의 핵심 장치 조사"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "repair_clock",
+        "description_ko": "시계탑을 원래대로 수리한다.",
+        "requirements": {
+          "stats": {
+            "INT": 15
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 180,
+            "exp": 250,
+            "items": ["clockwork_component"],
+            "reputation": 20
+          },
+          "faction_impact": {
+            "city": 25,
+            "clockmakers_guild": 40
+          }
+        }
+      },
+      {
+        "choice_id": "destroy_core",
+        "description_ko": "기억을 조작하는 장치라고 판단하고 핵심부를 파괴한다.",
+        "outcome": {
+          "rewards": {
+            "gold": 100,
+            "exp": 300,
+            "reputation": 15
+          },
+          "faction_impact": {
+            "city": 10,
+            "clockmakers_guild": -20
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "recover_original_blueprint",
+        "type": "collect",
+        "target": "clocktower_blueprint",
+        "required_count": 1,
+        "description_ko": "시계탑의 원본 설계도 확보",
+        "bonus_rewards": {
+          "gold": 150,
+          "exp": 150,
+          "items": ["clockwork_blueprint"]
+        }
+      }
+    ],
+    "time_limit_minutes": 4320,
+    "rewards": {
+      "gold": 120,
+      "exp": 180,
+      "items": ["clockwork_spring"],
+      "reputation": 10
+    },
+    "faction_impact": {
+      "city": 10,
+      "clockmakers_guild": 10
+    },
+    "failure_penalty": {
+      "reputation": -20,
+      "world_news": "시계탑의 이상 현상이 도시 전체로 퍼져 시민들의 기억에 혼란이 발생함"
+    }
+  },
+  {
+    "id": "quest_painted_door",
+    "title": "벽에 그려진 문",
+    "category": "investigation",
+    "giver_npc_id": "artist_lucia",
+    "description": "화가 루시아가 그린 적 없는 문 하나가 자신의 그림 속에 나타났습니다. 다음 날 실제 도시의 벽에도 똑같은 문이 나타났고, 밤마다 문 너머에서 인기척이 들려옵니다.",
+    "prerequisites": {
+      "level_min": 8,
+      "stats": {
+        "WIS": 12
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "artist_lucia",
+        "required_count": 1,
+        "description_ko": "루시아에게 그림에 나타난 문에 대해 듣기"
+      },
+      {
+        "stage_id": 2,
+        "type": "reach",
+        "target": "painted_door",
+        "required_count": 1,
+        "description_ko": "벽에 나타난 정체불명의 문 조사"
+      },
+      {
+        "stage_id": 3,
+        "type": "talk",
+        "target": "voice_behind_door",
+        "required_count": 1,
+        "description_ko": "문 너머에서 들려오는 목소리와 대화"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "open_door",
+        "description_ko": "문을 열고 그 너머로 들어간다.",
+        "outcome": {
+          "rewards": {
+            "gold": 100,
+            "exp": 400,
+            "items": ["impossible_paintbrush"]
+          },
+          "faction_impact": {
+            "artists_guild": 30,
+            "mage_council": 10
+          }
+        }
+      },
+      {
+        "choice_id": "erase_door",
+        "description_ko": "문을 그림의 일부로 보고 완전히 지워버린다.",
+        "requirements": {
+          "stats": {
+            "INT": 14
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 200,
+            "exp": 250,
+            "reputation": 15
+          },
+          "faction_impact": {
+            "artists_guild": 20,
+            "mage_council": 20
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "copy_painting",
+        "type": "collect",
+        "target": "living_painting_fragment",
+        "required_count": 1,
+        "description_ko": "문에서 떨어져 나온 살아 움직이는 그림 조각 확보",
+        "bonus_rewards": {
+          "exp": 200,
+          "items": ["living_canvas"]
+        }
+      }
+    ],
+    "time_limit_minutes": 2880,
+    "rewards": {
+      "gold": 100,
+      "exp": 200,
+      "items": ["enchanted_paint"],
+      "reputation": 10
+    },
+    "faction_impact": {
+      "artists_guild": 10
+    },
+    "failure_penalty": {
+      "reputation": -15,
+      "world_news": "그림 속 문이 도시 곳곳의 벽에 나타나기 시작함"
+    }
+  },
+  {
+    "id": "quest_nameless_sword",
+    "title": "이름을 잃은 검",
+    "category": "investigation",
+    "giver_npc_id": "old_swordsman",
+    "description": "한 노검사가 자신의 검이 더 이상 자신의 이름을 기억하지 못한다고 주장합니다. 검을 잡은 사람마다 서로 다른 과거의 기억을 보게 된다고 합니다.",
+    "prerequisites": {
+      "level_min": 12,
+      "stats": {
+        "WIS": 13
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "old_swordsman",
+        "required_count": 1,
+        "description_ko": "노검사의 이야기를 듣기"
+      },
+      {
+        "stage_id": 2,
+        "type": "collect",
+        "target": "nameless_sword",
+        "required_count": 1,
+        "description_ko": "이름을 잃은 검을 확인"
+      },
+      {
+        "stage_id": 3,
+        "type": "reach",
+        "target": "forgotten_battlefield",
+        "required_count": 1,
+        "description_ko": "검의 기억에 나타난 전장 방문"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "return_sword",
+        "description_ko": "검을 원래 주인에게 돌려준다.",
+        "outcome": {
+          "rewards": {
+            "gold": 150,
+            "exp": 250,
+            "items": ["swordsman_token"],
+            "reputation": 20
+          },
+          "faction_impact": {
+            "swordsman_guild": 30
+          }
+        }
+      },
+      {
+        "choice_id": "claim_sword",
+        "description_ko": "검이 새로운 주인을 찾았다고 판단하고 자신이 가진다.",
+        "requirements": {
+          "level_min": 15
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 0,
+            "exp": 400,
+            "items": ["nameless_sword"]
+          },
+          "faction_impact": {
+            "swordsman_guild": -20
+          }
+        }
+      }
+    ],
+    "optional_objectives": [],
+    "time_limit_minutes": 10080,
+    "rewards": {
+      "gold": 100,
+      "exp": 200,
+      "items": ["old_sword_fragment"],
+      "reputation": 10
+    },
+    "faction_impact": {
+      "swordsman_guild": 10
+    },
+    "failure_penalty": {
+      "reputation": -15,
+      "world_news": "이름 없는 검의 기억이 주변 사람들에게 퍼지기 시작함"
+    }
+  },
+  {
+    "id": "quest_false_sunrise",
+    "title": "두 번째 태양",
+    "category": "investigation",
+    "giver_npc_id": "astronomer_nora",
+    "description": "매달 한 번, 실제 해가 뜨기 직전에 하늘에 두 번째 태양이 나타납니다. 이번에는 그 가짜 태양이 사라지지 않고 하늘에 남아 있습니다.",
+    "prerequisites": {
+      "level_min": 18,
+      "stats": {
+        "INT": 15,
+        "WIS": 13
+      }
+    },
+    "stages": [
+      {
+        "stage_id": 1,
+        "type": "talk",
+        "target": "astronomer_nora",
+        "required_count": 1,
+        "description_ko": "천문학자에게 두 번째 태양에 대한 설명 듣기"
+      },
+      {
+        "stage_id": 2,
+        "type": "reach",
+        "target": "observatory",
+        "required_count": 1,
+        "description_ko": "천문대의 관측 장치 조사"
+      },
+      {
+        "stage_id": 3,
+        "type": "collect",
+        "target": "solar_fragment",
+        "required_count": 2,
+        "description_ko": "하늘에서 떨어진 태양의 파편 2개 수집"
+      },
+      {
+        "stage_id": 4,
+        "type": "reach",
+        "target": "sky_temple",
+        "required_count": 1,
+        "description_ko": "두 번째 태양과 연결된 고대 신전 조사"
+      }
+    ],
+    "branch_choices": [
+      {
+        "choice_id": "destroy_false_sun",
+        "description_ko": "가짜 태양을 파괴하여 원래의 하늘을 되찾는다.",
+        "requirements": {
+          "level_min": 20
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 500,
+            "exp": 600,
+            "items": ["solar_core"],
+            "reputation": 40
+          },
+          "faction_impact": {
+            "city": 30,
+            "scholars_guild": 30
+          }
+        }
+      },
+      {
+        "choice_id": "keep_false_sun",
+        "description_ko": "두 번째 태양을 유지하여 영원한 낮을 만든다.",
+        "requirements": {
+          "stats": {
+            "INT": 18
+          }
+        },
+        "outcome": {
+          "rewards": {
+            "gold": 200,
+            "exp": 700,
+            "items": ["sun_fragment"]
+          },
+          "faction_impact": {
+            "scholars_guild": 40,
+            "city": -30
+          }
+        }
+      }
+    ],
+    "optional_objectives": [
+      {
+        "objective_id": "protect_night_cycle",
+        "type": "condition",
+        "description_ko": "낮과 밤의 순환을 정상적으로 유지한 채 사건을 해결한다.",
+        "bonus_rewards": {
+          "gold": 300,
+          "exp": 300,
+          "reputation": 30
+        }
+      }
+    ],
+    "time_limit_minutes": 2880,
+    "rewards": {
+      "gold": 300,
+      "exp": 400,
+      "items": ["solar_shard"],
+      "reputation": 20
+    },
+    "faction_impact": {
+      "scholars_guild": 20
+    },
+    "failure_penalty": {
+      "reputation": -50,
+      "world_news": "두 번째 태양이 하늘에 남아 낮과 밤의 균형이 무너지기 시작함"
+    }
+  }
+]

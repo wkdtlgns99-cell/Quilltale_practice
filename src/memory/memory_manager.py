@@ -42,12 +42,10 @@ class MemoryManager:
 
         self.embedder = embedder or get_default_embedder()
 
-        # Initialize collections
+        # Initialize collections (Strict Diet for CPU performance: only literary lore, region & monster templates)
         self.store.ensure_collection(self.COLLECTION_EPISODIC, EMBEDDING_DIMENSION)
         self.store.ensure_collection(self.COLLECTION_LORE, EMBEDDING_DIMENSION)
         self.store.ensure_collection(self.COLLECTION_REGION_TEMPLATES, EMBEDDING_DIMENSION)
-        self.store.ensure_collection(self.COLLECTION_ARCANE_TEMPLATES, EMBEDDING_DIMENSION)
-        self.store.ensure_collection(self.COLLECTION_REALISM_TEMPLATES, EMBEDDING_DIMENSION)
         self.store.ensure_collection(self.COLLECTION_MONSTER_TEMPLATES, EMBEDDING_DIMENSION)
 
     def index_region_templates(self, templates_path: Optional[Any] = None) -> int:
@@ -177,98 +175,16 @@ class MemoryManager:
 
 
     def index_arcane_templates(self, templates_path: Optional[Any] = None) -> int:
-        """
-        Index 10 Fantasy Biomechanics & Arcane Physics templates into Qdrant vector memory.
-        """
-        import json
-        from src.core.config import TEMPLATES_DIR
-        path = templates_path or (TEMPLATES_DIR / "arcane_physics_template.json")
-        if not path.exists():
-            logger.warning(f"Arcane physics template file not found at {path}")
-            return 0
-
-        with open(path, "r", encoding="utf-8") as f:
-            templates = json.load(f)
-
-        count = 0
-        for item in templates:
-            aid = item.get("id", f"arcane_{count}")
-            search_text = (
-                f"{item.get('name', '')} {item.get('category', '')} {item.get('core_principle', '')} "
-                f"{' '.join(item.get('symptoms', []))} {item.get('mechanical_effect', '')}"
-            )
-            vectors = self.embedder.embed_passages([search_text])
-            if not vectors:
-                continue
-            vector = vectors[0]
-            payload = {
-                "id": aid,
-                "name": item.get("name", ""),
-                "category": item.get("category", ""),
-                "core_principle": item.get("core_principle", ""),
-                "symptoms": item.get("symptoms", []),
-                "mechanical_effect": item.get("mechanical_effect", ""),
-                "search_text": search_text,
-                "type": "arcane_template"
-            }
-            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"arcane_template_{aid}"))
-            if self.store.upsert(self.COLLECTION_ARCANE_TEMPLATES, point_id, vector, payload):
-                count += 1
-        logger.info(f"Indexed {count} arcane physics templates into Qdrant collection '{self.COLLECTION_ARCANE_TEMPLATES}'")
-        return count
+        """Deprecated for vector indexing. Physics & chemistry logic migrated to src/world/physics_matrix.py."""
+        return 0
 
     def search_arcane_templates(self, query: str, limit: int = 3) -> List[Dict[str, Any]]:
-        """Search for relevant arcane physics templates using Qdrant vector similarity."""
-        if not query.strip():
-            return []
-        query_vector = self.embedder.embed_query(query)
-        results = self.store.search(
-            self.COLLECTION_ARCANE_TEMPLATES,
-            query_vector=query_vector,
-            limit=limit,
-        )
-        return [r.payload for r in results]
+        """Deprecated: Physics & chemistry logic evaluated deterministically in Python."""
+        return []
 
     def index_realism_templates(self, templates_path: Optional[Any] = None) -> int:
-        """
-        Index 15 Realism & Causality Mechanics templates into Qdrant vector memory.
-        """
-        import json
-        from src.core.config import TEMPLATES_DIR
-        path = templates_path or (TEMPLATES_DIR / "realism_mechanics_template.json")
-        if not path.exists():
-            logger.warning(f"Realism mechanics template file not found at {path}")
-            return 0
-
-        with open(path, "r", encoding="utf-8") as f:
-            templates = json.load(f)
-
-        count = 0
-        for item in templates:
-            rid = item.get("id", f"realism_{count}")
-            search_text = (
-                f"{item.get('name', '')} {item.get('category', '')} {item.get('core_principle', '')} "
-                f"{' '.join(item.get('triggers', []))} {' '.join(item.get('consequences', []))}"
-            )
-            vectors = self.embedder.embed_passages([search_text])
-            if not vectors:
-                continue
-            vector = vectors[0]
-            payload = {
-                "id": rid,
-                "name": item.get("name", ""),
-                "category": item.get("category", ""),
-                "core_principle": item.get("core_principle", ""),
-                "triggers": item.get("triggers", []),
-                "consequences": item.get("consequences", []),
-                "search_text": search_text,
-                "type": "realism_template"
-            }
-            point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"realism_template_{rid}"))
-            if self.store.upsert(self.COLLECTION_REALISM_TEMPLATES, point_id, vector, payload):
-                count += 1
-        logger.info(f"Indexed {count} realism templates into Qdrant collection '{self.COLLECTION_REALISM_TEMPLATES}'")
-        return count
+        """Deprecated for vector indexing. Realism mechanics evaluated deterministically in Python."""
+        return 0
 
 
 

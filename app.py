@@ -36,6 +36,10 @@ def create_new_world() -> tuple:
         None,
         state.to_json(),
         state.to_player_summary_html(),
+        state.to_quest_journal_html(),
+        state.to_shop_html(),
+        state.to_crafting_html(),
+        state.to_party_html(),
         state.to_skills_html(),
         state.to_inventory_html(),
     )
@@ -91,12 +95,12 @@ def load_game(world_id: str) -> tuple:
     """Load a saved world by world_id."""
     if not world_id:
         gr.Warning("불러올 슬롯을 선택해주세요.")
-        return (gr.update(),) * 6
+        return (gr.update(),) * 10
     try:
         state = PersistenceManager.load_manual_save(world_id)
         if state is None:
             gr.Warning(f"저장 파일을 찾을 수 없습니다.")
-            return (gr.update(),) * 6
+            return (gr.update(),) * 10
         LegacyManager.spawn_legacy_npcs_to_world(state)
         chat_history = []
         for h in state.history[-20:]:
@@ -108,12 +112,16 @@ def load_game(world_id: str) -> tuple:
             None,
             state.to_json(),
             state.to_player_summary_html(),
+            state.to_quest_journal_html(),
+            state.to_shop_html(),
+            state.to_crafting_html(),
+            state.to_party_html(),
             state.to_skills_html(),
             state.to_inventory_html(),
         )
     except Exception as e:
         gr.Warning(f"불러오기 실패: {e}")
-        return (gr.update(),) * 6
+        return (gr.update(),) * 10
 
 
 
@@ -132,13 +140,21 @@ def take_action(
         try:
             state = WorldState.from_json(world_state_json)
             s_html = state.to_player_summary_html()
+            q_html = state.to_quest_journal_html()
+            shop_h = state.to_shop_html()
+            craft_h = state.to_crafting_html()
+            party_h = state.to_party_html()
             sk_html = state.to_skills_html()
             inv_html = state.to_inventory_html()
         except Exception:
             s_html = "<div class='qt-panel-content'>세계 상태를 불러올 수 없습니다.</div>"
+            q_html = ""
+            shop_h = ""
+            craft_h = ""
+            party_h = ""
             sk_html = ""
             inv_html = ""
-        return chat_history, current_image, world_state_json, s_html, sk_html, inv_html
+        return chat_history, current_image, world_state_json, s_html, q_html, shop_h, craft_h, party_h, sk_html, inv_html
 
     try:
         state = WorldState.from_json(world_state_json)
@@ -146,7 +162,7 @@ def take_action(
         state = None
 
     if state and getattr(state, "active_world_ended", False):
-        return chat_history, current_image, world_state_json, state.to_player_summary_html(), state.to_skills_html(), state.to_inventory_html()
+        return chat_history, current_image, world_state_json, state.to_player_summary_html(), state.to_quest_journal_html(), state.to_shop_html(), state.to_crafting_html(), state.to_party_html(), state.to_skills_html(), state.to_inventory_html()
 
     llm = get_llm(LLM_NAME)
     gm = GameMasterAgent(llm)
@@ -180,6 +196,10 @@ def take_action(
         new_image,
         state.to_json(),
         state.to_player_summary_html(),
+        state.to_quest_journal_html(),
+        state.to_shop_html(),
+        state.to_crafting_html(),
+        state.to_party_html(),
         state.to_skills_html(),
         state.to_inventory_html(),
     )
@@ -204,11 +224,18 @@ def start_game(world_state_json: str) -> tuple:
                 None,
                 saved.to_json(),
                 saved.to_player_summary_html(),
+                saved.to_quest_journal_html(),
+                saved.to_shop_html(),
+                saved.to_crafting_html(),
+                saved.to_party_html(),
                 saved.to_skills_html(),
                 saved.to_inventory_html(),
             )
         except Exception:
             pass  # Corrupt save → fall through to new world
+
+    # No progress / no save / corrupt save → generate a brand-new random world
+    return create_new_world()
 
     # No progress / no save / corrupt save → generate a brand-new random world
     return create_new_world()
@@ -389,6 +416,14 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
             with gr.Tabs():
                 with gr.TabItem("⚔️ 상태 기록부"):
                     status_display = gr.HTML(elem_classes="qt-accord")
+                with gr.TabItem("📜 퀘스트 저널"):
+                    quest_display = gr.HTML(elem_classes="qt-accord")
+                with gr.TabItem("🏪 상점"):
+                    shop_display = gr.HTML(elem_classes="qt-accord")
+                with gr.TabItem("⚒️ 공방/제작"):
+                    craft_display = gr.HTML(elem_classes="qt-accord")
+                with gr.TabItem("👥 동료/파티"):
+                    party_display = gr.HTML(elem_classes="qt-accord")
                 with gr.TabItem("✨ 스킬북"):
                     skills_display = gr.HTML(elem_classes="qt-accord")
                 with gr.TabItem("🎒 가방"):
@@ -461,7 +496,7 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
 
     new_world_btn.click(
         fn=create_new_world,
-        outputs=[chatbot, scene_image, world_state, status_display, skills_display, inv_display],
+        outputs=[chatbot, scene_image, world_state, status_display, quest_display, shop_display, craft_display, party_display, skills_display, inv_display],
     )
 
     save_btn.click(
@@ -481,13 +516,13 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
     release_btn.click(
         fn=release_character_action,
         inputs=[chatbot, world_state, scene_image],
-        outputs=[chatbot, scene_image, world_state, status_display, skills_display, inv_display],
+        outputs=[chatbot, scene_image, world_state, status_display, quest_display, shop_display, craft_display, party_display, skills_display, inv_display],
     )
 
     load_btn.click(
         fn=load_game,
         inputs=[save_slot_dd],
-        outputs=[chatbot, scene_image, world_state, status_display, skills_display, inv_display],
+        outputs=[chatbot, scene_image, world_state, status_display, quest_display, shop_display, craft_display, party_display, skills_display, inv_display],
     )
 
     submit_btn.click(
@@ -497,7 +532,7 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
     ).then(
         fn=take_action,
         inputs=[action_input, chatbot, world_state, scene_image],
-        outputs=[chatbot, scene_image, world_state, status_display, skills_display, inv_display],
+        outputs=[chatbot, scene_image, world_state, status_display, quest_display, shop_display, craft_display, party_display, skills_display, inv_display],
     ).then(
         fn=lambda: ("", gr.update(interactive=True), gr.update(interactive=False)),
         outputs=[action_input, action_input, submit_btn],
@@ -511,7 +546,7 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
     ).then(
         fn=take_action,
         inputs=[action_input, chatbot, world_state, scene_image],
-        outputs=[chatbot, scene_image, world_state, status_display, skills_display, inv_display],
+        outputs=[chatbot, scene_image, world_state, status_display, quest_display, shop_display, craft_display, party_display, skills_display, inv_display],
     ).then(
         fn=lambda: ("", gr.update(interactive=True), gr.update(interactive=False)),
         outputs=[action_input, action_input, submit_btn],
@@ -528,7 +563,7 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
     demo.load(
         fn=lambda ws: (*start_game(ws), gr.update(choices=get_save_choices(), value=get_save_choices()[0][1] if get_save_choices() and get_save_choices()[0][1] else "")),
         inputs=[world_state],
-        outputs=[chatbot, scene_image, world_state, status_display, skills_display, inv_display, save_slot_dd],
+        outputs=[chatbot, scene_image, world_state, status_display, quest_display, shop_display, craft_display, party_display, skills_display, inv_display, save_slot_dd],
     )
 
 

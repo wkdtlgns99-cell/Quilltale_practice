@@ -301,6 +301,8 @@ GM은 수치나 텍스트 제한을 직접 설명하는 메타적 나레이션(�
 GM_TURN_PROMPT_TEMPLATE = """
 {environmental_anchoring}
 
+{deterministic_fact_sheet}
+
 {npc_bdi_context}
 
 {world_context}
@@ -317,6 +319,18 @@ GM_TURN_PROMPT_TEMPLATE = """
 
 {graph_context}
 
+{quest_context}
+
+{shop_context}
+
+{crafting_context}
+
+{party_context}
+
+{status_ticks_context}
+
+{physics_reaction_context}
+
 {dice_roll_context}
 
 {interrupt_context}
@@ -330,9 +344,18 @@ GM_TURN_PROMPT_TEMPLATE = """
 {parsed_action_summary}
 원본 입력: "{action}"
 
-위 상태와 규칙, 템포 및 주사위 판정 결과를 엄격히 준수하여 JSON으로 결과를 응답하십시오.
-인위적인 객관식 선택지를 절대 나열하지 말고, 현장 분위기와 인물의 반응을 생생하게 묘사하십시오.
-현장에 살아있는 NPC가 있다면 그중 1명의 자율 행동(npc_action)도 반드시 포함하십시오.
+위 상태와 규칙, [확정된 100% 물리/규칙적 진실 (IMMUTABLE FACT SHEET)]을 단 1의 오차도 없이 엄격히 준수하여 아래 JSON 단일 형식으로만 결과를 응답하십시오:
+
+{{
+  "narration": "모든 장면 묘사, NPC 대사, 행동 결과를 담은 유려한 한국어 소설 서사 본문 (공백 제외 300~500자)",
+  "state_update": {{}},
+  "scene_changed": false
+}}
+
+[★ JSON 출력 주의사항 (엄격 준수)]
+1. 'character', 'emotion', 'scene_description' 같은 다른 임의의 키를 절대 만들지 마십시오.
+2. 모든 스토리, 나레이션, 대사는 오직 "narration" 단 하나의 문자열 필드 안에 완전한 소설 문장으로 작성하십시오.
+3. 인위적인 객관식 선택지를 절대 나열하지 마십시오.
 """
 
 

@@ -1,0 +1,53 @@
+{
+  "puzzles": [
+    {
+      "id": "puzzle_ancient_cipher_01",
+      "name_ko": "봉인된 고대어 룬 석문",
+      "puzzle_type": "incantation_cipher",
+      "location_id": "loc_dungeon_depths",
+      "description_ko": "세 개의 음각 홈이 파인 거대한 화강암 석문. 고대어 마법 단어를 순서대로 영창해야 결계가 풀립니다.",
+      "required_words": ["이그니스", "사기타", "임팩투스"],
+      "hint_ko": "비문에 '타오르는 불꽃의 화살이 부딪힐 때 문이 열리리라'고 적혀 있습니다.",
+      "reward_items": ["item_ancient_relic_core"],
+      "reward_exp": 150,
+      "solved": false
+    },
+    {
+      "id": "puzzle_weight_plate_01",
+      "name_ko": "심연의 무게 균형 압력판",
+      "puzzle_type": "weight_pressure_plate",
+      "location_id": "loc_ancient_catacomb",
+      "description_ko": "바닥에 설치된 육중한 청동 압력판. 50kg 이상의 무게가 가해져야 비밀 철창이 올라갑니다.",
+      "required_weight_kg": 50.0,
+      "required_strength": 14,
+      "hint_ko": "무거운 짐을 올려두거나, 괴력으로 바위를 밀어 올리면 작동할 것 같습니다.",
+      "reward_items": ["item_shadow_key"],
+      "reward_exp": 100,
+      "solved": false
+    },
+    {
+      "id": "puzzle_beam_reflector_01",
+      "name_ko": "프리즘 광선 굴절 장치",
+      "puzzle_type": "beam_reflector",
+      "location_id": "loc_crystal_sanctuary",
+      "description_ko": "천장에서 쏟아지는 마력 광선을 회전식 거울을 돌려 제단 중앙의 수정구로 유도해야 합니다.",
+      "required_angles": [45, 90, 135],
+      "hint_ko": "거울을 '45도, 90도, 135도' 방향으로 정렬하면 빛이 굴절됩니다.",
+      "reward_items": ["item_astral_prism"],
+      "reward_exp": 200,
+      "solved": false
+    },
+    {
+      "id": "puzzle_poison_gas_valve_01",
+      "name_ko": "부식성 독가스 차단 밸브",
+      "puzzle_type": "valve_sequence",
+      "location_id": "loc_abandoned_lab",
+      "description_ko": "녹색 독가스를 뿜어내는 3개의 황동 밸브. 올바른 순서로 잠가야 폭발을 막을 수 있습니다.",
+      "required_sequence": ["밸브3", "밸브1", "밸브2"],
+      "hint_ko": "벽에 '가장 높은 압력(3)부터 시작하여 환기구(1)를 거쳐 메인 밸브(2)를 닫으라'는 메모가 있습니다.",
+      "reward_items": ["item_alchemical_catalyst_pure"],
+      "reward_exp": 120,
+      "solved": false
+    }
+  ]
+}

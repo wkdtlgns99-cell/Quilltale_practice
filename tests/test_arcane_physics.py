@@ -43,24 +43,17 @@ def test_arcane_laws_in_context_summary():
     assert "언령 축적 및 혀의 석회화" in summary
 
 
-def test_memory_manager_arcane_and_realism_rag():
-    from src.memory.memory_manager import MemoryManager
+def test_deterministic_physics_matrix_evaluation():
+    from src.world.physics_matrix import PhysicsMatrixEngine
 
-    mm = MemoryManager()
-    arcane_count = mm.index_arcane_templates()
-    assert arcane_count >= 65
-
-    realism_count = mm.index_realism_templates()
-    assert realism_count >= 15
-
-    arcane_results = mm.search_arcane_templates("마나 고갈과 석화", limit=2)
-    assert len(arcane_results) >= 1
-    assert "name" in arcane_results[0]
-    assert "symptoms" in arcane_results[0]
-
-    realism_results = mm.search_realism_templates("밀폐 공간 화염과 열기", limit=2)
-    assert len(realism_results) >= 1
-    assert "name" in realism_results[0]
+    reactions = PhysicsMatrixEngine.evaluate(
+        action_text="과충전 마나를 쏟아부어 지팡이에 과부하를 건다",
+        environment_text="석실 내부",
+    )
+    overheat = next((r for r in reactions if r.rule_id == "mana_overheat_bleed"), None)
+    assert overheat is not None
+    assert overheat.status_to_apply == "bleed"
+    assert overheat.damage_bonus == 1.5
 
 
 

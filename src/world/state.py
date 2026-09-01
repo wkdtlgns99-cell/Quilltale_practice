@@ -123,6 +123,12 @@ class Item:
     utility_function: str = ""      # 기믹형 유틸리티 기능 (예: "벽 투과 도청", "10분간 짙은 연막 살포", "도어 락픽")
     puzzle_hint: str = ""           # 퍼즐 및 환경 상호작용 힌트
 
+    # Durability & Rune Sockets
+    durability: int = 100           # 현재 내구도 (0~100)
+    max_durability: int = 100       # 최대 내구도
+    rune_slots: int = 0             # 룬 소켓 구멍 개수 (0~3)
+    socketed_runes: list[str] = field(default_factory=list) # 각인된 룬 ID 목록
+
     @property
     def tooltip_text(self) -> str:
         lines = [f"[{self.name}]"]
@@ -243,6 +249,37 @@ class Faction:
     ruling_race: str = "인간"           # 지배 종족
     taboos: list[str] = field(default_factory=list) # 사회적/종교적 금기
     relations: dict[str, str] = field(default_factory=dict) # 타 세력과의 관계 {"faction_b": "적대" | "동맹" | "중립"}
+    
+    # 깃발 및 상징/문장 (Heraldry & Visual Identity)
+    emblem_animal: str = "사자"         # 대표 상징 동물/환수 (예: "두 머리 독수리", "심해 크라켄", "검은 늑대")
+    flag_colors: list[str] = field(default_factory=lambda: ["진홍색", "금색"]) # 깃발 색상 (예: ["진홍색", "금색"], ["칠흑색", "은색"])
+    flag_symbol: str = "교차된 검과 태양" # 깃발 문양 형상 (예: "태양을 관통하는 은빛 검", "톱니바퀴와 닻")
+    motto: str = ""                     # 세력 표어/가언 (예: "피와 쇠로 영광을", "어둠 속에서 진실을 본다")
+    headquarters_location: str = ""     # 본거지/수도 위치 ID
+
+
+@dataclass
+class NPCVisualDetails:
+    """
+    Ultra-detailed visual anatomy for high-fidelity narration and AI Image Generation (Flux/SD).
+    Supports granular species, life stages (child/teen/adult/elder), and body archetypes.
+    """
+    species: str = "인간"                            # 종족 (예: "인간", "엘프", "드워프", "수인(늑대/고양이)", "오크", "용족", "하프엘프")
+    life_stage: str = "성인 남성"                    # 연령 및 생애 주기 (예: "어린아이(남아)", "어린아이(여아)", "청소년 소년", "청소년 소녀", "성인 남성", "성인 여성", "중년 남성", "중년 여성", "노인", "노파")
+    build_archetype: str = "보통 체형"               # 골격/체형 유형 (예: "왜소하고 마른 체형", "날렵하고 유연한 체형", "근육질의 탄탄한 체형", "육중하고 거대한 체형", "통통하고 둥근 체형")
+    height_cm: int = 175                            # 신장 (cm 단위)
+    age_apparent: str = "30대"                      # 겉보기 나이 (예: "7~8세", "10대 중반", "20대 초반", "40대 중반", "70대 노인")
+    gender: str = "남성"                            # 성별 (남성, 여성, 불명 등)
+    height_and_build: str = "175cm 보통 체구"        # 체구 상세 묘사
+    hair_color: str = "흑발"                        # 머리 색상 (예: "칠흑빛 흑발", "은백색", "녹슨 구릿빛 붉은 머리", "백금발")
+    hair_style: str = "단정한 단발"                  # 헤어스타일 (예: "뒤로 묶은 꽁지머리", "이마를 덮은 헝클어진 곱슬머리", "포마드 올백", "양갈래 땋은 머리", "삭발")
+    eye_color: str = "갈색"                         # 눈동자 색상 (예: "호박색(Amber)", "차가운 은회색", "벽안(푸른 눈)", "탁한 비취색")
+    eye_shape: str = "날카로운 눈매"                 # 눈매/크기 (예: "날카로운 삼백안", "처진 강아지상 눈매", "반쯤 감긴 나른한 눈", "크고 또렷한 눈")
+    skin_tone: str = "구릿빛 피부"                   # 피부 톤/질감 (예: "햇볕에 그을린 구릿빛", "창백한 백옥 피부", "거칠고 주름진 피부")
+    facial_features: list[str] = field(default_factory=list) # 고유 얼굴 특징 (예: ["뺨의 옅은 주근깨", "왼쪽 눈썹을 가로지르는 흉터", "턱의 짙은 수염", "오른쪽 눈 밑 애교점"])
+    clothing_style: str = "낡은 가죽 조끼와 셔츠"    # 의복/복식 (예: "기름때 묻은 무두질 가죽 조끼와 리넨 셔츠", "은사로 수놓아진 사제 로브", "무릎이 해진 멜빵바지")
+    distinctive_accessories: list[str] = field(default_factory=list) # 특이 소품/장신구 (예: ["외눈 안경(모노클)", "놋쇠 나침반 목걸이", "낡은 곰방대", "손에 쥔 나무 인형"])
+    posture_and_vibe: str = "경계하는 듯한 자세"     # 자세와 분위기 (예: "허리를 꼿꼿이 세운 군인 자세", "초조하게 손을 비비는 태도", "호기심 어린 눈망울")
 
 
 @dataclass
@@ -340,14 +377,59 @@ class NPC:
     traumas: list[str] = field(default_factory=list)              # 심리적 트라우마/PTSD
     power_dynamic_state: str = "normal"                           # 권력 공백 반응: "normal" | "subservient"(복종/우상화) | "usurper"(찬탈) | "mutiny"(내분)
     morale: int = 100                                             # 전투 사기 (0~100, 30 이하 시 패주/항복 자백 협상)
+    status_effects: dict = field(default_factory=dict)            # status_id -> StatusEffect
+    visual: NPCVisualDetails = field(default_factory=NPCVisualDetails) # 고유 외형 해부학적 데이터
+    blackmail_secret: str = ""                                    # 숨겨진 치부/약점/비리
+    faction_id: str = ""                                          # 소속 세력/단체 ID
+    faction_role: str = ""                                        # 세력 내 직책/신분
+
+    def to_image_prompt_keywords(self) -> str:
+        """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
+        v = self.visual
+        features_en = ", ".join(v.facial_features) if v.facial_features else "detailed facial features"
+        acc_en = ", ".join(v.distinctive_accessories) if v.distinctive_accessories else "detailed accessories"
+        return (
+            f"cinematic fantasy portrait of {v.species} {v.life_stage} {self.job}, {v.age_apparent}, "
+            f"{v.height_cm}cm {v.build_archetype}, {v.hair_color} {v.hair_style}, {v.eye_shape} with {v.eye_color} eyes, "
+            f"{v.skin_tone}, {features_en}, wearing {v.clothing_style}, {acc_en}, {v.posture_and_vibe}, "
+            f"highly detailed face, realistic skin texture, intricate clothing folds, volumetric lighting, masterpiece, 8k"
+        )
+
+    def to_korean_visual_summary(self) -> str:
+        """Returns a high-density sensory Korean summary of the NPC's physical appearance."""
+        v = self.visual
+        feat_str = f"특징: {', '.join(v.facial_features)}" if v.facial_features else ""
+        acc_str = f"소품: {', '.join(v.distinctive_accessories)}" if v.distinctive_accessories else ""
+        extras = " | ".join(filter(None, [feat_str, acc_str]))
+        extras_part = f" ({extras})" if extras else ""
+        return (
+            f"[{v.species} {v.life_stage} / {self.job}] {v.height_cm}cm {v.build_archetype}(겉보기 {v.age_apparent}), "
+            f"{v.hair_color} {v.hair_style}, {v.eye_shape}({v.eye_color} 눈동자), "
+            f"{v.skin_tone}, {v.clothing_style}{extras_part}"
+        )
 
     # Properties symmetric with Player
     @property
-    def str_mod(self) -> int: return (self.strength - 10) // 2
+    def effective_strength(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.strength + StatusEffectEngine.get_effective_stat_modifiers(self).get("strength", 0))
+
     @property
-    def agi_mod(self) -> int: return (self.agility - 10) // 2
+    def effective_agility(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.agility + StatusEffectEngine.get_effective_stat_modifiers(self).get("agility", 0))
+
     @property
-    def int_mod(self) -> int: return (self.intelligence - 10) // 2 + max(0, (self.wisdom - 10) // 2)
+    def effective_intelligence(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.intelligence + StatusEffectEngine.get_effective_stat_modifiers(self).get("intelligence", 0))
+
+    @property
+    def str_mod(self) -> int: return (self.effective_strength - 10) // 2
+    @property
+    def agi_mod(self) -> int: return (self.effective_agility - 10) // 2
+    @property
+    def int_mod(self) -> int: return (self.effective_intelligence - 10) // 2 + max(0, (self.wisdom - 10) // 2)
     @property
     def effective_crit_rate(self) -> float:
         from src.core.config import BASE_CRIT_RATE, CRIT_RATE_PER_POINT, LUCK_CRIT_BONUS
@@ -573,6 +655,12 @@ class Player:
     traumas: list[str] = field(default_factory=list)  # 심리적 트라우마 (예: ["화염 공포증"])
     hygiene_level: int = 100            # 위생도 (0~100, 30 이하 시 체취 누출로 야수 기습 유발)
     body_temperature: float = 36.5      # 심부 체온 (34도 이하 저체온증, 39도 이상 열사병)
+    status_effects: dict = field(default_factory=dict) # status_id -> StatusEffect
+    
+    # Bounty & Disguise
+    bounties: dict[str, int] = field(default_factory=dict) # 세력별 수배 현상금 {"faction_lumen": 1500}
+    disguise: Optional[str] = None                         # 착용 중인 변장 도구 (예: "까마귀 가면과 검은 로브")
+    active_alias: Optional[str] = None                     # 통성명용 가명 (예: "외눈의 방랑자 잭")
     
     @property
     def fatigue_status_ko(self) -> str:
@@ -584,22 +672,43 @@ class Player:
             return "경미한 피로"
         return "양호 (활력 넘침)"
 
+    # Effective Stats with Status Effects
+    @property
+    def effective_strength(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.strength + StatusEffectEngine.get_effective_stat_modifiers(self).get("strength", 0))
+
+    @property
+    def effective_agility(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.agility + StatusEffectEngine.get_effective_stat_modifiers(self).get("agility", 0))
+
+    @property
+    def effective_constitution(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.constitution + StatusEffectEngine.get_effective_stat_modifiers(self).get("constitution", 0))
+
+    @property
+    def effective_intelligence(self) -> int:
+        from src.world.status_engine import StatusEffectEngine
+        return max(1, self.intelligence + StatusEffectEngine.get_effective_stat_modifiers(self).get("intelligence", 0))
+
     # Properties
     @property
-    def str_stat(self) -> int: return self.strength
+    def str_stat(self) -> int: return self.effective_strength
 
     @str_stat.setter
     def str_stat(self, value: int): self.strength = value
     @property
-    def dex_stat(self) -> int: return self.agility
+    def dex_stat(self) -> int: return self.effective_agility
     @dex_stat.setter
     def dex_stat(self, value: int): self.agility = value
     @property
-    def con_stat(self) -> int: return self.constitution
+    def con_stat(self) -> int: return self.effective_constitution
     @con_stat.setter
     def con_stat(self, value: int): self.constitution = value
     @property
-    def int_stat(self) -> int: return self.intelligence
+    def int_stat(self) -> int: return self.effective_intelligence
     @int_stat.setter
     def int_stat(self, value: int): self.intelligence = value
     @property
@@ -621,11 +730,11 @@ class Player:
     def equipped_armor(self, value: Optional[str]): self.equipment.chest = value
 
     @property
-    def str_mod(self) -> int: return (self.strength - 10) // 2
+    def str_mod(self) -> int: return (self.effective_strength - 10) // 2
     @property  
-    def agi_mod(self) -> int: return (self.agility - 10) // 2
+    def agi_mod(self) -> int: return (self.effective_agility - 10) // 2
     @property
-    def int_mod(self) -> int: return (self.intelligence - 10) // 2 + max(0, (self.wisdom - 10) // 2)
+    def int_mod(self) -> int: return (self.effective_intelligence - 10) // 2 + max(0, (self.wisdom - 10) // 2)
     @property
     def effective_crit_rate(self) -> float:
         return BASE_CRIT_RATE + self.crit_rate_bonus * CRIT_RATE_PER_POINT + max(0, self.luck - 10) * LUCK_CRIT_BONUS
@@ -669,7 +778,23 @@ class WorldState:
     environment_states: dict[str, dict] = field(default_factory=dict) # {"tavern": {"door": "broken", "hearth": "burned"}}
     discovered_clues: dict[str, str] = field(default_factory=dict)     # 발견된 단서/비밀 DB
     world_secrets: dict[str, dict] = field(default_factory=dict)       # 비대칭 비밀/진실 DB (GM 비대칭 정보 & 단서 조각)
-    dilemmas_faced: list[dict] = field(default_factory=list)           # 플레이어가 겪은 딜레마 선택과 대가 기록
+    # Quests & Living Journal
+    quests: dict = field(default_factory=dict)
+    # Shops & Economy DB
+    shops: dict = field(default_factory=dict)
+    # Recipes & Crafting DB
+    recipes: dict = field(default_factory=dict)
+    # Party & Companions DB
+    party: dict = field(default_factory=dict)
+    # Puzzles & Dungeon Mechanisms DB
+    puzzles: dict = field(default_factory=dict)
+    # Bounties & Wanted Board DB
+    bounties_board: list[dict] = field(default_factory=list)
+    # Celestial & Festival Cycles
+    celestial_phase: str = "normal"              # "normal", "celestial_blood_moon", "celestial_solar_eclipse", "celestial_meteor_shower"
+    celestial_phase_turns: int = 0               # 남은 지속 턴 수
+    active_festival: Optional[str] = None        # "festival_harvest_bounty", "festival_night_of_dead"
+    active_festival_turns: int = 0               # 남은 축제 지속 턴 수
 
     # In-Game Time & Periodical Publishing System
     start_minute: int = 8 * 60                  # 기본 시작 시각: 1일차 월요일 08:00 (480분)
@@ -1152,6 +1277,17 @@ class WorldState:
                     laws_lines.append(f"  * {law}")
             arcane_laws_block = "\n[🔮 이 세계의 특수 판타지 생체·물리 법칙 (Arcane Biomechanics)]:\n" + "\n".join(laws_lines)
 
+        factions_block = ""
+        if self.factions:
+            fac_lines = []
+            for f_id, fac in self.factions.items():
+                colors_str = "/".join(fac.flag_colors) if fac.flag_colors else "미상"
+                motto_str = f", 표어: '{fac.motto}'" if fac.motto else ""
+                fac_lines.append(
+                    f"  * [{fac.name}] 상징 동물: {fac.emblem_animal} | 깃발 색: {colors_str} | 문양: {fac.flag_symbol}{motto_str} (체제: {fac.system}, {fac.power_level})"
+                )
+            factions_block = "\n[🚩 국가/세력 깃발 및 상징 문장 (Factions & Heraldry)]:\n" + "\n".join(fac_lines)
+
         eq_wep = self.get_equipped_weapon_item()
         wep_name = f"{eq_wep.name} (공격력+{eq_wep.damage})" if eq_wep else "맨손 (공격력 1)"
 
@@ -1164,7 +1300,7 @@ NPCs Present: {npcs_str}
 Player: {self.player.name} (Level {self.player.level}, HP {self.player.health}/{self.player.max_health}, Gold {self.player.gold}, Rep {self.player.reputation})
 Player Stats: STR {self.player.strength} (+{self.player.str_mod}), AGI {self.player.agility} (+{self.player.agi_mod}), INT {self.player.intelligence} (+{self.player.int_mod})
 Equipped Weapon: {wep_name}
-Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
+Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}{factions_block}
 """
 
 
@@ -1502,6 +1638,7 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
     🩸 <span class="qt-hover-tag" data-tooltip="[치명타 피해]&#10;치명타 적중 시 가해지는 추가 피해 배율입니다.">치명타 피해: {self.player.effective_crit_damage:.1f}%</span> &nbsp;|&nbsp;
     🫁 <span class="qt-hover-tag" data-tooltip="[신체 컨디션 및 피로도]&#10;격렬한 전투, 장거리 이동, 무리한 영창 시 누적되며&#10;휴식과 야영으로 회복됩니다.&#10;상태: {self.player.fatigue_status_ko}">컨디션: {self.player.fatigue_status_ko.split(' ')[0]}</span>
   </div>
+  <div class="qt-hud-line">🔮 <b class='qt-hud-label'>상태이상:</b> {self._get_player_status_html()}</div>
 
   <div class="qt-hud-line">🗡️ <b class='qt-hud-label'>장착 장비:</b> {eq_html}</div>
   <div class="qt-hud-line">💰 <b class='qt-hud-label'>소지금:</b> {self.player.gold} 골드{title_html}</div>
@@ -1510,6 +1647,31 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
   {npc_block}
 </div>
 """
+
+    def _get_player_status_html(self) -> str:
+        from src.world.status_engine import StatusEffectEngine
+        return StatusEffectEngine.format_status_for_html(self.player)
+
+    def to_quest_journal_html(self) -> str:
+        from src.world.quest_engine import QuestEngine
+        return QuestEngine.format_journal_html(self)
+
+    def to_shop_html(self, shop_id: Optional[str] = None) -> str:
+        from src.world.economy_engine import EconomyEngine
+        return EconomyEngine.format_shop_html(self, shop_id=shop_id)
+
+    def to_crafting_html(self) -> str:
+        from src.world.crafting_engine import CraftingEngine
+        return CraftingEngine.format_crafting_html(self)
+
+    def to_party_html(self) -> str:
+        from src.world.party_engine import PartyEngine
+        return PartyEngine.format_party_html(self)
+
+    def to_audio_html(self, fact_sheet=None, action="") -> str:
+        from src.world.audio_engine import AudioEngine
+        audio_data = AudioEngine.determine_turn_audio(self, fact_sheet=fact_sheet, action=action)
+        return AudioEngine.format_audio_html(audio_data)
 
 
     def to_skills_html(self) -> str:
@@ -2216,6 +2378,41 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
                 self.player.traumas.append(tra)
                 changes.append(f"플레이어 트라우마 획득: {tra}")
 
+        # 17. Status Effects (Status Effect Engine)
+        if "apply_status" in update:
+            from src.world.status_engine import StatusEffectEngine
+            status_data = update["apply_status"]
+            if isinstance(status_data, dict):
+                for target_key, s_info in status_data.items():
+                    target = self.player if target_key == "player" else self.npcs.get(target_key)
+                    if target:
+                        if isinstance(s_info, str):
+                            msg = StatusEffectEngine.apply_status(target, s_info)
+                        elif isinstance(s_info, dict):
+                            msg = StatusEffectEngine.apply_status(
+                                target,
+                                s_info.get("status_id", "poison"),
+                                duration=s_info.get("duration"),
+                                potency=s_info.get("potency"),
+                                stacks=s_info.get("stacks", 1)
+                            )
+                        else:
+                            msg = ""
+                        if msg:
+                            changes.append(msg)
+
+        if "remove_status" in update:
+            from src.world.status_engine import StatusEffectEngine
+            status_data = update["remove_status"]
+            if isinstance(status_data, dict):
+                for target_key, s_ids in status_data.items():
+                    target = self.player if target_key == "player" else self.npcs.get(target_key)
+                    if target:
+                        s_list = s_ids if isinstance(s_ids, list) else [s_ids]
+                        for s_id in s_list:
+                            if StatusEffectEngine.remove_status(target, str(s_id)):
+                                changes.append(f"상태이상 해제: [{getattr(target, 'name', target_key)}] {s_id}")
+
         # Update Environmental Metrics
         if "update_environment_metrics" in update:
             env_delta = update["update_environment_metrics"]
@@ -2237,6 +2434,119 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
                 ))
                 changes.append(f"정보 전파 대기열 등록: '{wave_data['event_desc']}' (지연: {wave_data.get('delay_turns', 2)}턴)")
 
+
+        # Quest Engine Deltas
+        if "accept_quest" in update:
+            from src.world.quest_engine import QuestEngine
+            q_id = update["accept_quest"]
+            success, msg = QuestEngine.accept_quest(self, str(q_id))
+            changes.append(msg)
+
+        if "advance_quest" in update:
+            from src.world.quest_engine import QuestEngine
+            adv_data = update["advance_quest"]
+            if isinstance(adv_data, dict):
+                e_type = adv_data.get("type", "condition")
+                target = adv_data.get("target", "")
+                count = adv_data.get("count", 1)
+                q_logs = QuestEngine.progress_event(self, e_type, target, count)
+                changes.extend(q_logs)
+
+        if "choose_quest_branch" in update:
+            from src.world.quest_engine import QuestEngine
+            b_data = update["choose_quest_branch"]
+            if isinstance(b_data, dict):
+                q_id = b_data.get("quest_id", "")
+                c_id = b_data.get("choice_id", "")
+                _, _, b_logs = QuestEngine.choose_branch(self, q_id, c_id)
+                changes.extend(b_logs)
+
+        if "complete_quest" in update:
+            from src.world.quest_engine import QuestEngine
+            q_id = update["complete_quest"]
+            c_logs = QuestEngine.complete_quest(self, str(q_id))
+            changes.extend(c_logs)
+
+        if "fail_quest" in update:
+            from src.world.quest_engine import QuestEngine
+            f_data = update["fail_quest"]
+            q_id = f_data.get("quest_id") if isinstance(f_data, dict) else str(f_data)
+            reason = f_data.get("reason", "") if isinstance(f_data, dict) else ""
+            f_logs = QuestEngine.fail_quest(self, q_id, reason)
+            changes.extend(f_logs)
+
+        # Economy & Shop Deltas
+        if "buy_item" in update:
+            from src.world.economy_engine import EconomyEngine
+            b_info = update["buy_item"]
+            if isinstance(b_info, dict):
+                s_id = b_info.get("shop_id", "")
+                i_id = b_info.get("item_id", "")
+                cnt = b_info.get("count", 1)
+                is_hag = b_info.get("is_haggled", False)
+                _, buy_msg, _ = EconomyEngine.buy_item(self, s_id, i_id, count=cnt, is_haggled=is_hag)
+                changes.append(buy_msg)
+
+        if "sell_item" in update:
+            from src.world.economy_engine import EconomyEngine
+            s_info = update["sell_item"]
+            if isinstance(s_info, dict):
+                s_id = s_info.get("shop_id", "")
+                i_id = s_info.get("item_id", "")
+                cnt = s_info.get("count", 1)
+                is_hag = s_info.get("is_haggled", False)
+                _, sell_msg, _ = EconomyEngine.sell_item(self, s_id, i_id, count=cnt, is_haggled=is_hag)
+                changes.append(sell_msg)
+
+        if "use_shop_service" in update:
+            from src.world.economy_engine import EconomyEngine
+            srv_info = update["use_shop_service"]
+            if isinstance(srv_info, dict):
+                s_id = srv_info.get("shop_id", "")
+                srv_id = srv_info.get("service_id", "")
+                _, srv_msg = EconomyEngine.use_service(self, s_id, srv_id)
+                changes.append(srv_msg)
+
+        # Crafting & Alchemy Deltas
+        if "craft_item" in update:
+            from src.world.crafting_engine import CraftingEngine
+            c_info = update["craft_item"]
+            if isinstance(c_info, dict):
+                r_id = c_info.get("recipe_id", "")
+                cat_id = c_info.get("catalyst_id")
+                _, craft_msg, _ = CraftingEngine.craft_item(self, r_id, catalyst_id=cat_id)
+                changes.append(craft_msg)
+
+        if "salvage_item" in update:
+            from src.world.crafting_engine import CraftingEngine
+            sal_info = update["salvage_item"]
+            i_id = sal_info.get("item_id") if isinstance(sal_info, dict) else str(sal_info)
+            _, sal_msg, _ = CraftingEngine.salvage_item(self, i_id)
+            changes.append(sal_msg)
+
+        # Party & Companion Deltas
+        if "recruit_companion" in update:
+            from src.world.party_engine import PartyEngine
+            c_id = str(update["recruit_companion"])
+            _, r_msg, _ = PartyEngine.recruit_companion(self, c_id)
+            changes.append(r_msg)
+
+        if "dismiss_companion" in update:
+            from src.world.party_engine import PartyEngine
+            c_id = str(update["dismiss_companion"])
+            _, d_msg, _ = PartyEngine.dismiss_companion(self, c_id)
+            changes.append(d_msg)
+
+        if "modify_companion_loyalty" in update:
+            from src.world.party_engine import PartyEngine
+            m_data = update["modify_companion_loyalty"]
+            if isinstance(m_data, dict):
+                c_id = m_data.get("companion_id", "")
+                delta = m_data.get("delta", 0)
+                reason = m_data.get("reason", "")
+                l_msg, _ = PartyEngine.modify_loyalty_and_affinity(self, c_id, delta, reason=reason)
+                if l_msg:
+                    changes.append(l_msg)
 
         # 17. Power Vacuum & Subservience Dynamic
         if "power_vacuum_reaction" in update:
@@ -2363,6 +2673,16 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
             injuries=p_raw.get("injuries", []) if isinstance(p_raw, dict) else [],
             traumas=p_raw.get("traumas", []) if isinstance(p_raw, dict) else []
         )
+        from src.world.status_engine import StatusEffect
+        raw_p_status = p_raw.get("status_effects", {}) if isinstance(p_raw, dict) else {}
+        p_status_dict = {}
+        if isinstance(raw_p_status, dict):
+            for s_id, s_data in raw_p_status.items():
+                if isinstance(s_data, dict):
+                    p_status_dict[s_id] = StatusEffect.from_dict(s_data)
+                elif isinstance(s_data, StatusEffect):
+                    p_status_dict[s_id] = s_data
+        state.player.status_effects = p_status_dict
 
         # Locations
         state.locations = {}
@@ -2378,6 +2698,7 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
         for k, v in raw.get("npcs", {}).items():
             npc_dict = dict(v) if isinstance(v, dict) else {}
             raw_memories = npc_dict.pop("memories", [])
+            raw_n_status = npc_dict.pop("status_effects", {})
             p_dict = npc_dict.pop("personality", {})
             personality = safe_init(NPCPersonality, p_dict)
             n_dict = npc_dict.pop("needs", {})
@@ -2386,12 +2707,14 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
             equipment = safe_init(EquipmentSlots, eq_dict)
             cp_dict = npc_dict.pop("combat_profile", {})
             combat_profile = safe_init(CombatProfile, cp_dict)
+            v_dict = npc_dict.pop("visual", {})
+            visual = safe_init(NPCVisualDetails, v_dict)
 
             npc = safe_init(
                 NPC, npc_dict,
                 id=k, name=k, description="", location=state.player.location,
                 personality=personality, needs=needs, equipment=equipment,
-                combat_profile=combat_profile,
+                combat_profile=combat_profile, visual=visual,
                 job="방랑자", level=1, health=50, max_health=50, mana=30, max_mana=30,
                 armor_class=10, gold=15, strength=10, agility=10, intelligence=10,
                 constitution=10, wisdom=10, luck=10, crit_rate_bonus=0, crit_damage_bonus=0,
@@ -2403,9 +2726,18 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
                 self_image_vs_reputation="", hidden_side="", education_level="",
                 financial_state="", skills=[], titles=[], attitude_description="",
                 interests=[], current_activity="", schedule=[], off_screen_logs=[],
-                last_seen_turn=0, physical_traces=[], fatigue=0, reputation=0, goal=""
+                last_seen_turn=0, physical_traces=[], fatigue=0, reputation=0, goal="",
+                blackmail_secret="", faction_id="", faction_role=""
             )
             npc.memories = [safe_init(MemoryEntry, m) for m in raw_memories if isinstance(m, dict)]
+            n_status_dict = {}
+            if isinstance(raw_n_status, dict):
+                for s_id, s_data in raw_n_status.items():
+                    if isinstance(s_data, dict):
+                        n_status_dict[s_id] = StatusEffect.from_dict(s_data)
+                    elif isinstance(s_data, StatusEffect):
+                        n_status_dict[s_id] = s_data
+            npc.status_effects = n_status_dict
             state.npcs[k] = npc
 
         # Clean up any legacy duplicates in loaded state
@@ -2457,6 +2789,42 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}
         for w in raw.get("pending_info_waves", []):
             if isinstance(w, dict):
                 state.pending_info_waves.append(safe_init(PendingInformation, w))
+
+        # Quests DB
+        from src.world.quest_engine import Quest
+        state.quests = {}
+        for q_id, q_data in raw.get("quests", {}).items():
+            if isinstance(q_data, dict):
+                state.quests[q_id] = Quest.from_dict(q_data)
+            elif isinstance(q_data, Quest):
+                state.quests[q_id] = q_data
+
+        # Shops DB
+        from src.world.economy_engine import Shop
+        state.shops = {}
+        for s_id, s_data in raw.get("shops", {}).items():
+            if isinstance(s_data, dict):
+                state.shops[s_id] = Shop.from_dict(s_data)
+            elif isinstance(s_data, Shop):
+                state.shops[s_id] = s_data
+
+        # Recipes DB
+        from src.world.crafting_engine import Recipe
+        state.recipes = {}
+        for r_id, r_data in raw.get("recipes", {}).items():
+            if isinstance(r_data, dict):
+                state.recipes[r_id] = Recipe.from_dict(r_data)
+            elif isinstance(r_data, Recipe):
+                state.recipes[r_id] = r_data
+
+        # Party & Companions DB
+        from src.world.party_engine import Companion
+        state.party = {}
+        for c_id, c_data in raw.get("party", {}).items():
+            if isinstance(c_data, dict):
+                state.party[c_id] = Companion.from_dict(c_data)
+            elif isinstance(c_data, Companion):
+                state.party[c_id] = c_data
 
         return state
 

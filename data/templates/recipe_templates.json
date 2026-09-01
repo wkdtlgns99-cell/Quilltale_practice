@@ -1,0 +1,598 @@
+[
+  {
+    "recipe_id": "recipe_gravity_anchor_boots",
+    "name_ko": "중력닻 장화",
+    "category": "blacksmithing",
+    "tier": "master",
+    "description_ko": "착용자의 위치를 대지에 강제로 고정하는 특수 장화. 밀쳐내기와 낙하에 거의 영향을 받지 않지만 이동 속도가 감소합니다.",
+    "required_station": "blacksmith_forge",
+    "required_tools": ["gravity_hammer", "adamantite_anvil"],
+    "prerequisites": {
+      "stats": { "STR": 15, "CON": 13 },
+      "level_min": 12,
+      "completed_quest_id": "quest_fallen_sky_fortress"
+    },
+    "environmental_conditions": {
+      "time_of_day": "any",
+      "weather": "any",
+      "location_tags": ["stable_ground"]
+    },
+    "ingredients": [
+      { "item_id": "adamantite_ingot", "count": 2 },
+      { "item_id": "gravity_stone", "count": 2 },
+      { "item_id": "giant_tendon", "count": 1 },
+      { "tag": "heavy_monster_hide", "count": 1 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "levitation_crystal",
+        "name_ko": "부유 결정",
+        "effect_ko": "이동 속도 감소 패널티를 제거하지만 제작 난이도 +3"
+      }
+    ],
+    "craft_time_minutes": 120,
+    "mana_cost": 0,
+    "craft_stat": "STR",
+    "craft_dc": 16,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_gravity_anchor_boots",
+        "name_ko": "완전한 중력닻 장화",
+        "count": 1,
+        "quality": "masterwork",
+        "description_ko": "밀쳐내기, 끌어당기기, 넘어뜨리기 효과에 완전 면역이며 낙하 피해를 받지 않습니다."
+      },
+      "success": {
+        "result_item_id": "gravity_anchor_boots",
+        "name_ko": "중력닻 장화",
+        "count": 1,
+        "quality": "normal",
+        "description_ko": "밀쳐내기 효과에 강한 저항을 얻으며 낙하 피해가 50% 감소합니다."
+      },
+      "partial_success": {
+        "result_item_id": "unstable_anchor_boots",
+        "name_ko": "불안정한 중력 장화",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "낙하 피해는 감소하지만 이동 시 일정 확률로 균형을 잃습니다."
+      },
+      "critical_failure": {
+        "result_item_id": "crushed_boots",
+        "name_ko": "짓눌린 장화",
+        "explosion_damage": 10,
+        "status_applied": "slow",
+        "description_ko": "중력석이 폭주하여 장화가 지나치게 무거워지고 제작자가 10 피해를 입습니다."
+      }
+    },
+    "toxicity_cost": 0,
+    "corruption_cost": 0,
+    "spoilage_turns": -1,
+    "salvage": {
+      "enabled": true,
+      "required_station": "blacksmith_forge",
+      "yield": [
+        { "item_id": "adamantite_ingot", "count": 1 },
+        { "item_id": "gravity_stone", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_bloodless_healing_salve",
+    "name_ko": "무혈 재생 연고",
+    "category": "alchemy_potion",
+    "tier": "master",
+    "description_ko": "상처에서 흘러나온 피를 다시 피부 아래로 되돌리는 기묘한 연고. 출혈을 즉시 멈추지만 과도한 사용은 신체에 부담을 줍니다.",
+    "required_station": "alchemy_kit",
+    "required_tools": ["silver_crucible", "herbal_mortar"],
+    "prerequisites": {
+      "stats": { "WIS": 15, "INT": 12 },
+      "level_min": 9,
+      "completed_quest_id": "quest_silent_healer"
+    },
+    "environmental_conditions": {
+      "time_of_day": "night",
+      "weather": "any",
+      "location_tags": ["herbal_garden"]
+    },
+    "ingredients": [
+      { "item_id": "red_moss", "count": 3 },
+      { "item_id": "troll_blood", "count": 1 },
+      { "item_id": "white_lotus", "count": 2 },
+      { "item_id": "purified_water", "count": 1 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "phoenix_feather",
+        "name_ko": "불사조의 깃털",
+        "effect_ko": "출혈뿐 아니라 최근 받은 치명상을 추가로 회복"
+      }
+    ],
+    "craft_time_minutes": 45,
+    "mana_cost": 15,
+    "craft_stat": "WIS",
+    "craft_dc": 15,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_bloodless_salve",
+        "name_ko": "완전한 무혈 재생 연고",
+        "count": 2,
+        "quality": "masterwork",
+        "description_ko": "출혈과 중독을 제거하고 잃은 HP의 60%를 즉시 회복합니다."
+      },
+      "success": {
+        "result_item_id": "bloodless_healing_salve",
+        "name_ko": "무혈 재생 연고",
+        "count": 2,
+        "quality": "normal",
+        "description_ko": "출혈을 즉시 제거하고 잃은 HP의 30%를 회복합니다."
+      },
+      "partial_success": {
+        "result_item_id": "weak_healing_salve",
+        "name_ko": "불완전한 재생 연고",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "출혈은 제거하지만 회복량이 매우 적습니다."
+      },
+      "critical_failure": {
+        "result_item_id": "necrotic_salve",
+        "name_ko": "괴사 연고",
+        "explosion_damage": 5,
+        "status_applied": "bleed",
+        "description_ko": "연고가 조직을 손상시켜 제작자에게 출혈을 일으킵니다."
+      }
+    },
+    "toxicity_cost": 5,
+    "corruption_cost": 0,
+    "spoilage_turns": 100,
+    "salvage": {
+      "enabled": true,
+      "required_station": "alchemy_kit",
+      "yield": [
+        { "item_id": "red_moss", "count": 1 },
+        { "item_id": "purified_water", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_storm_catcher",
+    "name_ko": "폭풍 포획기",
+    "category": "arcane_crafting",
+    "tier": "master",
+    "description_ko": "번개를 저장했다가 원하는 순간 방출할 수 있는 휴대용 마도구.",
+    "required_station": "arcane_altar",
+    "required_tools": ["copper_conductor", "mana_crystal"],
+    "prerequisites": {
+      "stats": { "INT": 16 },
+      "level_min": 14,
+      "completed_quest_id": "quest_eye_of_storm"
+    },
+    "environmental_conditions": {
+      "time_of_day": "any",
+      "weather": "thunderstorm",
+      "location_tags": ["high_ground"]
+    },
+    "ingredients": [
+      { "item_id": "storm_crystal", "count": 2 },
+      { "item_id": "copper_ingot", "count": 3 },
+      { "item_id": "elemental_mana_crystal", "count": 1 },
+      { "item_id": "wyvern_scale", "count": 2 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "lightning_core",
+        "name_ko": "번개의 핵",
+        "effect_ko": "저장 가능한 번개 횟수가 2배가 되지만 실패 확률 증가"
+      }
+    ],
+    "craft_time_minutes": 90,
+    "mana_cost": 50,
+    "craft_stat": "INT",
+    "craft_dc": 17,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_storm_catcher",
+        "name_ko": "폭풍의 심장을 담은 포획기",
+        "count": 1,
+        "quality": "masterwork",
+        "description_ko": "전투 중 최대 5회 번개를 저장하고 방출할 수 있습니다."
+      },
+      "success": {
+        "result_item_id": "storm_catcher",
+        "name_ko": "폭풍 포획기",
+        "count": 1,
+        "quality": "normal",
+        "description_ko": "최대 3회 번개를 저장하여 강력한 전격 공격으로 방출합니다."
+      },
+      "partial_success": {
+        "result_item_id": "leaking_storm_catcher",
+        "name_ko": "누전되는 폭풍 포획기",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "2회만 저장 가능하며 일정 확률로 사용자에게 전격 피해를 줍니다."
+      },
+      "critical_failure": {
+        "result_item_id": "lightning_bomb",
+        "name_ko": "폭주한 번개 구체",
+        "explosion_damage": 40,
+        "status_applied": "shocked",
+        "description_ko": "저장에 실패하여 주변으로 번개가 폭발합니다."
+      }
+    },
+    "toxicity_cost": 0,
+    "corruption_cost": 0,
+    "spoilage_turns": -1,
+    "salvage": {
+      "enabled": true,
+      "required_station": "arcane_altar",
+      "yield": [
+        { "item_id": "storm_crystal", "count": 1 },
+        { "item_id": "copper_ingot", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_predator_smoke",
+    "name_ko": "포식자의 연막",
+    "category": "survival_cooking",
+    "tier": "intermediate",
+    "description_ko": "야수의 후각을 속이는 특수한 연막. 야생 지역에서 추적을 피하거나 적의 감각을 교란하는 데 사용됩니다.",
+    "required_station": "campfire_kitchen",
+    "required_tools": ["smoking_rack", "herbal_grinder"],
+    "prerequisites": {
+      "stats": { "DEX": 12, "WIS": 12 },
+      "level_min": 6,
+      "completed_quest_id": "quest_beast_tracker"
+    },
+    "environmental_conditions": {
+      "time_of_day": "night",
+      "weather": "fog",
+      "location_tags": ["wilderness"]
+    },
+    "ingredients": [
+      { "item_id": "predator_gland", "count": 2 },
+      { "item_id": "bitter_herb", "count": 3 },
+      { "item_id": "charcoal", "count": 2 },
+      { "item_id": "salt", "count": 1 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "wolf_fur",
+        "name_ko": "늑대 털",
+        "effect_ko": "야수형 몬스터의 추적을 추가로 방해한다."
+      }
+    ],
+    "craft_time_minutes": 35,
+    "mana_cost": 0,
+    "craft_stat": "WIS",
+    "craft_dc": 12,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_predator_smoke",
+        "name_ko": "완전한 포식자 연막",
+        "count": 3,
+        "quality": "masterwork",
+        "description_ko": "사용한 지역에서 20턴 동안 야수형 적의 추적과 탐지 판정을 크게 감소시킵니다."
+      },
+      "success": {
+        "result_item_id": "predator_smoke",
+        "name_ko": "포식자의 연막",
+        "count": 2,
+        "quality": "normal",
+        "description_ko": "야수형 적의 탐지 확률을 크게 낮춥니다."
+      },
+      "partial_success": {
+        "result_item_id": "thin_predator_smoke",
+        "name_ko": "옅은 포식자 연막",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "효과가 절반으로 감소합니다."
+      },
+      "critical_failure": {
+        "result_item_id": "beast_attracting_smoke",
+        "name_ko": "야수를 부르는 연막",
+        "explosion_damage": 0,
+        "status_applied": "marked",
+        "description_ko": "냄새가 반대로 작용하여 주변 야수들이 제작자를 추적합니다."
+      }
+    },
+    "toxicity_cost": 0,
+    "corruption_cost": 0,
+    "spoilage_turns": 80,
+    "salvage": {
+      "enabled": true,
+      "required_station": "campfire_kitchen",
+      "yield": [
+        { "item_id": "charcoal", "count": 1 },
+        { "item_id": "salt", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_mimic_chest",
+    "name_ko": "모방 상자",
+    "category": "forbidden_transmutation",
+    "tier": "forbidden",
+    "description_ko": "주변에 있는 물건 하나의 외형을 복제하는 살아 있는 상자. 다른 사람의 소유물처럼 위장할 수 있습니다.",
+    "required_station": "arcane_altar",
+    "required_tools": ["transmutation_lens", "living_ink"],
+    "prerequisites": {
+      "stats": { "INT": 17, "CHA": 12 },
+      "level_min": 20,
+      "completed_quest_id": "quest_mimic_origin"
+    },
+    "environmental_conditions": {
+      "time_of_day": "any",
+      "weather": "any",
+      "location_tags": ["transmutation_chamber"]
+    },
+    "ingredients": [
+      { "item_id": "mimic_core", "count": 1 },
+      { "item_id": "living_ink", "count": 3 },
+      { "item_id": "shapechanging_crystal", "count": 2 },
+      { "item_id": "rare_wood", "count": 2 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "identity_shard",
+        "name_ko": "정체성 파편",
+        "effect_ko": "상자의 외형 복제 능력을 영구적으로 강화한다."
+      }
+    ],
+    "craft_time_minutes": 180,
+    "mana_cost": 80,
+    "craft_stat": "INT",
+    "craft_dc": 20,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_mimic_chest",
+        "name_ko": "완전한 모방 상자",
+        "count": 1,
+        "quality": "masterwork",
+        "description_ko": "어떤 물체의 외형과 질감까지 완벽하게 복제하며 내부에 물건을 보관할 수 있습니다."
+      },
+      "success": {
+        "result_item_id": "mimic_chest",
+        "name_ko": "모방 상자",
+        "count": 1,
+        "quality": "normal",
+        "description_ko": "지정한 물체의 외형을 복제할 수 있습니다."
+      },
+      "partial_success": {
+        "result_item_id": "defective_mimic",
+        "name_ko": "불완전한 모방 상자",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "외형은 복제하지만 움직임이나 촉감이 부자연스럽습니다."
+      },
+      "critical_failure": {
+        "result_item_id": "hungry_mimic",
+        "name_ko": "굶주린 모방체",
+        "explosion_damage": 15,
+        "status_applied": "hostile",
+        "description_ko": "상자가 자아를 얻고 제작자를 공격합니다."
+      }
+    },
+    "toxicity_cost": 0,
+    "corruption_cost": 15,
+    "spoilage_turns": -1,
+    "salvage": {
+      "enabled": true,
+      "required_station": "arcane_altar",
+      "yield": [
+        { "item_id": "shapechanging_crystal", "count": 1 },
+        { "item_id": "living_ink", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_scentless_ration",
+    "name_ko": "무취 비상식량",
+    "category": "survival_cooking",
+    "tier": "intermediate",
+    "description_ko": "먹는 동안 냄새와 흔적을 거의 남기지 않는 장거리 탐험용 식량. 추적자를 피해야 하는 원정에 유용합니다.",
+    "required_station": "campfire_kitchen",
+    "required_tools": ["preservation_box", "salt_press"],
+    "prerequisites": {
+      "stats": { "CON": 12, "WIS": 11 },
+      "level_min": 5
+    },
+    "environmental_conditions": {
+      "time_of_day": "any",
+      "weather": "any",
+      "location_tags": ["clean_kitchen"]
+    },
+    "ingredients": [
+      { "item_id": "dried_meat", "count": 3 },
+      { "item_id": "salt", "count": 2 },
+      { "item_id": "bitter_root", "count": 1 },
+      { "item_id": "hard_bread", "count": 2 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "monster_scent_gland",
+        "name_ko": "괴물의 냄새샘",
+        "effect_ko": "섭취 후 생명체의 후각 탐지에 완전히 걸리지 않게 한다."
+      }
+    ],
+    "craft_time_minutes": 30,
+    "mana_cost": 0,
+    "craft_stat": "CON",
+    "craft_dc": 11,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_scentless_ration",
+        "name_ko": "완전 무취 비상식량",
+        "count": 5,
+        "quality": "masterwork",
+        "description_ko": "높은 포만감을 제공하며 섭취 후 30턴 동안 냄새 기반 탐지를 크게 감소시킵니다."
+      },
+      "success": {
+        "result_item_id": "scentless_ration",
+        "name_ko": "무취 비상식량",
+        "count": 4,
+        "quality": "normal",
+        "description_ko": "포만감을 회복하고 냄새 기반 추적을 감소시킵니다."
+      },
+      "partial_success": {
+        "result_item_id": "poor_scentless_ration",
+        "name_ko": "불완전한 무취식",
+        "count": 2,
+        "quality": "flawed",
+        "description_ko": "포만감은 회복하지만 냄새 제거 효과가 약합니다."
+      },
+      "critical_failure": {
+        "result_item_id": "spoiled_ration",
+        "name_ko": "상한 비상식량",
+        "explosion_damage": 0,
+        "status_applied": "food_poisoning",
+        "description_ko": "보존에 실패하여 섭취 시 식중독을 일으킵니다."
+      }
+    },
+    "toxicity_cost": 0,
+    "corruption_cost": 0,
+    "spoilage_turns": 150,
+    "salvage": {
+      "enabled": true,
+      "required_station": "campfire_kitchen",
+      "yield": [
+        { "item_id": "salt", "count": 1 },
+        { "item_id": "dried_meat", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_molten_edge_oil",
+    "name_ko": "용융의 칼날 기름",
+    "category": "alchemy_potion",
+    "tier": "intermediate",
+    "description_ko": "무기에 바르면 금속과 갑옷을 녹여 방어력을 일시적으로 약화시키는 특수 오일.",
+    "required_station": "alchemy_kit",
+    "required_tools": ["iron_distiller", "heatproof_mortar"],
+    "prerequisites": {
+      "stats": { "INT": 13, "DEX": 11 },
+      "level_min": 7
+    },
+    "environmental_conditions": {
+      "time_of_day": "any",
+      "weather": "any",
+      "location_tags": ["volcanic_region"]
+    },
+    "ingredients": [
+      { "item_id": "fire_salamander_oil", "count": 2 },
+      { "item_id": "molten_ore", "count": 1 },
+      { "item_id": "acidic_mushroom", "count": 2 },
+      { "item_id": "beast_fat", "count": 1 }
+    ],
+    "optional_catalysts": [
+      {
+        "item_id": "dragon_fire_sac",
+        "name_ko": "용의 화염낭",
+        "effect_ko": "금속뿐 아니라 마법 방어막도 약화시킵니다."
+      }
+    ],
+    "craft_time_minutes": 50,
+    "mana_cost": 10,
+    "craft_stat": "INT",
+    "craft_dc": 14,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_molten_edge_oil",
+        "name_ko": "극열 용융의 칼날 기름",
+        "count": 3,
+        "quality": "masterwork",
+        "description_ko": "무기가 적중할 때 대상의 방어력을 30% 감소시킵니다."
+      },
+      "success": {
+        "result_item_id": "molten_edge_oil",
+        "name_ko": "용융의 칼날 기름",
+        "count": 2,
+        "quality": "normal",
+        "description_ko": "다음 5회 공격이 대상의 방어력을 15% 감소시킵니다."
+      },
+      "partial_success": {
+        "result_item_id": "weak_molten_oil",
+        "name_ko": "희석된 용융 기름",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "방어력 감소 효과가 절반으로 감소합니다."
+      },
+      "critical_failure": {
+        "result_item_id": "melting_weapon_oil",
+        "name_ko": "무기를 녹이는 기름",
+        "count": 1,
+        "quality": "cursed",
+        "description_ko": "도포한 무기 자체가 부식되어 내구도가 크게 감소합니다."
+      }
+    },
+    "toxicity_cost": 8,
+    "corruption_cost": 0,
+    "spoilage_turns": 120,
+    "salvage": {
+      "enabled": true,
+      "required_station": "alchemy_kit",
+      "yield": [
+        { "item_id": "beast_fat", "count": 1 },
+        { "item_id": "acidic_mushroom", "count": 1 }
+      ]
+    }
+  },
+  {
+    "recipe_id": "recipe_dragon_slayer_oil",
+    "name_ko": "용살자의 기름",
+    "category": "alchemy_potion",
+    "tier": "master",
+    "description_ko": "용의 비늘을 녹여 만든 특수 무기유. 무기에 바르면 용족에게 치명적인 원소 피해를 입힙니다.",
+    "required_station": "alchemy_kit",
+    "required_tools": ["dragon_scale_scraper", "oil_distiller"],
+    "prerequisites": {
+      "stats": { "INT": 14 },
+      "level_min": 10
+    },
+    "ingredients": [
+      { "item_id": "dragon_scale", "count": 3 },
+      { "item_id": "fire_oil", "count": 2 },
+      { "item_id": "silver_thistle", "count": 1 }
+    ],
+    "craft_time_minutes": 60,
+    "mana_cost": 10,
+    "craft_stat": "INT",
+    "craft_dc": 15,
+    "outcomes": {
+      "critical_success": {
+        "result_item_id": "perfect_dragon_slayer_oil",
+        "name_ko": "극상의 용살자 기름",
+        "count": 2,
+        "quality": "masterwork",
+        "description_ko": "용족에게 입히는 피해가 50% 증가합니다."
+      },
+      "success": {
+        "result_item_id": "dragon_slayer_oil",
+        "name_ko": "용살자의 기름",
+        "count": 1,
+        "quality": "normal",
+        "description_ko": "용족에게 입히는 피해가 30% 증가합니다."
+      },
+      "partial_success": {
+        "result_item_id": "diluted_dragon_oil",
+        "name_ko": "희석된 용살자 기름",
+        "count": 1,
+        "quality": "flawed",
+        "description_ko": "용족 피해 15% 증가."
+      },
+      "critical_failure": {
+        "result_item_id": "toxic_sludge",
+        "name_ko": "유독성 찌꺼기",
+        "explosion_damage": 10,
+        "status_applied": "burn",
+        "description_ko": "화염 오일이 역류하여 화상을 입습니다."
+      }
+    },
+    "salvage": {
+      "enabled": true,
+      "required_station": "alchemy_kit",
+      "yield": [
+        { "item_id": "dragon_scale", "count": 1 }
+      ]
+    }
+  }
+]

@@ -1,0 +1,73 @@
+{
+  "celestial_events": [
+    {
+      "id": "celestial_blood_moon",
+      "name_ko": "붉은 달의 밤 (Blood Moon)",
+      "cycle_interval_turns": 25,
+      "duration_turns": 3,
+      "description_ko": "하늘이 피처럼 붉게 물들며 야수와 언데드의 눈이 붉게 번뜩입니다.",
+      "effects": {
+        "monster_attack_mult": 1.5,
+        "dark_magic_mult": 1.4,
+        "holy_magic_mult": 0.7,
+        "ambush_chance_increase": 0.3
+      },
+      "announcement_ko": "🩸 [천문 이변: 붉은 달의 밤] 대륙 전체의 야수와 언데드가 흉폭해지며 공격력이 1.5배 상승합니다!"
+    },
+    {
+      "id": "celestial_solar_eclipse",
+      "name_ko": "검은 태양의 일식 (Solar Eclipse)",
+      "cycle_interval_turns": 50,
+      "duration_turns": 2,
+      "description_ko": "태양이 검은 장막에 가려지고 대낮이 한밤중처럼 어두워집니다.",
+      "effects": {
+        "lighting_override": "칠흑 같은 어둠",
+        "holy_magic_mult": 0.5,
+        "stealth_dc_bonus": 4,
+        "shadow_guild_activity": true
+      },
+      "announcement_ko": "🌑 [천문 이변: 검은 태양의 일식] 세상이 어둠에 잠기고 신성 마법이 약화되며 암살자들의 은신 능력이 극대화됩니다!"
+    },
+    {
+      "id": "celestial_meteor_shower",
+      "name_ko": "별똥별 유성우 (Starfall Shower)",
+      "cycle_interval_turns": 40,
+      "duration_turns": 3,
+      "description_ko": "밤하늘을 수놓는 푸른 유성우. 지면에 에테르 마력이 풍부하게 흘러넘칩니다.",
+      "effects": {
+        "mana_regen_bonus": 5,
+        "crafting_success_bonus": 2,
+        "magic_damage_mult": 1.25
+      },
+      "announcement_ko": "✨ [천문 축복: 별똥별 유성우] 지면에 마나가 충만해져 마나 회복량과 마법 위력, 제작 성공률이 상승합니다!"
+    }
+  ],
+  "festivals": [
+    {
+      "id": "festival_harvest_bounty",
+      "name_ko": "풍요의 수확제 (Harvest Bounty)",
+      "cycle_interval_turns": 30,
+      "duration_turns": 5,
+      "description_ko": "황금빛 곡식과 술이 넘쳐나는 대륙의 대축제. 모든 상인이 지갑을 열고 할인합니다.",
+      "effects": {
+        "shop_price_discount": 0.3,
+        "tavern_rest_heal_mult": 1.5,
+        "morale_bonus": 20
+      },
+      "announcement_ko": "🎉 [대륙 축제: 풍요의 수확제] 선술집과 상점 물가가 30% 할인되며 휴식 회복량이 대폭 증가합니다!"
+    },
+    {
+      "id": "festival_night_of_dead",
+      "name_ko": "망자의 위령제 (Night of the Dead)",
+      "cycle_interval_turns": 60,
+      "duration_turns": 3,
+      "description_ko": "떠나간 영혼들을 기리는 향불과 촛불이 온 거리를 가득 채웁니다.",
+      "effects": {
+        "undead_pacified": true,
+        "ghost_dialogue_unlocked": true,
+        "incantation_wisdom_bonus": 3
+      },
+      "announcement_ko": "🕯️ [대륙 축제: 망자의 위령제] 영혼들과의 교감이 가능해지며 고대 영창의 마력 통제력이 상승합니다!"
+    }
+  ]
+}
