@@ -2793,20 +2793,36 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}{factio
         # Quests DB
         from src.world.quest_engine import Quest
         state.quests = {}
-        for q_id, q_data in raw.get("quests", {}).items():
-            if isinstance(q_data, dict):
-                state.quests[q_id] = Quest.from_dict(q_data)
-            elif isinstance(q_data, Quest):
-                state.quests[q_id] = q_data
+        raw_quests = raw.get("quests", {})
+        if isinstance(raw_quests, dict):
+            for q_id, q_data in raw_quests.items():
+                if isinstance(q_data, dict):
+                    state.quests[q_id] = Quest.from_dict(q_data)
+                elif isinstance(q_data, Quest):
+                    state.quests[q_id] = q_data
+        elif isinstance(raw_quests, list):
+            for q_data in raw_quests:
+                if isinstance(q_data, dict) and "id" in q_data:
+                    state.quests[q_data["id"]] = Quest.from_dict(q_data)
+                elif isinstance(q_data, Quest):
+                    state.quests[q_data.id] = q_data
 
         # Shops DB
         from src.world.economy_engine import Shop
         state.shops = {}
-        for s_id, s_data in raw.get("shops", {}).items():
-            if isinstance(s_data, dict):
-                state.shops[s_id] = Shop.from_dict(s_data)
-            elif isinstance(s_data, Shop):
-                state.shops[s_id] = s_data
+        raw_shops = raw.get("shops", {})
+        if isinstance(raw_shops, dict):
+            for s_id, s_data in raw_shops.items():
+                if isinstance(s_data, dict):
+                    state.shops[s_id] = Shop.from_dict(s_data)
+                elif isinstance(s_data, Shop):
+                    state.shops[s_id] = s_data
+        elif isinstance(raw_shops, list):
+            for s_data in raw_shops:
+                if isinstance(s_data, dict) and "id" in s_data:
+                    state.shops[s_data["id"]] = Shop.from_dict(s_data)
+                elif isinstance(s_data, Shop):
+                    state.shops[s_data.id] = s_data
 
         # Recipes DB
         from src.world.crafting_engine import Recipe

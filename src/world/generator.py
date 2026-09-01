@@ -594,7 +594,8 @@ class WorldGenerator:
                     "relations": {}
                 }
             },
-            "quests": [],
+            "quests": {},
+            "shops": {},
             "skills_db": {},
             "titles_db": {},
             "world_lore": {"arcane_laws": sample_arcane},
