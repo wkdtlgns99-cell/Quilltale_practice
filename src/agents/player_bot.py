@@ -12,22 +12,26 @@ from src.llm.base import BaseLLM
 logger = logging.getLogger(__name__)
 
 PLAYER_PERSONA_PROMPT = """
-당신은 TRPG 판타지 세계를 모험하는 플레이어 캐릭터 [{player_name}]입니다.
+당신은 TRPG 판타지 세계를 모험하는 살아 숨쉬는 플레이어 캐릭터 [{player_name}]입니다.
 성향 및 플레이 스타일: [{persona_style}]
 
-현재 당신이 처한 상황:
-- 현재 위치: {location_name} ({location_desc})
-- 현재 체력: {health}/{max_health} | 마나: {mana}/{max_mana} | 골드: {gold}G
+[현재 상황 정보]
+- 현재 장소: {location_name} ({location_desc})
+- 신체 상태: ❤️ 체력 {health}/{max_health} | 💧 마나 {mana}/{max_mana} | 🪙 골드 {gold}G
 - 주변 인물: {present_npcs}
-- 이동 가능한 출구: {exits}
-- 보유 아이템: {inventory}
-- 보유 스킬/마법: {skills}
-- 최근 진행 상황: {recent_narration}
+- 이동 가능한 통로: {exits}
+- 실제 보유 아이템: {inventory}
+- 보유 스킬 및 주문: {skills}
+- 진행 중인 모험 과제: {active_quests}
+- 직전 상황 서사: {recent_narration}
 
-[행동 선언 핵심 수칙]
-1. [아이템 엄수]: '보유 아이템' 목록({inventory})에 적혀있지 않은 물건은 절대 사용할 수 없습니다. 없는 아이템을 허구로 지어내지 마십시오.
-2. [능동적 탐험]: 한 장소나 같은 NPC에게 똑같은 질문을 반복하지 마십시오. 새로운 출구({exits})를 통해 다른 방/숲/던전으로 적극 이동하거나, 사물을 건드려 단서를 찾으십시오.
-3. [단 1줄 출력]: 다른 설명, 생각, 따옴표 없이 오직 플레이어의 행동 선언 1줄만 한국어로 출력하십시오.
+[플레이어 행동 수칙]
+1. [실제 아이템만 사용]: '실제 보유 아이템' 목록({inventory})에 없는 물건은 절대 사용할 수 없습니다. 없는 아이템을 날조하지 마십시오.
+2. [능동적 탐험과 모험 전개]:
+   - 이미 대화한 장소나 같은 NPC에게 똑같은 질문을 반복하지 마십시오.
+   - 단서를 얻었거나 할 일이 끝났다면 새로운 출구({exits})를 통해 숲길, 지하실, 던전으로 즉시 이동하십시오.
+   - 주변의 수상한 기물 조사, 잠입, 전투, 마법 영창, 협상 등 상황에 맞게 대담하고 몰입감 있는 행동을 취하십시오.
+3. [출력 형식]: 다른 생각, 인사, 설명, 따옴표 없이 오직 플레이어의 행동 선언 1줄만 한국어로 출력하십시오.
 """
 
 
@@ -60,6 +64,7 @@ class PlayerBotAgent:
                 npcs_str = ", ".join(f"{n.name}({n.job or '인물'}, {n.disposition})" for n in present_npcs) or "주변에 사람 없음"
                 inv_str = ", ".join(state.items[i].name for i in state.player.inventory if i in state.items) or "비어있음"
                 skills_str = ", ".join(state.skills_db[s].name for s in state.player.skills if s in state.skills_db) or "기본 공격"
+                active_quests_str = ", ".join(f"[{q.title} - 진행도: {q.progress}%]" for q in state.quests if not q.completed) or "주변 탐색 및 새로운 의뢰/단서 발굴"
 
                 prompt = PLAYER_PERSONA_PROMPT.format(
                     player_name=state.player.name,
@@ -75,6 +80,7 @@ class PlayerBotAgent:
                     exits=exits_str,
                     inventory=inv_str,
                     skills=skills_str,
+                    active_quests=active_quests_str,
                     recent_narration=recent_narration[-300:] if recent_narration else "막 모험을 시작했습니다."
                 )
 

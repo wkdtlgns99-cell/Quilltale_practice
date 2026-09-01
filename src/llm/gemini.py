@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiLLM(BaseLLM):
-    def __init__(self, model: str = "gemini-3.5-flash-lite", api_key: Optional[str] = None, *args, **kwargs):
+    def __init__(self, model: str = "gemini-3.7-flash", api_key: Optional[str] = None, *args, **kwargs):
         keys: List[str] = []
         if api_key:
             keys.append(api_key)
