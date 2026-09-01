@@ -420,23 +420,187 @@ class WorldGenerator:
         monster_lines = [f"- [{m.get('tier', 'elite').upper()} {m.get('name', '')}]: {m.get('concept_theme', '')} (약점: {m.get('weakness_exploit', '')[:80]}...)" for m in sample_monsters]
         monster_inspiration_text = "\n".join(monster_lines) if monster_lines else "표준 기믹 몬스터"
 
-        # Load rich base template for instantaneous 0-second world generation
-        template_path = TEMPLATES_DIR / 'world_template.json'
-        try:
-            with open(template_path, 'r', encoding='utf-8') as f:
-                world_data = json.load(f)
-        except Exception:
-            world_data = {"world_name": "잿빛 변경", "player": {"location": "tavern", "health": 100, "max_health": 100}}
+        # Infinite Variety: Procedurally assemble a completely unique world from our 30+ region templates
+        WORLD_NAMES = [
+            "황혼의 에테르나 대륙", "칼날산맥의 변경지대", "안개 덮인 발렌도르프", 
+            "사라진 신들의 고원", "검은 바다의 군도", "영구동토의 실베리아", 
+            "붉은 모래의 아라키아", "비전 마법의 아르카디아", "부서진 달의 협곡",
+            "천공의 부유대륙 레무리아", "빛바랜 왕국의 유적지", "심연의 크리스탈 협곡"
+        ]
+        world_name = random.choice(WORLD_NAMES)
 
-        # Assign unique world ID, dynamic world genre, and fused arcane laws
-        world_data['world_id'] = f'world_{uuid.uuid4().hex[:8]}'
-        world_data['session_id'] = world_data['world_id']
-        world_data['intro_key'] = chosen_intro_key
-        world_data['world_genre'] = world_genre
+        # Load region templates pool
+        region_templates_path = TEMPLATES_DIR / 'region_templates.json'
+        region_pool = []
+        if region_templates_path.exists():
+            try:
+                with open(region_templates_path, 'r', encoding='utf-8') as f:
+                    region_pool = json.load(f)
+            except Exception:
+                pass
 
-        if 'world_lore' not in world_data or not isinstance(world_data['world_lore'], dict):
-            world_data['world_lore'] = {}
-        world_data['world_lore']['arcane_laws'] = sample_arcane
+        # Select 3-4 distinct regions
+        chosen_regions = random.sample(region_pool, min(4, len(region_pool))) if region_pool else []
+        
+        # Build dynamic locations
+        locations_dict = {}
+        dir_keys = ["north", "south", "east", "west", "upstairs", "downstairs"]
+        
+        if chosen_regions:
+            for idx, reg in enumerate(chosen_regions):
+                loc_id = f"loc_{idx+1}"
+                desc_obj = reg.get("description", {})
+                if isinstance(desc_obj, dict):
+                    desc_text = f"{desc_obj.get('visual', '')} {desc_obj.get('auditory', '')}".strip()
+                else:
+                    desc_text = str(desc_obj)
+                
+                locations_dict[loc_id] = {
+                    "id": loc_id,
+                    "name": reg.get("name", f"미지의 구역 {idx+1}"),
+                    "description": desc_text or "기이한 안개와 마력이 소용돌이치는 미지의 장소다.",
+                    "exits": {},
+                    "items": [],
+                    "npcs": [],
+                    "danger_level": idx + 1
+                }
+            
+            # Cross-connect exits
+            loc_ids = list(locations_dict.keys())
+            for i in range(len(loc_ids) - 1):
+                cur_id = loc_ids[i]
+                next_id = loc_ids[i+1]
+                locations_dict[cur_id]["exits"]["north"] = next_id
+                locations_dict[next_id]["exits"]["south"] = cur_id
+            if len(loc_ids) >= 3:
+                locations_dict[loc_ids[0]]["exits"]["east"] = loc_ids[2]
+                locations_dict[loc_ids[2]]["exits"]["west"] = loc_ids[0]
+
+            start_loc_id = loc_ids[0]
+        else:
+            start_loc_id = "start_area"
+            locations_dict = {
+                start_loc_id: {
+                    "id": start_loc_id,
+                    "name": "버려진 고대 성소",
+                    "description": "차가운 석조 기둥과 부서진 제단이 어둠 속에 잠긴 고대의 성소다.",
+                    "exits": {"north": "ruins_hall"},
+                    "items": ["ancient_relic"],
+                    "npcs": [],
+                    "danger_level": 1
+                },
+                "ruins_hall": {
+                    "id": "ruins_hall",
+                    "name": "폐허가 된 회랑",
+                    "description": "무너진 천장 틈새로 푸른 달빛이 스며드는 깊은 석조 회랑이다.",
+                    "exits": {"south": start_loc_id},
+                    "items": [],
+                    "npcs": [],
+                    "danger_level": 2
+                }
+            }
+
+        # Dynamic NPC generation based on start location
+        NPC_NAMES = ["엘릭", "바란", "카엘", "레니아", "모르건", "실비아", "타르코", "이리나", "다렌", "벨라"]
+        NPC_JOBS = ["방랑 탐험가", "은둔 마도학자", "지역 길드 정보상", "퇴역 베테랑 용병", "약초 연금술사", "신전 파계승"]
+        
+        npc_name_1 = random.choice(NPC_NAMES)
+        npc_job_1 = random.choice(NPC_JOBS)
+        
+        npcs_dict = {
+            "npc_guide_1": {
+                "id": "npc_guide_1",
+                "name": f"{npc_job_1} {npc_name_1}",
+                "description": f"풍파를 겪은 눈빛과 낡은 여행 장비를 갖춘 {npc_job_1}다.",
+                "location": start_loc_id,
+                "job": npc_job_1,
+                "disposition": "neutral",
+                "attitude_description": "신중하며 경계심이 강함",
+                "desire": "이 위험한 지역에서 탈출하거나 가치 있는 유물을 확보하는 것",
+                "weakness": "귀중한 고대 지식이나 식량 제안에 크게 흔들림",
+                "alive": True,
+                "health": 60,
+                "max_health": 60,
+                "mana": 40,
+                "max_mana": 40,
+                "armor_class": 12,
+                "inventory": [],
+                "memories": []
+            }
+        }
+        locations_dict[start_loc_id]["npcs"].append("npc_guide_1")
+
+        # Dynamic Starter Items
+        starter_items_pool = [
+            {"id": "iron_dagger", "name": "손질된 단검", "description": "날이 예리하게 선 강철 단검이다.", "location": "inventory", "item_type": "weapon", "damage": 8, "defense": 0, "value": 20, "scaling_stat": "agility", "scaling_factor": 1.2, "properties": {"weapon": True}},
+            {"id": "travel_journal", "name": "낡은 여행 일지", "description": "이 대륙의 위험한 지형과 생물에 대해 조잡하게 기록된 가죽 표지의 일지다.", "location": "inventory", "item_type": "misc", "damage": 0, "defense": 0, "value": 5, "scaling_stat": "int", "scaling_factor": 1.0, "properties": {"readable": True}},
+            {"id": "mana_dust", "name": "발광 마나 수정 가루", "description": "어둠 속에서 은은한 푸른빛을 발산하는 응축된 마나 수정 가루 주머니다.", "location": "inventory", "item_type": "consumable", "damage": 0, "defense": 0, "value": 30, "scaling_stat": "int", "scaling_factor": 1.0, "properties": {"glow": True}}
+        ]
+        
+        items_dict = {it["id"]: it for it in starter_items_pool}
+        player_inventory = [it["id"] for it in starter_items_pool]
+
+        world_data = {
+            "session_id": f"world_{uuid.uuid4().hex[:8]}",
+            "world_id": f"world_{uuid.uuid4().hex[:8]}",
+            "world_name": world_name,
+            "world_genre": world_genre,
+            "active_world_ended": False,
+            "world_chronicle": "",
+            "intro_key": chosen_intro_key,
+            "player": {
+                "name": "방랑자",
+                "location": start_loc_id,
+                "inventory": player_inventory,
+                "health": 100,
+                "max_health": 100,
+                "mana": 50,
+                "max_mana": 50,
+                "level": 1,
+                "exp": 0,
+                "gold": 30,
+                "stat_points": 0,
+                "strength": 12,
+                "agility": 10,
+                "intelligence": 10,
+                "constitution": 12,
+                "wisdom": 10,
+                "luck": 10,
+                "crit_rate_bonus": 0,
+                "crit_damage_bonus": 0,
+                "reputation": 0,
+                "equipment": {
+                    "weapon": None, "head": None, "face": None, "chest": None,
+                    "legs": None, "boots": None, "gloves": None, "cape": None,
+                    "rings": [], "earrings": []
+                },
+                "skills": [],
+                "titles": [],
+                "active_title": None,
+                "known_magic_words": ["바르", "카르", "이그니스"],
+                "known_facts": []
+            },
+            "locations": locations_dict,
+            "npcs": npcs_dict,
+            "items": items_dict,
+            "factions": {
+                "continent_explorers": {
+                    "id": "continent_explorers",
+                    "name": "대륙 개척 탐사대",
+                    "system": "탐사 연맹",
+                    "power_level": "지역 개척단",
+                    "ruling_race": "혼합",
+                    "taboos": ["유적 훼손", "고대 봉인 무단 해제"],
+                    "relations": {}
+                }
+            },
+            "quests": [],
+            "skills_db": {},
+            "titles_db": {},
+            "world_lore": {"arcane_laws": sample_arcane},
+            "history": [],
+            "world_facts": [f"[대륙 명칭] {world_name}", f"[세계 장르] {world_genre}"]
+        }
 
         return world_data, chosen_intro_key
 
