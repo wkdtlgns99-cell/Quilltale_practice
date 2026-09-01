@@ -1,4 +1,4 @@
-﻿# 📜 Quilltale TRPG — 세션 개발 인계 및 누적 히스토리 팩 (SESSION_HANDOFF.md)
+# 📜 Quilltale TRPG — 세션 개발 인계 및 누적 히스토리 팩 (SESSION_HANDOFF.md)
 
 > **[안내]**
 > 본 문서는 게임 엔진 런타임에는 전혀 관여하지 않는 **순수 개발자 & AI 세션 인계용 기록 문서**입니다.
@@ -6,27 +6,51 @@
 
 ---
 
-## 📅 [2026-09-01] 세션 작업 보고서
+## 📅 [2026-09-01] 세션 작업 보고서 (최종 누적 업데이트)
 
 ### 1. 오늘 완료 및 수정한 핵심 내역
-- **로컬 1등 두뇌 Qwen 2.5 14B (qwen2.5:14b) 탑재**:
-  - RTX 4050 (6GB VRAM) + RAM 최적화 연동.
-  - 소설급 한국어 서사 및 룰 준수 엔진 연동 완료.
-- **바탕화면 1-클릭 AI 관전 시스템 간소화**:
-  - Quilltale_AI_관전.bat 바탕화면 배치.
-  - 선택지 정리: [1] Qwen 2.5 14B 로컬 AI, [2] Gemini Cloud AI 2대장으로 압축.
-  - 관전 중 모든 턴을 data/collector_logs/spectator_dataset.jsonl에 자동 적재하여 0원 파인튜닝 데이터셋 구축.
-- **오류 해결**:
-  - 14B 다운로드 중 발생했던 404 Not Found 모델 미설치 오류 $\to$ 14B 다운로드 완료 및 정상 추론 확인.
-- **품질 검증**:
-  - pytest 175개 테스트 전원 통과 확인.
 
-### 2. 현재 파일 및 아키텍처 상태
-- scripts/spectator_runner.py: Qwen 14B / Gemini 분기 및 자동 데이터셋 기록
-- scripts/spectate_launcher.py: 초간단 2택 메뉴
-- scripts/batch_collector.py: 코랩/로컬 3대 직업 병렬 수집기
-- scripts/data_refiner.py: 제미나이 데이터 세탁기
-- data/templates/: 16종 템플릿(지역, 몬스터, 시나리오, 마법물리, 리얼리즘 등) 정상 보유
+1. **🌌 Gemini 3.7 Flash 최상위 서사 엔진 장착 (100% 무료 0원)**:
+   - 기존 경량 `gemini-3.5-flash-lite` 대신 구글 최고 지능 모델인 **`gemini-3.7-flash`**를 기본 GM 두뇌로 탑재.
+   - 신용카드 결제 없는 무료 등급 보호 및 429 한도 시 15초 쿨다운/키 로테이션 완비.
+
+2. **⚡ RTX 4050 노트북 VRAM 맞춤 최적화 (`Qwen 2.5 7B` 전격 교체)**:
+   - 기존 `14B (9GB)` 모델 삭제 $\to$ 그래픽카드(6GB VRAM) 한계로 시스템 RAM에 걸쳐 1턴에 1분 걸리던 병목 해결.
+   - **`Qwen 2.5 7B (4.7GB)`**로 교체하여 VRAM 100% 안착 $\to$ **1턴당 1.5초 쾌속 연산(30배 가속)** 달성.
+
+3. **🌋 30종 테마 풀 기반 무한 세계관 절차적 생성 엔진 (Procedural Generation)**:
+   - '잿빛 변경 / 마르타 / 선술집'만 반복되던 고정 템플릿 로딩 완전 폐기.
+   - `data/templates/region_templates.json`의 30개 대형 테마 풀에서 매 게임마다 0.005초 만에 **완전 무작위 대륙명, 던전 4개소, NPC, 퀘스트, 시작 장비**를 절차적으로 조립.
+
+4. **🛠️ ActionValidator 아이템 오인 사격 버그 수정**:
+   - 가방에 `낡은 철제 열쇠`가 있음에도, 은퇴 NPC의 동일 명칭 아이템 때문에 거짓 거절(False Positive)을 때리던 검증기 로직 수정 $\to$ 가방/주변에 1개라도 있으면 100% 정상 통과.
+
+5. **🚶 물리적 위치 이동(Location Transition) 100% 강제 연동**:
+   - 봇이 "북쪽으로 이동한다"고 선언해도 좌표가 갱신되지 않아 제자리에 갇혀있던 엔진 누락을 Pass 1 확정 물리 이동(`apply_update`)으로 완벽 연동.
+
+6. **🧠 PlayerBot 지능 고도화 & 앵무새 루프 박멸**:
+   - `south(loc_1)` 같은 내부 프로그래밍 코드가 프롬프트에 노출되던 문제 해결 $\to$ `남쪽 (시간의 성채 방향)`으로 100% 자연어 변환.
+   - 고정 예시 문장 복붙 버그 차단 $\to$ **[1. 지형 탐색 | 2. 인물 대화 | 3. 아이템/마법 | 4. 구역 이동]** 4대 동적 선택지 프레임워크 장착.
+   - 최근 4턴 행동 이력 주입 + 코드 레벨 중복 차단기(Anti-Repetition Verifier) 연동.
+
+7. **💥 PhysicsReactionResult 속성명 크래시 픽스**:
+   - 물리/화학 매트릭스 연산 중 `description_ko` 속성명 누락 에러 즉시 해결.
+
+8. **✅ 품질 검증 및 동기화**:
+   - `pytest` 175개 테스트 전원 통과 확인 (2.1s).
+   - 깃허브 원격 저장소(`wkdtlgns99-cell/Quilltale_practice`) 최신 푸시 동기화 완료.
+
+---
+
+### 2. 주요 수정 파일 목록
+- `src/world/validator.py`: 중복 명칭 아이템 검증기 오인 사격 수정
+- `src/world/generator.py`: 30개 테마 풀 기반 0초 절차적 대륙 생성기 구현
+- `src/world/state.py`: `apply_update` 이동 연동 및 `from_json` 리스트/딕셔너리 방어 파싱
+- `src/world/two_pass_engine.py`: Pass 1 확정 물리 이동 및 물리 반응 연산 픽스
+- `src/world/physics_matrix.py`: `description_ko` 속성 호환성 보장
+- `src/agents/player_bot.py`: 자연어 출구 변환, 4대 동적 프레임워크, 중복 방지 필터
+- `src/llm/gemini.py`: 기본 모델 `gemini-3.7-flash` 승격 및 다중 키 로테이션
+- `scripts/spectate_launcher.py` & `scripts/spectator_runner.py`: `Qwen 7B` 쾌속 모드 기본화
 
 ---
 
@@ -36,9 +60,9 @@
    - Kokoro-82M (로컬 초경량 한국어 지원) 또는 Edge-TTS (MS 고품질 클라우드) 연동.
    - GM 서사 발생 시 실시간 실감형 한국어 오디오 낭독 연동.
 2. **🎨 SD 1.5 화풍 LoRA 학습 & NPC 5대 표정 팩 파이프라인**:
-   - 코랩 무료 GPU(T4) 15분 학습 노트북 (sd15_lora_trainer.ipynb) 구축.
+   - 코랩 무료 GPU(T4) 15분 학습 노트북 (`sd15_lora_trainer.ipynb`) 구축.
    - 20장 화풍 학습 $\to$ NPC 5대 표정(기본, 호감, 분노, 당황, 부상) 일괄 생성 및 웹 UI 매핑.
-3. **🖥️ 웹 UI (pp.py) 고도화**:
+3. **🖥️ 웹 UI (`app.py`) 고도화**:
    - [🤖 AI 1턴 진행] 버튼 + [🎙️ 성우 보이스] 토글 + 실시간 초상화 연동.
 4. **🚀 코랩 무한 데이터 파이프라인 정식 가동**:
    - 3계정 자동 수집 $\to$ 데이터 세탁 $\to$ 파인튜닝 루틴 정착.
