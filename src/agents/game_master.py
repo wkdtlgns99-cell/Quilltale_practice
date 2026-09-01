@@ -130,7 +130,7 @@ class GameMasterAgent:
                 state.npcs[dice_res.target_npc_id].stats_revealed = True
         else:
             state.last_dice_result = None
-            dice_context = "[🎲 주사위 판정]\n통상적인 탐색/대화 행동 (별도 주사위 판정 없음)"
+            dice_context = ""
 
         # Step 2: Living world simulation, Information Waves, & Periodicals check
         state.advance_world_simulation()
@@ -179,16 +179,43 @@ class GameMasterAgent:
             parsed_summary_lines.append(f'- [신체 물리 행동]: {parsed["action"]}')
         parsed_action_summary = "\n".join(parsed_summary_lines) if parsed_summary_lines else f'- [행동]: {action}'
 
+        # --- DYNAMIC INJECTION LOGIC ---
+        action_str = action.lower() if action else ""
+        
+        # 1. Skills
+        skill_names = [s.name.lower() for s in state.player.skills] if state.player.skills else []
+        uses_skill = any(sn in action_str for sn in skill_names) or any(k in action_str for k in ["공격", "마법", "스킬", "사용", "영창", "주문", "때린다", "베기", "쏜다"])
+        dyn_skills = self._format_skills_context(state) if uses_skill else ""
+        
+        # 2. Titles (Social Interaction)
+        social_keywords = ["대화", "인사", "위협", "묻다", "질문", "말한다", "설득", "다가간다", "바라본다", "npc"]
+        is_social = any(k in action_str for k in social_keywords)
+        dyn_titles = self._format_titles_context(state) if is_social else ""
+        
+        # 3. World Context (Lore/Rumors)
+        lore_keywords = ["소문", "역사", "흔적", "조사", "책", "문자", "묻다", "주변", "기록", "살핀다", "단서"]
+        is_lore = any(k in action_str for k in lore_keywords)
+        dyn_world = state.to_context_summary() if is_lore else ""
+        
+        # 4. Off-screen
+        is_travel = any(k in action_str for k in ["이동", "간다", "도착", "들어간다", "나간다"])
+        dyn_off_screen = off_screen_context if (is_social or is_travel) else ""
+        
+        # 5. Graph / Ecosystem
+        graph_keywords = ["이동", "지도", "세력", "생태", "흔적", "주변", "탐색", "관찰"]
+        is_graph = any(k in action_str for k in graph_keywords)
+        dyn_graph = graph_context if is_graph else ""
+        
         prompt = GM_TURN_PROMPT_TEMPLATE.format(
             environmental_anchoring=environmental_anchoring,
             npc_bdi_context=npc_bdi_context,
-            world_context=state.to_context_summary(),
+            world_context=dyn_world,
             map_context=state.to_map_summary(),
-            off_screen_context=off_screen_context,
-            skills_context=self._format_skills_context(state),
-            titles_context=self._format_titles_context(state),
+            off_screen_context=dyn_off_screen,
+            skills_context=dyn_skills,
+            titles_context=dyn_titles,
             rag_memory_context=rag_context,
-            graph_context=graph_context,
+            graph_context=dyn_graph,
             dice_roll_context=dice_context,
             interrupt_context=interrupt_context,
             incant_context=incant_context,
@@ -202,6 +229,15 @@ class GameMasterAgent:
         # Step 4: Call LLM
         try:
             dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
+            try:
+                action_text = action if "action" in locals() else ""
+                magic_keywords = ["마법", "영창", "주문", "캐스팅", "마나", "원소", "형태", "기동"]
+                if any(k in action_text for k in magic_keywords):
+                    from src.agents.prompts import MAGIC_SYSTEM_PROMPT
+                    dynamic_system_prompt += "\n\n" + MAGIC_SYSTEM_PROMPT
+            except Exception:
+                pass
+
             raw = self._llm.generate_json(prompt, dynamic_system_prompt)
             result = json.loads(raw)
 
@@ -445,6 +481,15 @@ class GameMasterAgent:
 
         try:
             dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
+            try:
+                action_text = action if "action" in locals() else ""
+                magic_keywords = ["마법", "영창", "주문", "캐스팅", "마나", "원소", "형태", "기동"]
+                if any(k in action_text for k in magic_keywords):
+                    from src.agents.prompts import MAGIC_SYSTEM_PROMPT
+                    dynamic_system_prompt += "\n\n" + MAGIC_SYSTEM_PROMPT
+            except Exception:
+                pass
+
             raw = self._llm.generate_json(prompt, dynamic_system_prompt)
             result = json.loads(raw, strict=False)
             narration = result.get("narration", f"당신은 {loc.name if loc else '알 수 없는 곳'}에 서 있습니다.")
