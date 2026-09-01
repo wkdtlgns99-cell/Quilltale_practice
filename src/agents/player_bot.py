@@ -23,14 +23,16 @@ PLAYER_PERSONA_PROMPT = """
 - 실제 보유 아이템: {inventory}
 - 보유 스킬 및 주문: {skills}
 - 진행 중인 모험 과제: {active_quests}
+- 당신의 최근 행동 이력:
+{recent_actions}
 - 직전 상황 서사: {recent_narration}
 
 [플레이어 행동 수칙]
-1. [실제 아이템만 사용]: '실제 보유 아이템' 목록({inventory})에 없는 물건은 절대 사용할 수 없습니다. 없는 아이템을 날조하지 마십시오.
-2. [능동적 탐험과 모험 전개]:
-   - 이미 대화한 장소나 같은 NPC에게 똑같은 질문을 반복하지 마십시오.
-   - 단서를 얻었거나 할 일이 끝났다면 새로운 출구({exits})를 통해 숲길, 지하실, 던전으로 즉시 이동하십시오.
-   - 주변의 수상한 기물 조사, 잠입, 전투, 마법 영창, 협상 등 상황에 맞게 대담하고 몰입감 있는 행동을 취하십시오.
+1. [행동 반복 절대 금지]:
+   - '당신의 최근 행동 이력'에 적힌 행동을 그대로 다시 말하지 마십시오.
+   - 방금 이동했다면 도착한 장소의 사물/인물을 조사하거나 상호작용하십시오.
+   - 방금 조사했다면 새로운 단서를 바탕으로 출구({exits})를 통해 다음 구역으로 전진하거나 마법/아이템을 사용하십시오.
+2. [실제 아이템만 사용]: '실제 보유 아이템' 목록({inventory})에 없는 물건은 절대 사용할 수 없습니다. 없는 아이템을 날조하지 마십시오.
 3. [출력 형식]: 다른 생각, 인사, 설명, 따옴표 없이 오직 플레이어의 행동 선언 1줄만 한국어로 출력하십시오.
 """
 
@@ -66,6 +68,9 @@ class PlayerBotAgent:
                 skills_str = ", ".join(state.skills_db[s].name for s in state.player.skills if s in state.skills_db) or "기본 공격"
                 active_quests_str = ", ".join(f"[{q.title} - 진행도: {q.progress}%]" for q in state.quests if not q.completed) or "주변 탐색 및 새로운 의뢰/단서 발굴"
 
+                past_actions = [f"- {h.get('turn')}턴: {h.get('action')}" for h in state.history[-3:] if h.get("action")]
+                past_actions_str = "\n".join(past_actions) if past_actions else "- 모험의 첫 턴입니다."
+
                 prompt = PLAYER_PERSONA_PROMPT.format(
                     player_name=state.player.name,
                     persona_style=self.persona_description,
@@ -81,6 +86,7 @@ class PlayerBotAgent:
                     inventory=inv_str,
                     skills=skills_str,
                     active_quests=active_quests_str,
+                    recent_actions=past_actions_str,
                     recent_narration=recent_narration[-300:] if recent_narration else "막 모험을 시작했습니다."
                 )
 

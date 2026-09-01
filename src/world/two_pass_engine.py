@@ -200,6 +200,34 @@ class TwoPassEngine:
             fact_sheet.pre_computed_state_delta = {}
             return fact_sheet
 
+        # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
+        curr_loc = state.current_location()
+        if curr_loc and curr_loc.exits:
+            action_lower = action.lower()
+            direction_keywords = {
+                "north": ["북쪽", "북", "north", "앞으로", "정면"],
+                "south": ["남쪽", "남", "south", "뒤로", "남문"],
+                "east": ["동쪽", "동", "east", "오른쪽"],
+                "west": ["서쪽", "서", "west", "왼쪽"],
+                "upstairs": ["2층", "계단", "위층", "upstairs", "올라"],
+                "downstairs": ["지하", "아래층", "지하실", "downstairs", "내려"]
+            }
+            is_move_action = any(v in action_lower for v in ["이동", "걸어", "향해", "달려", "들어", "나선", "오르", "내려", "나간", "떠난", "발걸음", "move", "go", "enter", "exit"])
+            if is_move_action:
+                for exit_dir, target_loc_id in curr_loc.exits.items():
+                    keywords = direction_keywords.get(exit_dir.lower(), [exit_dir.lower()])
+                    target_loc = state.locations.get(target_loc_id)
+                    loc_name_match = bool(target_loc and target_loc.name.lower() in action_lower)
+                    dir_match = any(k in action_lower for k in keywords)
+                    if dir_match or loc_name_match:
+                        if target_loc_id in state.locations:
+                            if "player" not in state_delta:
+                                state_delta["player"] = {}
+                            state_delta["player"]["location"] = target_loc_id
+                            target_name = target_loc.name if target_loc else target_loc_id
+                            fact_sheet.quest_progress_logs.append(f"장소 이동 완료: [{target_name}]에 도착함")
+                            break
+
         # 3. Environmental Puzzles & Mechanisms
         puzzle_res = PuzzleEngine.evaluate_puzzle_action(state, action)
         if puzzle_res and puzzle_res.get("is_solved"):

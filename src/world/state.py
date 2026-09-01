@@ -2035,9 +2035,19 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}{factio
                     self.player.location = new_loc_id
                     self.locations[new_loc_id].visited = True
                     changes.append(f"Player moved to {self.locations[new_loc_id].name}")
+                elif direction in self.locations:
+                    self.player.location = direction
+                    self.locations[direction].visited = True
+                    changes.append(f"Player moved to {self.locations[direction].name}")
                 else:
                     changes.append(f"REJECTED move to {direction} — not a valid exit")
                     break
+        elif "player" in update and isinstance(update["player"], dict) and "location" in update["player"]:
+            new_loc_id = update["player"]["location"]
+            if new_loc_id in self.locations:
+                self.player.location = new_loc_id
+                self.locations[new_loc_id].visited = True
+                changes.append(f"Player moved to {self.locations[new_loc_id].name}")
 
         # 2. Item pickup
         if "pickup_item" in update:
