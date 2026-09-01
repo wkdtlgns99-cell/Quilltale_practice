@@ -36,9 +36,9 @@ def run_single_collector_worker(
     gm_llm = GeminiLLM(api_key=api_key)
     bot_llm = GeminiLLM(api_key=api_key)
 
-    state = WorldGenerator.generate_initial_world(seed_name=f"colab_{worker_name}_{int(time.time())}")
     gm = GameMasterAgent(llm=gm_llm)
-    bot = PlayerBotAgent(persona=persona, llm=bot_llm)
+    state = gm.generate_new_game()
+    bot = PlayerBotAgent(llm=bot_llm, persona_key=persona)
 
     # 1. Opening
     opening = gm.generate_opening(state)

@@ -46,6 +46,10 @@ def run_spectator_session(turns: int = 5, mode: str = "mock", persona: str = "cu
         from src.llm.gemini import GeminiLLM
         gm_llm = GeminiLLM()
         bot_llm = GeminiLLM()
+    elif mode == "ollama_14b":
+        from src.llm.ollama import OllamaLLM
+        gm_llm = OllamaLLM(model="qwen2.5:14b")
+        bot_llm = OllamaLLM(model="qwen2.5:14b")
     elif mode == "ollama_7b":
         from src.llm.ollama import OllamaLLM
         gm_llm = OllamaLLM(model="qwen2.5:7b")
@@ -127,6 +131,21 @@ def run_spectator_session(turns: int = 5, mode: str = "mock", persona: str = "cu
         print(f"⏱️ 턴 처리 시간: {elapsed_sec:.2f}초")
         recent_narration = result.get("narration", "")
 
+        # Save turn to dataset
+        try:
+            from src.llm.resilience import JSONRepairEngine
+            dataset_file = Path(__file__).resolve().parent.parent / "data" / "collector_logs" / "spectator_dataset.jsonl"
+            dataset_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(dataset_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps({
+                    "instruction": f"위치: {loc_name} | 플레이어 행동: {bot_action}",
+                    "response": clean_narr,
+                    "mode": mode,
+                    "turn": state.turn
+                }, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
         # Check death
         if state.player.health <= 0:
             print(f"\n{TerminalColors.RED}{TerminalColors.BOLD}☠️ 플레이어가 사망하여 모험이 종료되었습니다!{TerminalColors.END}")
@@ -135,14 +154,15 @@ def run_spectator_session(turns: int = 5, mode: str = "mock", persona: str = "cu
         time.sleep(delay)
 
     print(f"\n{TerminalColors.HEADER}{TerminalColors.BOLD}======================================================={TerminalColors.END}")
-    print(f"{TerminalColors.GREEN}🎉 관전 세션이 정상적으로 완료되었습니다!{TerminalColors.END}")
+    print(f"{TerminalColors.GREEN}🎉 관전 세션이 정상적으로 완료되었습니다! (학습 로그 자동 누적됨){TerminalColors.END}")
     print(f"{TerminalColors.HEADER}{TerminalColors.BOLD}======================================================={TerminalColors.END}\n")
 
 
 if __name__ == "__main__":
+    import json
     parser = argparse.ArgumentParser(description="Quilltale Spectator Runner")
     parser.add_argument("--turns", type=int, default=5, help="Number of turns to auto-play")
-    parser.add_argument("--mode", type=str, default="ollama_1.5b", choices=["mock", "live", "ollama", "ollama_1.5b", "ollama_3b", "ollama_7b"], help="LLM mode: mock, live, ollama_1.5b, ollama_3b, ollama_7b")
+    parser.add_argument("--mode", type=str, default="ollama_14b", choices=["mock", "live", "ollama", "ollama_1.5b", "ollama_3b", "ollama_7b", "ollama_14b"], help="LLM mode")
     parser.add_argument("--persona", type=str, default="curious_scholar", help="Player bot persona")
     parser.add_argument("--delay", type=float, default=0.5, help="Delay in seconds between turns")
     args = parser.parse_args()

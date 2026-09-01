@@ -22,28 +22,19 @@ def main():
     print(f"{TerminalColors.CYAN}{TerminalColors.BOLD}🎮 Quilltale TRPG — AI 무인 자동 플레이 관전 런처{TerminalColors.END}")
     print(f"{TerminalColors.HEADER}{TerminalColors.BOLD}======================================================={TerminalColors.END}\n")
 
-    print(" [1] 🚀 초광속 Qwen 2.5 1.5B AI 관전 (완전 무료 0원 / CPU 1초 컷) [추천]")
-    print(" [2] ⚡ 쾌속 Qwen 2.5 3B AI 관전 (완전 무료 0원 / CPU 3~5초 균형)")
-    print(" [3] 🧠 고지능 Qwen 2.5 7B AI 관전 (완전 무료 0원 / 70억 뇌 / 고지능)")
-    print(" [4] 🎲 초고속 0원 룰북 시뮬레이션 (0.01초 초광속 검증)")
-    print(" [5] 🌌 구글 제미나이 클라우드 관전 (0.5초 컷 / 소설급 서사)")
+    print(" [1] 👑 Qwen 2.5 14B 로컬 AI (로컬 0원 / 최고 지능 / 학습 데이터 자동 수집) [추천]")
+    print(" [2] 🌌 구글 제미나이 클라우드 AI (초고속 / 최고급 소설 서사)")
     print()
 
     try:
-        choice = input("👉 원하는 모드 번호를 입력하세요 [1/2/3/4/5] (기본값: 1): ").strip()
+        choice = input("👉 원하는 모드 번호를 입력하세요 [1/2] (기본값: 1): ").strip()
     except (KeyboardInterrupt, EOFError):
         return
 
     if choice == "2":
-        mode = "ollama_3b"
-    elif choice == "3":
-        mode = "ollama_7b"
-    elif choice == "4":
-        mode = "mock"
-    elif choice == "5":
         mode = "live"
     else:
-        mode = "ollama_1.5b"
+        mode = "ollama_14b"
 
     print("\n [성향 선택]")
     print("  1. curious_scholar (호기심 많은 학자 / 탐색형)")
