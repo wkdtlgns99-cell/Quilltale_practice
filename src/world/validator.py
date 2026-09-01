@@ -115,17 +115,14 @@ class ActionValidator:
             )
 
         # 2. Inventory check: Cannot use or drop items not owned
-        for item_id, item in state.items.items():
-            if item.name.lower() in action_lower or item_id in action_lower:
-                if (
-                    item_id not in state.player.inventory
-                    and (not curr_loc or item_id not in curr_loc.items)
-                ):
-                    # Check if action verb implies usage/drop
-                    if any(
-                        verb in action_lower
-                        for verb in ["사용", "찌른", "열", "먹", "휘두", "버린", "use", "unlock", "drop"]
-                    ):
+        accessible_item_ids = set(state.player.inventory) | (set(curr_loc.items) if curr_loc else set())
+        accessible_item_names = {state.items[i].name.lower() for i in accessible_item_ids if i in state.items}
+
+        usage_verbs = ["사용", "찌른", "열", "먹", "휘두", "버린", "use", "unlock", "drop"]
+        if any(verb in action_lower for verb in usage_verbs):
+            for item_id, item in state.items.items():
+                if item.name.lower() in action_lower or item_id in action_lower:
+                    if item.name.lower() not in accessible_item_names and item_id not in accessible_item_ids:
                         return (
                             False,
                             f"가방이나 주변에 존재하지 않는 [{item.name}]을(를) 사용할 수 없습니다.",
