@@ -33,8 +33,14 @@ def run_single_collector_worker(
     print(f"=======================================================")
 
     # Initialize Gemini LLM with specific API key
-    gm_llm = GeminiLLM(api_key=api_key)
-    bot_llm = GeminiLLM(api_key=api_key)
+    if api_key:
+        os.environ["GEMINI_API_KEY"] = api_key
+    try:
+        gm_llm = GeminiLLM(api_key=api_key)
+        bot_llm = GeminiLLM(api_key=api_key)
+    except TypeError:
+        gm_llm = GeminiLLM()
+        bot_llm = GeminiLLM()
 
     gm = GameMasterAgent(llm=gm_llm)
     state = gm.generate_new_game()

@@ -11,9 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiLLM(BaseLLM):
-    def __init__(self, model: str = "gemini-2.5-flash", api_key: Optional[str] = None):
-        key = api_key or os.environ.get("GEMINI_API_KEY", "")
+    def __init__(self, model: str = "gemini-2.5-flash", api_key: Optional[str] = None, *args, **kwargs):
+        key = api_key or kwargs.get("api_key") or os.environ.get("GEMINI_API_KEY", "")
         if key:
+            os.environ["GEMINI_API_KEY"] = key
             self._client = genai.Client(api_key=key)
         else:
             try:
