@@ -23,24 +23,20 @@ PLAYER_PERSONA_PROMPT = """
 - 실제 보유 아이템: {inventory}
 - 보유 스킬 및 주문: {skills}
 - 진행 중인 모험 과제: {active_quests}
-- 당신의 최근 행동 이력:
+- 당신의 최근 행동 이력 (중복 절대 금지):
 {recent_actions}
 - 직전 상황 서사: {recent_narration}
 
-[모범 행동 선언 예시 (반드시 이 격조 높은 TRPG 스타일로만 출력하십시오)]
-- 예시 1 (탐색/조사): "바닥에 흩어진 푸른 마력 수정 가루를 손끝으로 찍어 냄새와 마력 파동을 분석해본다."
-- 예시 2 (사물 상호작용): "낡은 여행 일지를 펼쳐 벽면에 새겨진 고대 문양 스케치와 대조하며 비밀 통로의 힌트를 찾는다."
-- 예시 3 (NPC 대화): "상대방에게 다가가 경계심을 풀며 최근 이 주변에서 일어난 이변에 대해 은밀히 묻는다."
-- 예시 4 (전투/위기): "손질된 단검을 단단히 쥐고 허리를 낮춘 채, 적의 빈틈을 노려 날카롭게 찔러 들어간다."
-- 예시 5 (지역 이동): "현재 구역의 조사를 마친 뒤, 북쪽 통로를 통해 다음 구역으로 신중하게 발걸음을 옮긴다."
+[행동 선언 지침]
+현재 상황과 분위기에 맞춰 아래의 4가지 유형 중 가장 자연스러운 1가지를 선택하여 구체적으로 행동하십시오:
+1. [지형/사물 탐색]: '{location_name}'의 묘사된 기물, 바닥의 흔적, 건축물의 문양을 직접 만지거나 조사하기
+2. [인물 상호작용]: '{present_npcs}'에게 말을 걸어 단서/소문을 묻거나 표정/소지품을 관찰하기
+3. [아이템/마법 응용]: 가방 속 '{inventory}'을 사용하거나 마법 '{skills}'을 현재 상황에 맞게 시전하기
+4. [구역 이동]: 현재 구역의 탐색이 끝났다면 출구({exits}) 중 한 곳으로 전진하기
 
-[플레이어 행동 수칙]
-1. [모험 행동의 몰입도]:
-   - 멍청한 잡담이나 엉뚱한 독백("발가락을 뻗었다" 등)을 절대 하지 마십시오.
-   - 방금 이동했다면 즉시 다시 이동하지 말고, 현재 장소의 기물 조사 / NPC 대화 / 아이템 사용을 먼저 수행하십시오.
-2. [행동 반복 절대 금지]:
-   - '당신의 최근 행동 이력'에 적힌 행동을 그대로 다시 말하지 마십시오.
-3. [출력 형식]: 다른 설명, 생각, 따옴표 없이 오직 위 모범 예시처럼 행동 선언 1줄만 한국어로 출력하십시오.
+[핵심 수칙]
+- 당신의 최근 행동 이력에 적힌 말이나 행동을 그대로 앵무새처럼 반복하지 마십시오.
+- 시스템 코드나 영어를 쓰지 말고, 자연스러운 한국어 문장 1줄로만 행동을 선언하십시오.
 """
 
 
@@ -112,8 +108,11 @@ class PlayerBotAgent:
                 response = self.llm.generate(prompt)
                 resp_text = getattr(response, "text", getattr(response, "content", str(response)))
                 action = resp_text.strip().strip('"').strip("'")
-                # Clean up any trailing engine code leaks
-                if action and len(action) > 2:
+                
+                past_action_texts = [h.get('action', '').strip() for h in state.history[-4:] if h.get("action")]
+                is_verbatim_repeat = any(action == past or (len(past) > 5 and past in action) for past in past_action_texts if past)
+
+                if action and len(action) > 2 and not is_verbatim_repeat:
                     return action
             except Exception as e:
                 logger.warning(f"PlayerBot LLM decision failed, fallback to heuristic: {e}")
