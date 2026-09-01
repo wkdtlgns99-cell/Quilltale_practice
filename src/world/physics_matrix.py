@@ -17,6 +17,10 @@ class PhysicsReactionResult:
     status_duration: int = 0
     status_potency: int = 0
 
+    @property
+    def description_ko(self) -> str:
+        return self.description
+
 
 # Deterministic Matrix of Fundamental Physical & Chemical Laws
 PHYSICS_RULES: List[Dict[str, Any]] = [

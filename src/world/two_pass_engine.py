@@ -244,7 +244,7 @@ class TwoPassEngine:
         loc_desc = f"{curr_loc.name} {curr_loc.description}" if curr_loc else ""
         inv_item_names = [state.items[i].name for i in state.player.inventory if i in state.items]
         physics_reactions = PhysicsMatrixEngine.evaluate(action, loc_desc, inv_item_names)
-        fact_sheet.physics_reactions = [rx.description_ko for rx in physics_reactions]
+        fact_sheet.physics_reactions = [getattr(rx, "description", getattr(rx, "description_ko", str(rx))) for rx in physics_reactions]
 
         for rx in physics_reactions:
             if rx.status_to_apply:
