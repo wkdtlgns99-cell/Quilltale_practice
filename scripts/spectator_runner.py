@@ -78,13 +78,17 @@ def run_spectator_session(turns: int = 5, mode: str = "mock", persona: str = "cu
         bot_llm = None  # Uses smart heuristics
 
     gm = GameMasterAgent(llm=gm_llm)
+    print(f"{TerminalColors.YELLOW}⏳ 방대한 대륙 지형, 던전 5개소, NPC 생태계를 절차적 생성 중입니다...{TerminalColors.END}")
     state = gm.generate_new_game()
     state.session_id = f"spectator_{int(time.time())}"
+    print(f"{TerminalColors.GREEN}✅ 세계관 창조 완료! [{state.world_name}]{TerminalColors.END}")
+    
     bot = PlayerBotAgent(llm=bot_llm, persona_key=persona)
 
     # Opening
+    print(f"{TerminalColors.YELLOW}⏳ 프롤로그 서사를 집필하는 중입니다...{TerminalColors.END}")
     opening = gm.generate_opening(state)
-    print(f"{TerminalColors.BOLD}[📜 오프닝 서사]{TerminalColors.END}")
+    print(f"\n{TerminalColors.BOLD}[📜 오프닝 서사]{TerminalColors.END}")
     print(f"{opening.get('narration', '')}\n")
     time.sleep(delay)
 
