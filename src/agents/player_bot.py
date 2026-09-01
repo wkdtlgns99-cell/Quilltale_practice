@@ -19,7 +19,7 @@ PLAYER_PERSONA_PROMPT = """
 - 현재 장소: {location_name} ({location_desc})
 - 신체 상태: ❤️ 체력 {health}/{max_health} | 💧 마나 {mana}/{max_mana} | 🪙 골드 {gold}G
 - 주변 인물: {present_npcs}
-- 이동 가능한 통로: {exits}
+- 이동 가능한 출구: {exits}
 - 실제 보유 아이템: {inventory}
 - 보유 스킬 및 주문: {skills}
 - 진행 중인 모험 과제: {active_quests}
@@ -28,11 +28,15 @@ PLAYER_PERSONA_PROMPT = """
 - 직전 상황 서사: {recent_narration}
 
 [플레이어 행동 수칙]
-1. [행동 반복 절대 금지]:
-   - '당신의 최근 행동 이력'에 적힌 행동을 그대로 다시 말하지 마십시오.
-   - 방금 이동했다면 도착한 장소의 사물/인물을 조사하거나 상호작용하십시오.
-   - 방금 조사했다면 새로운 단서를 바탕으로 출구({exits})를 통해 다음 구역으로 전진하거나 마법/아이템을 사용하십시오.
-2. [실제 아이템만 사용]: '실제 보유 아이템' 목록({inventory})에 없는 물건은 절대 사용할 수 없습니다. 없는 아이템을 날조하지 마십시오.
+1. [모험 행동의 다양성과 몰입도]:
+   - 'south(loc_1)' 같은 시스템 코드나 영어 단어를 절대 출력하지 마십시오.
+   - 방금 다른 구역으로 이동해 왔다면 즉시 다시 이동하지 마십시오!
+   - 현재 장소의 기이한 제단, 벽화, 바닥의 마력 흔적을 만져보고 조사하거나,
+   - 주변 NPC에게 다가가 숨겨진 보물이나 전설에 대해 질문하거나,
+   - 가방 속 아이템(일지, 단검, 마나 가루)을 활용하고 고대 마법을 시험해 보십시오.
+   - 현재 장소에서 충분히 조사하고 단서를 얻었을 때만 새로운 출구({exits})로 이동하십시오.
+2. [행동 반복 절대 금지]:
+   - '당신의 최근 행동 이력'에 적힌 행동을 그대로 앵무새처럼 반복하지 마십시오.
 3. [출력 형식]: 다른 생각, 인사, 설명, 따옴표 없이 오직 플레이어의 행동 선언 1줄만 한국어로 출력하십시오.
 """
 
@@ -49,6 +53,7 @@ class PlayerBotAgent:
         self.llm = llm
         self.persona_key = persona_key
         self.persona_description = self.PERSONAS.get(persona_key, self.PERSONAS["curious_scholar"])
+        self._action_cycle_counter = 0
 
     def decide_action(self, state: WorldState, recent_narration: str = "") -> str:
         """
@@ -60,7 +65,18 @@ class PlayerBotAgent:
                 curr_loc = state.current_location()
                 loc_name = curr_loc.name if curr_loc else "미지의 장소"
                 loc_desc = curr_loc.description if curr_loc else ""
-                exits_str = ", ".join(f"{d}({lid})" for d, lid in (curr_loc.exits.items() if curr_loc else {})) or "없음"
+                
+                direction_ko = {
+                    "north": "북쪽", "south": "남쪽", "east": "동쪽", "west": "서쪽",
+                    "upstairs": "2층 계단", "downstairs": "지하 통로"
+                }
+                exit_descriptions = []
+                for d, lid in (curr_loc.exits.items() if curr_loc else {}):
+                    d_ko = direction_ko.get(d.lower(), d)
+                    target_loc = state.locations.get(lid)
+                    loc_display = target_loc.name if target_loc else "미지의 구역"
+                    exit_descriptions.append(f"{d_ko}({loc_display} 방향)")
+                exits_str = ", ".join(exit_descriptions) or "더 이상 이어진 통로 없음"
                 
                 present_npcs = state.npcs_in_location(state.player.location)
                 npcs_str = ", ".join(f"{n.name}({n.job or '인물'}, {n.disposition})" for n in present_npcs) or "주변에 사람 없음"
@@ -93,6 +109,7 @@ class PlayerBotAgent:
                 response = self.llm.generate(prompt)
                 resp_text = getattr(response, "text", getattr(response, "content", str(response)))
                 action = resp_text.strip().strip('"').strip("'")
+                # Clean up any trailing engine code leaks
                 if action and len(action) > 2:
                     return action
             except Exception as e:
@@ -102,41 +119,59 @@ class PlayerBotAgent:
         return self._heuristic_decision(state)
 
     def _heuristic_decision(self, state: WorldState) -> str:
-        """Smart rule-based decision fallback without LLM tokens."""
+        """Smart rule-based decision fallback with diverse roleplay actions."""
+        self._action_cycle_counter += 1
         curr_loc = state.current_location()
         present_npcs = state.npcs_in_location(state.player.location)
         hostiles = [n for n in present_npcs if n.alive and n.disposition == "hostile"]
         neutrals = [n for n in present_npcs if n.alive and n.disposition != "hostile"]
 
-        # 1. Low HP: Drink potion or rest
+        # 1. Low HP: Drink potion or take defensive stance
         if state.player.health < state.player.max_health * 0.35:
             potion_ids = [i for i in state.player.inventory if "potion" in i or "포션" in state.items.get(i, Item(id="", name="", description="", location="")).name]
             if potion_ids:
                 return "가방에서 체력 회복 포션을 꺼내 급히 들이킨다."
-            return "숨을 헐떡이며 방어 태세를 취하고 뒤로 물러선다."
+            return "숨을 헐떡이며 방어 태세를 취하고 신중하게 뒤로 물러선다."
 
         # 2. Hostile NPC present: Combat attack
         if hostiles:
             target = hostiles[0]
             if "scholar" in self.persona_key or "mage" in self.persona_key:
                 if state.player.known_magic_words:
-                    return f"손을 뻗어 '이그니스 사기타 볼란스' 주문을 영창하여 {target.name}에게 불꽃 화살을 발사한다."
-                return f"마력을 집중하여 {target.name}을 향해 원거리 마력탄을 쏜다."
-            return f"강철검을 단단히 쥐고 {target.name}의 빈틈을 노려 날카롭게 베어버린다."
+                    return f"손을 뻗어 '이그니스' 주문을 외우며 {target.name}에게 화염 마법을 투사한다."
+                return f"마력을 집중하여 {target.name}을 향해 날카로운 비전 탄환을 발사한다."
+            return f"손질된 단검을 강하게 쥐고 {target.name}의 빈틈을 노려 정면으로 베어낸다."
 
-        # 3. Friendly/Neutral NPC present: Talk/Inquire
-        if neutrals and random.random() < 0.6:
+        # 3. Neutral NPC present: Dialogue and investigation
+        if neutrals and (self._action_cycle_counter % 2 == 1):
             target = random.choice(neutrals)
             queries = [
-                f"{target.name}에게 다가가 이 주변의 소문과 위험 지역에 대해 묻는다.",
-                f"{target.name}에게 가벼운 인사를 건네며 일거리나 퀘스트가 있는지 묻는다.",
-                f"{target.name}의 안색과 손에 든 물건을 조심스럽게 살핀다."
+                f"{target.name}에게 다가가 이 지역에 숨겨진 비밀이나 위험에 대해 은밀히 묻는다.",
+                f"{target.name}에게 인사를 건네며 최근 발견된 단서나 유물에 대한 정보를 요청한다.",
+                f"{target.name}의 옷차림과 손에 쥔 물건을 유심히 관찰하며 의도를 파악한다."
             ]
             return random.choice(queries)
 
-        # 4. Explore/Move to adjacent location
-        if curr_loc and curr_loc.exits:
-            direction, dest_id = random.choice(list(curr_loc.exits.items()))
-            return f"{direction} 방향 통로로 발걸음을 옮겨 이동한다."
+        # 4. In-depth Room Investigation & Item Use (Cycle: Inspect -> Read -> Move)
+        cycle_mod = self._action_cycle_counter % 3
+        if cycle_mod == 1:
+            inv_items = [state.items[i].name for i in state.player.inventory if i in state.items]
+            if "낡은 여행 일지" in inv_items:
+                return "낡은 여행 일지를 펼쳐 현재 위치의 지형 스케치와 단서를 꼼꼼히 대조해본다."
+            return "현재 구역의 바닥과 기둥에 새겨진 마력의 흐름과 기이한 흔적을 손으로 쓸어내리며 면밀히 조사한다."
+        elif cycle_mod == 2:
+            return "주변의 부서진 석조 제단과 수상한 균열 틈새에 숨겨진 장치나 유물이 있는지 탐색한다."
 
-        return "주변의 기물과 바닥의 흔적을 면밀히 조사한다."
+        # 5. Move to adjacent location when ready
+        if curr_loc and curr_loc.exits:
+            direction_ko = {
+                "north": "북쪽", "south": "남쪽", "east": "동쪽", "west": "서쪽",
+                "upstairs": "2층 계단", "downstairs": "지하 통로"
+            }
+            direction, dest_id = random.choice(list(curr_loc.exits.items()))
+            d_ko = direction_ko.get(direction.lower(), direction)
+            target_loc = state.locations.get(dest_id)
+            loc_name = target_loc.name if target_loc else "다음 구역"
+            return f"{d_ko} 통로를 통해 {loc_name} 방향으로 신중하게 발걸음을 옮긴다."
+
+        return "주변의 지형지물을 살피며 다음 행동을 신중하게 가늠한다."
