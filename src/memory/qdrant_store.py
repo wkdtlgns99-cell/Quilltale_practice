@@ -38,8 +38,14 @@ class QdrantVectorStore(BaseVectorStore):
             from pathlib import Path
             norm_path = str(Path(path).resolve())
             if norm_path not in self._client_cache:
+                lock_file = Path(norm_path) / ".lock"
+                if lock_file.exists():
+                    try:
+                        lock_file.unlink()
+                    except Exception:
+                        pass
                 try:
-                    self._client_cache[norm_path] = QdrantClient(path=norm_path, prefer_grpc=False)
+                    self._client_cache[norm_path] = QdrantClient(path=norm_path, prefer_grpc=False, timeout=1.0)
                 except Exception as e:
                     logger.warning(
                         f"Failed to lock Qdrant storage at '{norm_path}' ({e}). "

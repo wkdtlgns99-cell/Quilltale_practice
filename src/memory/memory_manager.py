@@ -48,11 +48,15 @@ class MemoryManager:
         self.store.ensure_collection(self.COLLECTION_REGION_TEMPLATES, EMBEDDING_DIMENSION)
         self.store.ensure_collection(self.COLLECTION_MONSTER_TEMPLATES, EMBEDDING_DIMENSION)
 
+    _indexed_templates = set()
+
     def index_region_templates(self, templates_path: Optional[Any] = None) -> int:
         """
         Index all 30 deep region templates into Qdrant vector database for RAG retrieval.
         Returns the count of indexed templates.
         """
+        if "regions" in self._indexed_templates:
+            return 0
         import json
         from pathlib import Path
         from src.core.config import TEMPLATES_DIR
@@ -70,6 +74,7 @@ class MemoryManager:
             return 0
 
         count = 0
+        self._indexed_templates.add("regions")
         for reg in templates:
             rid = reg.get("id", str(uuid.uuid4()))
             name = reg.get("name", "미지의 지역")

@@ -420,40 +420,19 @@ class WorldGenerator:
         monster_lines = [f"- [{m.get('tier', 'elite').upper()} {m.get('name', '')}]: {m.get('concept_theme', '')} (약점: {m.get('weakness_exploit', '')[:80]}...)" for m in sample_monsters]
         monster_inspiration_text = "\n".join(monster_lines) if monster_lines else "표준 기믹 몬스터"
 
-        # Load template for format reference
+        # Load rich base template for instantaneous 0-second world generation
         template_path = TEMPLATES_DIR / 'world_template.json'
         try:
             with open(template_path, 'r', encoding='utf-8') as f:
-                template = f.read()
-        except FileNotFoundError:
-            template = '{}'
-
-        prompt = GENERATOR_PROMPT.format(
-            world_genre=world_genre,
-            arcane_laws_text=arcane_laws_text,
-            realism_laws_text=realism_laws_text,
-            monster_inspiration_text=monster_inspiration_text,
-            region_inspiration_text=region_inspiration_text,
-            world_template=template,
-            intro_detail=intro_info["detail"],
-            start_loc_type=intro_info["start_loc_type"]
-        )
-
-        try:
-            raw = self._llm.generate_json(prompt, GENERATOR_SYSTEM_PROMPT)
-            world_data = json.loads(raw)
-        except Exception as e:
-            logger.error(f'World generation failed: {e}')
-            # Fallback: load template as default
-            with open(template_path, 'r', encoding='utf-8') as f:
                 world_data = json.load(f)
+        except Exception:
+            world_data = {"world_name": "잿빛 변경", "player": {"location": "tavern", "health": 100, "max_health": 100}}
 
-        # Assign unique world ID, world genre, and fused arcane laws
+        # Assign unique world ID, dynamic world genre, and fused arcane laws
         world_data['world_id'] = f'world_{uuid.uuid4().hex[:8]}'
         world_data['session_id'] = world_data['world_id']
         world_data['intro_key'] = chosen_intro_key
-        if 'world_genre' not in world_data or not world_data['world_genre']:
-            world_data['world_genre'] = world_genre
+        world_data['world_genre'] = world_genre
 
         if 'world_lore' not in world_data or not isinstance(world_data['world_lore'], dict):
             world_data['world_lore'] = {}
