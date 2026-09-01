@@ -66,6 +66,7 @@ class GeminiLLM(BaseLLM):
         candidate_models = list(dict.fromkeys(candidate_models))
 
         last_error = None
+        # Phase 1: Try all available clients and candidate models immediately
         for _ in range(len(self._clients) or 1):
             client = self.current_client
             for m in candidate_models:
@@ -79,11 +80,30 @@ class GeminiLLM(BaseLLM):
                     last_error = e
                     err_str = str(e)
                     if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                        logger.warning(f"Model {m} quota exhausted (429). Rotating to next model immediately...")
+                        logger.warning(f"Model {m} quota exhausted (429). Rotating to next model/key...")
                         continue
                     else:
                         logger.warning(f"Gemini {m} error: {e}")
                         time.sleep(0.5)
             self.rotate_client()
+
+        # Phase 2: If all returned 429 (exceeded 15 requests/min), cooldown for 15s and retry
+        err_str = str(last_error or "")
+        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+            for cooldown_attempt in range(3):
+                wait_time = 15 + (cooldown_attempt * 5)
+                print(f"\n⏳ [Google 무료 분당 15회 쿼터 보호: {wait_time}초 대기 후 자동 재개...]")
+                time.sleep(wait_time)
+                for client in self._clients:
+                    for m in candidate_models:
+                        try:
+                            response = client.models.generate_content(
+                                model=m,
+                                contents=final_prompt,
+                            )
+                            return LLMResponse(text=response.text or "", model=m)
+                        except Exception as e:
+                            last_error = e
+                            continue
 
         raise RuntimeError(f"All Gemini models and API keys exhausted. Last error: {last_error}")

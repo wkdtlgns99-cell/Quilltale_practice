@@ -168,7 +168,7 @@ if __name__ == "__main__":
     parser.add_argument("--turns", type=int, default=5, help="Number of turns to auto-play")
     parser.add_argument("--mode", type=str, default="ollama_14b", choices=["mock", "live", "ollama", "ollama_1.5b", "ollama_3b", "ollama_7b", "ollama_14b"], help="LLM mode")
     parser.add_argument("--persona", type=str, default="curious_scholar", help="Player bot persona")
-    parser.add_argument("--delay", type=float, default=0.5, help="Delay in seconds between turns")
+    parser.add_argument("--delay", type=float, default=2.5, help="Delay in seconds between turns")
     args = parser.parse_args()
 
     run_spectator_session(turns=args.turns, mode=args.mode, persona=args.persona, delay=args.delay)
