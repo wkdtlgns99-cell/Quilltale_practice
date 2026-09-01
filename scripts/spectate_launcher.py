@@ -22,8 +22,8 @@ def main():
     print(f"{TerminalColors.CYAN}{TerminalColors.BOLD}🎮 Quilltale TRPG — AI 무인 자동 플레이 관전 런처{TerminalColors.END}")
     print(f"{TerminalColors.HEADER}{TerminalColors.BOLD}======================================================={TerminalColors.END}\n")
 
-    print(" [1] 👑 Qwen 2.5 14B 로컬 AI (로컬 0원 / 최고 지능 / 학습 데이터 자동 수집) [추천]")
-    print(" [2] 🌌 구글 제미나이 클라우드 AI (초고속 / 최고급 소설 서사)")
+    print(" [1] ⚡ Qwen 2.5 7B 로컬 AI (RTX 4050 1.5초 쾌속 연산 / 0원 무제한 관전 & 데이터 수집) [추천]")
+    print(" [2] 🌌 구글 제미나이 3.7 클라우드 AI (초고속 / 최고급 소설 서사)")
     print()
 
     try:
@@ -34,7 +34,7 @@ def main():
     if choice == "2":
         mode = "live"
     else:
-        mode = "ollama_14b"
+        mode = "ollama_7b"
 
     print("\n [성향 선택]")
     print("  1. curious_scholar (호기심 많은 학자 / 탐색형)")
