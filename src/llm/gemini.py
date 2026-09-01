@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiLLM(BaseLLM):
-    def __init__(self, model: str = "gemini-1.5-flash", api_key: Optional[str] = None, *args, **kwargs):
+    def __init__(self, model: str = "gemini-3.6-flash", api_key: Optional[str] = None, *args, **kwargs):
         key = api_key or kwargs.get("api_key") or os.environ.get("GEMINI_API_KEY", "")
         if key:
             os.environ["GEMINI_API_KEY"] = key
@@ -27,15 +27,21 @@ class GeminiLLM(BaseLLM):
         if not self._client:
             raise RuntimeError("GEMINI_API_KEY is not set or client initialization failed.")
         final_prompt = f"{system}\n\n{prompt}" if system else prompt
-        for attempt in range(3):
-            try:
-                response = self._client.models.generate_content(
-                    model=self._model_name,
-                    contents=final_prompt,
-                )
-                return LLMResponse(text=response.text or "", model=self._model_name)
-            except Exception as e:
-                logger.error(f"Gemini API attempt {attempt+1} failed: {e}")
-                if attempt == 2:
-                    raise
-                time.sleep(2 ** attempt)
+        
+        # Try primary model then fallbacks
+        candidate_models = [self._model_name, "gemini-3.6-flash", "gemini-3.7-flash", "gemini-flash-latest"]
+        last_error = None
+        
+        for m in dict.fromkeys(candidate_models):
+            for attempt in range(2):
+                try:
+                    response = self._client.models.generate_content(
+                        model=m,
+                        contents=final_prompt,
+                    )
+                    return LLMResponse(text=response.text or "", model=m)
+                except Exception as e:
+                    last_error = e
+                    logger.warning(f"Gemini model {m} attempt {attempt+1} failed: {e}")
+                    time.sleep(1)
+        raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
