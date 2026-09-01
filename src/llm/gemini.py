@@ -1,6 +1,7 @@
 import os
 import logging
 import time
+from typing import Optional
 from google import genai
 from dotenv import load_dotenv
 from .base import BaseLLM, LLMResponse
