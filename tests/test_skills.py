@@ -64,3 +64,37 @@ def test_grant_title_already_has(test_player, test_state):
     test_player.titles.append('title1')
     success, _ = SkillSystem.grant_title(test_player, 'title1', test_state)
     assert success is False
+
+
+def test_load_skill_templates():
+    skills = SkillSystem.load_skill_templates()
+    assert len(skills) >= 10
+
+    # Test Fireball (arcane_magic)
+    fireball = skills.get("skill_arcane_fireball_01")
+    assert fireball is not None
+    assert fireball.name == "작열 화염구 (이그니스 스페라)"
+    assert fireball.category == "arcane_magic"
+    assert fireball.resource_type == "mana"
+    assert fireball.resource_cost == 25
+    assert fireball.element == "화염"
+    assert fireball.area_shape == "circle"
+    assert fireball.area_radius_meters == 4.0
+    assert fireball.is_forbidden is False
+
+    # Test Shadow Sever (stealth / taboo)
+    shadow_sever = skills.get("skill_stealth_shadow_sever_01")
+    assert shadow_sever is not None
+    assert "그림자 목긋기" in shadow_sever.name
+    assert shadow_sever.resource_type == "stamina"
+    assert shadow_sever.is_forbidden is True
+    assert "암살단" in shadow_sever.taboo_reason
+
+    # Test Bone Spike (necromancy / hp cost)
+    bone_spike = skills.get("skill_forbidden_bone_spike_01")
+    assert bone_spike is not None
+    assert bone_spike.category == "necromancy"
+    assert bone_spike.resource_type == "hp"
+    assert bone_spike.resource_cost == 15
+    assert bone_spike.is_forbidden is True
+

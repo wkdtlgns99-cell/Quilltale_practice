@@ -101,6 +101,122 @@ class SkillSystem:
             return {'variant': 'balanced', 'description': '균형 잡힌 마법 발현'}
     
     @staticmethod
+    def parse_skill_template(raw: dict) -> Skill:
+        """Parse a 14-domain raw JSON dict into a canonical Skill object."""
+        d1 = raw.get("1_기본식별_계통", {})
+        d2 = raw.get("2_기술위계_합체기", {})
+        d3 = raw.get("3_소모자원_대가", {})
+        d4 = raw.get("4_시전방식_쿨다운", {})
+        d5 = raw.get("5_명중_사거리_범위", {})
+        d6 = raw.get("6_피해수치_물리연산", {})
+        d7 = raw.get("7_처형_조건부폭딜", {})
+        d8 = raw.get("8_위치이동_군중제어", {})
+        d9 = raw.get("9_원소_환경_날씨연계", {})
+        d10 = raw.get("10_치명타_자원흡수", {})
+        d11 = raw.get("11_지속시간_스택중첩", {})
+        d12 = raw.get("12_숙련도_경지", {})
+        d13 = raw.get("13_소음도_사회적금기", {})
+        d14 = raw.get("14_서사_연출", {})
+
+        return Skill(
+            id=raw.get("id", ""),
+            name=raw.get("name", ""),
+            # 1
+            category=d1.get("category", "physical"),
+            skill_type=d1.get("skill_type", "active"),
+            role_type=d1.get("role_type", "single_attack"),
+            tier=d1.get("tier", "common"),
+            acquire_difficulty=d1.get("tier", "common"),
+            is_unique=d1.get("is_unique", False),
+            owner_npc_id=d1.get("owner_npc_id", ""),
+            # 2
+            rank_type=d2.get("rank_type", "normal"),
+            joint_partner_id=d2.get("joint_partner_id", ""),
+            joint_requirements=d2.get("joint_requirements", {}),
+            # 3
+            resource_type=d3.get("resource_type", "mana"),
+            resource_cost=d3.get("resource_cost", 0),
+            mana_cost=d3.get("resource_cost", 0) if d3.get("resource_type") == "mana" else 0,
+            catalyst_required=d3.get("catalyst_required", ""),
+            recoil_or_side_effect=d3.get("recoil_or_side_effect", ""),
+            backfire_risk=d3.get("backfire_risk", 0.0),
+            backfire_description=d3.get("backfire_description", ""),
+            # 4
+            cast_behavior=d4.get("cast_behavior", "instant"),
+            cast_time_turns=d4.get("cast_time_turns", 0),
+            cooldown_turns=d4.get("cooldown_turns", 0),
+            current_cooldown=d4.get("current_cooldown", 0),
+            required_weapon=d4.get("required_weapon", "무관"),
+            required_stance=d4.get("required_stance", ""),
+            # 5
+            hit_type=d5.get("hit_type", "dice_roll"),
+            target_type=d5.get("target_type", "single_enemy"),
+            range=d5.get("range", "melee"),
+            area_shape=d5.get("area_shape", "single"),
+            area_radius_meters=d5.get("area_radius_meters", 0.0),
+            # 6
+            damage_delivery=d6.get("damage_delivery", "single_burst"),
+            hit_count=d6.get("hit_count", 1),
+            base_value=d6.get("base_value", 0),
+            scaling_stat=d6.get("scaling_stat", "str"),
+            scaling_factor=d6.get("scaling_factor", 1.0),
+            element=d6.get("element", "물리"),
+            armor_penetration=d6.get("armor_penetration", 0.0),
+            # 7
+            execution_condition=d7.get("execution_condition", {}),
+            # 8
+            displacement=d8.get("displacement", {}),
+            inflicted_status=d8.get("inflicted_status", []),
+            # 9
+            synergy_tags=d9.get("synergy_tags", []),
+            environmental_gimmick=d9.get("environmental_gimmick", ""),
+            weather_terrain_synergy=d9.get("weather_terrain_synergy", {}),
+            # 10
+            crit_multiplier_bonus=d10.get("crit_multiplier_bonus", 0.0),
+            guaranteed_crit_condition=d10.get("guaranteed_crit_condition", ""),
+            lifesteal_pct=d10.get("lifesteal_pct", 0.0),
+            mana_drain_pct=d10.get("mana_drain_pct", 0.0),
+            # 11
+            duration_turns=d11.get("duration_turns", 0),
+            max_stacks=d11.get("max_stacks", 1),
+            current_stacks=d11.get("current_stacks", 0),
+            # 12
+            mastery_level=d12.get("mastery_level", 1),
+            mastery_exp=d12.get("mastery_exp", 0),
+            max_mastery_level=d12.get("max_mastery_level", 4),
+            # 13
+            noise_level=d13.get("noise_level", "normal"),
+            is_forbidden=d13.get("is_forbidden", False),
+            taboo_reason=d13.get("taboo_reason", ""),
+            # 14
+            description=d14.get("description", ""),
+            incantation_or_formula=d14.get("incantation_or_formula", ""),
+            visual_fx_description=d14.get("visual_fx_description", "")
+        )
+
+    @staticmethod
+    def load_skill_templates(file_path: str = "data/templates/skill_templates.json") -> dict[str, Skill]:
+        """Load and parse skill templates JSON into a dictionary of Skill objects."""
+        import json
+        from pathlib import Path
+        
+        path = Path(file_path)
+        if not path.exists():
+            return {}
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw_list = json.load(f)
+            skills_dict = {}
+            for item in raw_list:
+                skill = SkillSystem.parse_skill_template(item)
+                if skill.id:
+                    skills_dict[skill.id] = skill
+            return skills_dict
+        except Exception as e:
+            logger.error(f"Failed to load skill templates from {file_path}: {e}")
+            return {}
+
+    @staticmethod
     def grant_title(player: Player, title_id: str, state: WorldState) -> Tuple[bool, str]:
         """Grant a title to player. Titles are unique - only one holder per world."""
         if title_id not in state.titles_db:
@@ -115,3 +231,4 @@ class SkillSystem:
         player.titles.append(title_id)
         bonuses_str = ', '.join(f'{k}+{v}' for k, v in title.stat_bonuses.items())
         return True, f'🏆 새 칭호 [{title.name}] 획득! 능력치 보너스: {bonuses_str if bonuses_str else "없음"}'
+

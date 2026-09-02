@@ -10,6 +10,7 @@ import random
 import logging
 from typing import Optional, List, Dict
 from src.core.config import BASE_DIR, TEMPLATES_DIR
+from src.world.skills import SkillSystem
 
 logger = logging.getLogger(__name__)
 
@@ -509,13 +510,12 @@ class WorldGenerator:
             }
         ]
 
-        # Pick either cosmology continent starter or one of diverse origins
+        # Pick continent starter or fallback to diverse origins
         cosmo_starter = chosen_continent.get("starter_settlement")
-        possible_starters = list(STARTER_ORIGINS_POOL)
-        if cosmo_starter:
-            possible_starters.append(cosmo_starter)
-        
-        starter_settlement = random.choice(possible_starters)
+        if cosmo_starter and isinstance(cosmo_starter, dict):
+            starter_settlement = cosmo_starter
+        else:
+            starter_settlement = random.choice(STARTER_ORIGINS_POOL)
 
         # 2. Tier 2 & 3: Locations Assembly [1. Starter Settlement + 2~4. Outer Dungeons]
         region_templates_path = TEMPLATES_DIR / 'region_templates.json'
@@ -611,35 +611,47 @@ class WorldGenerator:
             "소지한 부적이 사실 저주받은 피의 마법 아티팩트임"
         ]
 
-        npc_name_1 = random.choice(NPC_NAMES)
-        npc_job_1 = random.choice(NPC_JOBS)
+        # Use starter settlement's NPC info if available
+        starter_npc_name = starter_settlement.get("starter_npc_name")
+        starter_npc_job = starter_settlement.get("starter_job")
+
+        npc_name_1 = starter_npc_name if starter_npc_name else random.choice(NPC_NAMES)
+        npc_job_1 = starter_npc_job if starter_npc_job else random.choice(NPC_JOBS)
         
+        from src.world.event_perspective import EventPerspectiveEngine
+
+        raw_npc_guide = {
+            "id": "npc_guide_1",
+            "name": f"{npc_name_1}" if (" " in str(npc_name_1) or "(" in str(npc_name_1)) else f"{npc_job_1} {npc_name_1}",
+            "description": f"풍파를 겪은 눈빛과 낡은 장비를 갖춘 {npc_job_1}다. 현장의 분위기를 주시하고 있다.",
+            "location": start_loc_id,
+            "job": npc_job_1,
+            "disposition": "neutral",
+            "attitude_description": "신중하며 경계심이 강함",
+            "desire": random.choice(NPC_DESIRES),
+            "weakness": random.choice(NPC_WEAKNESSES),
+            "taboo": random.choice(NPC_TABOOS),
+            "trauma": random.choice(NPC_TRAUMAS),
+            "blackmail_secret": random.choice(NPC_SECRETS),
+            "affinity": 50,
+            "fear": 0,
+            "debt": 0,
+            "alive": True,
+            "health": 60,
+            "max_health": 60,
+            "mana": 40,
+            "max_mana": 40,
+            "armor_class": 12,
+            "inventory": [],
+            "memories": [],
+            "beliefs": []
+        }
+        
+        # Inject 12-axis perspective beliefs based on NPC traits & chosen cosmology
+        raw_npc_guide["beliefs"] = EventPerspectiveEngine.generate_event_beliefs(raw_npc_guide, chosen_cosmology)
+
         npcs_dict = {
-            "npc_guide_1": {
-                "id": "npc_guide_1",
-                "name": f"{npc_job_1} {npc_name_1}",
-                "description": f"풍파를 겪은 눈빛과 낡은 여행 장비를 갖춘 {npc_job_1}다.",
-                "location": start_loc_id,
-                "job": npc_job_1,
-                "disposition": "neutral",
-                "attitude_description": "신중하며 경계심이 강함",
-                "desire": random.choice(NPC_DESIRES),
-                "weakness": random.choice(NPC_WEAKNESSES),
-                "taboo": random.choice(NPC_TABOOS),
-                "trauma": random.choice(NPC_TRAUMAS),
-                "blackmail_secret": random.choice(NPC_SECRETS),
-                "affinity": 50,
-                "fear": 0,
-                "debt": 0,
-                "alive": True,
-                "health": 60,
-                "max_health": 60,
-                "mana": 40,
-                "max_mana": 40,
-                "armor_class": 12,
-                "inventory": [],
-                "memories": []
-            }
+            "npc_guide_1": raw_npc_guide
         }
         locations_dict[start_loc_id]["npcs"].append("npc_guide_1")
 
@@ -652,6 +664,73 @@ class WorldGenerator:
         
         items_dict = {it["id"]: it for it in starter_items_pool}
         player_inventory = [it["id"] for it in starter_items_pool]
+
+        # Assemble Factions from cosmology major nations & continental factions
+        factions_dict = {}
+        for idx, nat in enumerate(chosen_cosmology.get("major_nations", [])):
+            fac_id = f"nation_{idx+1}"
+            factions_dict[fac_id] = {
+                "id": fac_id,
+                "name": nat.get("nation_name", f"주요 국가 {idx+1}"),
+                "system": nat.get("system", "국가"),
+                "power_level": "주요 국가",
+                "ruling_race": "인간",
+                "taboos": [],
+                "relations": {"외교": nat.get("relations", "중립")},
+                "emblem_animal": "사자",
+                "flag_colors": ["금색", "진홍색"],
+                "flag_symbol": "국가 인장",
+                "motto": ""
+            }
+
+        for idx, fac in enumerate(chosen_continent.get("factions", [])):
+            fac_id = fac.get("id", f"fac_{idx+1}")
+            factions_dict[fac_id] = {
+                "id": fac_id,
+                "name": fac.get("name", f"세력 {idx+1}"),
+                "system": "조직",
+                "power_level": fac.get("role", "지역 세력"),
+                "ruling_race": "혼합",
+                "taboos": [],
+                "relations": {},
+                "emblem_animal": "매",
+                "flag_colors": ["은색", "청색"],
+                "flag_symbol": "문양",
+                "motto": ""
+            }
+
+        if not factions_dict:
+            factions_dict["continent_explorers"] = {
+                "id": "continent_explorers",
+                "name": "대륙 개척 탐사대",
+                "system": "탐사 연맹",
+                "power_level": "지역 개척단",
+                "ruling_race": "혼합",
+                "taboos": ["유적 훼손", "고대 봉인 무단 해제"],
+                "relations": {}
+            }
+
+        # Build full cosmology metadata dict
+        full_cosmo = dict(chosen_cosmology)
+        full_cosmo["arcane_laws"] = sample_arcane
+
+        # World facts summary
+        cur_rules = chosen_cosmology.get("currency_and_laws", {})
+        official_curr = cur_rules.get("official_currency", "") if isinstance(cur_rules, dict) else ""
+        magic_rules = chosen_cosmology.get("magic_rules", {})
+        forbidden_mag = magic_rules.get("forbidden_magic", "") if isinstance(magic_rules, dict) else ""
+
+        world_facts_list = [
+            f"[행성 세계관] {world_name} ({world_genre})",
+            f"[소속 대륙/영토] {continent_name}",
+            f"[시대적 배경] {chosen_cosmology.get('era_background', '')}",
+            f"[거시적 세계 위협] {chosen_cosmology.get('macro_threat', '')}",
+            f"[말소된 역사 미스터리] {chosen_cosmology.get('censored_history', '')}",
+        ]
+        if official_curr:
+            world_facts_list.append(f"[통용 화폐] {official_curr}")
+        if forbidden_mag:
+            world_facts_list.append(f"[금지 마법] {forbidden_mag}")
 
         world_data = {
             "session_id": f"world_{uuid.uuid4().hex[:8]}",
@@ -696,30 +775,18 @@ class WorldGenerator:
             "locations": locations_dict,
             "npcs": npcs_dict,
             "items": items_dict,
-            "factions": {
-                "continent_explorers": {
-                    "id": "continent_explorers",
-                    "name": "대륙 개척 탐사대",
-                    "system": "탐사 연맹",
-                    "power_level": "지역 개척단",
-                    "ruling_race": "혼합",
-                    "taboos": ["유적 훼손", "고대 봉인 무단 해제"],
-                    "relations": {}
-                }
-            },
+            "factions": factions_dict,
             "quests": {},
             "shops": {},
-            "skills_db": {},
+            "skills_db": {
+                sid: {k: v for k, v in sk.__dict__.items()}
+                for sid, sk in SkillSystem.load_skill_templates().items()
+            } if hasattr(SkillSystem, "load_skill_templates") else {},
             "titles_db": {},
-            "world_lore": {"arcane_laws": sample_arcane},
+            "cosmology_template": full_cosmo,
+            "world_lore": full_cosmo,
             "history": [],
-            "world_facts": [
-                f"[행성 세계관] {world_name} ({world_genre})",
-                f"[소속 대륙/영토] {continent_name}",
-                f"[시대적 배경] {chosen_cosmology.get('era_background', '')}",
-                f"[거시적 세계 위협] {chosen_cosmology.get('macro_threat', '')}",
-                f"[말소된 역사 미스터리] {chosen_cosmology.get('censored_history', '')}",
-            ]
+            "world_facts": world_facts_list
         }
 
         return world_data, chosen_intro_key

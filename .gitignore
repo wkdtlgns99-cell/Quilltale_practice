@@ -32,4 +32,5 @@ data/legacy/
 .vscode/
 .idea/
 *.log
+data/collector_logs/
 .env

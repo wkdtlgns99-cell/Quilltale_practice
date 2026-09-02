@@ -68,24 +68,97 @@ class NPCPersonality:
 
 @dataclass
 class Skill:
+    # 1. 기본 식별 & 계통 (Identification & School)
     id: str
-    name: str                           # Korean name
-    skill_type: str = 'active'          # 'active' | 'passive' | 'unique'
-    is_unique: bool = False
-    incantation: str = ''               # Magic incantation text
-    incantation_length: int = 0         # 0 = not magic
-    scaling_stat: str = 'str'
-    scaling_factor: float = 1.0
-    effect: dict = field(default_factory=dict)  # {'type': 'reveal_thoughts', ...}
-    acquire_difficulty: str = 'common'  # common|rare|epic|legendary
-    description: str = ''
-    owner_npc_id: str = ''             # For unique skills: original NPC
-    mana_cost: int = 0
-    cooldown_turns: int = 0
-    current_cooldown: int = 0
-    element: str = "무속성"             # "화염" | "빙결" | "전격" | "암흑" | "신성" | "공간" | "물리"
-    ancient_words: list[str] = field(default_factory=list)  # e.g. ["헬리오스", "아르케"]
-    incantation_verse: str = ""         # Poetic/ceremonial incantation verse
+    name: str                                           # 스킬명 (예: "음혈부두술: 저주의 못", "화산파 육합검결")
+    category: str = "physical"                          # 10대 계통 (physical, martial_qi, arcane_magic, holy_miracle, necromancy, curse_voodoo, alchemy, taming, psionics, subterfuge)
+    skill_type: str = "active"                          # active(능동) | passive(상시) | toggle(유지) | reaction(반격) | unique
+    role_type: str = "single_attack"                    # single_attack | aoe_attack | heal | buff | debuff_curse | defense_guard | summon | utility
+    tier: str = "common"                                # common(기초) | uncommon(숙련) | rare(비전) | epic(절기) | legendary(신화/오의)
+    acquire_difficulty: str = "common"                  # 하위 호환용 난이도
+    is_unique: bool = False                             # 세계 유일 스킬 여부
+    owner_npc_id: str = ""                              # 고유 스킬 원본 소유자 NPC ID
+
+    # 2. 기술 위계 & 합체기 (Rank & Joint Combo)
+    rank_type: str = "normal"                           # normal(일반기) | special(비기/특수기) | ultimate(궁극기) | joint_combo(합체기)
+    joint_partner_id: str = ""                          # 합체기 대상 동료/NPC ID
+    joint_requirements: dict = field(default_factory=dict) # 합체기 발동 조건 (예: {"min_affinity": 60, "partner_present": True})
+
+    # 3. 소모 자원 & 대가 (Cost & Catalyst)
+    resource_type: str = "mana"                         # mana | stamina | qi | hp | corpse | reagent | faith | sanity
+    resource_cost: int = 0                              # 소모량
+    mana_cost: int = 0                                  # 하위 호환용 마나 소모량
+    catalyst_required: str = ""                         # 필요 촉매/도구 (예: "부두 인형", "희생양의 피", "비수")
+    recoil_or_side_effect: str = ""                     # 시전자 반동 (예: "시전 후 1턴간 탈진", "광기 +1")
+    backfire_risk: float = 0.0                          # 대실패 자폭/역류 확률 (0.0 ~ 1.0)
+    backfire_description: str = ""                      # 자폭 시 효과
+
+    # 4. 시전 방식 & 쿨다운 (Execution & Constraints)
+    cast_behavior: str = "instant"                      # instant(즉발) | charging(기 모으기) | channeling(집중) | delayed(지연)
+    cast_time_turns: int = 0                            # 시전 턴수 (0 = 즉발)
+    cooldown_turns: int = 0                             # 재사용 대기시간
+    current_cooldown: int = 0                           # 현재 남은 쿨다운
+    required_weapon: str = "무관"                       # 필요 무기군 (예: "장검", "지팡이", "활", "맨손", "무관")
+    required_stance: str = ""                           # 선행 자세/태세
+
+    # 5. 명중 & 사거리/범위 (Targeting & Range)
+    hit_type: str = "dice_roll"                         # guaranteed_hit(확정 명중) | dice_roll(주사위 판정) | guided_homing(유도)
+    target_type: str = "single_enemy"                   # self | single_enemy | single_ally | all_enemies | all_allies | ground_area | summon_slot
+    range: str = "melee"                                # melee(근접) | short(근거리) | medium(중거리) | long(원거리) | global(전역)
+    area_shape: str = "single"                          # single | cone(부채꼴) | line(직선) | circle(원형) | room(방 전체)
+    area_radius_meters: float = 0.0                     # 범위 반경 (m)
+
+    # 6. 피해/수치 & 물리 연산 (Mechanics & Scaling)
+    damage_delivery: str = "single_burst"               # single_burst(단타) | multi_hit(연타) | dot_periodic(도트) | delayed_burst(지연) | reflect(반사)
+    hit_count: int = 1                                  # 연타 타수
+    base_value: int = 0                                 # 기본 피해/회복량
+    scaling_stat: str = "str"                           # str | dex | int | wis | con | cha
+    scaling_factor: float = 1.0                         # 스탯 배율
+    element: str = "물리"                               # 물리 | 화염 | 빙결 | 전격 | 산성 | 신성 | 암흑 | 독 | 영혼 | 비전
+    armor_penetration: float = 0.0                      # 방어 관통률 (0.0 ~ 1.0)
+    effect: dict = field(default_factory=dict)          # 세부 효과 딕셔너리 (하위 호환)
+
+    # 7. 처형 & 조건부 폭딜 (Execution Condition)
+    execution_condition: dict = field(default_factory=dict) # 처형/조건부 보너스 (예: {"threshold_hp_pct": 20, "multiplier": 3.0})
+
+    # 8. 위치 이동 & 군중 제어 (Displacement & CC)
+    displacement: dict = field(default_factory=dict)        # 위치 이동 (예: {"type": "knockback", "distance_m": 5})
+    inflicted_status: list[dict] = field(default_factory=list) # 상태이상 (예: [{"status": "bleeding", "duration": 3}])
+
+    # 9. 원소/환경/날씨 연계 (Synergy & Weather/Terrain)
+    synergy_tags: list[str] = field(default_factory=list)   # 연계 태그 (예: ["oil_ignite", "water_electrocute"])
+    environmental_gimmick: str = ""                         # 환경 기믹 (예: "기름 점화", "수면 결빙")
+    weather_terrain_synergy: dict = field(default_factory=dict) # 날씨/지형 반응 (예: {"rain": {"power_mult": 1.5}})
+
+    # 10. 치명타 & 자원 흡수 (Crit & Drain)
+    crit_multiplier_bonus: float = 0.0                  # 치명타 피해 보너스 배율
+    guaranteed_crit_condition: str = ""                 # 확정 치명타 조건 (예: "stealth_ambush")
+    lifesteal_pct: float = 0.0                          # 피해량 대비 HP 흡혈률
+    mana_drain_pct: float = 0.0                         # 마나 흡수율
+
+    # 11. 지속시간 & 스택 중첩 (Duration & Stacks)
+    duration_turns: int = 0                             # 지속 턴수 (0 = 즉시 종료)
+    max_stacks: int = 1                                 # 최대 중첩 스택 수
+    current_stacks: int = 0                             # 현재 스택
+
+    # 12. 숙련도 & 경지 (Mastery Progression)
+    mastery_level: int = 1                              # 1성(초출) ~ 4성(오의)
+    mastery_exp: int = 0                                # 숙련도 누적 경험치
+    max_mastery_level: int = 4                          # 최대 경지
+
+    # 13. 소음도 & 사회적 금기 (Noise & Social Taboo)
+    noise_level: str = "normal"                         # silent(무소음) | quiet(속삭임) | normal(일반) | loud(굉음)
+    is_forbidden: bool = False                          # 금기/불법 스킬 여부
+    taboo_reason: str = ""                              # 금기 이유
+
+    # 14. 서사 & 연출 (Flavor & GM Narration)
+    description: str = ""                               # 스킬 상세 설명
+    incantation: str = ""                               # 하위 호환용 영창 텍스트
+    incantation_length: int = 0                         # 하위 호환용 영창 길이
+    ancient_words: list[str] = field(default_factory=list) # 고대어 어휘 목록
+    incantation_verse: str = ""                         # 하위 호환용 영창 구절
+    incantation_or_formula: str = ""                    # 영창/심법/공식 본문
+    visual_fx_description: str = ""                     # AI GM 연출 묘사 지문
 
 
 @dataclass
@@ -792,7 +865,8 @@ class WorldState:
 
     # Macro World Architecture & Factions
     factions: dict[str, Faction] = field(default_factory=dict)         # 국가 및 주요 세력 DB
-    world_lore: dict[str, Any] = field(default_factory=dict)           # 종족/마법체계/기원 등 거시 설정
+    cosmology_template: dict[str, Any] = field(default_factory=dict)   # 활성화된 세계관 템플릿 풀 스펙
+    world_lore: dict[str, Any] = field(default_factory=dict)           # 세계관 세부 설정 (cosmology_template 동기화)
     environment_states: dict[str, dict] = field(default_factory=dict) # {"tavern": {"door": "broken", "hearth": "burned"}}
     discovered_clues: dict[str, str] = field(default_factory=dict)     # 발견된 단서/비밀 DB
     world_secrets: dict[str, dict] = field(default_factory=dict)       # 비대칭 비밀/진실 DB (GM 비대칭 정보 & 단서 조각)
@@ -1276,11 +1350,56 @@ class WorldState:
             if memory_lines:
                 memory_block = "\nNPC MEMORIES (what present NPCs remember):\n" + "\n".join(memory_lines)
 
+        npc_beliefs_block = ""
+        if loc_npcs:
+            belief_lines = []
+            for npc in loc_npcs:
+                if npc.alive and npc.beliefs:
+                    for b in npc.beliefs:
+                        belief_lines.append(f"  * [{npc.name} / id:{npc.id}의 개인적 시각/믿음]: {b}")
+            if belief_lines:
+                npc_beliefs_block = "\n[🧠 현장 인물들의 개인적 세계관/역사 인식 & 믿음 (NPC Beliefs & Perspective Bias)]:\n" + "\n".join(belief_lines)
+
         rumor_block = ""
         if self.world_facts:
             rumor_block = "\nGLOBAL WORLD FACTS / RUMORS:\n" + "\n".join(
                 f"- {fact}" for fact in self.world_facts
             )
+
+        cosmo_block = ""
+        cosmo_data = self.cosmology_template or self.world_lore
+        if cosmo_data and isinstance(cosmo_data, dict):
+            cosmo_lines = []
+            cosmo_sub = cosmo_data.get("cosmology", {})
+            if isinstance(cosmo_sub, dict):
+                if cosmo_sub.get("sun_and_moons"):
+                    cosmo_lines.append(f"  * [천체 현상]: {cosmo_sub['sun_and_moons']}")
+                if cosmo_sub.get("mana_origin"):
+                    cosmo_lines.append(f"  * [마나 기원]: {cosmo_sub['mana_origin']}")
+                if cosmo_sub.get("divine_order"):
+                    cosmo_lines.append(f"  * [신들의 질서]: {cosmo_sub['divine_order']}")
+
+            magic_sub = cosmo_data.get("magic_rules", {})
+            if isinstance(magic_sub, dict):
+                if magic_sub.get("incantation_system"):
+                    cosmo_lines.append(f"  * [영창 원리]: {magic_sub['incantation_system']}")
+                if magic_sub.get("forbidden_magic"):
+                    cosmo_lines.append(f"  * [금지 마법]: {magic_sub['forbidden_magic']}")
+                if magic_sub.get("magic_cost"):
+                    cosmo_lines.append(f"  * [마법 대가/부작용]: {magic_sub['magic_cost']}")
+
+            curr_sub = cosmo_data.get("currency_and_laws", {})
+            if isinstance(curr_sub, dict):
+                if curr_sub.get("official_currency"):
+                    cosmo_lines.append(f"  * [통용 화폐]: {curr_sub['official_currency']}")
+                if curr_sub.get("contraband"):
+                    cosmo_lines.append(f"  * [절대 밀수품]: {curr_sub['contraband']}")
+                if curr_sub.get("global_laws"):
+                    laws_str = " | ".join(curr_sub["global_laws"]) if isinstance(curr_sub["global_laws"], list) else str(curr_sub["global_laws"])
+                    cosmo_lines.append(f"  * [세계 법률]: {laws_str}")
+
+            if cosmo_lines:
+                cosmo_block = "\n[🌌 세계관 고유 법칙 & 규칙 (Cosmology & Laws)]:\n" + "\n".join(cosmo_lines)
 
         arcane_laws_block = ""
         arcane_laws = self.world_lore.get("arcane_laws", [])
@@ -1318,7 +1437,7 @@ NPCs Present: {npcs_str}
 Player: {self.player.name} (Level {self.player.level}, HP {self.player.health}/{self.player.max_health}, Gold {self.player.gold}, Rep {self.player.reputation})
 Player Stats: STR {self.player.strength} (+{self.player.str_mod}), AGI {self.player.agility} (+{self.player.agi_mod}), INT {self.player.intelligence} (+{self.player.int_mod})
 Equipped Weapon: {wep_name}
-Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}{factions_block}
+Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_block}{arcane_laws_block}{factions_block}
 """
 
 
@@ -2630,6 +2749,10 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}{factio
     @classmethod
     def from_json(cls, data: str) -> "WorldState":
         raw = json.loads(data)
+        return cls.from_dict(raw)
+
+    @classmethod
+    def from_dict(cls, raw: dict) -> "WorldState":
         state = cls()
         state.session_id = raw.get("session_id", "default_session")
         state.world_id = raw.get("world_id", "")
@@ -2784,7 +2907,8 @@ Player Inventory: {inv_str}{memory_block}{rumor_block}{arcane_laws_block}{factio
             state.factions[k] = safe_init(Faction, v, id=k, name=k)
 
         # Macro World Lore, Secrets & Dynamic Discovery
-        state.world_lore = raw.get("world_lore", {})
+        state.cosmology_template = raw.get("cosmology_template", {}) or raw.get("world_lore", {})
+        state.world_lore = raw.get("world_lore", {}) or state.cosmology_template
         state.environment_states = raw.get("environment_states", {})
         state.discovered_clues = raw.get("discovered_clues", {})
         state.world_secrets = raw.get("world_secrets", {})
