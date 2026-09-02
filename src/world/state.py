@@ -113,7 +113,8 @@ class Item:
     properties: dict = field(default_factory=dict)
 
     # Physical Object & Environment Interaction Properties
-    weight: float = 1.0             # kg (무게)
+    weight: float = 1.0             # kg (내부 실제 물리 무게)
+    weight_revealed: bool = False   # 관찰/감정 성공 시 실제 kg 노출 (무게 안개)
     size: str = "small"             # "small" (가방 가능), "medium" (손에 들기 가능), "heavy" (괴력 필요), "massive" (건물/기둥)
     required_strength: int = 10     # 들거나 휘두르기 위한 최소 근력 (STR)
     can_store_in_bag: bool = True   # 가방 수납 가능 여부 (small만 True)
@@ -128,6 +129,21 @@ class Item:
     max_durability: int = 100       # 최대 내구도
     rune_slots: int = 0             # 룬 소켓 구멍 개수 (0~3)
     socketed_runes: list[str] = field(default_factory=list) # 각인된 룬 ID 목록
+
+    @property
+    def display_weight(self) -> str:
+        """Fog of War for Weight: returns descriptive weight estimation unless precisely inspected."""
+        if self.weight_revealed:
+            return f"{self.weight:.1f}kg (정밀 확인됨)"
+        if self.weight < 1.0:
+            return "깃털처럼 가벼움 (1kg 미만 추정)"
+        elif self.weight < 5.0:
+            return "가볍게 손에 쥘 만함 (1~5kg 추정)"
+        elif self.weight < 15.0:
+            return "묵직한 무게감 (5~15kg 추정)"
+        elif self.weight < 40.0:
+            return "두 손으로 들어야 할 만큼 무거움 (15~40kg 추정)"
+        return "괴력이 없으면 꿈쩍도 안 할 정도로 육중함 (40kg 이상 추정)"
 
     @property
     def tooltip_text(self) -> str:
@@ -155,7 +171,7 @@ class Item:
         if self.defense > 0:
             stats.append(f"방어력 +{self.defense}")
         if self.weight > 0:
-            stats.append(f"무게: {self.weight}kg")
+            stats.append(f"무게: {self.display_weight}")
         if self.required_strength > 10:
             stats.append(f"요구 근력: STR {self.required_strength}")
         if stats:
@@ -665,11 +681,13 @@ class Player:
     @property
     def fatigue_status_ko(self) -> str:
         if self.fatigue >= 80:
-            return "탈진 (호흡 곤란, 손떨림 및 마력 통제 극심한 저하)"
+            return "탈진 (호흡 곤란, 주사위 판정 -3 디메리트, 마력 통제 저하)"
         elif self.fatigue >= 50:
-            return "피로 (호흡이 가빠지고 몸이 무거움)"
+            return "피로 (호흡 가쁨, 주사위 판정 -1 디메리트)"
         elif self.fatigue >= 20:
             return "경미한 피로"
+        elif self.fatigue == 0:
+            return "양호 (피로도 0: 완벽한 휴식, 주사위 판정 +1 메리트)"
         return "양호 (활력 넘침)"
 
     # Effective Stats with Status Effects

@@ -421,15 +421,103 @@ class WorldGenerator:
         monster_inspiration_text = "\n".join(monster_lines) if monster_lines else "표준 기믹 몬스터"
 
         # Infinite Variety: Procedurally assemble a completely unique world from our 30+ region templates
-        WORLD_NAMES = [
-            "황혼의 에테르나 대륙", "칼날산맥의 변경지대", "안개 덮인 발렌도르프", 
-            "사라진 신들의 고원", "검은 바다의 군도", "영구동토의 실베리아", 
-            "붉은 모래의 아라키아", "비전 마법의 아르카디아", "부서진 달의 협곡",
-            "천공의 부유대륙 레무리아", "빛바랜 왕국의 유적지", "심연의 크리스탈 협곡"
-        ]
-        world_name = random.choice(WORLD_NAMES)
+        # 1. Tier 1: Planet Cosmology & World Lore Selection
+        cosmology_path = TEMPLATES_DIR / 'cosmology_templates.json'
+        cosmology_pool = []
+        if cosmology_path.exists():
+            try:
+                with open(cosmology_path, 'r', encoding='utf-8') as f:
+                    cosmology_pool = json.load(f)
+            except Exception:
+                pass
 
-        # Load region templates pool
+        if cosmology_pool:
+            chosen_cosmology = random.choice(cosmology_pool)
+        else:
+            chosen_cosmology = {
+                "id": "cosmology_terra_arcana",
+                "world_name": "테라 아르카나 (Terra Arcana)",
+                "genre": "정통 하이 판타지",
+                "era_background": "고대 마도 제국 멸망 후 300년이 흐른 중세 판타지 시대.",
+                "continents": [{
+                    "continent_name": "아발론 제국과 북부 칼날산맥",
+                    "description": "은빛 성기사단과 마탑 연합이 다스리는 광활한 제국령과 험준한 산악 변경 지대",
+                    "starter_settlement": {
+                        "id": "start_settlement_01",
+                        "name": "갈까마귀 횃불 선술집과 국경 전초기지",
+                        "description": "두꺼운 참나무 기둥과 타오르는 벽난로가 있는 아늑한 국경 선술집이다. 모험가 길드의 의뢰 벽보가 붙어있고, 바텐더와 무장한 용병들이 난롯가에 모여 술잔을 기울이고 있다.",
+                        "starter_job": "선술집 바텐더",
+                        "starter_npc_name": "바란"
+                    }
+                }]
+            }
+
+        world_name = chosen_cosmology.get("world_name", "테라 아르카나")
+        world_genre = chosen_cosmology.get("genre", "정통 하이 판타지")
+        continents = chosen_cosmology.get("continents", [])
+        chosen_continent = random.choice(continents) if continents else {}
+        continent_name = chosen_continent.get("continent_name", "아발론 제국 변경령")
+        # Diverse starter origins pool (Noble Mansion, Cathedral, Mage Tower, Fortress, Expedition Camp, Ship, Hideout, Hunter Lodge)
+        STARTER_ORIGINS_POOL = [
+            {
+                "name": "고대 명문 가문의 대저택 집무실",
+                "description": "고풍스러운 샹들리에와 융단이 깔린 가문의 집무실이다. 벽난로의 불꽃이 벽면의 초상화들을 비추고 있으며, 책상 위에는 가문의 존망이 걸린 비밀 서신과 봉인된 칙령이 놓여 있다.",
+                "starter_job": "가문의 늙은 수석 집사",
+                "starter_npc_name": "알프레드 (Alfred)"
+            },
+            {
+                "name": "대성당 성유물 수호 기도실",
+                "description": "은은한 촛불과 백리향 향로 연기가 피어오르는 엄숙한 석조 기도실이다. 스테인드글라스 너머로 은백색 달빛이 쏟아져 내리며, 제단 위에는 봉인된 성스러운 룬 석판이 놓여 있다.",
+                "starter_job": "성소의 맹인 고위 사제",
+                "starter_npc_name": "엘레나 (Elena)"
+            },
+            {
+                "name": "마탑 최상층 천문 관측 서재",
+                "description": "수천 권의 마도서와 회전하는 기계식 천구의가 가득한 비전 서재다. 거대한 천문 망원경 너머로 대기 중의 마나 폭풍이 푸른 번갯불처럼 번뜩이고 있다.",
+                "starter_job": "수석 마도 점성학자",
+                "starter_npc_name": "알버스 (Albus)"
+            },
+            {
+                "name": "국경 요새 성벽 최상층 망루",
+                "description": "차가운 칼바람이 몰아치는 깎아지른 절벽 위 요새 망루다. 망원경과 신호용 횃불 바구니가 놓여 있으며, 발아래로는 안개에 덮인 미지의 황무지가 끝없이 펼쳐져 있다.",
+                "starter_job": "흉터투성이 국경 보초대장",
+                "starter_npc_name": "가릭 (Garik)"
+            },
+            {
+                "name": "고대 유적 발굴단 야간 전진 캠프",
+                "description": "거대한 크레이터 유적지 틈새에 세워진 두꺼운 방수 텐트 안이다. 흙 묻은 고대 석판 조각과 측량 도구, 램프 불빛 아래로 발굴 대원들의 긴장된 숨소리가 들려온다.",
+                "starter_job": "외눈박이 수석 발굴단장",
+                "starter_npc_name": "브론 (Bron)"
+            },
+            {
+                "name": "외해 탐사 범선의 조타실 및 갑판",
+                "description": "거친 파도를 가르며 삐걱거리는 대형 목조 범선의 조타실이다. 탁자 위에는 낡은 해도와 떨리는 황동 나침반이 놓여 있고, 갑판 너머로 짙은 해무가 밀려오고 있다.",
+                "starter_job": "파이프 담배를 문 노련한 조타수",
+                "starter_npc_name": "마틴 (Martin)"
+            },
+            {
+                "name": "도시 지하 수로망의 비밀 은신처",
+                "description": "어두운 하수도 틈새를 개조해 만든 은밀한 도적 연합의 아지트다. 눅눅한 이끼 냄새와 무기를 손질하는 숫돌 소리가 울리며, 탁자 위에는 누군가의 현상금 수배지가 꽂혀 있다.",
+                "starter_job": "후드를 깊게 눌러쓴 정보상",
+                "starter_npc_name": "까마귀 잭 (Crow Jack)"
+            },
+            {
+                "name": "안개 숲 사냥꾼의 튼튼한 통나무 산장",
+                "description": "거대한 고대 원시림 깊은 곳에 지어진 견고한 사냥꾼 오두막이다. 타오르는 장작 난로와 벽에 걸린 맹수 모피들, 그리고 손질된 장궁과 화살촉이 든든한 분위기를 풍긴다.",
+                "starter_job": "과묵한 늙은 늑대 사냥꾼",
+                "starter_npc_name": "요른 (Jorn)"
+            }
+        ]
+
+        # Pick either cosmology continent starter or one of diverse origins
+        cosmo_starter = chosen_continent.get("starter_settlement")
+        possible_starters = list(STARTER_ORIGINS_POOL)
+        if cosmo_starter:
+            possible_starters.append(cosmo_starter)
+        
+        starter_settlement = random.choice(possible_starters)
+
+        # 2. Tier 2 & 3: Locations Assembly [1. Starter Settlement + 2~4. Outer Dungeons]
         region_templates_path = TEMPLATES_DIR / 'region_templates.json'
         region_pool = []
         if region_templates_path.exists():
@@ -439,71 +527,90 @@ class WorldGenerator:
             except Exception:
                 pass
 
-        # Select 3-4 distinct regions
-        chosen_regions = random.sample(region_pool, min(4, len(region_pool))) if region_pool else []
+        chosen_dungeons = random.sample(region_pool, min(3, len(region_pool))) if region_pool else []
         
-        # Build dynamic locations
         locations_dict = {}
-        dir_keys = ["north", "south", "east", "west", "upstairs", "downstairs"]
         
-        if chosen_regions:
-            for idx, reg in enumerate(chosen_regions):
-                loc_id = f"loc_{idx+1}"
-                desc_obj = reg.get("description", {})
-                if isinstance(desc_obj, dict):
-                    desc_text = f"{desc_obj.get('visual', '')} {desc_obj.get('auditory', '')}".strip()
-                else:
-                    desc_text = str(desc_obj)
-                
-                locations_dict[loc_id] = {
-                    "id": loc_id,
-                    "name": reg.get("name", f"미지의 구역 {idx+1}"),
-                    "description": desc_text or "기이한 안개와 마력이 소용돌이치는 미지의 장소다.",
-                    "exits": {},
-                    "items": [],
-                    "npcs": [],
-                    "danger_level": idx + 1
-                }
-            
-            # Cross-connect exits
-            loc_ids = list(locations_dict.keys())
-            for i in range(len(loc_ids) - 1):
-                cur_id = loc_ids[i]
-                next_id = loc_ids[i+1]
-                locations_dict[cur_id]["exits"]["north"] = next_id
-                locations_dict[next_id]["exits"]["south"] = cur_id
-            if len(loc_ids) >= 3:
-                locations_dict[loc_ids[0]]["exits"]["east"] = loc_ids[2]
-                locations_dict[loc_ids[2]]["exits"]["west"] = loc_ids[0]
+        # Loc 1: Guaranteed Safe/Cozy Starter Village / Tavern
+        start_loc_id = "loc_1"
+        locations_dict[start_loc_id] = {
+            "id": start_loc_id,
+            "name": starter_settlement.get("name", "국경 선술집과 전초기지"),
+            "description": starter_settlement.get("description", "따스한 모닥불과 모험가들이 머무는 안전한 전초기지다."),
+            "exits": {},
+            "items": [],
+            "npcs": [],
+            "danger_level": 1
+        }
 
-            start_loc_id = loc_ids[0]
-        else:
-            start_loc_id = "start_area"
-            locations_dict = {
-                start_loc_id: {
-                    "id": start_loc_id,
-                    "name": "버려진 고대 성소",
-                    "description": "차가운 석조 기둥과 부서진 제단이 어둠 속에 잠긴 고대의 성소다.",
-                    "exits": {"north": "ruins_hall"},
-                    "items": ["ancient_relic"],
-                    "npcs": [],
-                    "danger_level": 1
-                },
-                "ruins_hall": {
-                    "id": "ruins_hall",
-                    "name": "폐허가 된 회랑",
-                    "description": "무너진 천장 틈새로 푸른 달빛이 스며드는 깊은 석조 회랑이다.",
-                    "exits": {"south": start_loc_id},
-                    "items": [],
-                    "npcs": [],
-                    "danger_level": 2
-                }
+        # Loc 2~4: Outer Wilderness & Exploration Dungeons
+        for idx, reg in enumerate(chosen_dungeons):
+            loc_id = f"loc_{idx+2}"
+            desc_obj = reg.get("description", {})
+            if isinstance(desc_obj, dict):
+                desc_text = f"{desc_obj.get('visual', '')} {desc_obj.get('auditory', '')}".strip()
+            else:
+                desc_text = str(desc_obj)
+            
+            locations_dict[loc_id] = {
+                "id": loc_id,
+                "name": reg.get("name", f"미지의 탐험 구역 {idx+2}"),
+                "description": desc_text or "기이한 안개와 마력이 소용돌이치는 미지의 외곽 장소다.",
+                "exits": {},
+                "items": [],
+                "npcs": [],
+                "danger_level": idx + 2
             }
 
-        # Dynamic NPC generation based on start location
-        NPC_NAMES = ["엘릭", "바란", "카엘", "레니아", "모르건", "실비아", "타르코", "이리나", "다렌", "벨라"]
-        NPC_JOBS = ["방랑 탐험가", "은둔 마도학자", "지역 길드 정보상", "퇴역 베테랑 용병", "약초 연금술사", "신전 파계승"]
+        # Connect Exits: loc_1 (Tavern) -> loc_2 (Wilderness) -> loc_3 (Ruins) -> loc_4 (Dungeon)
+        loc_ids = list(locations_dict.keys())
+        for i in range(len(loc_ids) - 1):
+            cur_id = loc_ids[i]
+            next_id = loc_ids[i+1]
+            locations_dict[cur_id]["exits"]["north"] = next_id
+            locations_dict[next_id]["exits"]["south"] = cur_id
+        if len(loc_ids) >= 3:
+            locations_dict[loc_ids[0]]["exits"]["east"] = loc_ids[2]
+            locations_dict[loc_ids[2]]["exits"]["west"] = loc_ids[0]
+
+        # Dynamic NPC generation based on start location with rich 5-factor psychology
+        NPC_NAMES = ["엘릭", "바란", "카엘", "레니아", "모르건", "실비아", "타르코", "이리나", "다렌", "벨라", "로웨나", "발타자르"]
+        NPC_JOBS = ["방랑 탐험가", "은둔 마도학자", "지역 길드 정보상", "퇴역 베테랑 용병", "약초 연금술사", "신전 파계승", "선술집 바텐더", "암시장 장물아비"]
         
+        NPC_DESIRES = [
+            "병든 여동생의 치료비 300골드를 모아 안전한 곳으로 이주하는 것",
+            "빼앗긴 가문의 명예와 가보 검을 되찾는 것",
+            "이 저주받은 위험 지대에서 무사히 탈출하여 자유를 얻는 것",
+            "고대 금지된 마도서의 잃어버린 페이지를 손에 넣는 것",
+            "자신을 배신하고 누명을 씌운 옛 상관에게 복수하는 것",
+            "굶주림과 빚에서 벗어나 안전한 은신처를 마련하는 것",
+            "대륙 최고의 연금술사로 인정받아 길드를 재건하는 것"
+        ]
+        NPC_WEAKNESSES = [
+            "값비싼 귀금속이나 고액의 골드(돈) 제안에 쉽게 이성을 잃음",
+            "가족이나 소중한 사람의 안위가 걸리면 극도로 동요함",
+            "독한 술을 대접받으면 경계심이 풀리고 비밀을 술술 털어놓음",
+            "자존심이 너무 강해 진심 어린 찬사와 아부에 쉽게 낚임",
+            "신체 한쪽에 씻을 수 없는 오래된 관절 부상(오른쪽 무릎)",
+            "희귀한 고대 유물이나 지식에 대한 맹목적인 탐욕"
+        ]
+        NPC_TABOOS = [
+            "가족이나 부모를 모욕하면 즉시 칼을 뽑고 적대화됨",
+            "자신의 신앙과 신성한 맹세를 모독하는 행위 절대 용납 불가",
+            "동료를 배신하거나 약자를 괴롭히는 비열한 짓 극도로 혐오",
+            "과거 실패했던 뼈아픈 실수를 비웃거나 조롱하는 것"
+        ]
+        NPC_TRAUMAS = [
+            "과거 대화재로 동료들이 불타 죽은 기억 (화염 공포증)",
+            "지하 동굴에 홀로 고립되어 굶주렸던 기억 (폐쇄공간 공포)",
+            "믿었던 동료의 독침 배신으로 전멸했던 악몽 (타인 불신)"
+        ]
+        NPC_SECRETS = [
+            "사실 지역 길드의 공금을 횡령하고 숨어든 지명수배자임",
+            "과거 적대 마도 결사의 첩자로 일했던 어두운 과거",
+            "소지한 부적이 사실 저주받은 피의 마법 아티팩트임"
+        ]
+
         npc_name_1 = random.choice(NPC_NAMES)
         npc_job_1 = random.choice(NPC_JOBS)
         
@@ -516,8 +623,14 @@ class WorldGenerator:
                 "job": npc_job_1,
                 "disposition": "neutral",
                 "attitude_description": "신중하며 경계심이 강함",
-                "desire": "이 위험한 지역에서 탈출하거나 가치 있는 유물을 확보하는 것",
-                "weakness": "귀중한 고대 지식이나 식량 제안에 크게 흔들림",
+                "desire": random.choice(NPC_DESIRES),
+                "weakness": random.choice(NPC_WEAKNESSES),
+                "taboo": random.choice(NPC_TABOOS),
+                "trauma": random.choice(NPC_TRAUMAS),
+                "blackmail_secret": random.choice(NPC_SECRETS),
+                "affinity": 50,
+                "fear": 0,
+                "debt": 0,
                 "alive": True,
                 "health": 60,
                 "max_health": 60,
@@ -600,7 +713,13 @@ class WorldGenerator:
             "titles_db": {},
             "world_lore": {"arcane_laws": sample_arcane},
             "history": [],
-            "world_facts": [f"[대륙 명칭] {world_name}", f"[세계 장르] {world_genre}"]
+            "world_facts": [
+                f"[행성 세계관] {world_name} ({world_genre})",
+                f"[소속 대륙/영토] {continent_name}",
+                f"[시대적 배경] {chosen_cosmology.get('era_background', '')}",
+                f"[거시적 세계 위협] {chosen_cosmology.get('macro_threat', '')}",
+                f"[말소된 역사 미스터리] {chosen_cosmology.get('censored_history', '')}",
+            ]
         }
 
         return world_data, chosen_intro_key

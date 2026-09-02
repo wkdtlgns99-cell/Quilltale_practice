@@ -114,6 +114,42 @@ class ActionValidator:
                 extra_flags
             )
 
+        # 1.6 Physical Injury Action Block Check (Fractures, Arm/Leg Disabilities)
+        if state.player.injuries and action_clean:
+            injuries_text = " ".join(state.player.injuries)
+            if any(k in injuries_text for k in ["팔", "손목", "어깨"]) and any(k in action_lower for k in ["양손검", "대검", "활을", "장궁", "암벽", "매달려"]):
+                return (
+                    False,
+                    f"신체 부상({injuries_text})으로 인해 양손을 사용하는 무리한 행동을 할 수 없습니다.",
+                    None,
+                    extra_flags
+                )
+            if any(k in injuries_text for k in ["다리", "발목", "무릎"]) and any(k in action_lower for k in ["전력 질주", "도약", "높이 뛰어", "달려"]):
+                return (
+                    False,
+                    f"신체 부상({injuries_text})으로 인해 무리하게 질주하거나 도약할 수 없습니다.",
+                    None,
+                    extra_flags
+                )
+
+        # 1.7 Distance & Line-of-Sight Check (Cannot interact/attack across rooms/walls)
+        combat_or_social_verbs = ["공격", "찌르", "베", "대화", "말을", "물어", "훔치", "소매치기", "attack", "talk", "steal"]
+        if any(v in action_lower for v in combat_or_social_verbs):
+            for npc_id, npc in state.npcs.items():
+                if (npc.name.lower() in action_lower or npc_id in action_lower):
+                    if curr_loc and npc_id not in curr_loc.npcs and npc.location != curr_loc.id:
+                        return (
+                            False,
+                            f"[{npc.name}]은(는) 현재 장소({curr_loc.name})의 시야 내에 없습니다. 다른 방이나 벽 너머의 대상을 조작할 수 없습니다.",
+                            None,
+                            extra_flags
+                        )
+
+        # 1.8 Social/Recruitment Context Flag (Passed down to dynamic DC check rather than hard-blocking)
+        recruitment_verbs = ["동료가", "파티에", "합류", "따라와", "recruit", "join party"]
+        if any(v in action_lower for v in recruitment_verbs):
+            extra_flags['is_recruitment_attempt'] = True
+
         # 2. Inventory check: Cannot use or drop items not owned
         accessible_item_ids = set(state.player.inventory) | (set(curr_loc.items) if curr_loc else set())
         accessible_item_names = {state.items[i].name.lower() for i in accessible_item_ids if i in state.items}
@@ -188,8 +224,9 @@ class ActionValidator:
                     extra_flags['incantation_cancel_risk'] = True
                     break
 
-        # 4. Trigger Deterministic Dice Rolls for Challenges
+        # 4. Trigger Deterministic Dice Rolls for Challenges with Fatigue Modifiers
         dice_result = None
+        fatigue_val = state.player.fatigue
 
         # A. Magic Attack Check
         magic_verbs = ["파이어", "화염", "마법", "볼트", "빙결", "뇌전", "주문", "영창하여", "시전"]
@@ -220,6 +257,7 @@ class ActionValidator:
                 target_npc_id=target_npc_id,
                 target_part=target_part,
                 is_no_incantation=is_no_incant,
+                fatigue=fatigue_val,
             )
             if dice_result.interrupt_counter:
                 extra_flags['interrupt_counter'] = True
@@ -247,10 +285,10 @@ class ActionValidator:
                 base_damage=base_dmg,
                 scaling=scaling,
                 target_npc_id=target_npc_id,
-                target_part=target_part
+                target_part=target_part,
+                fatigue=fatigue_val,
             )
 
-            
             if dice_result.interrupt_counter:
                 extra_flags['interrupt_counter'] = True
 
@@ -260,15 +298,72 @@ class ActionValidator:
                 action_type="은신 / 절도",
                 stat_value=state.player.dex_stat,
                 dc=13,
+                fatigue=fatigue_val,
             )
 
-        # D. Intimidation / Persuasion check
-        elif any(v in action_lower for v in ["협박", "설득", "속이", "위협", "intimidate", "persuade", "threaten"]):
+        # D. Dialogue Negotiation / Intimidation / Persuasion / Recruitment with Psychological Leverage
+        elif any(v in action_lower for v in ["협박", "설득", "속이", "위협", "동료", "합류", "비밀", "부탁", "요구", "말을", "대화", "intimidate", "persuade", "threaten", "recruit"]):
+            target_npc = None
+            if curr_loc:
+                loc_npcs = state.npcs_in_location(curr_loc.id)
+                for n in loc_npcs:
+                    if n.name.lower() in action_lower or n.id in action_lower:
+                        target_npc = n
+                        break
+                if not target_npc and loc_npcs:
+                    target_npc = loc_npcs[0]
+
+            speech = parsed.get("dialogue", "") or action_clean
+            speech_lower = speech.lower()
+            
+            # Psychological Leverage Evaluation
+            psy_bonus = 0
+            feedback_logs = []
+            
+            if target_npc:
+                # 1. Check Taboo / Trauma Trigger (-10 Penalty / Negotiation Collapse)
+                taboo_str = getattr(target_npc, "taboo", "").lower()
+                trauma_str = getattr(target_npc, "trauma", "").lower()
+                if taboo_str and any(k in speech_lower for k in ["부모", "모욕", "천박", "겁쟁이", "패배자", "배신자"]):
+                    psy_bonus -= 10
+                    feedback_logs.append(f"⚠️ [역린/금기 촉발: {target_npc.name} 극노 (-10 패널티)]")
+                
+                # 2. Check Desire Alignment (+6 Bonus)
+                desire_str = getattr(target_npc, "desire", "").lower()
+                if desire_str:
+                    if any(k in desire_str for k in ["골드", "돈", "치료", "빚"]) and any(k in speech_lower for k in ["골드", "돈", "치료", "갚아", "보상", "금화"]):
+                        psy_bonus += 6
+                        feedback_logs.append(f"✨ [욕망 자극: {target_npc.name}의 금전/생계 욕망 공략 (+6 보너스)]")
+                    elif any(k in desire_str for k in ["명예", "가보", "검"]) and any(k in speech_lower for k in ["명예", "가문", "되찾", "가보", "기사"]):
+                        psy_bonus += 6
+                        feedback_logs.append(f"✨ [욕망 자극: {target_npc.name}의 명예 회복 욕망 공략 (+6 보너스)]")
+                    elif any(k in desire_str for k in ["탈출", "자유"]) and any(k in speech_lower for k in ["탈출", "나가", "안전", "자유", "살려"]):
+                        psy_bonus += 6
+                        feedback_logs.append(f"✨ [욕망 자극: {target_npc.name}의 탈출 이해관계 일치 (+6 보너스)]")
+
+                # 3. Check Weakness / Secret Exploitation (+8 Bonus)
+                weakness_str = getattr(target_npc, "weakness", "").lower()
+                secret_str = getattr(target_npc, "blackmail_secret", "").lower()
+                if weakness_str and any(k in speech_lower for k in ["가족", "동생", "술", "비밀", "약점", "칭찬", "대단"]):
+                    psy_bonus += 8
+                    feedback_logs.append(f"🎯 [치명적 약점 공략: {target_npc.name} 심리 동요 (+8 보너스)]")
+                if secret_str and any(k in speech_lower for k in ["수배", "횡령", "첩자", "스파이", "과거", "비리"]):
+                    psy_bonus += 8
+                    feedback_logs.append(f"🎯 [숨겨진 치부 레버리지: {target_npc.name} 압박 (+8 보너스)]")
+
+            base_dc = 15 if not any(v in action_lower for v in recruitment_verbs) else 18
+            effective_dc = max(5, base_dc - psy_bonus)
+            
             dice_result = DiceEngine.perform_check(
-                action_type="화술 / 위협",
+                action_type="화술 / 심리 설득",
                 stat_value=state.player.cha_stat,
-                dc=13,
+                dc=effective_dc,
+                target_npc_id=target_npc.id if target_npc else None,
+                fatigue=fatigue_val,
             )
+            
+            if feedback_logs:
+                dice_result.summary_ko += " | " + " ".join(feedback_logs)
 
         # E. Lockpicking / Chest unlocking check
         elif any(v in action_lower for v in ["자물쇠", "따기", "궤짝을 부수", "pick lock", "force open"]):
@@ -276,6 +371,7 @@ class ActionValidator:
                 action_type="자물쇠 해제 / 기계 조작",
                 stat_value=state.player.dex_stat,
                 dc=13,
+                fatigue=fatigue_val,
             )
 
         return True, "", dice_result, extra_flags

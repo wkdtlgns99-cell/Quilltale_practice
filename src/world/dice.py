@@ -114,9 +114,10 @@ class DiceEngine:
         target_npc_id: Optional[str] = None,
         target_part: str = '',
         is_no_incantation: bool = False,
+        fatigue: int = -1,
     ) -> DiceCheckResult:
         """
-        Executes a deterministic d20 check against DC.
+        Executes a deterministic d20 check against DC with fatigue modifier.
         """
         penalty = 0
         if target_part in cls.WEAK_POINT_DC_PENALTIES:
@@ -125,7 +126,17 @@ class DiceEngine:
         final_dc = dc + penalty
         
         roll = cls.roll_d20()
-        modifier = cls.stat_modifier(stat_value)
+        base_mod = cls.stat_modifier(stat_value)
+        
+        fatigue_mod = 0
+        if fatigue == 0:
+            fatigue_mod = 1
+        elif fatigue >= 80:
+            fatigue_mod = -3
+        elif fatigue >= 50:
+            fatigue_mod = -1
+
+        modifier = base_mod + fatigue_mod
         total = roll + modifier
 
         is_crit_succ = roll == 20
@@ -161,6 +172,13 @@ class DiceEngine:
             status_ko = f"✅ 성공 (주사위: {roll} + 보정치 {modifier} = {total} vs 난이도 {final_dc})"
         else:
             status_ko = f"❌ 실패 (주사위: {roll} + 보정치 {modifier} = {total} vs 난이도 {final_dc})"
+
+        if fatigue == 0:
+            status_ko += " [✨ 완벽한 휴식: 판정 +1 메리트]"
+        elif fatigue >= 80:
+            status_ko += " [🩸 극심한 탈진: 판정 -3 디메리트]"
+        elif fatigue >= 50:
+            status_ko += " [💦 심한 피로: 판정 -1 디메리트]"
 
         if is_no_incantation and is_success:
             status_ko += " [⚡ 무영창 시전: 본래 위력의 1/10]"

@@ -379,6 +379,12 @@ class GameMasterAgent:
             lines.append(f"    * BDI 인지: 믿고 있는 정보=[{beliefs_str}] | 절박한 욕망/동기=[{npc.desire or '생존'}] | 이번 턴 의도=[{npc.intention or '현장 주시'}]")
             if injuries_str != "외상 없음":
                 lines.append(f"    * 신체 상태: {injuries_str}")
+            
+            # 장비 및 가방(Inventory) 정보 명시적 노출로 허구 무기 창조(Hallucination) 방지
+            wpn = npc.equipment.weapon if hasattr(npc, "equipment") and npc.equipment.weapon else "맨손/무기 없음"
+            inv_str = ", ".join(npc.inventory) if npc.inventory else "가방 비어있음"
+            lines.append(f"    * 장비 및 소지품(절대 창조 금지): 장착 무기=[{wpn}] | 가방=[{inv_str}]")
+            
             if hasattr(npc, "combat_profile") and npc.combat_profile.intel_book:
                 intel_str = " | ".join(f"[{k}]에 대해: {v}" for k, v in npc.combat_profile.intel_book.items())
                 if intel_str:
@@ -414,33 +420,44 @@ class GameMasterAgent:
         intro_info = INTRO_STRUCTURES.get(chosen_key, INTRO_STRUCTURES["A"])
         chosen_structure = intro_info["detail"]
 
+        # Find world lore metadata
+        world_lore_lines = []
+        for fact in state.world_facts:
+            world_lore_lines.append(f"- {fact}")
+        world_lore_str = "\n".join(world_lore_lines) if world_lore_lines else "정통 판타지 세계관"
+
+        player_items = [state.items[item_id].name for item_id in state.player.inventory if item_id in state.items]
+        player_items_str = ", ".join(player_items) if player_items else "기본 소지품"
+
         prompt = f"""
 {state.to_context_summary()}
 
-당신은 이 TRPG의 오프닝 연출을 담당하는 마스터입니다.
+당신은 이 정통 판타지 대서사시의 장엄한 오프닝 프롤로그를 연출하는 마스터입니다.
 현재 세계의 시작 장소는 [{loc.name if loc else '미지의 장소'}] (설명: {loc.description if loc else ''})입니다.
 현장에 있는 인물: {', '.join(npc_descriptors) if npc_descriptors else '주변에 다른 인물 없음'}
+플레이어의 시작 소지품: {player_items_str}
 
-반드시 아래 오프닝 연출 구조를 따라 현재 시작 장소 [{loc.name if loc else ''}]의 상황을 순서대로 서술하십시오:
-
-{chosen_structure}
+[★ 대서사시 오프닝 프롤로그 4대 필수 서사 구성 (순서대로 깊고 길게 서술)]
+1. [거시 세계관의 역사 & 최대 떡밥 (Grand Macro Mystery)]:
+   - 위 WORLD STATE에 명시된 세계관의 기원, 과거 제국의 융성과 의문의 멸망 참사, 그리고 역사에서 마법적으로 지워진 미스터리/배경의 거대 위협을 소설 프롤로그처럼 묵직하고 장엄하게 서술하십시오.
+2. [이 시대의 공통 목적 & 거대한 골드러시 (The Grand Ambition)]:
+   - 이 위험천만한 세상에서 모든 군벌, 귀족, 도굴꾼, 모험가들이 목숨을 걸고 탐내는 궁극의 목적(추락한 핵, 잃어버린 성유물, 미지의 광맥 등)과 그로 인해 대륙 전체에 흐르는 팽팽한 긴장감을 제시하십시오.
+3. [주인공(플레이어)의 개인적 동기 & 품속의 단서 (Personal Drive & Hook)]:
+   - 플레이어가 왜 이 춥고 험난한 국경 지대까지 오게 되었는지, 품속에 쥔 소지품({player_items_str})과 얽힌 절박한 사연과 결의를 신체 감각과 함께 묘사하십시오.
+4. [시작 장소 [{loc.name if loc else ''}] 현장 조우 (Local Scene & Ticking Clock)]:
+   - 카메라가 천체와 대륙을 지나 마침내 플레이어가 서 있는 [{loc.name if loc else ''}] 현장의 공기, 냄새, 모닥불 타는 소리, 그리고 현장 인물들의 날카로운 시선과 즉각 마주칠 긴박한 상황으로 완벽하게 착지하십시오.
 
 [★ 분량 및 서술 디테일 필수 규칙 (엄격 준수)]
-1. [분량 고정]: **공백을 제외한 순수 한글 600~800자 (공백 포함 약 900~1,200자)** 분량으로 충실하고 깊이 있게 작성하십시오. 짧게 요약하거나 400자 이하로 끝내지 마십시오.
-2. [장면 연출 밀도]: 4단계(원경→중경→근경→줌인) 연출 단계마다 장면의 공기, 소리, 온도, 냄새, 빛과 그림자, 주변의 구체적인 소품과 기물, 인물의 시선과 호흡, 손끝의 감각을 영화처럼 생생하고 유려한 문학적 필체로 묘사하십시오.
-3. [절대 서사 일관성 & 자유도 규칙]:
+1. [분량 고정]: **공백을 제외한 순수 한글 800~1,200자 (공백 포함 약 1,200~1,800자)** 분량으로 한 편의 웅장한 대하 판타지 소설 1장 프롤로그처럼 깊고 압도적인 필체로 서술하십시오. 짧게 요약하거나 600자 이하로 끝내면 절대 안 됩니다.
+2. [절대 서사 일관성 & 자유도 규칙]:
    - 오프닝의 사건과 배경은 위 WORLD STATE에 명시된 시작 장소 [{loc.name if loc else ''}] 및 현장 인물들과 100% 일치해야 합니다.
-   - 다른 가상의 장소를 지어내지 말고, 플레이어가 서 있는 [{loc.name if loc else ''}] 현장에서 벌어진 사건으로 묘사하십시오.
-4. [미지의 인물 실명 발설 절대 금지 & 생생한 묘사]:
-   - 플레이어가 아직 통성명하지 않은 모르는 인물은 서사에서 실명을 부르지 마십시오.
-   - 대상의 성별, 연령, 착장, 분위기(예: 카운터를 닦는 여주인, 수염을 만지는 노인 등)를 자연스럽게 관찰하여 묘사하십시오.
-   - 상투적인 클리셰 단어(기름 묻은 앞치마, 0.5초 등)를 무의미하게 반복하지 마십시오.
-5. [선택지 목록 절대 금지]:
-   - 서사의 마지막에 인위적인 객관식 선택지(▶ 선택지 A/B/C 등)를 나열하지 마십시오.
-   - 플레이어가 오롯이 스스로의 의지로 행동을 결정할 수 있도록, 현장의 분위기와 긴장감 넘치는 상황 묘사로만 서사를 마무리하십시오.
-6. narration 필드에 전체 오프닝 서사를 담으십시오.
+3. [미지의 인물 실명 발설 절대 금지]:
+   - 플레이어가 아직 통성명하지 않은 모르는 인물은 실명을 부르지 말고 성별, 연령, 착장, 분위기(예: 카운터를 닦는 여주인, 수염을 만지는 노인)로 서술하십시오.
+4. [선택지 목록 절대 금지]:
+   - 서사의 마지막에 인위적인 객관식 선택지(▶ 선택지 A/B/C 등)를 나열하지 마십시오. 플레이어가 오롯이 자신의 의지로 첫 행동을 선언할 수 있도록 현장의 긴장감 넘치는 상황으로 서사를 마무리하십시오.
+5. narration 필드에 전체 오프닝 서사를 담으십시오.
 
-응답 형식: {{"narration": "오프닝 전체 서사 (한국어, 공백 제외 600~800자 분량, 미지 인물 실명 없음, 선택지 목록 없음)", "image_prompt": "cinematic fantasy scene (영문)"}}
+응답 형식: {{"narration": "오프닝 전체 대서사시 프롤로그 (한국어, 공백 제외 800~1,200자 분량, 미지 인물 실명 없음, 선택지 목록 없음)", "image_prompt": "cinematic fantasy scene (영문)"}}
 """
 
 

@@ -69,7 +69,13 @@ class DeterministicFactSheet:
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
         if not self.is_valid:
-            return f"[❌ 행동 거부/불가 판정]\n사유: {self.rejection_reason}"
+            return (
+                f"[❌ 행동 거부/불가 판정 (CRITICAL FAILURE)]\n"
+                f"시스템 사유: {self.rejection_reason}\n"
+                f"⚠️ [절대 규칙]: 플레이어의 행동은 물리적/논리적으로 가로막혔습니다. "
+                f"당신은 이 실패를 100% 반영하여 길막힘, 거절, 문턱 걸림 등 참담하게 실패한 상황만을 묘사해야 합니다. "
+                f"절대 목적지에 도착했다고 긍정적으로 묘사하거나, 막힌 문을 뚫고 지나갔다는 억지 소설을 쓰지 마십시오."
+            )
 
         lines = [
             "=================================================================",

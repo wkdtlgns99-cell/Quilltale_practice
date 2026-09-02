@@ -62,12 +62,14 @@ class GeminiLLM(BaseLLM):
             raise RuntimeError("GEMINI_API_KEY is not set or client initialization failed.")
         final_prompt = f"{system}\n\n{prompt}" if system else prompt
 
-        candidate_models = [self._model_name, "gemini-3.6-flash", "gemini-3.7-flash", "gemini-flash-latest"]
+        candidate_models = [self._model_name, "gemini-3.7-flash", "gemini-flash-latest"]
         candidate_models = list(dict.fromkeys(candidate_models))
 
         last_error = None
-        # Phase 1: Try all available clients and candidate models immediately
-        for _ in range(len(self._clients) or 1):
+        total_keys = len(self._clients)
+        
+        # Phase 1: Seamless Key Rotation (Instantly jump to next API key on 429/quota error)
+        for attempt in range(total_keys):
             client = self.current_client
             for m in candidate_models:
                 try:
@@ -78,21 +80,26 @@ class GeminiLLM(BaseLLM):
                     return LLMResponse(text=response.text or "", model=m)
                 except Exception as e:
                     last_error = e
-                    err_str = str(e)
-                    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                        logger.warning(f"Model {m} quota exhausted (429). Rotating to next model/key...")
-                        continue
+                    err_str = str(e).upper()
+                    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "QUOTA" in err_str:
+                        logger.warning(f"Key #{self._client_idx + 1} quota limit hit. Instantly rotating to next key...")
+                        break  # Break inner model loop, switch to next API key immediately!
                     else:
                         logger.warning(f"Gemini {m} error: {e}")
-                        time.sleep(0.5)
-            self.rotate_client()
+                        time.sleep(0.3)
+            
+            # Rotate to next key immediately
+            if total_keys > 1:
+                old_idx = self._client_idx
+                self.rotate_client()
+                print(f"🔑 [Google API 키 자동 교체]: {old_idx + 1}번 키 소진 ➔ {self._client_idx + 1}번 키로 즉시 우회 (대기시간 0초)")
 
-        # Phase 2: If all returned 429 (exceeded 15 requests/min), cooldown for 15s and retry
-        err_str = str(last_error or "")
-        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+        # Phase 2: If ALL registered keys exhausted free per-minute quota, cooldown and retry
+        err_str = str(last_error or "").upper()
+        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "QUOTA" in err_str:
             for cooldown_attempt in range(3):
                 wait_time = 15 + (cooldown_attempt * 5)
-                print(f"\n⏳ [Google 무료 분당 15회 쿼터 보호: {wait_time}초 대기 후 자동 재개...]")
+                print(f"\n⏳ [모든 등록된 API 키 쿼터 일시 소진: {wait_time}초 대기 후 자동 재개...]")
                 time.sleep(wait_time)
                 for client in self._clients:
                     for m in candidate_models:
