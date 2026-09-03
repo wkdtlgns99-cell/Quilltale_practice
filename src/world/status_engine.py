@@ -15,6 +15,8 @@ class StatusEffect:
     effect_type: str = "damage_tick"        # "damage_tick" | "heal_tick" | "stat_mod" | "action_block"
     damage_per_turn: int = 0
     heal_per_turn: int = 0
+    mana_drain_per_turn: int = 0
+    durability_damage_per_turn: int = 0
     stat_modifiers: Dict[str, int] = field(default_factory=dict)
     duration_turns: int = 3                 # Remaining turns (0 or negative = expired, -1 = infinite until cured)
     stacks: int = 1
@@ -30,6 +32,8 @@ class StatusEffect:
             "effect_type": self.effect_type,
             "damage_per_turn": self.damage_per_turn,
             "heal_per_turn": self.heal_per_turn,
+            "mana_drain_per_turn": self.mana_drain_per_turn,
+            "durability_damage_per_turn": self.durability_damage_per_turn,
             "stat_modifiers": self.stat_modifiers,
             "duration_turns": self.duration_turns,
             "stacks": self.stacks,
@@ -47,6 +51,8 @@ class StatusEffect:
             effect_type=data.get("effect_type", "damage_tick"),
             damage_per_turn=int(data.get("damage_per_turn", 0)),
             heal_per_turn=int(data.get("heal_per_turn", 0)),
+            mana_drain_per_turn=int(data.get("mana_drain_per_turn", 0)),
+            durability_damage_per_turn=int(data.get("durability_damage_per_turn", 0)),
             stat_modifiers=dict(data.get("stat_modifiers", {})),
             duration_turns=int(data.get("duration_turns", 3)),
             stacks=int(data.get("stacks", 1)),
@@ -81,10 +87,11 @@ STATUS_PRESETS: Dict[str, Dict[str, Any]] = {
         "name": "작열 화상",
         "effect_type": "damage_tick",
         "damage_per_turn": 6,
+        "durability_damage_per_turn": 1,
         "duration_turns": 2,
         "max_stacks": 3,
         "cure_conditions": ["water", "ice_spell", "물", "소화", "냉기"],
-        "description": "신체가 불타며 매 턴 화염 지속 피해를 입습니다.",
+        "description": "신체가 불타며 매 턴 화염 지속 피해를 입고 방어구 내구도가 손상됩니다.",
     },
     "freeze": {
         "name": "동결",
@@ -102,6 +109,23 @@ STATUS_PRESETS: Dict[str, Dict[str, Any]] = {
         "duration_turns": 1,
         "cure_conditions": [],
         "description": "강한 충격으로 정신을 잃어 이번 턴 행동이 불가합니다.",
+    },
+    "unconscious": {
+        "name": "의식불명(혼수)",
+        "effect_type": "action_block",
+        "is_action_block": True,
+        "duration_turns": 30,
+        "cure_conditions": ["wake_up", "water", "heal", "찬물", "치료", "소생", "뺨때리기"],
+        "description": "비살상 타격이나 치명타로 정신을 잃고 쓰러졌습니다. 깨어나기 전까지 모든 행동과 이동이 불가능합니다.",
+    },
+    "bound": {
+        "name": "포박(결박)",
+        "effect_type": "action_block",
+        "is_action_block": True,
+        "duration_turns": -1,  # Infinite until untied or cut
+        "stat_modifiers": {"agility": -10},
+        "cure_conditions": ["cut_rope", "untie", "break_chains", "밧줄자르기", "풀기", "해제", "열쇠"],
+        "description": "밧줄, 쇠사슬, 마나 수갑으로 사지가 결박되었습니다. 이동 및 무기/마법 사용이 불가능합니다.",
     },
     "paralysis": {
         "name": "감전 마비",
@@ -163,10 +187,24 @@ STATUS_PRESETS: Dict[str, Dict[str, Any]] = {
     "corrosion": {
         "name": "방어구 부식",
         "effect_type": "stat_mod",
+        "damage_per_turn": 2,
+        "durability_damage_per_turn": 2,
         "duration_turns": 3,
         "stat_modifiers": {"constitution": -3},
         "cure_conditions": ["repair", "수리", "중화"],
-        "description": "강산에 의해 방어구와 피부가 녹아내려 방어력이 약화됩니다.",
+        "description": "강산에 의해 방어구와 피부가 녹아내려 내구도와 방어력이 약화됩니다.",
+    },
+    "curse": {
+        "name": "사악한 저주",
+        "effect_type": "damage_tick",
+        "damage_per_turn": 5,
+        "mana_drain_per_turn": 5,
+        "durability_damage_per_turn": 0,
+        "duration_turns": 4,
+        "max_stacks": 3,
+        "stat_modifiers": {"strength": -2, "agility": -2, "intelligence": -2},
+        "cure_conditions": ["holy_water", "dispel", "purify", "성수", "정화", "디스펠", "축복"],
+        "description": "부정한 저주가 육체와 영혼을 좀먹어 매 턴 체력과 마나를 흡수하고 전신 능력을 저하시킵니다.",
     },
 }
 
@@ -191,6 +229,8 @@ class StatusEffectEngine:
         effect_type = preset.get("effect_type", "damage_tick")
         damage_per_turn = potency if (potency is not None and effect_type == "damage_tick") else preset.get("damage_per_turn", 0)
         heal_per_turn = potency if (potency is not None and effect_type == "heal_tick") else preset.get("heal_per_turn", 0)
+        mana_drain = preset.get("mana_drain_per_turn", 0)
+        durability_damage = preset.get("durability_damage_per_turn", 0)
         stat_modifiers = copy.deepcopy(preset.get("stat_modifiers", {}))
         dur = duration if duration is not None else preset.get("duration_turns", 3)
         max_s = preset.get("max_stacks", 5)
@@ -204,6 +244,8 @@ class StatusEffectEngine:
             effect_type=effect_type,
             damage_per_turn=damage_per_turn,
             heal_per_turn=heal_per_turn,
+            mana_drain_per_turn=mana_drain,
+            durability_damage_per_turn=durability_damage,
             stat_modifiers=stat_modifiers,
             duration_turns=dur,
             stacks=min(stacks, max_s),
@@ -247,6 +289,13 @@ class StatusEffectEngine:
         else:
             target.status_effects[status.id] = status
             return f"[{target_name}] '{status.name}' 상태이상이 부여되었습니다. (지속 {status.duration_turns}턴)"
+
+    @classmethod
+    def has_status(cls, target: Any, status_id: str) -> bool:
+        """Returns True if target currently has the active status effect."""
+        if hasattr(target, "status_effects") and target.status_effects:
+            return any(s_id == status_id or getattr(s, "id", "") == status_id for s_id, s in target.status_effects.items() if getattr(s, "duration_turns", 0) > 0)
+        return False
 
     @classmethod
     def remove_status(cls, target: Any, status_id: str) -> bool:
@@ -342,6 +391,24 @@ class StatusEffectEngine:
                 player_heal_total += tick_heal
                 logs.append(f"✨ [{status.name}] 지속 회복으로 체력 +{tick_heal} 회복 (현재 체력: {player.health}/{player.max_health})")
 
+            # Apply mana drain (e.g. curse)
+            if getattr(status, "mana_drain_per_turn", 0) > 0:
+                drain = status.mana_drain_per_turn * status.stacks
+                player.mana = max(0, player.mana - drain)
+                logs.append(f"🔮 [{status.name}] 영혼 잠식으로 마나 {drain} 소모 (남은 마나: {player.mana}/{player.max_mana})")
+
+            # Apply durability loss to armor (e.g. burn, corrosion)
+            if getattr(status, "durability_damage_per_turn", 0) > 0 and hasattr(state, "items"):
+                dur_loss = status.durability_damage_per_turn * status.stacks
+                chest_id = getattr(player.equipment, "chest", None) if hasattr(player, "equipment") else None
+                if chest_id and chest_id in state.items:
+                    armor_item = state.items[chest_id]
+                    from src.world.enchant_engine import EnchantEngine
+                    warn = EnchantEngine.consume_durability(armor_item, loss=dur_loss)
+                    logs.append(f"🔥 [{status.name}] 지속 침식으로 [{armor_item.name}] 내구도 -{dur_loss} 손상")
+                    if warn:
+                        logs.append(warn)
+
             # Decrement duration (if not infinite -1)
             if status.duration_turns > 0:
                 status.duration_turns -= 1
@@ -380,6 +447,12 @@ class StatusEffectEngine:
                     tick_heal = status.heal_per_turn * status.stacks
                     npc.health = min(npc.max_health, npc.health + tick_heal)
                     logs.append(f"💚 [{npc.name}] '{status.name}' 효과로 HP +{tick_heal}")
+
+                # Apply mana drain (e.g. curse)
+                if getattr(status, "mana_drain_per_turn", 0) > 0:
+                    drain = status.mana_drain_per_turn * status.stacks
+                    npc.mana = max(0, npc.mana - drain)
+                    logs.append(f"🔮 [{npc.name}] '{status.name}' 잠식으로 마나 -{drain}")
 
                 if status.duration_turns > 0:
                     status.duration_turns -= 1

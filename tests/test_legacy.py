@@ -47,7 +47,7 @@ def test_legacy_npc_spawning():
 
     # New game state
     new_state = load_test_state()
-    spawned = LegacyManager.spawn_legacy_npcs_to_world(new_state)
+    spawned = LegacyManager.spawn_legacy_npcs_to_world(new_state, force=True)
 
     assert any("발도르" in name for name in spawned)
 

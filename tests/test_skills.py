@@ -81,6 +81,7 @@ def test_load_skill_templates():
     assert fireball.area_shape == "circle"
     assert fireball.area_radius_meters == 4.0
     assert fireball.is_forbidden is False
+    assert fireball.color == "#ef4444"
 
     # Test Shadow Sever (stealth / taboo)
     shadow_sever = skills.get("skill_stealth_shadow_sever_01")
@@ -89,6 +90,7 @@ def test_load_skill_templates():
     assert shadow_sever.resource_type == "stamina"
     assert shadow_sever.is_forbidden is True
     assert "암살단" in shadow_sever.taboo_reason
+    assert shadow_sever.color in ["#64748b", "#94a3b8"]
 
     # Test Bone Spike (necromancy / hp cost)
     bone_spike = skills.get("skill_forbidden_bone_spike_01")
@@ -97,4 +99,5 @@ def test_load_skill_templates():
     assert bone_spike.resource_type == "hp"
     assert bone_spike.resource_cost == 15
     assert bone_spike.is_forbidden is True
+    assert bone_spike.color in ["#a855f7", "#9333ea"]
 

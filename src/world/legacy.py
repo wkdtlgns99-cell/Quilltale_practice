@@ -169,11 +169,23 @@ class LegacyManager:
 
 
     @classmethod
-    def spawn_legacy_npcs_to_world(cls, world_state: WorldState) -> List[str]:
+    def spawn_legacy_npcs_to_world(
+        cls,
+        world_state: WorldState,
+        spawn_chance: float = 0.35,
+        force: bool = False
+    ) -> List[str]:
         """
         Instantiates archived legacy characters as live NPCs inside the current world state.
         Ensures at most 1 legacy NPC is present in the world to prevent cloning/duplicates.
+        spawn_chance defaults to 0.35 (35% chance to encounter, per user rule: not guaranteed 100%).
+        force=True bypasses the probability check.
         """
+        if not force and spawn_chance < 1.0:
+            import random
+            if random.random() > spawn_chance:
+                return []
+
         # If the world already has a legacy NPC, do not spawn more
         existing_legacies = [n for n in world_state.npcs.values() if getattr(n, "is_legacy", False)]
         if existing_legacies:

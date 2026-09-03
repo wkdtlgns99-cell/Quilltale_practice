@@ -191,7 +191,20 @@ class SkillSystem:
             # 14
             description=d14.get("description", ""),
             incantation_or_formula=d14.get("incantation_or_formula", ""),
-            visual_fx_description=d14.get("visual_fx_description", "")
+            visual_fx_description=d14.get("visual_fx_description", ""),
+            color=(
+                raw.get("color") or d14.get("color") or
+                {
+                    "화염": "#ef4444", "빙결": "#38bdf8", "전격": "#eab308",
+                    "산성": "#22c55e", "독": "#10b981", "신성": "#fbbf24",
+                    "암흑": "#a855f7", "사령": "#9333ea", "비전": "#818cf8"
+                }.get(d6.get("element", "물리")) or
+                {
+                    "martial_qi": "#f97316", "alchemy": "#14b8a6", "subterfuge": "#64748b",
+                    "holy_miracle": "#fbbf24", "necromancy": "#a855f7", "curse_voodoo": "#d946ef",
+                    "psionics": "#ec4899", "taming": "#84cc16"
+                }.get(d1.get("category", "physical")) or "#94a3b8"
+            )
         )
 
     @staticmethod

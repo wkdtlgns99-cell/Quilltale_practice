@@ -343,12 +343,14 @@ class GameMasterAgent:
 
     def _format_skills_context(self, state: WorldState) -> str:
         if not state.player.skills:
-            return 'PLAYER SKILLS: None'
-        lines = ['PLAYER SKILLS:']
+            return f"PLAYER SKILLS: None (플레이어 마나 고유색: '{getattr(state.player, 'mana_color', '푸른빛 에테르')}')"
+        p_mana_color = getattr(state.player, 'mana_color', '푸른빛 에테르')
+        lines = [f"PLAYER SKILLS (플레이어 개인 마나 고유색: '{p_mana_color}'):"]
         for skill_id in state.player.skills:
             skill = state.skills_db.get(skill_id)
             if skill:
-                lines.append(f'  [{skill.skill_type.upper()}] {skill.name}: {skill.description}')
+                visual_note = skill.get_visual_description(state.player) if hasattr(skill, "get_visual_description") else ""
+                lines.append(f'  [{skill.skill_type.upper()}] {skill.name} (테마색: {getattr(skill, "color", "#94a3b8")}): {skill.description} | 연출 힌트: {visual_note}')
         return '\n'.join(lines)
 
     def _format_titles_context(self, state: WorldState) -> str:
@@ -380,10 +382,26 @@ class GameMasterAgent:
             if injuries_str != "외상 없음":
                 lines.append(f"    * 신체 상태: {injuries_str}")
             
+            mana_col = getattr(npc, "mana_color", "푸른빛 에테르")
+            lines.append(f"    * 개인 마나 고유색/오라 특성: [{mana_col}]")
+            
             # 장비 및 가방(Inventory) 정보 명시적 노출로 허구 무기 창조(Hallucination) 방지
             wpn = npc.equipment.weapon if hasattr(npc, "equipment") and npc.equipment.weapon else "맨손/무기 없음"
             inv_str = ", ".join(npc.inventory) if npc.inventory else "가방 비어있음"
             lines.append(f"    * 장비 및 소지품(절대 창조 금지): 장착 무기=[{wpn}] | 가방=[{inv_str}]")
+
+            # 보유 기술 및 스킬 정보 명시 (허구 마법 및 스킬 창조 방지)
+            if npc.skills:
+                skill_descs = []
+                for s_id in npc.skills:
+                    sk = state.skills_db.get(s_id)
+                    if sk:
+                        res_str = f"{sk.resource_type} {sk.resource_cost}" if sk.resource_cost > 0 else "무소모"
+                        cd_str = f"쿨 {sk.cooldown_turns}턴" if sk.cooldown_turns > 0 else "즉시"
+                        curr_cd = f"(남은 쿨 {sk.current_cooldown}턴)" if getattr(sk, "current_cooldown", 0) > 0 else "(시전 가능)"
+                        skill_descs.append(f"[{sk.name} ({res_str}, {cd_str}, {sk.base_value}수치 {curr_cd})]")
+                if skill_descs:
+                    lines.append(f"    * 보유 기술/위협 요소(절대 위조 금지): {' | '.join(skill_descs)}")
             
             if hasattr(npc, "combat_profile") and npc.combat_profile.intel_book:
                 intel_str = " | ".join(f"[{k}]에 대해: {v}" for k, v in npc.combat_profile.intel_book.items())

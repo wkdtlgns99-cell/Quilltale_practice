@@ -65,6 +65,7 @@ class DeterministicFactSheet:
     # 8. Pre-computed State Delta (Single Source of Truth)
     pre_computed_state_delta: Dict[str, Any] = field(default_factory=dict)
     dropped_skill_name: Optional[str] = None
+    npc_skill_logs: List[str] = field(default_factory=list)
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -125,6 +126,12 @@ class DeterministicFactSheet:
                 if self.dropped_skill_name:
                     lines.append(f"   - ✨ [고유 스킬 전리품 발생]: '{self.dropped_skill_name}' 스킬 획득.")
 
+        if self.npc_skill_logs:
+            lines.append("⚡ [현장 NPC 자율 스킬 및 기회주의적 행동 확정 연산]")
+            for nlog in self.npc_skill_logs:
+                lines.append(f"- {nlog}")
+            lines.append("*GM 절대 서사 강제 지침*: 당신은 위 NPC의 행동 결과(반격 피해, 소매치기 성공/실패, 기습 등)를 100% 반영하여 서사를 작성해야 합니다.")
+
         if self.enchant_logs:
             lines.append("✨ [장비 룬 인챈트 및 내구도 효과]")
             for elog in self.enchant_logs:
@@ -171,6 +178,9 @@ class TwoPassEngine:
         state_delta: Dict[str, Any] = {}
 
         # 1. Status Ticks, Weather Survival & Celestial Cycles
+        from src.world.npc_skill_engine import NPCSkillEngine
+        NPCSkillEngine.tick_all_skill_cooldowns(state)
+
         tick_result = StatusEffectEngine.process_turn_ticks(state)
         fact_sheet.status_tick_logs = tick_result.get("logs", [])
         
@@ -206,6 +216,15 @@ class TwoPassEngine:
             fact_sheet.pre_computed_state_delta = {}
             return fact_sheet
 
+        # 2.2 Delayed Theft Discovery Check (PerceptionEngine)
+        from src.world.perception_engine import PerceptionEngine
+        discovered_thefts = PerceptionEngine.check_delayed_theft_discovery(state, action)
+        if discovered_thefts:
+            for d_info in discovered_thefts:
+                fact_sheet.quest_progress_logs.append(d_info["log_ko"])
+                if d_info.get("gm_directive"):
+                    fact_sheet.npc_skill_logs.append(f"   * [도난 발각 서사 지침]: {d_info['gm_directive']}")
+
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         curr_loc = state.current_location()
         if curr_loc and curr_loc.exits:
@@ -231,8 +250,75 @@ class TwoPassEngine:
                                 state_delta["player"] = {}
                             state_delta["player"]["location"] = target_loc_id
                             target_name = target_loc.name if target_loc else target_loc_id
-                            fact_sheet.quest_progress_logs.append(f"장소 이동 완료: [{target_name}]에 도착함")
+
+                            from src.world.geography import GeographyEngine
+                            road = GeographyEngine.get_road(state, curr_loc.id, target_loc_id)
+                            dist_km = road.distance_km if road else 1.0
+                            r_type = road.road_type if road else "dirt_road"
+                            hours = GeographyEngine.calculate_segment_travel_hours(dist_km, r_type, travel_mode="foot")
+                            mins = max(5, int(hours * 60))
+                            state_delta["time_minutes"] = mins
+                            fatigue_inc = max(1, int(mins / 30))
+                            state_delta["fatigue_delta"] = fatigue_inc
+
+                            fact_sheet.quest_progress_logs.append(f"장소 이동 완료: [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요)")
                             break
+
+        # 2.5 Equipment Equip / Unequip Intent Execution
+        equip_intent = fact_sheet.extra_flags.get("equip_intent")
+        if equip_intent:
+            e_act = equip_intent.get("action")
+            e_item_id = equip_intent.get("item_id")
+            e_item_name = equip_intent.get("item_name")
+            e_slot = equip_intent.get("slot")
+            if e_act == "equip":
+                state_delta["equip_slot"] = {"item_id": e_item_id, "slot": e_slot}
+                fact_sheet.quest_progress_logs.append(f"장비 착용: [{e_item_name}]을(를) {e_slot} 부위에 장착했습니다.")
+            elif e_act == "unequip":
+                state_delta["unequip_slot"] = {"item_id": e_item_id, "slot": e_slot}
+                fact_sheet.quest_progress_logs.append(f"장비 해제: [{e_item_name}]을(를) {e_slot} 부위에서 해제했습니다.")
+
+        # 2.7 Medical Treatment Execution
+        treatment_intent = fact_sheet.extra_flags.get("treatment_intent")
+        if treatment_intent:
+            from src.world.injury_engine import InjuryEngine
+            t_type = treatment_intent.get("type")
+            inj_name = treatment_intent.get("injury_name")
+
+            if t_type == "item":
+                i_id = treatment_intent.get("item_id")
+                if i_id and i_id in state.items:
+                    item_obj = state.items[i_id]
+                    success, msg, d_mod = InjuryEngine.apply_item_treatment(state, state.player, inj_name, item_obj)
+                    if success:
+                        fact_sheet.quest_progress_logs.append(msg)
+                        if "player" not in state_delta:
+                            state_delta["player"] = {}
+                        if "inventory" not in state_delta["player"]:
+                            new_inv = list(state.player.inventory)
+                            if i_id in new_inv:
+                                new_inv.remove(i_id)
+                            state_delta["player"]["inventory"] = new_inv
+
+                        if d_mod.get("cured"):
+                            state_delta["remove_player_injury"] = inj_name
+                        elif d_mod.get("splinted"):
+                            state_delta["splint_player_injury"] = {
+                                "injury_name": inj_name,
+                                "turns_needed": d_mod.get("turns_needed", 2)
+                            }
+            elif t_type == "doctor":
+                doc_id = treatment_intent.get("doctor_id")
+                fee = treatment_intent.get("fee", 50)
+                if doc_id and doc_id in state.npcs:
+                    doc_npc = state.npcs[doc_id]
+                    success, msg, d_mod = InjuryEngine.apply_doctor_surgery(state, doc_npc, state.player, inj_name, fee=fee)
+                    fact_sheet.quest_progress_logs.append(msg)
+                    if success:
+                        if "player" not in state_delta:
+                            state_delta["player"] = {}
+                        state_delta["player"]["gold"] = max(0, state.player.gold - fee)
+                        state_delta["remove_player_injury"] = inj_name
 
         # 3. Environmental Puzzles & Mechanisms
         puzzle_res = PuzzleEngine.evaluate_puzzle_action(state, action)
@@ -278,15 +364,70 @@ class TwoPassEngine:
                 
                 # Combat damage computation
                 if dice_res.is_success and dice_res.damage_dealt > 0:
+                    raw_damage = dice_res.damage_dealt
+                    target_part = fact_sheet.extra_flags.get("target_part", "")
+
+                    # Check if AoE skill or whole-body attack
+                    skill_info = fact_sheet.extra_flags.get("player_skill_used")
+                    is_aoe = False
+                    sk_obj = None
+                    if skill_info:
+                        sk_id = skill_info.get("skill_id")
+                        sk_obj = state.skills_db.get(sk_id)
+                        if sk_obj and (sk_obj.area_shape in ["circle", "cone", "line", "sphere"] or getattr(sk_obj, "area_radius_meters", 0) > 0):
+                            is_aoe = True
+
+                    from src.world.equipment import EquipmentEngine
+                    # If AoE: cannot pinpoint specific anatomy, hits full body (chest/cape)
+                    if is_aoe:
+                        actual_part = "chest"
+                        mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
+                            state, target_npc, raw_damage, target_part="chest"
+                        )
+                        elem = sk_obj.element if sk_obj else "물리"
+                        injury_name = "전신 화상" if "화염" in elem else ("폭압 타박상" if "대지" in elem or "충격" in elem else "파편 열상")
+                        if injury_name not in target_npc.injuries:
+                            target_npc.injuries.append(injury_name)
+                        target_npc.morale = max(0, target_npc.morale - 20)
+                    elif target_part:
+                        actual_part = target_part
+                        mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
+                            state, target_npc, raw_damage, target_part=target_part
+                        )
+                        injury_map = {
+                            "머리": ("머리 충격(뇌진탕)", 20),
+                            "목": ("경추 손상", 25),
+                            "눈": ("안구 손상(시력 감퇴)", 30),
+                            "가슴": ("흉부 관통상", 25),
+                            "심장": ("흉부 치명상", 35),
+                            "팔": ("팔 관절 손상", 15),
+                            "손": ("손목 골절", 15),
+                            "다리": ("다리 골절/힘줄 파열", 20),
+                            "발": ("발목 부상", 15),
+                        }
+                        inj_name, morale_loss = injury_map.get(target_part, (f"{target_part} 부상", 15))
+                        if inj_name not in target_npc.injuries:
+                            target_npc.injuries.append(inj_name)
+                        target_npc.morale = max(0, target_npc.morale - morale_loss)
+                    else:
+                        actual_part = "chest"
+                        mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
+                            state, target_npc, raw_damage, target_part="chest"
+                        )
+
                     hp_before = target_npc.health
-                    hp_after = max(0, hp_before - dice_res.damage_dealt)
+                    hp_after = max(0, hp_before - mitigated_dmg)
                     is_alive = hp_after > 0
                     killed = (hp_before > 0 and hp_after <= 0)
 
                     fact_sheet.combat_outcome = {
                         "target_id": target_npc.id,
                         "target_name": target_npc.name,
-                        "damage_dealt": dice_res.damage_dealt,
+                        "damage_dealt": mitigated_dmg,
+                        "raw_damage": raw_damage,
+                        "target_part": actual_part,
+                        "is_aoe": is_aoe,
+                        "target_injuries": list(target_npc.injuries),
                         "hp_before": hp_before,
                         "hp_after": hp_after,
                         "max_hp": target_npc.max_health,
@@ -301,6 +442,8 @@ class TwoPassEngine:
                         "alive": is_alive,
                         "disposition": "hostile",
                         "stats_revealed": True,
+                        "injuries": list(target_npc.injuries),
+                        "morale": target_npc.morale,
                     }
 
                     # Equipment Wear & Rune Effects on Weapon
@@ -315,22 +458,107 @@ class TwoPassEngine:
                     # Kill events & Unique skill drops
                     if killed:
                         QuestEngine.progress_event(state, "kill", target_npc.id)
-                        state.pending_breaking_news.append(f"주요 인물 [{target_npc.name}]의 치명적 부상/사망 사건")
-                        dropped_skill = SkillSystem.roll_unique_skill_drop(state, target_npc.id)
-                        if dropped_skill:
-                            fact_sheet.dropped_skill_name = dropped_skill.name
+                        from src.world.rumor_diffusion_engine import RumorDiffusionEngine
+                        sig = 3 if getattr(target_npc, "tier", "commoner") in ["elite", "boss", "noble", "legendary"] else 2
+                        rep_delta = 15 if target_npc.disposition == "hostile" else -20
+                        r_wave = RumorDiffusionEngine.dispatch_event_rumor(
+                            state=state,
+                            origin_loc=state.player.location,
+                            event_text=f"플레이어가 [{target_npc.name}]을(를) 치명적 결투 끝에 처치함",
+                            significance=sig,
+                            reputation_delta=rep_delta,
+                            carrier="merchant"
+                        )
+                        fact_sheet.quest_progress_logs.append(f"소문 확산 시작: [{target_npc.name}] 처치 소식이 상단 가도를 타고 퍼져나갑니다. (파급력 Lv.{sig})")
+                        dropped_skill_id = SkillSystem.roll_unique_skill_drop(target_npc, state.player)
+                        if dropped_skill_id:
+                            sk_obj = state.skills_db.get(dropped_skill_id)
+                            fact_sheet.dropped_skill_name = sk_obj.name if sk_obj else dropped_skill_id
                             if "grant_skill" not in state_delta:
                                 state_delta["grant_skill"] = {}
-                            state_delta["grant_skill"]["player"] = dropped_skill.id
+                            state_delta["grant_skill"]["player"] = dropped_skill_id
+
+        # 6.5 Player Skill Resource Deduction & Cooldown Application
+        skill_info = fact_sheet.extra_flags.get("player_skill_used")
+        if skill_info:
+            sk_id = skill_info.get("skill_id")
+            sk_name = skill_info.get("skill_name", "스킬")
+            sk_res_type = skill_info.get("resource_type", "mana")
+            sk_cost = skill_info.get("resource_cost", 0)
+            sk_cd = skill_info.get("cooldown_turns", 0)
+
+            if sk_res_type == "mana":
+                state.player.mana = max(0, state.player.mana - sk_cost)
+                if "player" not in state_delta:
+                    state_delta["player"] = {}
+                state_delta["player"]["mana"] = state.player.mana
+            elif sk_res_type == "hp":
+                state.player.health = max(1, state.player.health - sk_cost)
+                if "player" not in state_delta:
+                    state_delta["player"] = {}
+                state_delta["player"]["health"] = state.player.health
+
+            if sk_id in state.skills_db:
+                state.skills_db[sk_id].current_cooldown = sk_cd
+
+            # If attack hit living target, apply inflicted status effects
+            if dice_res and dice_res.is_success and target_npc and target_npc.alive:
+                inflicted = skill_info.get("inflicted_status", [])
+                for st in inflicted:
+                    s_name = st.get("status")
+                    dur = st.get("duration_turns", st.get("duration", 2))
+                    pot = st.get("dot_damage_per_turn", st.get("potency", 5))
+                    if s_name:
+                        StatusEffectEngine.apply_status(target_npc, s_name, duration=dur, potency=pot)
+                        fact_sheet.status_tick_logs.append(f"적 [{target_npc.name}]에게 [{sk_name}] 효과로 상태이상 [{s_name}]({dur}턴) 부여")
 
         # 7. Quest Progress Hooks (location reach)
         QuestEngine.progress_event(state, "reach", state.player.location)
 
         # 8. Party & Companion Autonomous Turns
-        is_combat = (dice_res is not None and dice_res.action_type in ["combat", "magic_attack"])
+        is_combat = (dice_res is not None and any(k in getattr(dice_res, "action_type", "") for k in ["combat", "magic", "공격", "전투", "스킬"]))
         if is_combat and target_npc:
             companion_logs = PartyEngine.process_companion_combat_turns(state, target_npc=target_npc)
             fact_sheet.companion_combat_logs = companion_logs
+
+        # 8.5 Hostile NPC Combat Counter-Attack / Skill Turns
+        if is_combat:
+            curr_loc = state.current_location()
+            if curr_loc:
+                loc_npcs = state.npcs_in_location(curr_loc.id)
+                for h_npc in loc_npcs:
+                    if h_npc.alive and h_npc.disposition == "hostile":
+                        if target_npc and h_npc.id == target_npc.id and not target_npc.alive:
+                            continue
+                        npc_outcome = NPCSkillEngine.process_npc_combat_turn(h_npc, state, player_ac=getattr(state.player, "armor_class", 10))
+                        if npc_outcome:
+                            fact_sheet.npc_skill_logs.append(npc_outcome["summary_ko"])
+                            if "player" not in state_delta:
+                                state_delta["player"] = {}
+                            state_delta["player"]["health"] = state.player.health
+
+        # 8.6 Opportunistic / Desire-driven Non-Combat NPC Actions
+        elif curr_loc:
+            loc_npcs = state.npcs_in_location(curr_loc.id)
+            for o_npc in loc_npcs:
+                if o_npc.alive and o_npc.disposition != "hostile":
+                    opp_outcome = NPCSkillEngine.process_npc_opportunistic_turn(o_npc, state, action)
+                    if opp_outcome:
+                        fact_sheet.npc_skill_logs.append(opp_outcome["summary_ko"])
+                        if opp_outcome.get("gm_directive"):
+                            fact_sheet.npc_skill_logs.append(f"   * [서사 지침]: {opp_outcome['gm_directive']}")
+                        if "player" not in state_delta:
+                            state_delta["player"] = {}
+                        state_delta["player"]["gold"] = state.player.gold
+                        state_delta["player"]["inventory"] = list(state.player.inventory)
+                        if "npc_state" not in state_delta:
+                            state_delta["npc_state"] = {}
+                        state_delta["npc_state"][o_npc.id] = {
+                            "gold": o_npc.gold,
+                            "inventory": list(o_npc.inventory),
+                            "disposition": o_npc.disposition
+                        }
+                        break  # Limit to 1 opportunistic action per turn
 
         # 9. Ecological Feedback
         loc_name = curr_loc.name if curr_loc else "미지의 지대"

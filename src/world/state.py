@@ -159,6 +159,16 @@ class Skill:
     incantation_verse: str = ""                         # 하위 호환용 영창 구절
     incantation_or_formula: str = ""                    # 영창/심법/공식 본문
     visual_fx_description: str = ""                     # AI GM 연출 묘사 지문
+    color: str = "#94a3b8"                              # 스킬 고유 테마 색상 (HEX 코드, UI/스킬북 배지/효과 연출용)
+
+    def get_visual_description(self, caster: Any = None) -> str:
+        """Returns narrative visual description blending skill's element/effect with caster's personal mana aura."""
+        if not caster:
+            return self.visual_fx_description or f"[{self.name}]의 {self.element} 기운이 뿜어져 나옵니다."
+        caster_name = getattr(caster, "name", "시전자")
+        caster_mana = getattr(caster, "mana_color", "에테르")
+        base_desc = self.visual_fx_description or f"{self.element} 마력"
+        return f"{caster_name}의 내면에서 솟구치는 '{caster_mana}' 기운이 {self.name}에 깃들어, {base_desc}이(가) 특유의 질감과 변색된 색조로 강렬하게 발현됩니다."
 
 
 @dataclass
@@ -431,8 +441,14 @@ class NPC:
     constitution: int = 10
     wisdom: int = 10
     luck: int = 10
+    perception: int = 10        # 감각/지각 (Perception) - 도난/기습/함정/위화감 감지
     crit_rate_bonus: int = 0
     crit_damage_bonus: int = 0
+
+    @property
+    def perception_stat(self) -> int: return self.perception
+    @property
+    def per_stat(self) -> int: return self.perception
 
     memories: list[MemoryEntry] = field(default_factory=list)
     stats_revealed: bool = False    # Fog of War: Hidden until combat/investigation
@@ -471,6 +487,8 @@ class NPC:
     blackmail_secret: str = ""                                    # 숨겨진 치부/약점/비리
     faction_id: str = ""                                          # 소속 세력/단체 ID
     faction_role: str = ""                                        # 세력 내 직책/신분
+    mana_color: str = "창백한 푸른빛 에테르"                     # 개인 마나/오라 고유 색상 및 성질
+    mana_color_hex: str = "#38bdf8"
 
     def to_image_prompt_keywords(self) -> str:
         """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
@@ -643,8 +661,11 @@ class Location:
     items: list[str] = field(default_factory=list)
     npcs: list[str] = field(default_factory=list)
     physical_traces: list[dict] = field(default_factory=list) # [{"npc_name": "방랑자", "trace": "젖은 붕대와 탄피", "turn": 3}]
-    environmental_hazards: list[str] = field(default_factory=list) # 상호작용 가능한 환경 기믹 (예: ["매달린 샹들리에", "바닥의 기름통", "금이 간 기둥"])
     visited: bool = False
+    coordinates: tuple[float, float] = (0.0, 0.0) # (X_km, Y_km)
+    terrain: str = "plains"                        # "plains", "mountains", "forest", "swamp", "urban", "desert"
+    security_level: int = 50                       # 치안도 (0~100)
+    roads: dict = field(default_factory=dict)      # destination_id -> RoadConnection
 
 
 
@@ -724,6 +745,7 @@ class Player:
     # Secondary stats
     wisdom: int = 10            # 지혜 - INT+1, mana regen, incant chars +1
     luck: int = 10              # 행운 - drop rate, crit+0.5%, unique skill chance
+    perception: int = 10        # 감각/지각 - 기습/소매치기/복선/위화감/함정 탐지
     
     # Equipment
     equipment: EquipmentSlots = field(default_factory=EquipmentSlots)
@@ -737,10 +759,13 @@ class Player:
     known_magic_words: list[str] = field(default_factory=list)
     
     reputation: int = 0
+    regional_reputation: dict[str, int] = field(default_factory=dict) # 지역별 국소 명성 {loc_id: rep}
     known_facts: list[str] = field(default_factory=list)
     fatigue: int = 0                    # 피로도 (0~100)
     time_elapsed_minutes: int = 0       # 누적 인게임 시간 (분)
     injuries: list[str] = field(default_factory=list) # 신체 부위별 부상/장애 (예: ["오른팔 골절 (명중-3)"])
+    splinted_injuries: dict[str, int] = field(default_factory=dict) # 부목 고정된 골절 부상 및 완치까지 필요한 휴식 횟수
+    unnoticed_thefts: list[dict] = field(default_factory=list) # 아직 눈치채지 못한 도난 내역
     traumas: list[str] = field(default_factory=list)  # 심리적 트라우마 (예: ["화염 공포증"])
     hygiene_level: int = 100            # 위생도 (0~100, 30 이하 시 체취 누출로 야수 기습 유발)
     body_temperature: float = 36.5      # 심부 체온 (34도 이하 저체온증, 39도 이상 열사병)
@@ -750,6 +775,8 @@ class Player:
     bounties: dict[str, int] = field(default_factory=dict) # 세력별 수배 현상금 {"faction_lumen": 1500}
     disguise: Optional[str] = None                         # 착용 중인 변장 도구 (예: "까마귀 가면과 검은 로브")
     active_alias: Optional[str] = None                     # 통성명용 가명 (예: "외눈의 방랑자 잭")
+    mana_color: str = "푸른빛 에테르"                            # 개인 마나/오라 고유 색상 및 성질
+    mana_color_hex: str = "#38bdf8"
     
     @property
     def fatigue_status_ko(self) -> str:
@@ -763,26 +790,33 @@ class Player:
             return "양호 (피로도 0: 완벽한 휴식, 주사위 판정 +1 메리트)"
         return "양호 (활력 넘침)"
 
-    # Effective Stats with Status Effects
+    equipment_defense: int = 0
+    equipment_stat_bonuses: dict = field(default_factory=dict)
+
+    # Effective Stats with Status Effects & Equipment
     @property
     def effective_strength(self) -> int:
         from src.world.status_engine import StatusEffectEngine
-        return max(1, self.strength + StatusEffectEngine.get_effective_stat_modifiers(self).get("strength", 0))
+        eq_b = self.equipment_stat_bonuses.get("strength", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return max(1, self.strength + StatusEffectEngine.get_effective_stat_modifiers(self).get("strength", 0) + eq_b)
 
     @property
     def effective_agility(self) -> int:
         from src.world.status_engine import StatusEffectEngine
-        return max(1, self.agility + StatusEffectEngine.get_effective_stat_modifiers(self).get("agility", 0))
+        eq_b = self.equipment_stat_bonuses.get("agility", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return max(1, self.agility + StatusEffectEngine.get_effective_stat_modifiers(self).get("agility", 0) + eq_b)
 
     @property
     def effective_constitution(self) -> int:
         from src.world.status_engine import StatusEffectEngine
-        return max(1, self.constitution + StatusEffectEngine.get_effective_stat_modifiers(self).get("constitution", 0))
+        eq_b = self.equipment_stat_bonuses.get("constitution", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return max(1, self.constitution + StatusEffectEngine.get_effective_stat_modifiers(self).get("constitution", 0) + eq_b)
 
     @property
     def effective_intelligence(self) -> int:
         from src.world.status_engine import StatusEffectEngine
-        return max(1, self.intelligence + StatusEffectEngine.get_effective_stat_modifiers(self).get("intelligence", 0))
+        eq_b = self.equipment_stat_bonuses.get("intelligence", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return max(1, self.intelligence + StatusEffectEngine.get_effective_stat_modifiers(self).get("intelligence", 0) + eq_b)
 
     # Properties
     @property
@@ -803,13 +837,38 @@ class Player:
     @int_stat.setter
     def int_stat(self, value: int): self.intelligence = value
     @property
-    def wis_stat(self) -> int: return self.wisdom
+    def wis_stat(self) -> int:
+        eq_b = self.equipment_stat_bonuses.get("wisdom", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return self.wisdom + eq_b
     @wis_stat.setter
     def wis_stat(self, value: int): self.wisdom = value
     @property
-    def cha_stat(self) -> int: return self.luck
+    def cha_stat(self) -> int:
+        eq_b = self.equipment_stat_bonuses.get("luck", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return self.luck + eq_b
     @cha_stat.setter
     def cha_stat(self, value: int): self.luck = value
+
+    @property
+    def perception_stat(self) -> int: return self.effective_perception
+    @property
+    def per_stat(self) -> int: return self.effective_perception
+    @property
+    def per_mod(self) -> int: return (self.effective_perception - 10) // 2
+    @property
+    def effective_perception(self) -> int:
+        eq_b = self.equipment_stat_bonuses.get("perception", 0) + self.equipment_stat_bonuses.get("per", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        base = self.perception + eq_b
+        if hasattr(self, "status_effects") and self.status_effects:
+            for eff in self.status_effects.values():
+                if getattr(eff, "stat_debuffs", None) and "perception" in eff.stat_debuffs:
+                    base += eff.stat_debuffs["perception"]
+        return max(1, base)
+
+    def get_effective_reputation(self, location_id: str) -> int:
+        """Returns perceived reputation in a specific location: local + int(global * 0.75)."""
+        local_rep = self.regional_reputation.get(location_id, 0)
+        return local_rep + int(self.reputation * 0.75)
 
     @property
     def equipped_weapon(self) -> Optional[str]: return self.equipment.weapon
@@ -825,16 +884,31 @@ class Player:
     @property  
     def agi_mod(self) -> int: return (self.effective_agility - 10) // 2
     @property
-    def int_mod(self) -> int: return (self.effective_intelligence - 10) // 2 + max(0, (self.wisdom - 10) // 2)
+    def int_mod(self) -> int: return (self.effective_intelligence - 10) // 2 + max(0, (self.wis_stat - 10) // 2)
     @property
     def effective_crit_rate(self) -> float:
-        return BASE_CRIT_RATE + self.crit_rate_bonus * CRIT_RATE_PER_POINT + max(0, self.luck - 10) * LUCK_CRIT_BONUS
+        eq_crit = self.equipment_stat_bonuses.get("crit_rate", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return BASE_CRIT_RATE + (self.crit_rate_bonus + eq_crit) * CRIT_RATE_PER_POINT + max(0, self.luck - 10) * LUCK_CRIT_BONUS
     @property
     def effective_crit_damage(self) -> float:
-        return BASE_CRIT_DAMAGE + self.crit_damage_bonus * CRIT_DMG_PER_POINT
+        eq_crit_dmg = self.equipment_stat_bonuses.get("crit_damage", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return BASE_CRIT_DAMAGE + (self.crit_damage_bonus + eq_crit_dmg) * CRIT_DMG_PER_POINT
     @property
     def max_mana_effective(self) -> int:
-        return self.max_mana + max(0, self.intelligence - 10) * 5
+        eq_mana = self.equipment_stat_bonuses.get("max_mana", 0) if hasattr(self, "equipment_stat_bonuses") else 0
+        return self.max_mana + eq_mana + max(0, self.intelligence - 10) * 5
+
+    base_armor_class: int = 10
+
+    @property
+    def armor_class(self) -> int:
+        eq_def = getattr(self, "equipment_defense", 0)
+        return self.base_armor_class + self.agi_mod + eq_def
+
+    @armor_class.setter
+    def armor_class(self, value: int):
+        eq_def = getattr(self, "equipment_defense", 0)
+        self.base_armor_class = value - self.agi_mod - eq_def
 
 
 @dataclass
@@ -895,6 +969,7 @@ class WorldState:
     pending_breaking_news: list[str] = field(default_factory=list) # 호외 발행 대기열
     environment: EnvironmentalMetrics = field(default_factory=EnvironmentalMetrics)
     pending_info_waves: list[PendingInformation] = field(default_factory=list)
+    active_rumors: list = field(default_factory=list) # 활성화된 지리 도로망 소문 확산 웨이브 목록
 
 
 
@@ -955,6 +1030,14 @@ class WorldState:
         if wep_id and wep_id in self.items:
             return self.items[wep_id]
         return None
+
+    def recalculate_equipment_stats(self, entity: Any = None):
+        """Calculates and updates total equipment defense and stat bonuses onto the entity."""
+        from src.world.equipment import EquipmentEngine
+        target = entity if entity is not None else self.player
+        bonuses = EquipmentEngine.calculate_equipment_bonuses(self, target)
+        target.equipment_defense = bonuses["total_defense"]
+        target.equipment_stat_bonuses = bonuses["stat_bonuses"]
 
     def simulate_npc_needs_and_economy(self) -> list[str]:
         """
@@ -1185,6 +1268,12 @@ class WorldState:
             else:
                 remaining_waves.append(wave)
         self.pending_info_waves = remaining_waves
+
+        # Geographic Road-Network Rumor Diffusion
+        from src.world.rumor_diffusion_engine import RumorDiffusionEngine
+        geo_rumors = RumorDiffusionEngine.advance_time_tick(self, elapsed_minutes=0)
+        propagated_news.extend(geo_rumors)
+
         return propagated_news
 
     def advance_world_simulation(self) -> dict:
@@ -1909,10 +1998,11 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             tt = f"[{skill.name}]&#10;유형: {type_ko} ({cost_str})&#10;속성: {elem_ko}&#10;위력 계수: {stat_ko.upper()} × {skill.scaling_factor}&#10;판정 방식: {stat_ko.upper()} 기반 판정"
 
 
+            card_color = getattr(skill, "color", "#94a3b8") or "#94a3b8"
             html_blocks.append(f"""
-            <div class="qt-skill-card">
+            <div class="qt-skill-card" style="border-left: 3.5px solid {card_color} !important;">
               <div class="qt-skill-header">
-                <span class="qt-hover-tag" data-tooltip="{tt}"><b>{skill.name}</b></span>
+                <span class="qt-hover-tag" data-tooltip="{tt}"><b style="color:{card_color} !important;">{skill.name}</b></span>
                 {type_badge}
                 <span class="qt-skill-cost">{cost_str}</span>
               </div>
@@ -2031,6 +2121,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             constitution=data.get("constitution", 10),
             wisdom=data.get("wisdom", 10),
             luck=data.get("luck", 10),
+            perception=data.get("perception", 10),
             personality=personality,
             needs=needs,
             goal=data.get("goal", ""),
@@ -2179,12 +2270,26 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 else:
                     changes.append(f"REJECTED move to {direction} — not a valid exit")
                     break
-        elif "player" in update and isinstance(update["player"], dict) and "location" in update["player"]:
-            new_loc_id = update["player"]["location"]
-            if new_loc_id in self.locations:
-                self.player.location = new_loc_id
-                self.locations[new_loc_id].visited = True
-                changes.append(f"Player moved to {self.locations[new_loc_id].name}")
+        if "player" in update and isinstance(update["player"], dict):
+            p_dict = update["player"]
+            if "location" in p_dict:
+                new_loc_id = p_dict["location"]
+                if new_loc_id in self.locations:
+                    self.player.location = new_loc_id
+                    self.locations[new_loc_id].visited = True
+                    changes.append(f"Player moved to {self.locations[new_loc_id].name}")
+            if "gold" in p_dict:
+                self.player.gold = int(p_dict["gold"])
+                changes.append(f"Player gold updated: {self.player.gold}")
+            if "inventory" in p_dict and isinstance(p_dict["inventory"], list):
+                self.player.inventory = list(p_dict["inventory"])
+                changes.append(f"Player inventory updated: {len(self.player.inventory)} items")
+            if "health" in p_dict:
+                self.player.health = max(0, min(self.player.max_health, int(p_dict["health"])))
+                changes.append(f"Player health updated: {self.player.health}")
+            if "mana" in p_dict:
+                self.player.mana = max(0, min(self.player.max_mana, int(p_dict["mana"])))
+                changes.append(f"Player mana updated: {self.player.mana}")
 
         # 2. Item pickup
         if "pickup_item" in update:
@@ -2215,7 +2320,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     self.player.equipment.rings.remove(item_id)
                 if item_id in self.player.equipment.earrings:
                     self.player.equipment.earrings.remove(item_id)
-                    
+                self.recalculate_equipment_stats(self.player)
                 changes.append(f"Player dropped {self.items[item_id].name}")
 
         # 4. Item equip (new format)
@@ -2235,6 +2340,31 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     if len(self.player.equipment.earrings) < MAX_EARRINGS:
                         self.player.equipment.earrings.append(item_id)
                         changes.append(f"Equipped {item.name} to earring slot")
+                self.recalculate_equipment_stats(self.player)
+
+        # 4.5 Item unequip
+        if "unequip_slot" in update:
+            item_id = update["unequip_slot"].get("item_id")
+            slot = update["unequip_slot"].get("slot")
+            if slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape"]:
+                if getattr(self.player.equipment, slot) == item_id or not item_id:
+                    setattr(self.player.equipment, slot, None)
+                    changes.append(f"Unequipped from {slot}")
+            elif slot == "ring":
+                if item_id in self.player.equipment.rings:
+                    self.player.equipment.rings.remove(item_id)
+                    changes.append(f"Unequipped ring {item_id}")
+                elif not item_id and self.player.equipment.rings:
+                    self.player.equipment.rings.pop()
+                    changes.append("Unequipped ring")
+            elif slot == "earring":
+                if item_id in self.player.equipment.earrings:
+                    self.player.equipment.earrings.remove(item_id)
+                    changes.append(f"Unequipped earring {item_id}")
+                elif not item_id and self.player.equipment.earrings:
+                    self.player.equipment.earrings.pop()
+                    changes.append("Unequipped earring")
+            self.recalculate_equipment_stats(self.player)
 
         # 5. NPC state updates (alive, disposition, health, stats_revealed)
         if "npc_state" in update:
@@ -2251,6 +2381,10 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                             npc.alive = False
                     if "stats_revealed" in new_state:
                         npc.stats_revealed = new_state["stats_revealed"]
+                    if "injuries" in new_state and isinstance(new_state["injuries"], list):
+                        npc.injuries = list(new_state["injuries"])
+                    if "morale" in new_state:
+                        npc.morale = max(0, min(100, new_state["morale"]))
                     changes.append(f"NPC {npc.name} state updated: {new_state}")
                     
         # Update NPC personality
@@ -2409,6 +2543,10 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             delta = int(update["fatigue_delta"])
             self.player.fatigue = max(0, min(100, self.player.fatigue + delta))
             changes.append(f"Player fatigue updated: {self.player.fatigue}/100")
+            if delta < 0:
+                from src.world.injury_engine import InjuryEngine
+                r_logs = InjuryEngine.progress_rest_healing(self, self.player, rest_turns=1)
+                changes.extend(r_logs)
 
         # Time advanced updates
         if "time_minutes" in update:
@@ -2524,6 +2662,29 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             if tra and tra not in self.player.traumas:
                 self.player.traumas.append(tra)
                 changes.append(f"플레이어 트라우마 획득: {tra}")
+
+        if "remove_player_injury" in update:
+            rem_inj = str(update["remove_player_injury"]).strip()
+            to_remove = [inj for inj in self.player.injuries if rem_inj in inj or inj in rem_inj]
+            for inj in to_remove:
+                self.player.injuries.remove(inj)
+                if inj in self.player.splinted_injuries:
+                    del self.player.splinted_injuries[inj]
+                changes.append(f"플레이어 신체 부상 완치: {inj}")
+
+        if "splint_player_injury" in update:
+            s_data = update["splint_player_injury"]
+            inj_name = s_data.get("injury_name")
+            turns = s_data.get("turns_needed", 2)
+            if inj_name:
+                self.player.splinted_injuries[inj_name] = turns
+                changes.append(f"플레이어 부목 고정: {inj_name} (완치까지 휴식 {turns}회 필요)")
+
+        if "progress_rest_healing" in update:
+            from src.world.injury_engine import InjuryEngine
+            rest_turns = int(update["progress_rest_healing"])
+            r_logs = InjuryEngine.progress_rest_healing(self, self.player, rest_turns=rest_turns)
+            changes.extend(r_logs)
 
         # 17. Status Effects (Status Effect Engine)
         if "apply_status" in update:
@@ -2813,6 +2974,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             crit_damage_bonus=p_raw.get("crit_damage_bonus", 0) if isinstance(p_raw, dict) else 0,
             wisdom=min(MAX_STAT_VALUE, p_raw.get("wisdom", p_raw.get("wis_stat", 10))) if isinstance(p_raw, dict) else 10,
             luck=min(MAX_STAT_VALUE, p_raw.get("luck", p_raw.get("cha_stat", 10))) if isinstance(p_raw, dict) else 10,
+            perception=min(MAX_STAT_VALUE, p_raw.get("perception", p_raw.get("per_stat", 10))) if isinstance(p_raw, dict) else 10,
             reputation=max(MIN_REPUTATION_TOTAL, min(MAX_REPUTATION_TOTAL, p_raw.get("reputation", 0))) if isinstance(p_raw, dict) else 0,
             known_facts=p_raw.get("known_facts", []) if isinstance(p_raw, dict) else [],
             combat_profile=safe_init(CombatProfile, p_raw.get("combat_profile", {}) if isinstance(p_raw, dict) else {}),
@@ -2822,6 +2984,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             active_title=p_raw.get("active_title") if isinstance(p_raw, dict) else None,
             known_magic_words=p_raw.get("known_magic_words", []) if isinstance(p_raw, dict) else [],
             injuries=p_raw.get("injuries", []) if isinstance(p_raw, dict) else [],
+            unnoticed_thefts=p_raw.get("unnoticed_thefts", []) if isinstance(p_raw, dict) else [],
             traumas=p_raw.get("traumas", []) if isinstance(p_raw, dict) else []
         )
         from src.world.status_engine import StatusEffect
