@@ -462,28 +462,80 @@ class ActionValidator:
             if dice_result.interrupt_counter:
                 extra_flags['interrupt_counter'] = True
 
+        # Check if physical action is conversational/inquiry
+        is_inquiry_intent = any(v in action_clean.lower() for v in ["물어", "묻는", "질문", "대화", "이야기", "여쭤", "말을", "말하", "언급", "알고 있", "소문", "ask", "inquire", "talk"])
+
         # A. Generic Magic Attack Check (0 mana fallback or generic spell)
-        elif any(v in action_lower for v in ["파이어", "화염", "마법", "볼트", "빙결", "뇌전", "주문", "영창하여", "시전"]):
+        # Must NOT trigger on conversational questions or inquiries mentioning 'magic'
+        is_magic_attack_verb = any(v in action_clean.lower() for v in ["시전", "발사", "날린다", "내지른", "터뜨린", "공격", "영창하", "cast", "shoot", "blast"])
+        is_magic_attack_noun = any(v in action_clean.lower() for v in ["파이어", "화염구", "볼트", "빙결창", "뇌전구", "마법 화살"])
+
+        # Check for Intuitive Mana Shaping (고대어 없이 순수 심상/상상력과 INT+WIS+PER로 조형하는 마법)
+        shaping_elem = any(v in action_clean.lower() for v in ["번개", "전기", "불꽃", "화염", "얼음", "서리", "냉기", "바람", "돌", "대지", "빛", "그림자", "어둠", "마나", "에테르"])
+        shaping_form = any(v in action_clean.lower() for v in ["사슬", "화살", "창", "구체", "칼날", "방패", "장벽", "파동", "모아", "모아서", "꼬아", "빚어", "응축", "압축", "둘러"])
+        shaping_act = any(v in action_clean.lower() for v in ["날린", "날려", "쏜다", "쏘아", "발사", "내뿜", "던진", "뿜어", "투사", "공격"])
+        is_intuitive_shaping = shaping_elem and shaping_form and shaping_act and not is_inquiry_intent
+
+        is_magic_combat = (is_magic_attack_noun or ("마법" in action_clean.lower() and is_magic_attack_verb) or is_intuitive_shaping) and not is_inquiry_intent
+
+        if is_magic_combat:
             has_incant_speech = bool(parsed["dialogue"]) or ("영창" in action_lower)
             is_no_incant = not has_incant_speech
             extra_flags['is_no_incantation'] = is_no_incant
 
-            dice_result = DiceEngine.perform_check(
-                action_type="마법 공격",
-                stat_value=state.player.intelligence,
-                dc=target_ac,
-                base_damage=12,
-                scaling=1.8,
-                target_npc_id=target_npc_id,
-                target_part=target_part,
-                is_no_incantation=is_no_incant,
-                fatigue=fatigue_val,
-            )
+            # Check for unknown / unlearned magic words in incantation
+            incant_text = parsed["dialogue"] or action_clean
+            all_ancient_vocab = ["이그니스", "사기타", "볼란스", "풀구르", "빈쿨룸", "서큐엔스", "글라키에스", "스피라", "에룹티오", "테라", "스쿠툼", "임팩투스", "움브라", "바르", "카르"]
+            spoken_ancient_words = [w for w in all_ancient_vocab if w in incant_text]
+
+            if is_intuitive_shaping and not spoken_ancient_words:
+                # Intuitive Mana Shaping: High INT + WIS + PER synergy!
+                int_mod = DiceEngine.stat_modifier(state.player.intelligence)
+                wis_mod = max(0, DiceEngine.stat_modifier(state.player.wisdom))
+                per_mod = max(0, DiceEngine.stat_modifier(state.player.perception))
+                total_shaping_stat = 10 + (int_mod + wis_mod + per_mod) * 2
+
+                dice_result = DiceEngine.perform_check(
+                    action_type="직관적 마나 조형 (지능·지혜·감각 삼위일체)",
+                    stat_value=total_shaping_stat,
+                    dc=target_ac,
+                    base_damage=14,
+                    scaling=2.0,
+                    target_npc_id=target_npc_id,
+                    target_part=target_part,
+                    is_no_incantation=False,
+                    fatigue=fatigue_val,
+                )
+                extra_flags['intuitive_shaping'] = True
+            else:
+                known_words = getattr(state.player, "known_magic_words", ["이그니스", "사기타", "볼란스"])
+                unknown_words = [w for w in spoken_ancient_words if w not in known_words]
+
+                unknown_count = len(unknown_words)
+                dc_penalty = unknown_count * 4
+                effective_dc = target_ac + dc_penalty
+
+                if unknown_count > 0:
+                    extra_flags['backfire_risk'] = True
+                    extra_flags['unknown_words'] = unknown_words
+                    extra_flags['unknown_count'] = unknown_count
+
+                dice_result = DiceEngine.perform_check(
+                    action_type=f"미학습 마법 영창 (DC+{dc_penalty} 페널티)" if unknown_count > 0 else "마법 공격",
+                    stat_value=state.player.intelligence,
+                    dc=effective_dc,
+                    base_damage=12,
+                    scaling=1.8,
+                    target_npc_id=target_npc_id,
+                    target_part=target_part,
+                    is_no_incantation=is_no_incant,
+                    fatigue=fatigue_val,
+                )
             if dice_result.interrupt_counter:
                 extra_flags['interrupt_counter'] = True
 
         # B. Generic Physical Combat Attack (0 mana standard attack to conserve resources)
-        elif any(v in action_lower for v in ["공격", "찌르", "베", "벤", "찍", "내려치", "후려", "타격", "때리", "칼로", "검으", "단검으", "도끼", "attack", "strike", "stab", "slash"]):
+        elif not is_inquiry_intent and any(v in action_clean.lower() for v in ["공격", "찌르", "베", "벤", "찍", "내려치", "후려", "타격", "때리", "칼로", "검으", "단검으", "도끼", "attack", "strike", "stab", "slash"]):
             eq_wep = state.get_equipped_weapon_item()
             base_dmg = eq_wep.damage if eq_wep else 3
             scaling = eq_wep.scaling_factor if eq_wep else 1.0
@@ -503,7 +555,7 @@ class ActionValidator:
                 extra_flags['interrupt_counter'] = True
 
         # C. Stealth / Steal check
-        elif any(v in action_lower for v in ["훔치", "소매치기", "몰래", "steal", "pickpocket", "sneak"]):
+        elif any(v in action_clean.lower() for v in ["훔치", "소매치기", "몰래", "steal", "pickpocket", "sneak"]):
             dice_result = DiceEngine.perform_check(
                 action_type="은신 / 절도",
                 stat_value=state.player.dex_stat,
@@ -511,8 +563,8 @@ class ActionValidator:
                 fatigue=fatigue_val,
             )
 
-        # D. Dialogue Negotiation / Intimidation / Persuasion / Recruitment with Psychological Leverage
-        elif any(v in action_lower for v in ["협박", "설득", "속이", "위협", "동료", "합류", "비밀", "부탁", "요구", "말을", "대화", "intimidate", "persuade", "threaten", "recruit"]):
+        # D. Dialogue Negotiation / Intimidation / Persuasion / Information Inquiry with Psychological Leverage
+        elif is_inquiry_intent or any(v in action_lower for v in ["협박", "설득", "속이", "위협", "동료", "합류", "비밀", "부탁", "요구", "intimidate", "persuade", "threaten", "recruit"]):
             target_npc = None
             if curr_loc:
                 loc_npcs = state.npcs_in_location(curr_loc.id)

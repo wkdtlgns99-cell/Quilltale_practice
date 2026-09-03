@@ -23,6 +23,16 @@ class RoadType(str, Enum):
     DENSE_FOREST = "dense_forest"      # 울창한 숲길: 0.65x speed, ambush/beast risk
 
 
+class RoadCondition(str, Enum):
+    NORMAL = "normal"                  # 정상 상태
+    MUDDY = "muddy"                    # 진흙탕 (폭우 시 비포장 도로)
+    FLOODED = "flooded"                # 침수 범람 (폭우 시 수렁길/강변)
+    FROZEN_ICE = "frozen_ice"          # 살얼음 빙판길 (폭설/혹한 산길)
+    SNOW_DRIFT = "snow_drift"          # 적설/눈길 (폭설 시 일반 도로)
+    SANDSTORM = "sandstorm"            # 모래폭풍 (사막/황무지)
+    HEAT_HAZE = "heat_haze"            # 아지랑이/폭염 (극심한 더위)
+
+
 ROAD_SPEED_MULTIPLIERS: Dict[RoadType, float] = {
     RoadType.PAVED_HIGHWAY: 1.25,
     RoadType.DIRT_ROAD: 1.00,
@@ -37,6 +47,58 @@ ROAD_HAZARD_BASE: Dict[RoadType, int] = {
     RoadType.MOUNTAIN_PASS: 45,
     RoadType.SWAMP_TRAIL: 60,
     RoadType.DENSE_FOREST: 50,
+}
+
+ROAD_CONDITION_EFFECTS: Dict[RoadCondition, Dict[str, Any]] = {
+    RoadCondition.NORMAL: {
+        "name_ko": "정상 도로",
+        "speed_mult": 1.0,
+        "hazard_bonus": 0,
+        "fatigue_bonus": 0,
+        "description_ko": "통행에 지장이 없는 온전한 노면 상태입니다."
+    },
+    RoadCondition.MUDDY: {
+        "name_ko": "진흙탕 길",
+        "speed_mult": 0.55,
+        "hazard_bonus": 15,
+        "fatigue_bonus": 1,
+        "description_ko": "폭우로 노면이 곤죽처럼 진흙탕이 되어 발이 푹푹 빠지고 마차 바퀴가 헛돕니다."
+    },
+    RoadCondition.FLOODED: {
+        "name_ko": "침수 범람로",
+        "speed_mult": 0.30,
+        "hazard_bonus": 35,
+        "fatigue_bonus": 2,
+        "description_ko": "불어난 물로 길이 완전히 물에 잠겨 통행이 극도로 위험하고 지체됩니다."
+    },
+    RoadCondition.FROZEN_ICE: {
+        "name_ko": "살얼음 빙판길",
+        "speed_mult": 0.35,
+        "hazard_bonus": 40,
+        "fatigue_bonus": 1,
+        "description_ko": "노면이 빙판으로 얼어붙어 발을 헛디디면 천길 낭떠러지로 추락할 위험이 도사립니다."
+    },
+    RoadCondition.SNOW_DRIFT: {
+        "name_ko": "눈 덮인 길",
+        "speed_mult": 0.60,
+        "hazard_bonus": 20,
+        "fatigue_bonus": 1,
+        "description_ko": "발목까지 쌓인 눈더미로 인해 전진하는 데 큰 힘이 소모됩니다."
+    },
+    RoadCondition.SANDSTORM: {
+        "name_ko": "모래바람길",
+        "speed_mult": 0.40,
+        "hazard_bonus": 30,
+        "fatigue_bonus": 2,
+        "description_ko": "거센 모래바람으로 시야가 차단되고 호흡이 곤란해집니다."
+    },
+    RoadCondition.HEAT_HAZE: {
+        "name_ko": "아지랑이 열풍로",
+        "speed_mult": 0.85,
+        "hazard_bonus": 10,
+        "fatigue_bonus": 2,
+        "description_ko": "살인적인 지열과 아지랑이로 갈증과 탈수가 급격히 가속됩니다."
+    }
 }
 
 # Base speeds in km/h
@@ -97,16 +159,92 @@ class GeographyEngine:
         return None
 
     @classmethod
+    def get_effective_road_condition(
+        cls,
+        road: RoadConnection,
+        environment: Any = None
+    ) -> Dict[str, Any]:
+        """
+        Determines the dynamic road condition based on current environmental metrics (weather, temperature).
+        Returns a dict containing condition metadata, effective speed multiplier, hazard, and narrative warning.
+        """
+        if not environment:
+            base_eff = ROAD_CONDITION_EFFECTS[RoadCondition.NORMAL]
+            return {
+                "condition": RoadCondition.NORMAL,
+                "name_ko": base_eff["name_ko"],
+                "description_ko": base_eff["description_ko"],
+                "speed_multiplier": road.speed_multiplier,
+                "hazard_level": road.hazard_level,
+                "fatigue_bonus": 0,
+                "warning_ko": ""
+            }
+
+        weather = getattr(environment, "weather", "맑음").lower()
+        temp = getattr(environment, "temperature_celsius", 20)
+
+        cond = RoadCondition.NORMAL
+        warning = ""
+
+        # 1. Rain / Storm / Downpour
+        if any(w in weather for w in ["폭우", "호우", "장대비", "비"]):
+            if road.road_type == RoadType.SWAMP_TRAIL:
+                cond = RoadCondition.FLOODED
+                warning = "폭우로 인해 수렁길이 완전히 침수되어 무릎까지 흙탕물이 차올랐습니다."
+            elif road.road_type in [RoadType.DIRT_ROAD, RoadType.DENSE_FOREST]:
+                cond = RoadCondition.MUDDY
+                warning = "폭우로 인해 흙길이 진흙탕으로 변해 발이 푹푹 빠집니다."
+            elif road.road_type == RoadType.MOUNTAIN_PASS:
+                cond = RoadCondition.MUDDY
+                warning = "비바람으로 산비탈이 미끄러워지고 낙석 위험이 증가했습니다."
+            else:
+                cond = RoadCondition.NORMAL
+
+        # 2. Snow / Blizzard / Freezing cold
+        elif any(w in weather for w in ["폭설", "눈보라", "대설", "눈"]) or temp <= 0:
+            if road.road_type == RoadType.MOUNTAIN_PASS:
+                cond = RoadCondition.FROZEN_ICE
+                warning = "혹한과 눈보라로 산길 노면이 살얼음 빙판으로 얼어붙었습니다."
+            else:
+                cond = RoadCondition.SNOW_DRIFT
+                warning = "도로 위에 눈이 두껍게 쌓여 발걸음이 무겁게 지체됩니다."
+
+        # 3. Sandstorm / Dust
+        elif any(w in weather for w in ["모래폭풍", "황사", "열풍"]):
+            cond = RoadCondition.SANDSTORM
+            warning = "거센 모래바람이 길을 덮쳐 시야가 가로막히고 이동이 고통스럽습니다."
+
+        # 4. Extreme Heat
+        elif temp >= 35 or "폭염" in weather:
+            cond = RoadCondition.HEAT_HAZE
+            warning = "지열로 피어오르는 아지랑이와 살인적인 열기로 피로가 극심합니다."
+
+        eff = ROAD_CONDITION_EFFECTS[cond]
+        combined_speed_mult = road.speed_multiplier * eff["speed_mult"]
+        combined_hazard = road.hazard_level + eff["hazard_bonus"]
+
+        return {
+            "condition": cond,
+            "name_ko": eff["name_ko"],
+            "description_ko": eff["description_ko"],
+            "speed_multiplier": combined_speed_mult,
+            "hazard_level": combined_hazard,
+            "fatigue_bonus": eff["fatigue_bonus"],
+            "warning_ko": warning
+        }
+
+    @classmethod
     def calculate_segment_travel_hours(
         cls,
         distance_km: float,
         road_type: RoadType = RoadType.DIRT_ROAD,
-        travel_mode: str = "foot"
+        travel_mode: str = "foot",
+        condition_speed_mult: float = 1.0
     ) -> float:
-        """Calculates travel hours for a single road segment."""
+        """Calculates travel hours for a single road segment with condition modifier."""
         base_speed = TRAVEL_MODE_SPEEDS.get(travel_mode, 4.0)
         speed_mult = ROAD_SPEED_MULTIPLIERS.get(road_type, 1.0)
-        effective_speed = max(0.5, base_speed * speed_mult)
+        effective_speed = max(0.2, base_speed * speed_mult * condition_speed_mult)
         return distance_km / effective_speed
 
     @classmethod
@@ -115,10 +253,12 @@ class GeographyEngine:
         state: Any,
         origin_id: str,
         dest_id: str,
-        travel_mode: str = "foot"
+        travel_mode: str = "foot",
+        environment: Any = None
     ) -> Tuple[float, float, List[str]]:
         """
-        Calculates shortest travel time using Dijkstra's algorithm over the road network.
+        Calculates shortest travel time using Dijkstra's algorithm over the road network,
+        factoring in dynamic environmental road conditions (rain/mud, ice, snow, etc.).
         Returns (total_travel_hours, total_distance_km, path_location_ids).
         If unreachable, returns (float('inf'), float('inf'), []).
         """
@@ -127,6 +267,8 @@ class GeographyEngine:
 
         if origin_id not in state.locations or dest_id not in state.locations:
             return float('inf'), float('inf'), []
+
+        env = environment if environment is not None else getattr(state, "environment", None)
 
         # Priority queue stores: (total_hours, total_km, current_loc_id, path)
         pq: List[Tuple[float, float, str, List[str]]] = [(0.0, 0.0, origin_id, [origin_id])]
@@ -163,8 +305,10 @@ class GeographyEngine:
                         )
 
             for next_id, road in neighbors.items():
+                cond_info = cls.get_effective_road_condition(road, env)
+                cond_speed = ROAD_CONDITION_EFFECTS.get(cond_info["condition"], {}).get("speed_mult", 1.0)
                 segment_hours = cls.calculate_segment_travel_hours(
-                    road.distance_km, road.road_type, travel_mode
+                    road.distance_km, road.road_type, travel_mode, condition_speed_mult=cond_speed
                 )
                 new_hours = hours + segment_hours
                 new_km = km + road.distance_km
@@ -178,7 +322,8 @@ class GeographyEngine:
         cls,
         state: Any,
         origin_id: str,
-        travel_mode: str = "courier"
+        travel_mode: str = "courier",
+        environment: Any = None
     ) -> Dict[str, Tuple[float, float, int]]:
         """
         Returns a dict of all reachable locations from origin:
@@ -187,6 +332,8 @@ class GeographyEngine:
         reachable: Dict[str, Tuple[float, float, int]] = {origin_id: (0.0, 0.0, 0)}
         if origin_id not in state.locations:
             return reachable
+
+        env = environment if environment is not None else getattr(state, "environment", None)
 
         pq: List[Tuple[float, float, int, str]] = [(0.0, 0.0, 0, origin_id)]
         visited: Dict[str, float] = {}
@@ -217,8 +364,10 @@ class GeographyEngine:
                         )
 
             for next_id, road in neighbors.items():
+                cond_info = cls.get_effective_road_condition(road, env)
+                cond_speed = ROAD_CONDITION_EFFECTS.get(cond_info["condition"], {}).get("speed_mult", 1.0)
                 segment_hours = cls.calculate_segment_travel_hours(
-                    road.distance_km, road.road_type, travel_mode
+                    road.distance_km, road.road_type, travel_mode, condition_speed_mult=cond_speed
                 )
                 new_hours = hours + segment_hours
                 new_km = km + road.distance_km

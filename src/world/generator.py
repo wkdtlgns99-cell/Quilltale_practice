@@ -507,15 +507,39 @@ class WorldGenerator:
                 "description": "거대한 고대 원시림 깊은 곳에 지어진 견고한 사냥꾼 오두막이다. 타오르는 장작 난로와 벽에 걸린 맹수 모피들, 그리고 손질된 장궁과 화살촉이 든든한 분위기를 풍긴다.",
                 "starter_job": "과묵한 늙은 늑대 사냥꾼",
                 "starter_npc_name": "요른 (Jorn)"
+            },
+            {
+                "name": "죄수 호송 마차 전복 현장과 눈보라 비탈",
+                "description": "험준한 눈보라 절벽 비탈에 뒤집혀 부서진 제국 죄수 호송 마차 잔해다. 흩어진 쇠사슬과 부러진 창자루 사이로, 피를 흘리는 부상당한 호송 간수가 쓰러진 채 숨을 헐떡이고 있다.",
+                "starter_job": "피 흘리는 제국 호송 간수",
+                "starter_npc_name": "카터 (Carter)"
+            },
+            {
+                "name": "외해 난파선 생존자의 해안 절벽 동굴",
+                "description": "거센 파도가 몰아치는 외해 암초에 침몰한 상선 조각이 밀려든 축축한 해식 동굴이다. 소금기에 젖은 목재 파편과 찢긴 돛천 틈새에서 조난당한 이등 항해사가 떨며 횃불을 켜고 있다.",
+                "starter_job": "저체온증에 떠는 상선 항해사",
+                "starter_npc_name": "실비아 (Sylvia)"
+            },
+            {
+                "name": "약탈당한 비단 카라반의 야간 잔해지",
+                "description": "황무지 도로 한가운데에서 습격당해 불타는 대상(카라반) 마차들 틈새다. 타오르는 모닥불 연기와 흩뿌려진 향신료 가루 속에서 살아남은 상단 경비대장이 칼을 쥐고 주위를 경계하고 있다.",
+                "starter_job": "칼을 쥐고 경계하는 상단 경비대장",
+                "starter_npc_name": "라시드 (Rashid)"
+            },
+            {
+                "name": "국경 격리 검문소 목조 심문실",
+                "description": "외풍이 들이치는 삭막한 통나무 격리 심문실이다. 석유 램프의 그을음 냄새와 소독약 냄새가 진동하며, 두꺼운 가죽 방역복과 부리 가면을 착용한 국경 심문관이 의자에 앉아 당신의 통행증을 요구하고 있다.",
+                "starter_job": "부리 가면의 국경 방역관",
+                "starter_npc_name": "클라우디오 (Claudio)"
             }
         ]
 
-        # Pick continent starter or fallback to diverse origins
+        # Pick diverse starter origins (blend cosmology starter with 12 origins pool to prevent tavern repetition)
         cosmo_starter = chosen_continent.get("starter_settlement")
+        all_candidates = list(STARTER_ORIGINS_POOL)
         if cosmo_starter and isinstance(cosmo_starter, dict):
-            starter_settlement = cosmo_starter
-        else:
-            starter_settlement = random.choice(STARTER_ORIGINS_POOL)
+            all_candidates.append(cosmo_starter)
+        starter_settlement = random.choice(all_candidates)
 
         # 2. Tier 2 & 3: Locations Assembly [1. Starter Settlement + 2~4. Outer Dungeons]
         region_templates_path = TEMPLATES_DIR / 'region_templates.json'

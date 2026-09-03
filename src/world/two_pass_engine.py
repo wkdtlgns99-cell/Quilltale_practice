@@ -6,6 +6,7 @@ Pass 2: Literary Narration Validation and State Delta Reconciliation.
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 import logging
+import re
 
 from src.world.state import WorldState
 from src.world.validator import ActionValidator
@@ -237,32 +238,57 @@ class TwoPassEngine:
                 "upstairs": ["2층", "계단", "위층", "upstairs", "올라"],
                 "downstairs": ["지하", "아래층", "지하실", "downstairs", "내려"]
             }
-            is_move_action = any(v in action_lower for v in ["이동", "걸어", "향해", "달려", "들어", "나선", "오르", "내려", "나간", "떠난", "발걸음", "move", "go", "enter", "exit"])
+            is_move_action = any(v in action_lower for v in [
+                "이동", "걸어", "향해", "달려", "들어", "나선", "오르", "내려", "나간", "떠난",
+                "발걸음", "간다", "가자", "가려", "향한다", "내려간다", "올라간다", "접근",
+                "가본다", "밑바닥으로", "도착", "move", "go", "enter", "exit"
+            ])
             if is_move_action:
                 for exit_dir, target_loc_id in curr_loc.exits.items():
                     keywords = direction_keywords.get(exit_dir.lower(), [exit_dir.lower()])
                     target_loc = state.locations.get(target_loc_id)
                     loc_name_match = bool(target_loc and target_loc.name.lower() in action_lower)
                     dir_match = any(k in action_lower for k in keywords)
-                    if dir_match or loc_name_match:
+                    
+                    # Contextual match: if player mentions '수문' or '운하' and exit is north/subterranean
+                    context_match = False
+                    if exit_dir in ["north", "downstairs"] and any(w in action_lower for w in ["수문", "운하", "밑바닥", "지하"]):
+                        context_match = True
+
+                    if dir_match or loc_name_match or context_match:
                         if target_loc_id in state.locations:
                             if "player" not in state_delta:
                                 state_delta["player"] = {}
                             state_delta["player"]["location"] = target_loc_id
+                            
+                            # Narrative location name refinement if generic/mismatched
+                            if context_match and target_loc:
+                                if "비유클리드" in target_loc.name or "미지의" in target_loc.name:
+                                    target_loc.name = "도시 북쪽 외곽의 폐기된 운하 수문 지하"
+
                             target_name = target_loc.name if target_loc else target_loc_id
 
                             from src.world.geography import GeographyEngine
                             road = GeographyEngine.get_road(state, curr_loc.id, target_loc_id)
-                            dist_km = road.distance_km if road else 1.0
+                            dist_km = road.distance_km if road else 1.5
                             r_type = road.road_type if road else "dirt_road"
-                            hours = GeographyEngine.calculate_segment_travel_hours(dist_km, r_type, travel_mode="foot")
-                            mins = max(5, int(hours * 60))
+                            cond_info = GeographyEngine.get_effective_road_condition(road, state.environment) if road else {
+                                "condition": "normal", "speed_multiplier": 1.0, "name_ko": "정상 도로", "fatigue_bonus": 0, "warning_ko": ""
+                            }
+                            cond_speed = cond_info["speed_multiplier"] / road.speed_multiplier if (road and road.speed_multiplier > 0) else 1.0
+                            hours = GeographyEngine.calculate_segment_travel_hours(dist_km, r_type, travel_mode="foot", condition_speed_mult=cond_speed)
+                            mins = max(15, int(hours * 60))
                             state_delta["time_minutes"] = mins
-                            fatigue_inc = max(1, int(mins / 30))
+                            fatigue_inc = max(1, int(mins / 30) + cond_info.get("fatigue_bonus", 0))
                             state_delta["fatigue_delta"] = fatigue_inc
 
-                            fact_sheet.quest_progress_logs.append(f"장소 이동 완료: [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요)")
+                            road_warn = f" ({cond_info['warning_ko']})" if cond_info.get("warning_ko") else ""
+                            fact_sheet.quest_progress_logs.append(f"장소 이동 완료: [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요, 노면: {cond_info.get('name_ko', '정상')}){road_warn}")
                             break
+
+            # Default passage of time for minor actions if not moving
+            if "time_minutes" not in state_delta:
+                state_delta["time_minutes"] = 10
 
         # 2.5 Equipment Equip / Unequip Intent Execution
         equip_intent = fact_sheet.extra_flags.get("equip_intent")
@@ -515,6 +541,31 @@ class TwoPassEngine:
         # 7. Quest Progress Hooks (location reach)
         QuestEngine.progress_event(state, "reach", state.player.location)
 
+        # 7.5 Deterministic Gold Payment / Expense Detection
+        gold_match = re.search(r'(\d+)\s*(?:골드|은화|플로린|닢|G|g)(?:를|을|의|로|)?\s*(?:던져|건네|지불|내놓|주며|주고|내며|바치)', action)
+        if gold_match:
+            paid_amount = int(gold_match.group(1))
+            if state.player.gold >= paid_amount:
+                state.player.gold -= paid_amount
+                if "player" not in state_delta:
+                    state_delta["player"] = {}
+                state_delta["player"]["gold"] = state.player.gold
+                fact_sheet.quest_progress_logs.append(f"💰 {paid_amount}G 지불 완료 (잔여 골드: {state.player.gold}G)")
+                if target_npc:
+                    target_npc.gold = getattr(target_npc, "gold", 0) + paid_amount
+
+        # 7.6 Backfire Damage on Failed Magic with Unknown Words
+        if dice_res and not dice_res.is_success and fact_sheet.extra_flags.get("backfire_risk"):
+            unk_cnt = fact_sheet.extra_flags.get("unknown_count", 1)
+            backfire_dmg = max(5, unk_cnt * 4)
+            state.player.health = max(1, state.player.health - backfire_dmg)
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["health"] = state.player.health
+            fact_sheet.quest_progress_logs.append(
+                f"⚡ [마나 역류 자해!] 미학습 고대어 {unk_cnt}개 강행 실패로 마력이 시전자에게 역류하여 {backfire_dmg} 자해 피해를 입었습니다! (현재 체력: {state.player.health}/{state.player.max_health})"
+            )
+
         # 8. Party & Companion Autonomous Turns
         is_combat = (dice_res is not None and any(k in getattr(dice_res, "action_type", "") for k in ["combat", "magic", "공격", "전투", "스킬"]))
         if is_combat and target_npc:
@@ -559,6 +610,16 @@ class TwoPassEngine:
                             "disposition": o_npc.disposition
                         }
                         break  # Limit to 1 opportunistic action per turn
+
+        # 8.7 Deterministic Hidden Boss / Elite Monster Encounter Check
+        from src.world.hidden_encounter_engine import HiddenEncounterEngine
+        hidden_enc = HiddenEncounterEngine.evaluate_encounter(state, action)
+        if hidden_enc:
+            fact_sheet.quest_progress_logs.append(hidden_enc["encounter_log"])
+            fact_sheet.npc_skill_logs.append(f"🚨 [{hidden_enc['tier'].upper()} 강림]: {hidden_enc['appearance_narration']}")
+            fact_sheet.npc_skill_logs.append(f"   * [보스 약점 공략 힌트]: {hidden_enc['weakness']}")
+            if hidden_enc.get("extractable_skill"):
+                fact_sheet.npc_skill_logs.append(f"   * [처치 시 획득 가능 비기]: {hidden_enc['extractable_skill']}")
 
         # 9. Ecological Feedback
         loc_name = curr_loc.name if curr_loc else "미지의 지대"

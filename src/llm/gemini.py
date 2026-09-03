@@ -62,8 +62,8 @@ class GeminiLLM(BaseLLM):
             raise RuntimeError("GEMINI_API_KEY is not set or client initialization failed.")
         final_prompt = f"{system}\n\n{prompt}" if system else prompt
 
-        candidate_models = [self._model_name, "gemini-3.7-flash", "gemini-flash-latest"]
-        candidate_models = list(dict.fromkeys(candidate_models))
+        candidate_models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.1-pro-preview", self._model_name]
+        candidate_models = list(dict.fromkeys([m for m in candidate_models if m]))
 
         last_error = None
         total_keys = len(self._clients)
@@ -72,21 +72,26 @@ class GeminiLLM(BaseLLM):
         for attempt in range(total_keys):
             client = self.current_client
             for m in candidate_models:
-                try:
-                    response = client.models.generate_content(
-                        model=m,
-                        contents=final_prompt,
-                    )
-                    return LLMResponse(text=response.text or "", model=m)
-                except Exception as e:
-                    last_error = e
-                    err_str = str(e).upper()
-                    if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "QUOTA" in err_str:
-                        logger.warning(f"Key #{self._client_idx + 1} quota limit hit. Instantly rotating to next key...")
-                        break  # Break inner model loop, switch to next API key immediately!
-                    else:
-                        logger.warning(f"Gemini {m} error: {e}")
-                        time.sleep(0.3)
+                for retry in range(2):
+                    try:
+                        response = client.models.generate_content(
+                            model=m,
+                            contents=final_prompt,
+                        )
+                        return LLMResponse(text=response.text or "", model=m)
+                    except Exception as e:
+                        last_error = e
+                        err_str = str(e).upper()
+                        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "QUOTA" in err_str:
+                            logger.warning(f"Key #{self._client_idx + 1} quota limit hit. Instantly rotating to next key...")
+                            break  # Break inner model loop, switch to next API key immediately!
+                        elif "503" in err_str or "UNAVAILABLE" in err_str:
+                            logger.warning(f"Gemini {m} temporary 503 unavailable, retrying in 1s...")
+                            time.sleep(1.0)
+                        else:
+                            logger.warning(f"Gemini {m} error: {e}")
+                            time.sleep(0.3)
+                            break
             
             # Rotate to next key immediately
             if total_keys > 1:

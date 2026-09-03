@@ -165,3 +165,68 @@ class PerceptionEngine:
         # Clear discovered thefts
         state.player.unnoticed_thefts.clear()
         return discovered_events
+
+    @classmethod
+    def evaluate_sensory_awareness(
+        cls,
+        perception_stat: int,
+        faculty: str,
+        dc: int = 12
+    ) -> Dict[str, Any]:
+        """
+        Evaluates superhuman sensory faculties (premonition, gaze detection, kinesic anticipation, etc.).
+        Returns dictionary containing success status, roll details, and atmospheric sensory clue.
+        """
+        mod = DiceEngine.stat_modifier(perception_stat)
+        roll = DiceEngine.roll_d20()
+        total = roll + mod
+        is_success = total >= dc
+
+        clues = {
+            "premonition": {
+                "success": "발을 내딛으려는 찰나, 목덜미를 타고 서늘한 전율이 흘러내리며 심장이 쿵 내려앉습니다. 1보 앞에 치명적인 함정이 숨겨져 있습니다.",
+                "failure": "아무런 위화감도 느끼지 못했습니다."
+            },
+            "gaze_detection": {
+                "success": "어둠 속에서 당신의 관자놀이를 집요하게 겨누는 서늘한 시선의 무게가 피부를 따끔거리게 찌릅니다.",
+                "failure": "주변에 누군가 지켜보고 있다는 낌새를 알아채지 못했습니다."
+            },
+            "intuitive_insight": {
+                "success": "상대의 입가는 웃고 있으나, 허리춤을 쥔 손가락의 미세한 경련과 불협화음을 내는 호흡에서 노골적인 배신의 살의를 간파했습니다.",
+                "failure": "상대의 겉모습에 감춰진 진의를 꿰뚫어보지 못했습니다."
+            },
+            "structural_flaw": {
+                "success": "적의 육중한 장갑 틈새, 가죽 끈이 마모되어 살점이 드러난 치명적인 방어의 결이 한눈에 들어옵니다. (방어력 -2 판정 관통)",
+                "failure": "적의 빈틈이나 약점을 직관하지 못했습니다."
+            },
+            "kinesic_anticipation": {
+                "success": "적이 칼을 뻗기 직전, 어깨 근육의 미세한 수축과 발뒤꿈치로 실리는 무게 중심의 이동을 읽었습니다. 다음 턴 전력 찌르기가 들어옵니다!",
+                "failure": "적의 다음 예비 동작을 읽어내지 못했습니다."
+            },
+            "acoustic_spatial": {
+                "success": "칠흑 같은 어둠 속에서도 발소리의 울림과 서늘한 공기 저항으로 3보 앞에 깎아지른 수직 구덩이가 있음을 알아챘습니다.",
+                "failure": "어둠 속에서 지형의 굴곡을 파악하지 못해 발을 헛디딜 위험이 큽니다."
+            },
+            "heartbeat_hearing": {
+                "success": "벽 너머 축축한 공기 사이로 얕고 거친 두 사람의 숨소리와 불규칙한 심장 박동이 또렷하게 귓전에 닿습니다.",
+                "failure": "벽 너머의 기척을 잡아내지 못했습니다."
+            },
+            "mana_resonance": {
+                "success": "공기 중에 감도는 미세한 정전기와 비릿한 유황 냄새, 그리고 피부를 간질이는 파동으로 은폐된 고대 마법진의 결을 포착했습니다.",
+                "failure": "주변에 마나의 흐름이나 비전 흔적이 있는지 느끼지 못했습니다."
+            }
+        }
+
+        faculty_data = clues.get(faculty, clues["premonition"])
+        narrative = faculty_data["success"] if is_success else faculty_data["failure"]
+
+        return {
+            "faculty": faculty,
+            "perception_stat": perception_stat,
+            "roll": roll,
+            "modifier": mod,
+            "total": total,
+            "dc": dc,
+            "is_success": is_success,
+            "sensory_clue_ko": narrative
+        }

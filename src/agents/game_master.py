@@ -496,6 +496,33 @@ class GameMasterAgent:
             result = JSONRepairEngine.repair_and_parse(raw)
             narration = result.get("narration", f"당신은 {loc.name if loc else '알 수 없는 곳'}에 서 있습니다.")
             image_prompt = result.get("image_prompt")
+
+            # Two-Pass Length & Quality Validator: Enforce >= 800 chars for deep immersive prologue
+            if len(narration) < 800 and not narration.startswith("축축하고"):
+                logger.info(f"Prologue narration length ({len(narration)} chars) is below 800 chars. Triggering deep sensory expansion...")
+                expansion_prompt = f"""
+이전 오프닝 서사가 {len(narration)}자로 너무 짧습니다.
+다음 4대 핵심 구조를 엄격히 준수하여 반드시 800자 이상(공백 포함 900~1,300자)의 압도적 밀도를 지닌 오프닝 서사로 전면 확장하여 재작성하십시오:
+- [1문단 거시 역사]: 대륙과 제국의 역사, 과거 찬란했던 번영과 멸망/내전의 기원.
+- [2문단 당대 사회상과 비극]: 잿더미가 된 민초들의 궁핍한 삶, 각국 용병단과 군웅들의 탐욕스러운 분쟁.
+- [3문단 플레이어의 처지와 소지품]: 이 거센 피바람 속에 휘말린 플레이어의 초라한 행색, 품속에 쥐어진 차가운 소지품 감촉.
+- [4문단 현장 오감과 즉각적 상황]: 현재 장소([{loc.name if loc else '시작 장소'}])의 냄새, 소리, 공기의 온도, 눈앞 인물과의 대치 상황.
+
+이전 원문:
+{narration}
+
+반드시 JSON 포맷 {{"narration": "800자 이상의 확장된 서사 본문", "image_prompt": "..."}}으로만 반환하십시오.
+"""
+                try:
+                    raw_exp = self._llm.generate_json(expansion_prompt, dynamic_system_prompt)
+                    result_exp = JSONRepairEngine.repair_and_parse(raw_exp)
+                    exp_text = result_exp.get("narration", "")
+                    if len(exp_text) > len(narration):
+                        narration = exp_text
+                        if result_exp.get("image_prompt"):
+                            image_prompt = result_exp["image_prompt"]
+                except Exception as exp_err:
+                    logger.warning(f"Prologue expansion retry failed: {exp_err}")
         except Exception as e:
             logger.error(f"GM Opening generation error: {e}")
             narration = f"축축하고 차가운 공기가 폐부를 찌릅니다. 당신은 {loc.name if loc else '알 수 없는 장소'}에 서 있습니다."

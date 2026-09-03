@@ -22,6 +22,7 @@ eval_results/
 # Quilltale Local Database & Dynamic Save Files
 data/qdrant_storage/
 data/saves/
+saves/
 !data/saves/.gitkeep
 data/chronicles/
 data/legacy/
