@@ -67,10 +67,8 @@
       - [x] **1-2. 지리/기후 권역(Level 2)**: 10대 지형, 4계절 기후대, 자연 자원 물가(0.3x~5.0x), 인구, 면적, 천연 특산품(`specialties`), 환경 위험, 시야/소음 차폐(`Region`).
       - [x] **1-3. 국가/영지(Level 3)**: 정치 체제, 영토 경계, 공식 화폐/환율, 관세율(0~50%), 국경 검문소(통행증/밀수), 법률/금기, 인구, 면적, 국가 특산품(`specialties`), 외교 관계(`Nation`).
       - [x] **1-4. 정주지/마을(Level 4)**: 정주지 등급/격(수도/요새/농촌/광산/항구), 2D 좌표, 인구, 행정 면적, 종족비, 치안도, 성벽 등급, 도로망, 식량/식수 자급율, 위생도, 향토 특산품(`specialties`), 중앙 광장 시설물, 성문·해자, 마구간, 물레방아/풍차, 방화수조, 검역소, 지하 하수망, 방목지(`Settlement`).
-      - [x] **1-5. 세부 인프라/시설(Level 5)**: 시설 분류, 건물 생애주기(`BuildingStatus`: 정상/공사중/수리중/반파/폐허/방치), 완공도, 수리 자재, 창문 방범, 굴뚝 크기, 지붕 재질, 엄폐율, 비밀문, 지하실 유형, 파수 동물(`Facility`).
-      - [x] **[추가 정제] 로어 하드코딩 제거 & 상향식 집계**: `Faction`, `WorldState`, `NPCVisualDetails`, `Settlement`, `EnvironmentalMetrics` 기본값 중립화 + `recalculate_totals()` 상향식 인구/면적 합산 + 3단 특산품 계층 조회.
-    - [ ] **🔥 [다음 세션 즉시 착수 차례] 2단계: 상위 레이어(0~2층) 템플릿 연동**: 기존 `cosmology_templates.json`(57종)과 `region_templates.json`(30종)을 대륙/권역 그릇에 정밀 매핑.
-    - [ ] **3단계: 중간 레이어(3~4층) 국가/마을 영토 매핑**: 4대 왕국 및 국경선, 관세율, 마을 단위(`Settlement`: 좌표, 인구, 치안도) 도로망 결합.
+    - [x] **2단계: 상위 레이어(0~2층) 템플릿 연동**: 총 120종 대륙 템플릿 완비(`continent_templates.json`: 동양/선협/무협/괴담/신선 및 다크 판타지 등 전 120종 대륙 최강자/최강 몬스터 스케치 및 ID 포인터 전면 탑재) + `cosmology_templates.json`(57종) 및 `region_templates.json`(41종)을 `InfrastructureTemplateLoader`로 정밀 매핑/결합 완료.
+    - [ ] **🔥 [다음 세션 즉시 착수 차례] 3단계: 중간 레이어(3~4층) 국가/마을 영토 매핑**: 4대 왕국 및 국경선, 관세율, 마을 단위(`Settlement`: 좌표, 인구, 치안도) 도로망 결합.
     - [ ] **4단계: 하위 레이어(5층) 마을 내 인프라 배치**: 마을별 상점, 대장간, 학교, 신전, 주점 등 세부 시설 슬롯화 및 기능 연동.
     - [ ] **5단계: [최종] 전 계층 수직 통합 검수 (End-to-End)**: 시설에서 마을 ➔ 국가(관세) ➔ 권역(자연 물가) ➔ 대륙(언어) ➔ 세계관(마나)까지 상하향식 연동 100% 통합 단위 테스트.
   - **작업 원칙**: 다른 백로그 전면 중단하고, 1단계부터 5단계까지 순차적으로 100% 완료한 후 다음 백로그 진행.
@@ -208,116 +206,39 @@
 ## 📅 [2026-09-04] 현재 세션 개발 현황
 
 ### 1. 이번 세션 구현 완료 핵심 시스템
-1. **6대 계층 거시-미시 인프라 뼈대 1단계 완성 (infrastructure.py, state.py)**:
-   - Continent(대륙), Region(권역), Nation(국가), Settlement(정주지), Facility(세부시설) 5대 고밀도 데이터 클래스 구축.
-   - InfrastructureRegistry: O(1) 상하향식 계층 탐색, 권역 자연 자원 매트릭스(0.3x~5.0x) + 국가 관세율(0~50%) + 외교 관계 연동 유효 거래 가격 연산, 국경 관문 검문소(통행증, 밀수품 적발, 전시 차단) 검증 로직 구현.
-2. **건물 생애주기(Lifecycle) 및 물리 파손/공사 상태 체계 탑재**:
-   - BuildingStatus(str, Enum): OPERATIONAL(정상), UNDER_CONSTRUCTION(신축/증축), UNDER_REPAIR(수리보수), DAMAGED(반파/파손), RUINED(완파/폐허), ABANDONED(방치/소굴화).
-   - FacilityType(str, Enum): 14대 표준 물리 시설 유형 완비.
-   - Facility: building_status, construction_progress(완공 진척도 0~100%), repair_cost_materials(수리 자재/골드 장부), destruction_cause(파손 원인), scaffolding_accessible(비계 설치 여부).
-   - Settlement: 물리적 시설 슬롯 분류 및 상태별 목록 관리 (commercial_shops, training_facilities, active_peddlers, guild_halls, under_construction_facilities, ruined_facilities).
-3. **전 계층(Level 0 ~ Level 5) 현실 물리 & 거시 재앙 인프라 완비**:
-   - **Level 0 (WorldState - 거시 인류 난제, 대재앙 & 물리/기억/성간 상수)**:
-     - global_apocalyptic_threat: 전 세계적 멸망/재앙 위협 명칭 ("마왕군 침공", "영구 빙하기", "심연 차원문").
-     - world_crisis_active_stage: 위기 진행 단계 (0: 평화 ~ 5: 완전 파멸).
-     - global_nemesis_npc_id: 전 세계 공통 주적/마왕/파멸의 사도 NPC ID 포인터 (NPC 클래스 포인팅).
-     - global_sanctuary_region_id: 유일하게 침식되지 않은 인류 최후의 성역 권역 ID 포인터 (Region 클래스 포인팅).
-     - grand_crusade_coalition: 대재앙 대항 초국가 성전군/연합 세력 목록.
-     - universal_gravity_scale: 세계 물리 중력 계수 (1.0 = 표준, 중량 과적 및 낙하 충격량 배율 기준치).
-     - memory_decay_turn_interval: 사소한(1~2급) 에피소딕 기억의 자연 망각/흐려짐 턴 주기 (50턴).
-     - cosmic_alignment_element: 현재 행성이 통과 중인 우주 성간 속성/천체 정렬 ("neutral", "fire", "void", "holy", "life").
-     - world_soul_awakening_ratio: 행성 자체의 영혼/가이아 자아 각성도 (0~100, 마나 폭풍/지각 변동).
-   - **Level 1 (Continent)**:
-     - dominant_tycoon_npc_id: 대륙 최고 거상/상단 총수 NPC ID 포인터.
-     - continental_chokepoints: 대륙 관문 해협/지협/대협곡 등 전략적 병목 통로 목록.
-     - tectonic_instability_rating: 지질 판 불안정도 (0~100, 지진/화산 빈도).
-     - continental_forbidden_zones: 신벌/낙진 격리 금기 구역 목록.
-     - standard_physique_archetype: 대륙 주류 표준 체형 골격 ("humanoid_medium", "dwarven_broad", "beastfolk_large", 노획 장비 리사이징 기준).
-     - endemic_continental_resources: 대륙 고유 희귀 근원 자원 (타 대륙엔 아예 없는 자원: 미스릴 원석, 세계수 수액, 용골 화석).
-     - ancient_titan_remains: 대륙을 형성하는 잠든 고대 거신/시조룡의 유해 지형 목록 (["거신 이미르의 늑골 산맥", "세계뱀의 등뼈"]).
-     - leyline_network_scale: 대륙 전역을 관통하는 거대 마나 지맥 규모 ("sparse", "medium", "dense", "wild_surge").
-   - **Level 2 (Region)**:
-     - wildfire_hazard_rating: 산불/대화재 확산 취약도 (0~100).
-     - foliage_density: 야생 수목/식생 밀도 (0~100, 시야 차폐, 화살 방해, 매복 보너스).
-     - river_crossing_dc: 주요 하천/급류 도강 난이도 DC (도보/마차 침수 및 유실 판정).
-     - campfire_detection_risk: 야영 모닥불 피울 시 야생 맹수/도적 유인 위험도 (0~100, 야간 기습 확률).
-     - watch_shift_visibility_bonus: 권역 지형/시야에 따른 야간 불침번 경계 감시 보정치 (-50: 밀림 ~ +50: 사막).
-     - rare_mineral_deposits: 지질/지하 희소 광맥 (오리하르콘 광맥, 천연 유황 동굴, 심층 마나 수정맥 등).
-     - endemic_biological_resources: 기후 고유 희귀 생체/약초 자원 (만년설 설련화, 심연 발광 포자, 화염 도마뱀 쓸개 등).
-     - draconic_presence_level: 권역 내 용족/고룡 서식 위협도 (0: 없음, 1: 와이번/유룡, 2: 성룡 영역, 3: 고룡 동면/지배).
-     - dominant_elemental_affinity: 권역 지배 속성 마나 편향 ("neutral", "fire", "ice", "lightning", "darkness", "holy", "wind", "earth").
-     - monster_stampede_risk: 마수 번식기/마나 폭주 시 일어나는 마수 대침공/스탬피드 위험도 (0~100).
-   - **Level 3 (Nation)**:
-     - national_merchant_leader_id: 국가 공인 상단 총수/왕실 조달청장 NPC ID 포인터.
-     - border_barrier_type: 국경 물리 장벽 체계 ("none", "wooden_palisade_line", "great_stone_wall", "chasm_fortress").
-     - beacon_network_speed_hours: 국영 봉화대/파발망 신호 전파 시간.
-     - coin_minting_purity: 조폐국 주화 금/은 순도 (0~100%, 동전 깎기 및 위조 판정).
-     - ammunition_strategic_control: 국가 전시 철제 화살촉/탄약 민간 유통 통제 여부.
-     - refitting_guild_tax_rate: 노획 장비 체형 개조/수선 시 국영 대장장이 길드 공임 관세율 (0.0~0.3).
-     - monopoly_strategic_resources: 국가 독점 전매 및 수출 금지 전략 자원 (왕실 비전 초석, 고농축 마력석 등).
-     - national_mining_concessions: 영토 내 주요 광산 채굴권/조계지 장부 (mine_name -> 소유 길드/가문 ID).
-     - court_mage_circle_strength: 궁정 마법사단/국영 마도 결사단 규모 및 방어 전력 (0~100).
-     - national_patron_deity_boon: 국가 수호신전의 국가 단위 신성 가호 축복 (예: "솔라리스의 태양 방벽", "불멸의 강철 축복").
-     - airship_dock_count: 국영 공중 마도 비공정 계류장 및 정규 비공정 수.
-     - **국가 군사 5대 표준 병과 & 특수부대 체계 (Option C 하이브리드)**:
-       - `knights_count`: 정예 기사단 / 중장기병 / 성기사 병력 수 (기본 100).
-       - `infantry_count`: 정규 보병 (장창병, 방패병, 검사) 병력 수 (기본 600).
-       - `ranged_corps_count`: 원거리 부대 (궁병, 석궁병, 총사대) 병력 수 (기본 200).
-       - `cavalry_count`: 경기병 / 수색 기동대 병력 수 (기본 100).
-       - `siege_engine_count`: 공성 투석기 / 공성포 / 발리스타 수 (기본 10).
-       - `beast_riders_count`: 마수 / 환수 기병 (그리폰, 와이번, 늑대 기병) 수 (기본 0).
-       - `special_military_units`: 국가 고유 특수부대/정예 연대 딕셔너리 (예: `{"왕실 머스킷 총사대": 100, "그리폰 공습대": 30}`).
-       - `calculate_total_military_power()`: 지상군 총 전력 자동 산출 메서드.
-   - **Level 4 (Settlement)**:
-     - town_square_features(단두대/공고판/시계탑/분수대), gate_type(성문 방호), moat_type(해자), stable_and_cart_capacity(마구간/마차 주차장), watermills_count/windmills_count(물레방아/풍차), firefighting_cistern_rating(방화수조), quarantine_camp_active(검역소 텐트촌), sewer_network_scale(지하 하수망), pasture_area_hectares(가축 방목지).
-     - street_lighting_type: 가로등/야간 조명망 ("none", "pitch_torches", "whale_oil_lamps", "magic_crystals").
-     - battlement_type: 성벽 총안 및 사격 흉벽 ("none", "wooden_hurdles", "stone_crenels", "machicolations").
-     - militia_armory_capacity: 마을 공용 무기고 비축 정원 (징집 민병대 무기 비축량).
-     - fletching_and_ammo_supply_tier: 화살/볼트 탄약 공방 보급 등급 (0: 품귀, 1: 일반, 2: 관통살, 3: 마도화살).
-     - armor_refitting_forge_tier: 이종족 노획 장비 체형 수선 대장간 등급 (0: 불가, 1: 가죽/경갑, 2: 판금중갑, 3: 마도구).
-     - pack_animal_rental_available: 중량 과적 해소를 위한 노새/짐마차 대여 가능 여부.
-     - disguise_inspection_strictness: 성문/거리 경비병의 복면/가면 착용자 불심검문 엄격도 (0~100).
-     - local_resource_nodes: 마을 관할 현지 물리적 채굴/채집 노드 (예: ["제1 철광 갱도", "고대 은광맥", "유황 온천", "벌채장"]).
-     - resource_depletion_risk: 자원 고갈 및 폐광 위험도 (0~100, 100 도달 시 폐광 및 유령마을화).
-     - magical_barrier_active: 고위 마법 폭격/드래곤 브레스 차단용 도시 광역 마도 결계 돔 가동 여부.
-     - aerial_mount_dock_tier: 비행 마수 승강장 등급 (0: 없음, 1: 전령소, 2: 그리폰 마구간, 3: 비공정 계류탑).
-     - teleportation_waystone_active: 정주지 중앙 공간 전송 마법석/웨이포인트 결절점 활성 여부.
-     - undead_haunting_index: 야간 영체/원혼/언데드 출몰 및 사령 농도 (0~100, 50 이상 시 야간 횃불 푸르게 변함).
-   - **Level 5 (Facility)**:
-     - window_security_type(창문 철창), chimney_hearth_size(벽난로 침투), roof_material_type(지붕 재질), cover_density(실내 엄폐율), secret_door_mechanism(비밀문), cellar_type(지하실/감옥), guard_beast_type(파수 동물).
-     - vent_duct_size: 환기 배관/덕트 크기 ("none", "grate_narrow", "crawlable_human").
-     - floor_water_depth_cm: 바닥 침수/오수 깊이 (cm: 0 건조, 5 찰랑거림, 30 무릎/감전).
-     - key_holder_npc_id: 자물쇠 열쇠 소지자 NPC ID 포인터 (소매치기/협박 탈취 대상).
-     - ceiling_height_meters: 실내 천장 높이 (m, 2.2m 미만 시 장창/대검 휘두름 벽 충돌 튕김 제약).
-     - hallway_width_meters: 실내 복도/통로 유효 폭 (m, 1.5m 미만 시 찌르기 무기 한정 및 회피 불가).
-     - cover_poise_durability: 실내 엄폐물/문짝의 체간 충격량 버팀도 (0~100, 대형 둔기/폭발 가드 파괴).
-     - dungeon_max_depth_floors: 던전/지하 유적 시설의 최대 지하 심도 층수 (0: 일반 지상 건물, 1~50: 지하 미궁 층수).
-     - dungeon_core_element: 살아있는 던전 핵의 속성 ("none", "abyss", "fire", "arcane", "nature", "undead").
-     - sanctification_rating: 시설 신성 축성/정화도 (0~100: 0 사령/저주 소굴, 50 세속 중립, 100 언데드 즉시 정화 성소).
-4. **4단계 희소 지하 자원 & 천연 광물 계층 상하향 조회 엔진 (resolve_natural_resources)**:
-   - 마을 물리 채굴장 ➔ 국가 독점 전매 자원 ➔ 권역 희소 광맥/생체 자원 ➔ 대륙 고유 근원 자원 4단 자동 결합 포트폴리오 산출.
-5. **하드코딩 로어 완전 제거 및 스키마 중립화**:
-   - Faction, WorldState, NPCVisualDetails, Settlement 기본값 중립화 및 의사소통 가능한 휴머노이드 필멸자 지성체 다종족 규격 확립.
-6. **전 계층 공통 인구/면적 체계 및 상향식 자동 합산 (Roll-up)**:
-   - recalculate_totals() 상향식 집계 탑재 및 3단 특산품 계층 조회.
-7. **마을 5대 생존/공동체 인프라 & 회복탄력성 감사 시스템**:
-   - 상하수도, 식량창고, 방위치안, 상공업공방, 주민후생 5대 분류 및 audit_settlement_resilience() 진단 엔진 탑재.
-8. **문명 6 & 중세 시뮬레이션 심화 요소 확장**:
-   - 문명 3단 위계, 6대 산출량(SettlementYields), 국왕/영주/빌리프/촌장 통치 체계, 계층 갈등, 종교 관용도, 암흑가, 전시 명분, 기온 편차, 최상위 포식자/지역 챔피언 포인터 완비.
-9. **6대 전 계층(Level 0~5) 및 가도/차량/세력 전면 요약 특성 태그 체계 (`traits: List[str]`) 탑재**:
-   - **Level 0~5 수직 계층**: `WorldState`(Level 0, `world_traits` 및 `traits` 프로퍼티), `Continent`(Level 1), `Region`(Level 2), `Nation`(Level 3), `Settlement`(Level 4), `Facility`(Level 5) 전면 탑재.
-   - **가도/운송/세력 확장**: `InterTierRoute`(광역 간선가도/원양항로), `RoadConnection`(마을 연결도로), `TransitVehicle`(비공정/마차 등 운송수단), `Faction`(국가/세력), `Location`(실시간 탐색 노드)까지 유효한 전 클래스에 `traits` 필드 100% 개설.
-   - 플레이어 UI 한눈 요약, AI(GM) 서술 앵커링, 도로 매복/돌발 퀘스트 발생기 기초 데이터 규격 완성.
+1. **총 120종 대륙 템플릿 신규 구축 및 대륙 최강자/최강 몬스터 스케치 전면 완비 (`data/templates/continent_templates.json`)**:
+   - 1차 20종 + 2차 30종 + 3차 40종 + 4차 30종 = 총 120종의 고밀도 대륙 템플릿 JSON 완성.
+   - 대륙 최강자 스케치(`continental_apex_champion_sketch`) 및 최강 몬스터 스케치(`continental_apex_monster_sketch`) 전 120개 대륙 100% 완비.
+2. **총 215종 4계층 정주지/마을 템플릿 전격 구축 및 무결성 검증 (`data/templates/settlement_templates.json`)**:
+   - 215종 전 템플릿 완비 및 `traits >= 1`, 좌표, 치안도, 성벽, 특산품, 중앙 광장, 금기, 원한, 스캔들 100% 무결점 탑재.
+3. **총 134종 Level 3 국가/영지 템플릿 완비 및 데이터 클래스 확장 (`data/templates/nation_templates.json`)**:
+   - `Nation` 클래스에 `dominant_species: List[str] = field(default_factory=list)`(국가 주요 구성 종족 목록) 신설하여 대륙(`mortal_species`) - 국가(`dominant_species`) - 마을(`racial_demographics`)로 이어지는 3단 종족 계층 체계 완성.
+   - 1차 29종 + 2차 26종 + 3차 7종 + 4차 15종 + 5차 16종 + 6차 10종 + 7차 31종 = 총 134종 국가 템플릿 100% 무결점 완비.
+4. **총 112종 Level 2 권역(Region) 템플릿 대폭 보강 및 적응 로더 완비 (`data/templates/region_templates.json`)**:
+   - 기존 41종 + 1차 20종 + 2차 21종 + 3차 15종 + 4차 15종 = 총 112종 고밀도 권역 전격 병합 (속삭이는 서리 첨봉, 마그마 불꽃 심혈 지대, 독무 포자 늪지대, 비취 대나무 숲, 적철석 혈암 협곡, 프리즘 수정 사막, 산호 왕관 만, 불타는 뼈 모래언덕, 그림자 심연 동굴, 초록 바람 평원, 질풍 폭풍 협곡, 신기루 에테르 사막, 푸른 수정 라군, 녹슨 철혈 황무지, 메아리치는 심연 협곡 등 4차 15종 추가 탑재).
+   - `InfrastructureTemplateLoader.adapt_region_template_to_region` 고도화: 중첩 생태계(`ecology`), 유적(`landmarks_and_ruins`), 자원(`resources`), 식문화/복식/신앙(`lifestyle_and_culture`)을 `Region` 데이터클래스에 100% 바인딩.
+5. **`InfrastructureTemplateLoader` 전 계층 로더 라인업 완성**:
+   - `load_settlement_templates()`, `load_nation_templates()`, `load_region_templates()`, `load_continent_templates()` 전 계층 로더 완비.
 
-### 2. 테스트 검증 상태
-- **인프라 계층 단위 테스트 45개 및 핵심 스위트 49개 100% 무결점 통과 (1.27s / 13.31s)**:
-  - tests/test_infrastructure_hierarchy.py 39개 테스트 통과.
-  - tests/test_world_state.py 6개 테스트 통과.
-  - tests/test_two_pass_engine.py 4개 테스트 통과.
-  - 신규 군사 병과(Option C), 6계층 + 가도/운송/세력 traits 태그, 직렬화/역직렬화 회귀 결함 0건. 전 모듈 호환성 100% 검증.
+### 2. 테스트 및 평가 검증 상태
+- **인프라 계층 단위 테스트 50개 및 프로젝트 전체 299개 테스트 100% 무결점 통과**:
+  - `tests/test_infrastructure_hierarchy.py`: 총 50개 테스트 전체 통과.
+    - `test_region_templates_json_integrity`: 112개 권역 템플릿 고유 ID, `traits >= 1`, 지형, 바닥 표면, 희귀 광맥, 몬스터 및 복식/식문화/신앙 프로필 전수 무결성 검증.
+    - `test_infrastructure_template_loader_regions`: 112개 권역 데이터 클래스 로딩 및 terrain/price multiplier 매핑 검증.
+    - `test_nation_templates_json_integrity` (134개) & `test_infrastructure_template_loader_nations` (134개) 검증.
+  - 전체 회귀 결함 0건, 299 passed in 3.15s.
+- **DoD Gate 평가 검증 (`eval_runner.py --no-judge`)**:
+  - `Invalid transition rate: 0.0%` (무결점 통과).
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-- **현재 완료 상태**: **1단계 (Level 0~5 고밀도 데이터 클래스 정의, 물리/생존 인프라, 군사 전력 Option C, 10개 클래스 traits 요약 특성 태그 체계)** 100% 완료.
-- **다음 세션 즉시 착수 작업**: **🔥 [인프라 2단계 착수] 상위 레이어(0~2층) 템플릿 연동**:
-  - `data/templates/cosmology_templates.json`(57종)과 `data/templates/region_templates.json`(30종)의 방대한 로어/기후/지형 데이터를 대륙(`Continent`), 권역(`Region`), 세계관(`WorldState`) 데이터 클래스 인스턴스로 자동 매핑·주입하는 로더 파이프라인 구축 및 검증.
+- **현재 완료 상태**:
+  - Level 0 우주론/세계관 57종 (`cosmology_templates.json`)
+  - Level 1 대륙 120종 + 최강자/최강 몬스터 (`continent_templates.json`)
+  - Level 2 권역 112종 (`region_templates.json`) [목표 300개 중 112개 달성 (37.3%)]
+  - Level 3 국가 134종 (`nation_templates.json`)
+  - Level 4 정주지/마을 215종 (`settlement_templates.json`)
+- **다음 세션 즉시 착수 작업**:
+  - 권역 템플릿 추가 투입 시 이어서 병합 (총 300개 목표치 향해 진행),
+  - 또는 [4단계 하위 레이어] Level 5 마을 내 세부 시설(`Facility`) 슬롯화 및 기능 연동 진행.
+
 

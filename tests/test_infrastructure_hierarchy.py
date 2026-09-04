@@ -2477,24 +2477,437 @@ def test_additional_entities_traits_field():
     assert loc.traits == ["칠흑 어둠", "피비린내", "언데드 출몰"]
 
 
+# =====================================================================
+# Level 0 ~ 2 Template Loader & Hierarchy Pipeline Tests
+# =====================================================================
+def test_continent_templates_json_integrity():
+    """Verify continent_templates.json has 120 complete templates with all rich fields including apex champion and monster."""
+    import json
+    from src.core.config import TEMPLATES_DIR
+
+    target_file = TEMPLATES_DIR / "continent_templates.json"
+    assert target_file.exists(), f"continent_templates.json does not exist at {target_file}"
+
+    with open(target_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list)
+    assert len(data) == 120, f"Expected 120 continents, found {len(data)}"
+
+    required_keys = [
+        "id", "name", "description", "common_language", "mortal_species",
+        "era_background", "plate_name", "climate_zones", "continental_treaty",
+        "dominant_trade_coalition", "continental_chokepoints",
+        "tectonic_instability_rating", "continental_forbidden_zones",
+        "traits", "compatible_genres", "suggested_regions", "dominant_tycoon_sketch",
+        "continental_apex_champion_sketch", "continental_apex_monster_sketch"
+    ]
+
+    for c in data:
+        for rk in required_keys:
+            assert rk in c, f"Continent {c.get('id', 'unknown')} missing required key '{rk}'"
+        assert len(c["traits"]) > 0, f"Continent {c['id']} must have non-empty traits"
+        assert len(c["compatible_genres"]) > 0, f"Continent {c['id']} must have compatible genres"
+        assert len(c["suggested_regions"]) > 0, f"Continent {c['id']} must have suggested regions"
+        assert isinstance(c["dominant_tycoon_sketch"], dict), f"Continent {c['id']} dominant_tycoon_sketch must be dict"
+        assert isinstance(c["continental_apex_champion_sketch"], dict), f"Continent {c['id']} continental_apex_champion_sketch must be dict"
+        assert isinstance(c["continental_apex_monster_sketch"], dict), f"Continent {c['id']} continental_apex_monster_sketch must be dict"
+        assert len(c["continental_apex_champion_sketch"]["traits"]) >= 2, f"Continent {c['id']} champion missing traits"
+        assert len(c["continental_apex_monster_sketch"]["traits"]) >= 2, f"Continent {c['id']} monster missing traits"
 
 
+def test_infrastructure_template_loader_continents():
+    """InfrastructureTemplateLoader loads and parses all 120 continents into Continent dataclasses."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, Continent
+
+    continents = InfrastructureTemplateLoader.load_continent_templates()
+    assert len(continents) == 120
+
+    for cid, cont in continents.items():
+        assert isinstance(cont, Continent)
+        assert cont.id == cid
+        assert cont.name
+        assert cont.common_language
+        assert cont.plate_name
+        assert len(cont.traits) >= 1
+        assert len(cont.compatible_genres) >= 1
+        assert len(cont.suggested_regions) >= 1
+        assert isinstance(cont.dominant_tycoon_sketch, dict)
+        assert isinstance(cont.continental_apex_champion_sketch, dict)
+        assert isinstance(cont.continental_apex_monster_sketch, dict)
+        assert len(cont.continental_apex_champion_sketch.get("traits", [])) >= 2
+        assert len(cont.continental_apex_monster_sketch.get("traits", [])) >= 2
+
+    # Test serialization round-trip of extended fields
+    first_cont = next(iter(continents.values()))
+    cont_dict = first_cont.to_dict()
+    assert "compatible_genres" in cont_dict
+    assert "suggested_regions" in cont_dict
+    assert "dominant_tycoon_sketch" in cont_dict
+    assert "continental_apex_champion_sketch" in cont_dict
+    assert "continental_apex_monster_sketch" in cont_dict
+    assert "traits" in cont_dict
+
+    restored = Continent.from_dict(cont_dict)
+    assert restored.id == first_cont.id
+    assert restored.compatible_genres == first_cont.compatible_genres
+    assert restored.suggested_regions == first_cont.suggested_regions
+    assert restored.dominant_tycoon_sketch == first_cont.dominant_tycoon_sketch
+    assert restored.continental_apex_champion_sketch == first_cont.continental_apex_champion_sketch
+    assert restored.continental_apex_monster_sketch == first_cont.continental_apex_monster_sketch
+    assert restored.traits == first_cont.traits
 
 
+def test_continental_apex_champion_and_monster_integrity():
+    """Verify all 120 continents possess rich, genre-aligned apex champion and monster sketches with pointer support."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, Continent
+
+    continents = InfrastructureTemplateLoader.load_continent_templates()
+    assert len(continents) == 120
+
+    for cid, cont in continents.items():
+        champ = cont.continental_apex_champion_sketch
+        monster = cont.continental_apex_monster_sketch
+
+        # Champion fields
+        assert "name" in champ and champ["name"], f"{cid} champion missing name"
+        assert "title" in champ and champ["title"], f"{cid} champion missing title"
+        assert "traits" in champ and len(champ["traits"]) >= 2, f"{cid} champion missing traits"
+        assert "combat_style" in champ and champ["combat_style"], f"{cid} champion missing combat_style"
+
+        # Monster fields
+        assert "name" in monster and monster["name"], f"{cid} monster missing name"
+        assert "classification" in monster and monster["classification"], f"{cid} monster missing classification"
+        assert "traits" in monster and len(monster["traits"]) >= 2, f"{cid} monster missing traits"
+        assert "threat_level" in monster and monster["threat_level"], f"{cid} monster missing threat_level"
+        assert "description" in monster and monster["description"], f"{cid} monster missing description"
+
+    # Test pointer assignment and roundtrip
+    sample = next(iter(continents.values()))
+    sample.continental_apex_champion_npc_id = "npc_apex_hero_01"
+    sample.continental_apex_monster_id = "monster_apex_leviathan_01"
+    
+    d = sample.to_dict()
+    assert d["continental_apex_champion_npc_id"] == "npc_apex_hero_01"
+    assert d["continental_apex_monster_id"] == "monster_apex_leviathan_01"
+
+    restored = Continent.from_dict(d)
+    assert restored.continental_apex_champion_npc_id == "npc_apex_hero_01"
+    assert restored.continental_apex_monster_id == "monster_apex_leviathan_01"
 
 
+def test_infrastructure_template_loader_regions():
+    """InfrastructureTemplateLoader loads and adapts all 112 region templates with terrain mappings & price multipliers."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, Region
+
+    regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
+    assert len(regions) == 112
+
+    for rid, reg in regions.items():
+        assert isinstance(reg, Region)
+        assert reg.id == rid
+        assert reg.continent_id == "test_continent"
+        assert reg.name
+        assert reg.terrain in InfrastructureTemplateLoader.TERRAIN_PRICE_MULTIPLIERS
+        assert len(reg.natural_price_multipliers) >= 3
+        for item_type, mult in reg.natural_price_multipliers.items():
+            assert mult > 0.0, f"Multiplier for {item_type} in {rid} should be > 0"
+        assert reg.climate_type != ""
+        assert reg.dominant_surface != ""
+        assert isinstance(reg.mana_density, int) and reg.mana_density >= 0
+        assert len(reg.seasonal_temperature_range) == 2
+        assert len(reg.traits) >= 1
+
+    # Test adapt_region_template_to_region directly with fallback defaults
+    raw_mock = {
+        "id": "mock_reg",
+        "name": "시험 권역",
+        "category": "snow_plateau",
+        "description": {"visual": "눈이 쌓인 평원.", "auditory": "바람 소리.", "olfactory": "찬 공기."},
+        "environmental_hazards": [{"hazard_name": "동상 위험"}],
+        "monsters": ["설원 늑대"]
+    }
+    adapted = InfrastructureTemplateLoader.adapt_region_template_to_region(raw_mock, continent_id="c_snow")
+    assert adapted.id == "mock_reg"
+    assert adapted.continent_id == "c_snow"
+    assert adapted.terrain == "frozen_tundra"
+    assert adapted.climate_type == "혹한대"
+    assert adapted.dominant_surface == "ice_sheet"
+    assert "눈이 쌓인 평원." in adapted.description
+    assert "동상 위험" in adapted.survival_hazards
+    assert "설원 늑대" in adapted.common_monsters
+    assert "fur" in adapted.natural_price_multipliers
+    assert len(adapted.traits) >= 3
 
 
+def test_cosmology_world_state_injection():
+    """InfrastructureTemplateLoader properly injects Level 0 cosmology into WorldState."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    cosmo_dict = {
+        "id": "cosmo_celestial",
+        "world_name": "아스트랄 가이아",
+        "genre": "하이 판타지",
+        "era_background": "신화적 번영기이자 마도 문명의 여명",
+        "cosmology": {
+            "sun_and_moons": "루미나스 태양과 두 개의 보랏빛 위성",
+            "divine_order": "빛과 정의의 판테온"
+        },
+        "macro_threat": "차원 균열을 통한 공허 군단의 침공"
+    }
+
+    InfrastructureTemplateLoader.inject_cosmology_to_world_state(ws, cosmo_dict)
+
+    assert ws.world_name == "아스트랄 가이아"
+    assert ws.world_genre == "하이 판타지"
+    assert ws.civilization_era.startswith("신화적 번영기")
+    assert ws.epoch_state == "안정기"
+    assert "루미나스 태양과 두 개의 보랏빛 위성" in ws.pantheon_deities[0]
+    assert "빛과 정의의 판테온" in ws.founded_religions[0]
+    assert ws.global_apocalyptic_threat == "차원 균열을 통한 공허 군단의 침공"
+    assert ws.world_threat_level == 30
+    assert ws.world_crisis_active_stage == 1
+    assert "하이 판타지" in ws.world_traits
+    assert "거시적 위협 도래" in ws.world_traits
+    assert ws.traits == ws.world_traits
+    assert ws.cosmology_template == cosmo_dict
 
 
+def test_assemble_world_upper_layers():
+    """InfrastructureTemplateLoader assembles Level 0, Level 1, Level 2 end-to-end into registry."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, InfrastructureRegistry
+    from src.world.state import WorldState
+
+    # 1. Default assembly (automatic matching)
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_world_upper_layers(ws)
+
+    assert isinstance(reg, InfrastructureRegistry)
+    assert ws.infrastructure is reg
+    assert len(reg.continents) == 1
+    assert len(reg.regions) >= 4
+
+    chosen_cont = next(iter(reg.continents.values()))
+    assert len(chosen_cont.region_ids) >= 4
+    for rid in chosen_cont.region_ids:
+        assert rid in reg.regions
+        assert reg.regions[rid].continent_id == chosen_cont.id
+
+    assert len(reg.continents) == 1
+    assert len(reg.regions) >= 4
+    totals = reg.get_world_totals()
+    assert "total_population" in totals
+    assert "total_area_sq_km" in totals
+
+    # 2. Targeted assembly with explicit IDs
+    ws2 = WorldState()
+    reg2 = InfrastructureTemplateLoader.assemble_world_upper_layers(
+        ws2,
+        cosmo_id="cosmo_01",
+        continent_id="continent_aethelgard",
+        region_ids=["region_crystal_desert_01", "region_abyssal_maelstrom_01"]
+    )
+    assert "continent_aethelgard" in reg2.continents
+    assert "region_crystal_desert_01" in reg2.regions
+    assert "region_abyssal_maelstrom_01" in reg2.regions
+    assert reg2.regions["region_crystal_desert_01"].continent_id == "continent_aethelgard"
+    assert len(reg2.continents) == 1
+    assert len(reg2.regions) == 2
 
 
+def test_settlement_templates_json_integrity():
+    """Validates data/templates/settlement_templates.json for 215 unique settlements and required fields."""
+    import json
+    from src.core.config import TEMPLATES_DIR
+
+    path = TEMPLATES_DIR / "settlement_templates.json"
+    assert path.exists(), "settlement_templates.json must exist"
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list)
+    assert len(data) == 215, f"Expected 215 settlements, got {len(data)}"
+
+    seen_ids = set()
+    for item in data:
+        assert isinstance(item, dict)
+        s_id = item.get("id")
+        assert s_id, "Settlement must have an id"
+        assert s_id not in seen_ids, f"Duplicate settlement id: {s_id}"
+        seen_ids.add(s_id)
+
+        assert item.get("name"), f"Settlement {s_id} missing name"
+        assert item.get("settlement_type"), f"Settlement {s_id} missing settlement_type"
+        assert isinstance(item.get("population"), int), f"Settlement {s_id} population must be int"
+        assert isinstance(item.get("security_level"), int), f"Settlement {s_id} security_level must be int"
+        assert isinstance(item.get("wall_defense_tier"), int), f"Settlement {s_id} wall_defense_tier must be int"
+        assert isinstance(item.get("traits"), list) and len(item["traits"]) >= 1, f"Settlement {s_id} must have traits >= 1"
+        assert isinstance(item.get("specialties"), list), f"Settlement {s_id} specialties must be list"
+        assert isinstance(item.get("description"), str) and len(item["description"]) > 0, f"Settlement {s_id} missing description"
 
 
+def test_infrastructure_template_loader_settlements():
+    """Validates InfrastructureTemplateLoader.load_settlement_templates and registry binding."""
+    from src.world.infrastructure import (
+        InfrastructureTemplateLoader, InfrastructureRegistry, Settlement, Nation, Region
+    )
+
+    settlements = InfrastructureTemplateLoader.load_settlement_templates()
+    assert len(settlements) == 215
+
+    # Check roundtrip serialization of all settlements
+    for s_id, s_obj in settlements.items():
+        assert isinstance(s_obj, Settlement)
+        d = s_obj.to_dict()
+        restored = Settlement.from_dict(d)
+        assert restored.id == s_id
+        assert restored.name == s_obj.name
+        assert restored.population == s_obj.population
+        assert restored.security_level == s_obj.security_level
+        assert len(restored.traits) >= 1
+
+    # Check registry linkage
+    reg = InfrastructureRegistry()
+    nation = Nation(id="nation_sample", name="샘플 왕국", continent_id="cont_01")
+    region = Region(id="region_sample", name="샘플 권역", continent_id="cont_01")
+    sample_settle = settlements["settlement_salt_weep_haven"]
+    sample_settle.nation_id = "nation_sample"
+    sample_settle.region_id = "region_sample"
+
+    reg.register_nation(nation)
+    reg.register_region(region)
+    reg.register_settlement(sample_settle)
+
+    assert "settlement_salt_weep_haven" in reg.settlements
+    assert "settlement_salt_weep_haven" in nation.settlement_ids
+    assert "settlement_salt_weep_haven" in region.settlement_ids
 
 
+def test_nation_templates_json_integrity():
+    """Verifies all nation templates in nation_templates.json are valid and well-formed."""
+    import json
+    from pathlib import Path
+
+    path = Path("data/templates/nation_templates.json")
+    assert path.exists(), "nation_templates.json must exist"
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list)
+    assert len(data) == 134, f"Expected 134 nation templates, got {len(data)}"
+
+    seen_ids = set()
+    for idx, item in enumerate(data):
+        assert isinstance(item, dict), f"Nation at index {idx} must be a dict"
+        assert "id" in item and item["id"], f"Nation at index {idx} missing id"
+        assert "name" in item and item["name"], f"Nation at index {idx} missing name"
+        assert "continent_id" in item and item["continent_id"], f"Nation {item['id']} missing continent_id"
+        assert item["id"] not in seen_ids, f"Duplicate nation ID: {item['id']}"
+        seen_ids.add(item["id"])
+
+        # Mandatory traits rule
+        traits = item.get("traits", [])
+        assert isinstance(traits, list) and len(traits) >= 1, f"Nation {item['id']} must have >= 1 trait"
+
+        # Species check
+        dominant_species = item.get("dominant_species", [])
+        assert isinstance(dominant_species, list) and len(dominant_species) >= 1, f"Nation {item['id']} must have >= 1 dominant species"
+
+        # Demographics & Military
+        assert isinstance(item.get("population", 0), (int, float))
+        assert isinstance(item.get("standing_army_size", 0), int)
+        assert item.get("magic_prohibition_tier", 0) in range(0, 6)
 
 
+def test_infrastructure_template_loader_nations():
+    """Validates InfrastructureTemplateLoader.load_nation_templates and registry binding."""
+    from src.world.infrastructure import (
+        InfrastructureTemplateLoader, InfrastructureRegistry, Nation, Continent
+    )
+
+    nations = InfrastructureTemplateLoader.load_nation_templates()
+    assert len(nations) == 134
+
+    for n_id, n_obj in nations.items():
+        assert isinstance(n_obj, Nation)
+        d = n_obj.to_dict()
+        restored = Nation.from_dict(d)
+        assert restored.id == n_id
+        assert restored.name == n_obj.name
+        assert restored.population == n_obj.population
+        assert restored.standing_army_size == n_obj.standing_army_size
+        assert len(restored.traits) >= 1
+        assert len(restored.dominant_species) >= 1
+
+    # Check registry linkage
+    reg = InfrastructureRegistry()
+    cont = Continent(id="continent_azure_archipelago", name="푸른 군도 대륙")
+    reg.register_continent(cont)
+
+    sample_nation = nations["nation_silver_harbor_republic"]
+    reg.register_nation(sample_nation)
+
+    assert "nation_silver_harbor_republic" in reg.nations
+    assert "nation_silver_harbor_republic" in cont.nation_ids
+
+
+def test_region_templates_json_integrity():
+    """Verifies all 61 region templates in region_templates.json are valid, unique, and well-formed."""
+    import json
+    from pathlib import Path
+    from src.world.infrastructure import InfrastructureTemplateLoader, Region
+
+    path = Path("data/templates/region_templates.json")
+    assert path.exists(), "region_templates.json must exist"
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list)
+    assert len(data) == 112, f"Expected 112 region templates, got {len(data)}"
+
+    seen_ids = set()
+    for idx, item in enumerate(data):
+        assert isinstance(item, dict), f"Region at {idx} must be dict"
+        assert "id" in item and item["id"], f"Region at {idx} missing id"
+        assert "name" in item and item["name"], f"Region at {idx} missing name"
+        assert item["id"] not in seen_ids, f"Duplicate region ID: {item['id']}"
+        seen_ids.add(item["id"])
+
+        # Traits rule
+        traits = item.get("traits", [])
+        if traits:
+            assert isinstance(traits, list) and len(traits) >= 1
+
+    # Verify loading and serialization
+    regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
+    assert len(regions) == 112
+
+    # Verify newly added region with rich nested profile
+    crimson = regions.get("region_crimson_caldera")
+    assert crimson is not None
+    assert crimson.name == "적혈 용암 칼데라"
+    assert crimson.terrain == "volcanic"
+    assert crimson.dominant_surface == "obsidian_crust"
+    assert "태양석 철광맥" in crimson.rare_mineral_deposits
+    assert len(crimson.common_monsters) >= 4
+    assert len(crimson.cuisine.staples) >= 1
+    assert len(crimson.attire.labor_lower_class) >= 1
+    assert len(crimson.culture.faith_and_beliefs) >= 1
+    assert len(crimson.traits) >= 4
+
+    # Verify Batch 4 region
+    frost_peaks = regions.get("region_whispering_frost_peaks")
+    assert frost_peaks is not None
+    assert frost_peaks.name == "속삭이는 서리 첨봉"
+    assert frost_peaks.terrain == "frozen_tundra"
+    assert frost_peaks.dominant_surface == "powder_snow"
+    assert "블루 아이스 광맥" in frost_peaks.rare_mineral_deposits
+    assert len(frost_peaks.traits) >= 4
 
 
 

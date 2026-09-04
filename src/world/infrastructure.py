@@ -11,8 +11,12 @@ Level 5: Facility (Shops, Blacksmiths, Academies, Temples, Gates, Taverns, Dunge
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Any
+from pathlib import Path
+import json
 import logging
+import random
 
+from src.core.config import TEMPLATES_DIR
 from src.world.geography import RoadConnection, RouteCategory
 
 logger = logging.getLogger(__name__)
@@ -172,6 +176,10 @@ class Continent:
     continental_treaty: str = ""                        # 대륙 전역 공통 불가침/금기 조약 (예: "성역 불침 조약", "대륙 노예무역 전면 금지 조약")
     dominant_trade_coalition: str = ""                  # 대륙 전역 상권을 좌지우지하는 초국가 거대 상인 동맹 (예: "한자동맹", "황금 삼각 상단")
     dominant_tycoon_npc_id: str = ""                    # 대륙 최고 거상/상단 연합 총수 NPC ID 포인터
+    continental_apex_champion_npc_id: str = ""          # 대륙 최강자 NPC ID 포인터
+    continental_apex_champion_sketch: Dict[str, Any] = field(default_factory=dict) # 대륙 최강자 스케치 프로필 (name, title, traits, combat_style 등)
+    continental_apex_monster_id: str = ""               # 대륙 최강 몬스터/개체 ID 포인터
+    continental_apex_monster_sketch: Dict[str, Any] = field(default_factory=dict)  # 대륙 최강 몬스터 스케치 프로필 (name, classification, traits, threat_level, description 등)
     continental_chokepoints: List[str] = field(default_factory=list) # 대륙 관문 해협/지협/대협곡 등 전략적 병목 통로 목록
     tectonic_instability_rating: int = 20               # 대륙 판 지질 불안정도 (0~100, 높을수록 화산 분화 및 지진 해일 빈도 증가)
     continental_forbidden_zones: List[str] = field(default_factory=list) # 신벌/낙진/고대 결계로 격리된 대륙 전역 출입 금기 구역
@@ -184,6 +192,9 @@ class Continent:
     cuisine: CuisineProfile = field(default_factory=CuisineProfile) # 대륙 식생/식문화 원형
     attire: AttireHierarchyProfile = field(default_factory=AttireHierarchyProfile) # 대륙 복식 양식
     traits: List[str] = field(default_factory=list)     # 대륙 고유 특성 태그 목록 (예: ["가이아의 각성", "마나 과포화", "풍요로운 신대륙"])
+    compatible_genres: List[str] = field(default_factory=list) # 호환 세계관 장르 목록 (예: ["정통 하이 판타지", "다크 판타지"])
+    suggested_regions: List[str] = field(default_factory=list) # 추천 소속 권역 ID/유형 목록
+    dominant_tycoon_sketch: Dict[str, Any] = field(default_factory=dict) # 대륙 최고 거상/상단 스케치 프로필
     description: str = ""
 
     def to_dict(self) -> dict:
@@ -201,6 +212,41 @@ class Continent:
         clean["culture"] = _safe_profile(CulturalNormsProfile, data.get("culture"))
         clean["cuisine"] = _safe_profile(CuisineProfile, data.get("cuisine"))
         clean["attire"] = _safe_profile(AttireHierarchyProfile, data.get("attire"))
+
+        # Normalize compatible_genres (dict or list)
+        cg = data.get("compatible_genres", [])
+        if isinstance(cg, dict):
+            genres = []
+            if "primary" in cg and cg["primary"]:
+                genres.append(str(cg["primary"]))
+            if "sub" in cg and isinstance(cg["sub"], list):
+                genres.extend(str(s) for s in cg["sub"] if s)
+            clean["compatible_genres"] = genres
+        elif isinstance(cg, list):
+            clean["compatible_genres"] = [str(g) for g in cg if g]
+
+        # Normalize suggested_regions (dict or list)
+        sr = data.get("suggested_regions", [])
+        if isinstance(sr, dict):
+            clean["suggested_regions"] = [str(v) for v in sr.values() if v]
+        elif isinstance(sr, list):
+            clean["suggested_regions"] = [str(r) for r in sr if r]
+
+        # Normalize dominant_tycoon_sketch
+        ts = data.get("dominant_tycoon_sketch", {})
+        if isinstance(ts, dict):
+            clean["dominant_tycoon_sketch"] = dict(ts)
+
+        # Normalize continental_apex_champion_sketch
+        cs = data.get("continental_apex_champion_sketch", {})
+        if isinstance(cs, dict):
+            clean["continental_apex_champion_sketch"] = dict(cs)
+
+        # Normalize continental_apex_monster_sketch
+        ms = data.get("continental_apex_monster_sketch", {})
+        if isinstance(ms, dict):
+            clean["continental_apex_monster_sketch"] = dict(ms)
+
         return cls(**{k: v for k, v in clean.items() if k in cls.__dataclass_fields__})
 
 
@@ -292,6 +338,7 @@ class Nation:
     id: str
     name: str                                           # 국가명 (예: "아이언포지 광산왕국", "루멘 성왕국")
     continent_id: str                                   # 소속 대륙 ID
+    dominant_species: List[str] = field(default_factory=list) # 국가 주요 구성 종족 목록 (인간, 엘프, 드워프, 수인 등)
     ruling_system: str = "봉건 왕정"                    # 정치 체제 ("왕정", "공화정", "마법 과두정", "군정", "도적 자치령")
     civilization_level: str = ""                        # 국가 기술/제도 문명 수준 (예: "마도공학 후기 중세", "초기 철기 부족제")
     monarch_title: str = "국왕"                         # 국가 원수 칭호 ("국왕", "황제", "대공", "대사제", "칸")
@@ -697,6 +744,9 @@ class Settlement:
                 roads_dict[k] = v
         clean = dict(data)
         clean["roads"] = roads_dict
+        coords = clean.get("coordinates")
+        if isinstance(coords, list):
+            clean["coordinates"] = tuple(coords)
         clean["yields"] = _safe_profile(SettlementYields, data.get("yields"))
         clean["infrastructure"] = _safe_profile(SettlementInfrastructureProfile, data.get("infrastructure"))
         clean["attire"] = _safe_profile(AttireHierarchyProfile, data.get("attire"))
@@ -1375,4 +1425,495 @@ class InfrastructureRegistry:
             reg.settlements[k] = Settlement.from_dict(v)
         for k, v in data.get("facilities", {}).items():
             reg.facilities[k] = Facility.from_dict(v)
+        return reg
+
+
+# =====================================================================
+# Infrastructure Template Loader Pipeline (Levels 0 ~ 2)
+# =====================================================================
+class InfrastructureTemplateLoader:
+    """
+    Loader and adapter pipeline connecting static JSON templates (cosmology, continent, region)
+    to Quilltale 6-tier infrastructure data classes (WorldState, Continent, Region).
+    """
+
+    CATEGORY_TERRAIN_MAP: Dict[str, str] = {
+        "magical_wasteland": "magical_anomaly",
+        "arcane_void": "magical_anomaly",
+        "arcane_sanctum": "magical_anomaly",
+        "rune_crater": "magical_anomaly",
+        "spatial_anomaly": "magical_anomaly",
+        "temporal_zone": "magical_anomaly",
+        "dream_realm": "magical_anomaly",
+        "dream_space": "magical_anomaly",
+        "emotion_realm": "magical_anomaly",
+        "crystal_forest": "magical_anomaly",
+        "snow_plateau": "frozen_tundra",
+        "ice_cave": "frozen_tundra",
+        "glacial_fjord": "frozen_tundra",
+        "poison_swamp": "swamp_marsh",
+        "poison_crypt": "swamp_marsh",
+        "poison_wasteland": "swamp_marsh",
+        "canyon_spore": "swamp_marsh",
+        "dense_jungle": "dense_forest",
+        "grassland_forest": "plains",
+        "mountain_pass": "mountain_mine",
+        "volcanic": "volcanic",
+        "ocean": "coastal_port",
+    }
+
+    TERRAIN_PRICE_MULTIPLIERS: Dict[str, Dict[str, float]] = {
+        "magical_anomaly": {"crystal": 0.4, "water": 2.5, "food": 2.0, "mana_potion": 0.5, "ore": 1.5},
+        "frozen_tundra": {"fur": 0.4, "ice": 0.2, "firewood": 3.0, "food": 2.5, "salt": 1.8},
+        "swamp_marsh": {"herbs": 0.4, "poison": 0.3, "clean_water": 3.0, "salt": 2.0, "iron": 1.8},
+        "dense_forest": {"timber": 0.3, "herbs": 0.4, "fur": 0.6, "metal": 2.0, "salt": 1.5},
+        "mountain_mine": {"ore": 0.4, "iron": 0.5, "gems": 0.6, "food": 2.0, "timber": 1.8},
+        "volcanic": {"obsidian": 0.3, "sulfur": 0.2, "metal": 0.5, "water": 4.0, "food": 3.0},
+        "coastal_port": {"fish": 0.3, "salt": 0.4, "pearl": 0.5, "timber": 1.5, "ore": 1.6},
+        "desert_wasteland": {"water": 4.0, "salt": 0.6, "ice": 5.0, "fur": 0.5, "silk": 1.5},
+        "underground_abyss": {"gems": 0.4, "mushrooms": 0.3, "iron": 0.6, "food": 3.5, "cloth": 3.0},
+        "plains": {"grain": 0.5, "horses": 0.5, "meat": 0.6, "iron": 1.5, "gems": 2.0},
+    }
+
+    @classmethod
+    def load_continent_templates(cls, filepath: Optional[Path | str] = None) -> Dict[str, Continent]:
+        """Loads and instantiates all Continent dataclass objects from continent_templates.json."""
+        target_path = Path(filepath) if filepath else (TEMPLATES_DIR / "continent_templates.json")
+        if not target_path.exists():
+            logger.warning(f"Continent templates file not found: {target_path}")
+            return {}
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        continents: Dict[str, Continent] = {}
+        for item in data:
+            if isinstance(item, dict) and "id" in item:
+                cont = Continent.from_dict(item)
+                continents[cont.id] = cont
+        return continents
+
+    @classmethod
+    def adapt_region_template_to_region(cls, reg_dict: dict, continent_id: str = "") -> Region:
+        """
+        Transforms a raw region template from region_templates.json into a rich Level 2 Region dataclass.
+        Augments missing price multipliers, climate, surface, and traits.
+        """
+        reg_id = reg_dict.get("id", f"region_{random.randint(1000, 9999)}")
+        name = reg_dict.get("name", "미지의 권역")
+        category = reg_dict.get("category", "")
+        terrain = reg_dict.get("terrain") or cls.CATEGORY_TERRAIN_MAP.get(category, "plains")
+
+        # Atmospheric description synthesis
+        desc_raw = reg_dict.get("description", "")
+        if isinstance(desc_raw, dict):
+            v = desc_raw.get("visual", "")
+            a = desc_raw.get("auditory", "")
+            o = desc_raw.get("olfactory", "")
+            description = f"{v} {a} {o}".strip()
+        else:
+            description = str(desc_raw)
+
+        # Climate and temperature range
+        if category in ["snow_plateau", "ice_cave", "glacial_fjord"]:
+            climate_type = "혹한대"
+            temp_range = (-35, 5)
+            dominant_surface = "ice_sheet"
+            mana_density = 35
+        elif category in ["volcanic"]:
+            climate_type = "건조 열대"
+            temp_range = (15, 52)
+            dominant_surface = "cracked_stone"
+            mana_density = 70
+        elif category in ["dense_jungle", "poison_swamp", "canyon_spore"]:
+            climate_type = "열대 습윤"
+            temp_range = (18, 38)
+            dominant_surface = "deep_mud"
+            mana_density = 55
+        elif category in ["magical_wasteland", "arcane_void", "arcane_sanctum", "crystal_forest", "spatial_anomaly", "temporal_zone", "dream_realm", "dream_space", "emotion_realm", "rune_crater"]:
+            climate_type = "비전 이상대"
+            temp_range = (-10, 35)
+            dominant_surface = "loose_sand"
+            mana_density = 85
+        elif category in ["ocean"]:
+            climate_type = "해양성 온대"
+            temp_range = (5, 30)
+            dominant_surface = "deep_mud"
+            mana_density = 50
+        else:
+            climate_type = "온대"
+            temp_range = (-5, 28)
+            dominant_surface = "dirt"
+            mana_density = 50
+
+        # Override with explicit values if present
+        if reg_dict.get("climate_type"):
+            climate_type = reg_dict["climate_type"]
+        if reg_dict.get("dominant_surface"):
+            dominant_surface = reg_dict["dominant_surface"]
+        if "mana_density" in reg_dict:
+            mana_density = reg_dict["mana_density"]
+        if "seasonal_temperature_range" in reg_dict:
+            temp_range = tuple(reg_dict["seasonal_temperature_range"])
+
+        # Price multipliers
+        multipliers = dict(reg_dict.get("natural_price_multipliers", {}))
+        if not multipliers:
+            multipliers = dict(cls.TERRAIN_PRICE_MULTIPLIERS.get(terrain, cls.TERRAIN_PRICE_MULTIPLIERS.get("plains", {})))
+
+        # Hazards & Monsters
+        hazards = []
+        if "survival_hazards" in reg_dict and isinstance(reg_dict["survival_hazards"], list):
+            hazards.extend(reg_dict["survival_hazards"])
+        for h in reg_dict.get("environmental_hazards", []):
+            if isinstance(h, dict) and "hazard_name" in h:
+                hazards.append(h["hazard_name"])
+            elif isinstance(h, str):
+                hazards.append(h)
+        for w in reg_dict.get("weather_events", []):
+            if isinstance(w, dict) and "event_name" in w:
+                hazards.append(w["event_name"])
+
+        # Sub-dictionary extractors
+        eco = reg_dict.get("ecology", {}) if isinstance(reg_dict.get("ecology"), dict) else {}
+        lm_ruins = reg_dict.get("landmarks_and_ruins", {}) if isinstance(reg_dict.get("landmarks_and_ruins"), dict) else {}
+        res = reg_dict.get("resources", {}) if isinstance(reg_dict.get("resources"), dict) else {}
+        life = reg_dict.get("lifestyle_and_culture", {}) if isinstance(reg_dict.get("lifestyle_and_culture"), dict) else {}
+
+        factions_enc = reg_dict.get("factions_and_encounters", {})
+        monsters = list(factions_enc.get("common_monsters", [])) if isinstance(factions_enc, dict) else []
+        if not monsters and "monsters" in reg_dict:
+            monsters = list(reg_dict["monsters"])
+        if not monsters and "common_monsters" in reg_dict:
+            monsters = list(reg_dict["common_monsters"])
+        if not monsters and "common_monsters" in eco:
+            monsters = list(eco["common_monsters"])
+
+        apex_predator = reg_dict.get("apex_predator_id") or eco.get("apex_predator_id", "")
+        regional_champ = reg_dict.get("regional_champion_npc_id") or eco.get("regional_champion_npc_id", "")
+        nomadic = list(reg_dict.get("nomadic_tribes") or eco.get("nomadic_tribes", []))
+
+        # Visibility parsing
+        vis_meters = 50
+        vis_stealth = reg_dict.get("visibility_and_stealth", {})
+        if isinstance(vis_stealth, dict) and "visibility_range" in vis_stealth:
+            vis_str = vis_stealth["visibility_range"]
+            digits = "".join(filter(str.isdigit, vis_str.split("m")[0]))
+            if digits:
+                try:
+                    vis_meters = int(digits)
+                except ValueError:
+                    vis_meters = 50
+        elif "visibility_meters" in reg_dict:
+            vis_meters = reg_dict["visibility_meters"]
+
+        # Landmarks as natural wonders
+        landmarks = []
+        for lm in reg_dict.get("landmarks", []):
+            if isinstance(lm, dict) and "name" in lm:
+                landmarks.append(lm["name"])
+            elif isinstance(lm, str):
+                landmarks.append(lm)
+        if not landmarks and "natural_wonders" in reg_dict:
+            landmarks = list(reg_dict["natural_wonders"])
+        if not landmarks and "natural_wonders" in lm_ruins:
+            landmarks = list(lm_ruins["natural_wonders"])
+
+        arch_sites = list(reg_dict.get("archaeological_sites") or lm_ruins.get("archaeological_sites", []))
+        pl_rifts = list(reg_dict.get("planar_rifts") or lm_ruins.get("planar_rifts", []))
+        nat_shelters = list(reg_dict.get("natural_shelters") or lm_ruins.get("natural_shelters", []))
+
+        # Rare mineral deposits & biological resources
+        rare_minerals = []
+        if "rare_mineral_deposits" in reg_dict and reg_dict["rare_mineral_deposits"]:
+            rare_minerals = list(reg_dict["rare_mineral_deposits"])
+        elif "rare_mineral_deposits" in res and res["rare_mineral_deposits"]:
+            rare_minerals = list(res["rare_mineral_deposits"])
+        elif terrain == "magical_anomaly":
+            rare_minerals = ["심층 마나 수정맥", "비전 유리석"]
+        elif terrain == "frozen_tundra":
+            rare_minerals = ["만년빙정", "청빙 철광석"]
+        elif terrain == "volcanic":
+            rare_minerals = ["불꽃 심장석", "흑요석 원석"]
+        elif terrain == "mountain_mine":
+            rare_minerals = ["오리하르콘 광맥", "고순도 철광맥"]
+        elif terrain == "swamp_marsh":
+            rare_minerals = ["독안개 유황석", "부패 저항 진균"]
+        else:
+            rare_minerals = ["천연 광맥"]
+
+        specs = reg_dict.get("specialties") or res.get("specialties") or landmarks or [f"{name} 고유 특산물"]
+        endemic_bio = list(reg_dict.get("endemic_biological_resources") or res.get("endemic_biological_resources", []))
+        tr_node = reg_dict.get("trade_node_name") or res.get("trade_node_name", "")
+
+        # Culture / Cuisine / Attire mapping
+        cuisine_dict = reg_dict.get("cuisine") or life.get("cuisine", {})
+        if isinstance(cuisine_dict, dict) and ("staple_food" in cuisine_dict or "delicacy" in cuisine_dict):
+            staples = [cuisine_dict["staple_food"]] if cuisine_dict.get("staple_food") else []
+            delicacies = [cuisine_dict["delicacy"]] if cuisine_dict.get("delicacy") else []
+            taboos = cuisine_dict.get("taboo_food", "")
+            cuisine_obj = CuisineProfile(
+                staples=staples,
+                proteins_and_salts=delicacies,
+                expedition_rations=[f"금기: {taboos}"] if taboos else [],
+                beverages_and_water=[]
+            )
+        else:
+            cuisine_obj = _safe_profile(CuisineProfile, cuisine_dict)
+
+        attire_dict = reg_dict.get("attire") or life.get("attire", {})
+        if isinstance(attire_dict, dict) and ("daily_wear" in attire_dict or "extreme_weather_gear" in attire_dict):
+            daily = [attire_dict["daily_wear"]] if attire_dict.get("daily_wear") else []
+            extreme = [attire_dict["extreme_weather_gear"]] if attire_dict.get("extreme_weather_gear") else []
+            attire_obj = AttireHierarchyProfile(
+                labor_lower_class=daily,
+                middle_practical_class=[],
+                upper_ruling_class=extreme
+            )
+        else:
+            attire_obj = _safe_profile(AttireHierarchyProfile, attire_dict)
+
+        cult_dict = reg_dict.get("culture") or life.get("culture", {})
+        if isinstance(cult_dict, dict) and ("animism_and_faith" in cult_dict or "regional_taboo" in cult_dict):
+            faith = [cult_dict["animism_and_faith"]] if cult_dict.get("animism_and_faith") else []
+            taboo = [cult_dict["regional_taboo"]] if cult_dict.get("regional_taboo") else []
+            culture_obj = CulturalNormsProfile(
+                faith_and_beliefs=faith,
+                commercial_customs=taboo,
+                social_structure=[],
+                seasonal_events=[]
+            )
+        else:
+            culture_obj = _safe_profile(CulturalNormsProfile, cult_dict)
+
+        # Traits assembly
+        traits = list(reg_dict.get("traits", []))
+        if not traits:
+            traits = [name, terrain, climate_type]
+            if hazards:
+                traits.append(hazards[0])
+            if landmarks:
+                traits.append(landmarks[0])
+
+        target_continent_id = continent_id or reg_dict.get("continent_id", "")
+
+        return Region(
+            id=reg_id,
+            name=name,
+            continent_id=target_continent_id,
+            terrain=terrain,
+            climate_type=climate_type,
+            natural_price_multipliers=multipliers,
+            survival_hazards=hazards,
+            visibility_meters=vis_meters,
+            noise_occlusion=reg_dict.get("noise_occlusion", 70 if terrain in ["dense_forest", "underground_abyss", "swamp_marsh"] else 40),
+            common_monsters=monsters,
+            specialties=specs,
+            natural_hazards=reg_dict.get("natural_hazards") or hazards[:2],
+            strategic_deposits=reg_dict.get("strategic_deposits") or ["야생 자원 채집지"],
+            rare_mineral_deposits=rare_minerals,
+            endemic_biological_resources=endemic_bio,
+            natural_wonders=landmarks,
+            archaeological_sites=arch_sites,
+            planar_rifts=pl_rifts,
+            natural_shelters=nat_shelters,
+            mana_density=mana_density,
+            apex_predator_id=apex_predator,
+            regional_champion_npc_id=regional_champ,
+            seasonal_temperature_range=temp_range,
+            campsite_viability=reg_dict.get("campsite_viability", 50),
+            foraging_abundance=reg_dict.get("foraging_abundance", 50),
+            water_source_reliability=reg_dict.get("water_source_reliability", 70),
+            environmental_toxicity=reg_dict.get("environmental_toxicity", 0),
+            draconic_presence_level=reg_dict.get("draconic_presence_level", 0),
+            dominant_elemental_affinity=reg_dict.get("dominant_elemental_affinity", "neutral"),
+            dominant_surface=dominant_surface,
+            nomadic_tribes=nomadic,
+            trade_node_name=tr_node,
+            cuisine=cuisine_obj,
+            attire=attire_obj,
+            culture=culture_obj,
+            traits=traits,
+            description=description,
+        )
+
+    @classmethod
+    def load_region_templates(cls, filepath: Optional[Path | str] = None, continent_id: str = "") -> Dict[str, Region]:
+        """Loads and adapts all Region dataclass objects from region_templates.json."""
+        target_path = Path(filepath) if filepath else (TEMPLATES_DIR / "region_templates.json")
+        if not target_path.exists():
+            logger.warning(f"Region templates file not found: {target_path}")
+            return {}
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        regions: Dict[str, Region] = {}
+        for item in data:
+            if isinstance(item, dict) and "id" in item:
+                reg = cls.adapt_region_template_to_region(item, continent_id=continent_id)
+                regions[reg.id] = reg
+        return regions
+
+    @classmethod
+    def load_settlement_templates(cls, filepath: Optional[Path | str] = None, nation_id: str = "", region_id: str = "") -> Dict[str, Settlement]:
+        """Loads all Settlement dataclass objects from settlement_templates.json."""
+        target_path = Path(filepath) if filepath else (TEMPLATES_DIR / "settlement_templates.json")
+        if not target_path.exists():
+            logger.warning(f"Settlement templates file not found: {target_path}")
+            return {}
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        settlements: Dict[str, Settlement] = {}
+        for item in data:
+            if isinstance(item, dict) and "id" in item:
+                s_dict = dict(item)
+                if nation_id:
+                    s_dict["nation_id"] = nation_id
+                if region_id:
+                    s_dict["region_id"] = region_id
+                st = Settlement.from_dict(s_dict)
+                settlements[st.id] = st
+        return settlements
+
+    @classmethod
+    def load_nation_templates(cls, filepath: Optional[Path | str] = None, continent_id: str = "") -> Dict[str, Nation]:
+        """Loads all Nation dataclass objects from nation_templates.json."""
+        target_path = Path(filepath) if filepath else (TEMPLATES_DIR / "nation_templates.json")
+        if not target_path.exists():
+            logger.warning(f"Nation templates file not found: {target_path}")
+            return {}
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        nations: Dict[str, Nation] = {}
+        for item in data:
+            if isinstance(item, dict) and "id" in item:
+                n_dict = dict(item)
+                if continent_id:
+                    n_dict["continent_id"] = continent_id
+                nat = Nation.from_dict(n_dict)
+                nations[nat.id] = nat
+        return nations
+
+    @classmethod
+    def inject_cosmology_to_world_state(cls, world_state: Any, cosmo_dict: dict) -> None:
+        """Injects Level 0 cosmological laws, era, and pantheon into WorldState."""
+        world_state.world_name = cosmo_dict.get("world_name", getattr(world_state, "world_name", ""))
+        world_state.world_genre = cosmo_dict.get("genre", getattr(world_state, "world_genre", ""))
+        world_state.civilization_era = cosmo_dict.get("era_background", "")[:250]
+        world_state.epoch_state = "안정기"
+
+        cosmo = cosmo_dict.get("cosmology", {})
+        if isinstance(cosmo, dict):
+            sun_moons = cosmo.get("sun_and_moons", "")
+            if sun_moons and not getattr(world_state, "pantheon_deities", []):
+                world_state.pantheon_deities = [sun_moons[:50]]
+            divine = cosmo.get("divine_order", "")
+            if divine and not getattr(world_state, "founded_religions", []):
+                world_state.founded_religions = [divine[:50]]
+
+        macro_threat = cosmo_dict.get("macro_threat", "")
+        if macro_threat:
+            world_state.global_apocalyptic_threat = macro_threat[:100]
+            world_state.world_threat_level = 30
+            world_state.world_crisis_active_stage = 1
+
+        genre = cosmo_dict.get("genre", "정통 판타지")
+        traits = [genre, "신성 조약", "마나 지맥 순환"]
+        if macro_threat:
+            traits.append("거시적 위협 도래")
+        world_state.world_traits = traits
+
+        world_state.cosmology_template = cosmo_dict
+        world_state.world_lore = cosmo_dict
+
+    @classmethod
+    def assemble_world_upper_layers(
+        cls,
+        world_state: Any,
+        cosmo_id: Optional[str] = None,
+        continent_id: Optional[str] = None,
+        region_ids: Optional[List[str]] = None,
+        registry: Optional[InfrastructureRegistry] = None,
+    ) -> InfrastructureRegistry:
+        """
+        End-to-end integration:
+        Assembles Level 0 (WorldState) + Level 1 (Continent) + Level 2 (Region),
+        registers into InfrastructureRegistry with bi-directional links,
+        and executes recalculate_totals().
+        """
+        reg = registry or getattr(world_state, "infrastructure", None) or InfrastructureRegistry()
+
+        # 1. Level 0: Load & inject cosmology
+        cosmo_path = TEMPLATES_DIR / "cosmology_templates.json"
+        cosmo_pool = []
+        if cosmo_path.exists():
+            with open(cosmo_path, "r", encoding="utf-8") as f:
+                cosmo_pool = json.load(f)
+
+        chosen_cosmo = None
+        if cosmo_id and cosmo_pool:
+            chosen_cosmo = next((c for c in cosmo_pool if c.get("id") == cosmo_id), None)
+        if not chosen_cosmo and cosmo_pool:
+            chosen_cosmo = cosmo_pool[0]
+
+        if chosen_cosmo:
+            cls.inject_cosmology_to_world_state(world_state, chosen_cosmo)
+
+        # 2. Level 1: Load & select continent
+        continents = cls.load_continent_templates()
+        chosen_cont: Optional[Continent] = None
+        if continent_id and continent_id in continents:
+            chosen_cont = continents[continent_id]
+        elif continents:
+            # Match by compatible_genres with world_genre if possible
+            target_genre = getattr(world_state, "world_genre", "")
+            for c in continents.values():
+                if any(target_genre in cg or cg in target_genre for cg in c.compatible_genres):
+                    chosen_cont = c
+                    break
+            if not chosen_cont:
+                chosen_cont = next(iter(continents.values()))
+
+        if chosen_cont:
+            reg.register_continent(chosen_cont)
+
+        # 3. Level 2: Load & attach regions
+        cont_id_str = chosen_cont.id if chosen_cont else ""
+        all_regions = cls.load_region_templates(continent_id=cont_id_str)
+
+        selected_regions: List[Region] = []
+        if region_ids:
+            for rid in region_ids:
+                if rid in all_regions:
+                    selected_regions.append(all_regions[rid])
+        elif chosen_cont and chosen_cont.suggested_regions:
+            # Match by suggested regions (id, terrain, or substring match)
+            for sr in chosen_cont.suggested_regions:
+                sr_norm = sr.lower()
+                for r in all_regions.values():
+                    if r.id == sr or r.terrain == sr or sr_norm in r.name.lower():
+                        if r not in selected_regions:
+                            selected_regions.append(r)
+                            break
+            # If not enough, fill up to 4
+            if len(selected_regions) < 4:
+                for r in all_regions.values():
+                    if r not in selected_regions:
+                        selected_regions.append(r)
+                    if len(selected_regions) >= 4:
+                        break
+        else:
+            selected_regions = list(all_regions.values())[:4]
+
+        for reg_obj in selected_regions:
+            reg_obj.continent_id = cont_id_str
+            reg.register_region(reg_obj)
+
+        world_state.infrastructure = reg
+        reg.recalculate_totals()
         return reg

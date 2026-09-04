@@ -1,5 +1,64 @@
 # Quilltale TRPG Engine - AI Developer & GM Rules
 
+# SYSTEM_RULES:QUILLTALE
+[CRITICAL] Strict adherence required. Failure to comply = immediate roll-back.
+
+<DoD_Gate>
+1. RUN pytest: Execute `pytest tests/` in bash before completion. Report stdout/stderr verbatim. NO faked results.
+2. RUN eval: If modifying `state.py` or `src/world/*_engine.py`, execute `eval_runner.py --no-judge` & report `invalid_transition_rate`.
+3. TEST req: Write >=1 pytest case for any new feature.
+4. NO test-gaming: Do not edit test assertions/skip tests just to pass. Fix logic instead.
+</DoD_Gate>
+
+<Prompt_Rules>
+1. NO regex/patch/temp scripts in `scratch/` for `src/agents/prompts.py`.
+2. USE file edit tools directly. Do not omit code (no `...` or `/* same */`). Show full diff.
+</Prompt_Rules>
+
+<No_Dup_Compatibility>
+1. SEARCH first: Grep existing modules before creating new class/engine/template.
+2. JSON check: Verify `data/templates/*.json` and `data/legacy/*.json` key overlaps before adding.
+3. SAVE_LOAD: Ensure `WorldState` modifications include defaults/optional fields to prevent deserialization break with old JSON saves.
+4. ENCODING: Always read/write Korean text files as UTF-8 explicit. No implicit encoding.
+</No_Dup_Compatibility>
+
+<Two_Pass_Resource>
+1. PASS 1 (Python): 100% deterministic logic (dice, combat, status, quest). No math/rules in LLM prompt.
+2. PASS 2 (LLM): Narrative rendering only.
+3. MEMORY limit: NPCs episodic memory must have truncation/summarization to avoid token overflow.
+4. FALLBACK: Network/image APIs must have fallback paths to prevent app crash on timeout/error.
+5. NO silent fallback masking: On API/network fail, log the failure. Never return fake success narration.
+</Two_Pass_Resource>
+
+<UI_Architecture>
+1. GRADIO isolation: UI code (`app.py`) must only handle I/O and rendering. Zero business logic.
+2. ASYNC: Do not block UI thread with heavy processing/external API calls.
+</UI_Architecture>
+
+<Scope_Commit>
+1. ZERO unauthorized edits. `AGENTS.md` (rules, backlog, hw) is STRICTLY READ-ONLY.
+2. ATOMIC commit: 1 session = 1 task/requirement only. No mixed refactoring.
+</Scope_Commit>
+
+<UI_Localization>
+1. 100% natural, idiomatic Korean for all user-facing text (narration, NPC dialogue, options).
+2. ISOLATE system/debug text (snake_case, variables) from user view.
+</UI_Localization>
+
+<Report_Format>
+Return exact markdown format at session end:
+### 1. Modified Files
+(paths)
+### 2. Pytest Results
+(verbatim bash log, pass/fail counts)
+### 3. Added/Modified Tests
+(function names & purpose)
+### 4. Doc Alignment Check
+(status) + IF conflict found: propose doc update, do not just report and ignore.
+</Report_Format>
+
+---
+
 ## 1. Core Mission & Philosophy
 - **Anti-Yes-Man Rule:** Do not be an agreeable 'yes-man'. The player is a grounded mortal character. Absurd, power-scaling, or impossible actions must realistically fail.
 - **Deterministic Truth (WorldState):** The JSON `WorldState` is the single source of truth. LLM narration must never contradict recorded facts, stats, locations, or items.
