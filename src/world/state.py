@@ -345,16 +345,17 @@ class Faction:
     name: str                           # 국가 또는 세력 이름 (예: "루멘 성왕국", "그림자 상단")
     system: str = "왕정"                # 정치 체제 (왕정, 공화정, 마도정 등)
     power_level: str = "강국"           # 국력/세력 규모 (강대국, 소국, 비밀결사 등)
-    ruling_race: str = "인간"           # 지배 종족
+    ruling_race: str = ""               # 지배 지성체 종족 (인간, 엘프, 드워프, 오크, 수인 등)
     taboos: list[str] = field(default_factory=list) # 사회적/종교적 금기
     relations: dict[str, str] = field(default_factory=dict) # 타 세력과의 관계 {"faction_b": "적대" | "동맹" | "중립"}
     
     # 깃발 및 상징/문장 (Heraldry & Visual Identity)
-    emblem_animal: str = "사자"         # 대표 상징 동물/환수 (예: "두 머리 독수리", "심해 크라켄", "검은 늑대")
-    flag_colors: list[str] = field(default_factory=lambda: ["진홍색", "금색"]) # 깃발 색상 (예: ["진홍색", "금색"], ["칠흑색", "은색"])
-    flag_symbol: str = "교차된 검과 태양" # 깃발 문양 형상 (예: "태양을 관통하는 은빛 검", "톱니바퀴와 닻")
+    emblem_animal: str = ""             # 대표 상징 동물/환수 (예: "두 머리 독수리", "심해 크라켄", "검은 늑대")
+    flag_colors: list[str] = field(default_factory=list) # 깃발 색상 (예: ["진홍색", "금색"], ["칠흑색", "은색"])
+    flag_symbol: str = ""               # 깃발 문양 형상 (예: "태양을 관통하는 은빛 검", "톱니바퀴와 닻")
     motto: str = ""                     # 세력 표어/가언 (예: "피와 쇠로 영광을", "어둠 속에서 진실을 본다")
     headquarters_location: str = ""     # 본거지/수도 위치 ID
+    traits: list[str] = field(default_factory=list) # 세력 요약 특성 태그 (예: ["호전적", "비밀주의", "상업 중심"])
 
 
 @dataclass
@@ -363,22 +364,22 @@ class NPCVisualDetails:
     Ultra-detailed visual anatomy for high-fidelity narration and AI Image Generation (Flux/SD).
     Supports granular species, life stages (child/teen/adult/elder), and body archetypes.
     """
-    species: str = "인간"                            # 종족 (예: "인간", "엘프", "드워프", "수인(늑대/고양이)", "오크", "용족", "하프엘프")
-    life_stage: str = "성인 남성"                    # 연령 및 생애 주기 (예: "어린아이(남아)", "어린아이(여아)", "청소년 소년", "청소년 소녀", "성인 남성", "성인 여성", "중년 남성", "중년 여성", "노인", "노파")
-    build_archetype: str = "보통 체형"               # 골격/체형 유형 (예: "왜소하고 마른 체형", "날렵하고 유연한 체형", "근육질의 탄탄한 체형", "육중하고 거대한 체형", "통통하고 둥근 체형")
-    height_cm: int = 175                            # 신장 (cm 단위)
-    age_apparent: str = "30대"                      # 겉보기 나이 (예: "7~8세", "10대 중반", "20대 초반", "40대 중반", "70대 노인")
-    gender: str = "남성"                            # 성별 (남성, 여성, 불명 등)
-    height_and_build: str = "175cm 보통 체구"        # 체구 상세 묘사
-    hair_color: str = "흑발"                        # 머리 색상 (예: "칠흑빛 흑발", "은백색", "녹슨 구릿빛 붉은 머리", "백금발")
-    hair_style: str = "단정한 단발"                  # 헤어스타일 (예: "뒤로 묶은 꽁지머리", "이마를 덮은 헝클어진 곱슬머리", "포마드 올백", "양갈래 땋은 머리", "삭발")
-    eye_color: str = "갈색"                         # 눈동자 색상 (예: "호박색(Amber)", "차가운 은회색", "벽안(푸른 눈)", "탁한 비취색")
-    eye_shape: str = "날카로운 눈매"                 # 눈매/크기 (예: "날카로운 삼백안", "처진 강아지상 눈매", "반쯤 감긴 나른한 눈", "크고 또렷한 눈")
-    skin_tone: str = "구릿빛 피부"                   # 피부 톤/질감 (예: "햇볕에 그을린 구릿빛", "창백한 백옥 피부", "거칠고 주름진 피부")
-    facial_features: list[str] = field(default_factory=list) # 고유 얼굴 특징 (예: ["뺨의 옅은 주근깨", "왼쪽 눈썹을 가로지르는 흉터", "턱의 짙은 수염", "오른쪽 눈 밑 애교점"])
-    clothing_style: str = "낡은 가죽 조끼와 셔츠"    # 의복/복식 (예: "기름때 묻은 무두질 가죽 조끼와 리넨 셔츠", "은사로 수놓아진 사제 로브", "무릎이 해진 멜빵바지")
-    distinctive_accessories: list[str] = field(default_factory=list) # 특이 소품/장신구 (예: ["외눈 안경(모노클)", "놋쇠 나침반 목걸이", "낡은 곰방대", "손에 쥔 나무 인형"])
-    posture_and_vibe: str = "경계하는 듯한 자세"     # 자세와 분위기 (예: "허리를 꼿꼿이 세운 군인 자세", "초조하게 손을 비비는 태도", "호기심 어린 눈망울")
+    species: str = ""                            # 종족 (예: "인간", "엘프", "드워프", "수인(늑대/고양이)", "오크", "용족", "하프엘프")
+    life_stage: str = ""                         # 연령 및 생애 주기 (예: "어린아이(남아)", "청소년 소녀", "성인 남성", "노인")
+    build_archetype: str = ""                    # 골격/체형 유형 (예: "왜소하고 마른 체형", "근육질의 탄탄한 체형")
+    height_cm: int = 0                           # 신장 (cm 단위)
+    age_apparent: str = ""                       # 겉보기 나이 (예: "7~8세", "10대 중반", "20대 초반", "40대 중반", "70대 노인")
+    gender: str = ""                             # 성별 (남성, 여성, 불명 등)
+    height_and_build: str = ""                   # 체구 상세 묘사
+    hair_color: str = ""                         # 머리 색상 (예: "칠흑빛 흑발", "은백색", "녹슨 구릿빛 붉은 머리", "백금발")
+    hair_style: str = ""                         # 헤어스타일 (예: "뒤로 묶은 꽁지머리", "단정한 단발", "포마드 올백")
+    eye_color: str = ""                          # 눈동자 색상 (예: "호박색(Amber)", "차가운 은회색", "벽안(푸른 눈)")
+    eye_shape: str = ""                          # 눈매/크기 (예: "날카로운 삼백안", "처진 강아지상 눈매", "크고 또렷한 눈")
+    skin_tone: str = ""                          # 피부 톤/질감 (예: "햇볕에 그을린 구릿빛", "창백한 백옥 피부")
+    facial_features: list[str] = field(default_factory=list) # 고유 얼굴 특징 (예: ["뺨의 옅은 주근깨", "왼쪽 눈썹을 가로지르는 흉터"])
+    clothing_style: str = ""                     # 의복/복식 (예: "기름때 묻은 가죽 조끼", "은사 사제 로브")
+    distinctive_accessories: list[str] = field(default_factory=list) # 특이 소품/장신구 (예: ["외눈 안경", "놋쇠 나침반 목걸이"])
+    posture_and_vibe: str = ""                   # 자세와 분위기 (예: "초조하게 손을 비비는 태도", "호기심 어린 눈망울")
 
 
 @dataclass
@@ -509,11 +510,25 @@ class NPC:
         acc_str = f"소품: {', '.join(v.distinctive_accessories)}" if v.distinctive_accessories else ""
         extras = " | ".join(filter(None, [feat_str, acc_str]))
         extras_part = f" ({extras})" if extras else ""
-        return (
-            f"[{v.species} {v.life_stage} / {self.job}] {v.height_cm}cm {v.build_archetype}(겉보기 {v.age_apparent}), "
-            f"{v.hair_color} {v.hair_style}, {v.eye_shape}({v.eye_color} 눈동자), "
-            f"{v.skin_tone}, {v.clothing_style}{extras_part}"
-        )
+
+        species_str = f"{v.species} {v.life_stage}".strip() if (v.species or v.life_stage) else "인물"
+        height_str = f"{v.height_cm}cm " if v.height_cm > 0 else ""
+        build_str = v.build_archetype or "보통 체형"
+        age_str = f"(겉보기 {v.age_apparent})" if v.age_apparent else ""
+        hair_str = f"{v.hair_color} {v.hair_style}".strip() if (v.hair_color or v.hair_style) else ""
+        eye_str = f"{v.eye_shape}({v.eye_color} 눈동자)" if (v.eye_shape and v.eye_color) else (f"{v.eye_color} 눈동자" if v.eye_color else (v.eye_shape or ""))
+        skin_str = v.skin_tone or ""
+        clothes_str = v.clothing_style or ""
+
+        parts = [
+            f"{height_str}{build_str}{age_str}".strip(),
+            hair_str,
+            eye_str,
+            skin_str,
+            clothes_str
+        ]
+        desc_core = ", ".join(filter(None, parts)) or "보통 체형"
+        return f"[{species_str} / {self.job}] {desc_core}{extras_part}"
 
     # Properties symmetric with Player
     @property
@@ -666,6 +681,7 @@ class Location:
     terrain: str = "plains"                        # "plains", "mountains", "forest", "swamp", "urban", "desert"
     security_level: int = 50                       # 치안도 (0~100)
     roads: dict = field(default_factory=dict)      # destination_id -> RoadConnection
+    traits: list[str] = field(default_factory=list) # 장소 요약 특성 태그 (예: ["어둠", "피비린내", "엄폐물 풍부"])
 
 
 
@@ -674,22 +690,28 @@ class Location:
 class EnvironmentalMetrics:
     weather: str = "맑음"                   # "맑음", "폭우", "농무", "모래폭풍", "폭설", "산성비"
     lighting: str = "적당한 밝기"            # "칠흑 같은 어둠", "희미한 등불", "적당한 밝기", "눈부신 분광"
-    smell: str = "스산한 흙냄새"
-    noise: str = "조용한 바람 소리"          # "적막", "바람 소리", "시끌벅적한 소음", "귀를 찢는 굉음"
+    smell: str = ""
+    noise: str = ""
     oxygen_level: int = 100                 # 산소 농도 (%)
     time_of_day: str = "낮"                 # "새벽", "낮", "황혼", "심야"
     hazard_level: int = 0                   # 환경 위험도 (0~100)
     market_inflation: dict[str, float] = field(default_factory=dict) # 아이템 카테고리별 물가 배율
-    scent_trace: str = "청결함"              # 잔류 냄새 흔적 (예: "피비린내 누적", "그을음과 탄내")
+    scent_trace: str = ""                   # 잔류 냄새 흔적 (예: "피비린내 누적", "그을음과 탄내")
     ambient_noise_occlusion: str = "일반"    # 음향 차폐 상태 (예: "폭포 굉음으로 외부 소음 차폐", "두꺼운 철문 차폐")
     temperature_celsius: int = 20           # 환경 온도 (섭씨)
 
     def to_anchoring_text(self) -> str:
-        return (
-            f"[🌿 현재 환경 앵커링] 시간: {self.time_of_day} | 날씨: {self.weather} | "
-            f"조도: {self.lighting} | 냄새: {self.smell} | 소음: {self.noise} | "
-            f"산소 농도: {self.oxygen_level}%"
-        )
+        parts = [
+            f"시간: {self.time_of_day}",
+            f"날씨: {self.weather}",
+            f"조도: {self.lighting}",
+        ]
+        if self.smell:
+            parts.append(f"냄새: {self.smell}")
+        if self.noise:
+            parts.append(f"소음: {self.noise}")
+        parts.append(f"산소 농도: {self.oxygen_level}%")
+        return f"[🌿 현재 환경 앵커링] " + " | ".join(parts)
 
 
 @dataclass
@@ -915,9 +937,30 @@ class Player:
 class WorldState:
     session_id: str = "default_session"
     world_id: str = ""
-    world_name: str = "잿빛 변경"
-    world_genre: str = "다크 판타지"
+    world_name: str = ""
+    world_genre: str = ""
     turn: int = 0
+    civilization_era: str = ""                                          # Level 0: 전 세계 문명 시대 배경 및 기술 상한선 (예: "중세 판타지", "마도 르네상스")
+    epoch_state: str = "안정기"                                         # Level 0: 전 세계 거시적 시대 기류 ("황금기", "안정기", "쇠퇴기", "암흑기")
+    founded_religions: list[str] = field(default_factory=list)          # Level 0: 전 세계 창시된 주요 종교/교단 목록 (예: "성광교회", "원시정령신앙")
+    total_population: int = 0                                           # Level 0: 전 세계 총 인구
+    total_area_sq_km: float = 0.0                                       # Level 0: 전 세계 총 표면적 (km²)
+    magic_suppression_cycle: int = 0                                    # Level 0: 마나 조석/에테르 개기일식 주기 (0~100, 100: 마법 완전 불발의 날)
+    planar_convergence_cycle: int = 0                                   # Level 0: 차원 대수렴 주기 (0~100, 100: 이계 악마/천상계 차원 문 개방)
+    world_threat_level: int = 10                                        # Level 0: 세계적 멸망/대재앙 위협도 (0~100, 심연 침공/마왕 부활/용의 각성)
+    global_apocalyptic_threat: str = ""                                 # Level 0: 전 세계적 멸망/재앙 위협 명칭 (예: "마왕군 침공", "영구 빙하기", "심연 차원문 개방")
+    world_crisis_active_stage: int = 0                                  # Level 0: 전 인류적 위기/종말 카운트다운 단계 (0: 평화 ~ 5: 완전 파멸 임박)
+    global_nemesis_npc_id: str = ""                                     # Level 0: 전 세계 공통의 주적/마왕/파멸의 사도 NPC ID 포인터
+    global_sanctuary_region_id: str = ""                                # Level 0: 전 세계 침식 속에서 유일하게 방호된 인류 최후의 성역 권역 ID 포인터
+    grand_crusade_coalition: list[str] = field(default_factory=list)    # Level 0: 전 세계 난제 해결을 위해 결성된 초국가 대연합/성전군 세력 목록
+    universal_gravity_scale: float = 1.0                                 # Level 0: 세계 물리 중력 계수 (1.0 = 표준, 중량 과적 및 낙하 충격량 배율 기준치)
+    memory_decay_turn_interval: int = 50                                 # Level 0: 사소한(1~2급) 에피소딕 기억의 자연 망각/흐려짐 턴 주기
+    cosmic_alignment_element: str = "neutral"                           # Level 0: 현재 행성이 통과 중인 우주 성간 속성/천체 정렬 ("neutral", "fire", "void", "holy", "life")
+    world_soul_awakening_ratio: int = 0                                 # Level 0: 행성 자체의 영혼/가이아 자아 각성도 (0~100, 높을수록 마나 폭풍 및 지각 변동 증가)
+    pantheon_deities: list[str] = field(default_factory=list)           # Level 0: 세계관 주신/신격 목록 (예: ["태양신 솔라리스", "밤의 여신 녹티스"])
+    days_per_month: int = 30                                            # Level 0: 천문 역법 - 한 달 일수
+    months_per_year: int = 12                                           # Level 0: 천문 역법 - 1년 개월 수
+    world_traits: list[str] = field(default_factory=list)               # Level 0: 세계관/행성 거시 요약 특성 태그 (예: ["신들의 침묵", "마나 과포화", "성간 화염 정렬", "종말 임박"])
     locations: dict[str, Location] = field(default_factory=dict)
     npcs: dict[str, NPC] = field(default_factory=dict)
     items: dict[str, Item] = field(default_factory=dict)
@@ -938,6 +981,7 @@ class WorldState:
     current_scenario_act: str = "act_1_hook_and_misdirection"
 
     # Macro World Architecture & Factions
+    infrastructure: Optional[Any] = None                                # Level 1~5 Macro-to-Micro hierarchy registry
     factions: dict[str, Faction] = field(default_factory=dict)         # 국가 및 주요 세력 DB
     cosmology_template: dict[str, Any] = field(default_factory=dict)   # 활성화된 세계관 템플릿 풀 스펙
     world_lore: dict[str, Any] = field(default_factory=dict)           # 세계관 세부 설정 (cosmology_template 동기화)
@@ -1002,7 +1046,16 @@ class WorldState:
     def time_display_ko(self) -> str:
         return f"{self.current_day}일차 {self.day_of_week_ko}요일 {self.current_hour:02d}:{self.current_minute:02d}"
 
+    @property
+    def traits(self) -> list[str]:
+        return self.world_traits
 
+    def sync_infrastructure_totals(self) -> None:
+        """Rolls up population and area from infrastructure into WorldState."""
+        if self.infrastructure and hasattr(self.infrastructure, "get_world_totals"):
+            totals = self.infrastructure.get_world_totals()
+            self.total_population = totals.get("total_population", 0)
+            self.total_area_sq_km = totals.get("total_area_sq_km", 0.0)
 
     def current_location(self) -> Optional[Location]:
         return self.locations.get(self.player.location)
@@ -2917,9 +2970,30 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state = cls()
         state.session_id = raw.get("session_id", "default_session")
         state.world_id = raw.get("world_id", "")
-        state.world_name = raw.get("world_name", "잿빛 변경")
-        state.world_genre = raw.get("world_genre", "다크 판타지")
+        state.world_name = raw.get("world_name", "")
+        state.world_genre = raw.get("world_genre", "")
         state.turn = raw.get("turn", 0)
+        state.civilization_era = raw.get("civilization_era", "")
+        state.epoch_state = raw.get("epoch_state", "안정기")
+        state.founded_religions = raw.get("founded_religions", [])
+        state.total_population = raw.get("total_population", 0)
+        state.total_area_sq_km = raw.get("total_area_sq_km", 0.0)
+        state.magic_suppression_cycle = raw.get("magic_suppression_cycle", 0)
+        state.planar_convergence_cycle = raw.get("planar_convergence_cycle", 0)
+        state.world_threat_level = raw.get("world_threat_level", 10)
+        state.global_apocalyptic_threat = raw.get("global_apocalyptic_threat", "")
+        state.world_crisis_active_stage = raw.get("world_crisis_active_stage", 0)
+        state.global_nemesis_npc_id = raw.get("global_nemesis_npc_id", "")
+        state.global_sanctuary_region_id = raw.get("global_sanctuary_region_id", "")
+        state.grand_crusade_coalition = raw.get("grand_crusade_coalition", [])
+        state.universal_gravity_scale = raw.get("universal_gravity_scale", 1.0)
+        state.memory_decay_turn_interval = raw.get("memory_decay_turn_interval", 50)
+        state.cosmic_alignment_element = raw.get("cosmic_alignment_element", "neutral")
+        state.world_soul_awakening_ratio = raw.get("world_soul_awakening_ratio", 0)
+        state.pantheon_deities = raw.get("pantheon_deities", [])
+        state.days_per_month = raw.get("days_per_month", 30)
+        state.months_per_year = raw.get("months_per_year", 12)
+        state.world_traits = raw.get("world_traits", raw.get("traits", []))
         state.world_reputation = raw.get("world_reputation", 0)
         state.world_facts = raw.get("world_facts", [])
         state.world_chronicle = raw.get("world_chronicle", "")
@@ -3076,6 +3150,20 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.discovered_clues = raw.get("discovered_clues", {})
         state.world_secrets = raw.get("world_secrets", {})
         state.dilemmas_faced = raw.get("dilemmas_faced", [])
+
+        # 6-Tier Infrastructure Registry (Level 1~5)
+        if "infrastructure" in raw and raw["infrastructure"]:
+            try:
+                from src.world.infrastructure import InfrastructureRegistry
+                if isinstance(raw["infrastructure"], dict):
+                    state.infrastructure = InfrastructureRegistry.from_dict(raw["infrastructure"])
+                elif isinstance(raw["infrastructure"], InfrastructureRegistry):
+                    state.infrastructure = raw["infrastructure"]
+            except Exception as e:
+                logger.warning(f"Failed to deserialize infrastructure registry: {e}")
+                state.infrastructure = None
+        else:
+            state.infrastructure = None
 
         # Items
         state.items = {}

@@ -112,6 +112,13 @@ TRAVEL_MODE_SPEEDS: Dict[str, float] = {
 }
 
 
+class RouteCategory(str, Enum):
+    TRUNK_HIGHWAY = "trunk_highway"        # 간선 도로 (왕도/가도): 대도시 간을 잇는 정규 도로망
+    BRANCH_ROAD = "branch_road"            # 지선 도로 (상업로/샛길): 지역 간 물류 이동로
+    BOTTLENECK_PASS = "bottleneck_pass"    # 병목 지점 (관문/협곡/국경): 통행세, 검문, 방어 거점
+    SUPPLY_WAYSTATION = "supply_waystation" # 보급 지점 (역참/여관/오아시스): 숙박 및 식수 보급소
+
+
 @dataclass
 class RoadConnection:
     destination_id: str
@@ -121,8 +128,19 @@ class RoadConnection:
     hazard_level: int = 20
     toll_fee: int = 0
     road_name_ko: str = "비포장 흙길"
+    route_category: RouteCategory = RouteCategory.BRANCH_ROAD
+    is_bottleneck: bool = False
+    bottleneck_type: str = ""                                  # 병목 유형 (예: "관문", "협곡", "국경")
+    supply_facilities: List[str] = field(default_factory=list) # 보급 시설 (예: ["역참", "여관", "식수원"])
+    allowed_transit_types: List[str] = field(default_factory=list) # 통행 허용 운송수단 범주
+    traits: List[str] = field(default_factory=list)            # 도로 연결 요약 특성 태그 (예: ["진흙탕길", "야간 기습 빈발", "협곡 매복지"])
 
     def __post_init__(self):
+        if isinstance(self.route_category, str):
+            try:
+                self.route_category = RouteCategory(self.route_category)
+            except ValueError:
+                self.route_category = RouteCategory.BRANCH_ROAD
         if self.speed_multiplier == 1.0 and self.road_type in ROAD_SPEED_MULTIPLIERS:
             self.speed_multiplier = ROAD_SPEED_MULTIPLIERS[self.road_type]
         if self.hazard_level == 20 and self.road_type in ROAD_HAZARD_BASE:
