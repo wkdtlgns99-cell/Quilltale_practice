@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 200 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 216 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 200
+    assert len(regions) == 216
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 200, f"Expected 200 region templates, got {len(data)}"
+    assert len(data) == 216, f"Expected 216 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 200
+    assert len(regions) == 216
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -2953,6 +2953,23 @@ def test_region_templates_json_integrity():
     assert rainforest.dominant_surface == "giant_tree_roots"
     assert "녹색 마나석" in rainforest.rare_mineral_deposits
     assert len(rainforest.traits) >= 4
+
+    # Verify Batch 10 region
+    whale = regions.get("region_whispering_whale_graveyard")
+    assert whale is not None
+    assert whale.name == "노래하는 거대 고래의 무덤"
+    assert whale.terrain == "coastal_port"
+    assert whale.dominant_surface == "bone_coral_sand"
+    assert "웨일 본 펄 크리스탈 광맥" in whale.rare_mineral_deposits
+    assert len(whale.traits) >= 4
+
+    aurora_tundra = regions.get("region_aurora_crystal_tundra")
+    assert aurora_tundra is not None
+    assert aurora_tundra.name == "오로라를 품은 수정 빙하"
+    assert aurora_tundra.terrain == "frozen_tundra"
+    assert aurora_tundra.dominant_surface == "aurora_crystal_sheet"
+    assert "오로라 프리스마이트 광맥" in aurora_tundra.rare_mineral_deposits
+    assert len(aurora_tundra.traits) >= 4
 
 
 
