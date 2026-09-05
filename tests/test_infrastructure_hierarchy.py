@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 149 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 165 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 149
+    assert len(regions) == 165
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 149, f"Expected 149 region templates, got {len(data)}"
+    assert len(data) == 165, f"Expected 165 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 149
+    assert len(regions) == 165
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -2935,6 +2935,15 @@ def test_region_templates_json_integrity():
     assert ice_crown.dominant_surface == "glacier_ice"
     assert "청빙 철광맥" in ice_crown.rare_mineral_deposits
     assert len(ice_crown.traits) >= 4
+
+    # Verify Batch 8 region
+    ice_fang = regions.get("region_ice_fang_glacier_canyon")
+    assert ice_fang is not None
+    assert ice_fang.name == "서리송곳니 빙하 협곡"
+    assert ice_fang.terrain == "frozen_tundra"
+    assert ice_fang.dominant_surface == "ice_sheet"
+    assert "청빙 철광맥" in ice_fang.rare_mineral_deposits
+    assert len(ice_fang.traits) >= 4
 
 
 
