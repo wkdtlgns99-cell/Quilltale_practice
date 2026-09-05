@@ -1448,18 +1448,53 @@ class InfrastructureTemplateLoader:
         "dream_space": "magical_anomaly",
         "emotion_realm": "magical_anomaly",
         "crystal_forest": "magical_anomaly",
+        "floating_islands": "magical_anomaly",
+        "meteor_crater": "magical_anomaly",
+        "enchanted_meadow": "magical_anomaly",
         "snow_plateau": "frozen_tundra",
         "ice_cave": "frozen_tundra",
         "glacial_fjord": "frozen_tundra",
+        "aurora_valley": "frozen_tundra",
         "poison_swamp": "swamp_marsh",
         "poison_crypt": "swamp_marsh",
         "poison_wasteland": "swamp_marsh",
         "canyon_spore": "swamp_marsh",
+        "mangrove_delta": "swamp_marsh",
+        "dark_moor": "swamp_marsh",
+        "fungal_gorge": "swamp_marsh",
+        "mirror_marsh": "swamp_marsh",
+        "high_altitude_marsh": "swamp_marsh",
         "dense_jungle": "dense_forest",
+        "ancient_rainforest": "dense_forest",
+        "bamboo_forest": "dense_forest",
+        "corrupted_forest": "dense_forest",
+        "ironwood_forest": "dense_forest",
+        "perpetual_twilight_forest": "dense_forest",
+        "boreal_forest": "dense_forest",
         "grassland_forest": "plains",
+        "storm_steppe": "plains",
+        "perpetual_bloom_valley": "plains",
+        "blood_red_riverlands": "plains",
+        "river_basin": "plains",
         "mountain_pass": "mountain_mine",
+        "canyon_badlands": "mountain_mine",
+        "fossil_valley": "mountain_mine",
+        "misty_highland": "mountain_mine",
+        "mesa_plateau": "mountain_mine",
         "volcanic": "volcanic",
+        "sulfur_springs": "volcanic",
+        "ash_wasteland": "volcanic",
         "ocean": "coastal_port",
+        "mystic_lake_basin": "coastal_port",
+        "sunken_coast": "coastal_port",
+        "tidal_cliffs": "coastal_port",
+        "obsidian_coast": "coastal_port",
+        "salt_flat": "desert_wasteland",
+        "glass_desert": "desert_wasteland",
+        "singing_dunes": "desert_wasteland",
+        "crystal_caverns": "underground_abyss",
+        "hollow_mountain": "underground_abyss",
+        "giant_sinkhole": "underground_abyss",
     }
 
     TERRAIN_PRICE_MULTIPLIERS: Dict[str, Dict[str, float]] = {
@@ -1502,7 +1537,17 @@ class InfrastructureTemplateLoader:
         reg_id = reg_dict.get("id", f"region_{random.randint(1000, 9999)}")
         name = reg_dict.get("name", "미지의 권역")
         category = reg_dict.get("category", "")
-        terrain = reg_dict.get("terrain") or cls.CATEGORY_TERRAIN_MAP.get(category, "plains")
+        raw_terrain = reg_dict.get("terrain", "")
+        if raw_terrain in cls.TERRAIN_PRICE_MULTIPLIERS:
+            terrain = raw_terrain
+        elif raw_terrain in cls.CATEGORY_TERRAIN_MAP:
+            terrain = cls.CATEGORY_TERRAIN_MAP[raw_terrain]
+        elif category in cls.CATEGORY_TERRAIN_MAP:
+            terrain = cls.CATEGORY_TERRAIN_MAP[category]
+        elif category in cls.TERRAIN_PRICE_MULTIPLIERS:
+            terrain = category
+        else:
+            terrain = "plains"
 
         # Atmospheric description synthesis
         desc_raw = reg_dict.get("description", "")
