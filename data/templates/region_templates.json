@@ -22800,5 +22800,1765 @@
       }
     ],
     "category": "mountain_mine"
+  },
+  {
+    "id": "region_clockwork_time_tomb",
+    "name": "멈춰버린 태엽의 영묘",
+    "continent_id": "continent_scorched_spine",
+    "terrain": "mountain_mine",
+    "climate_type": "증기 기관 고산대",
+    "dominant_surface": "brass_gear_floor",
+    "dominant_elemental_affinity": "metal",
+    "traits": [
+      "거대 황동 태엽이 맞물리는 지형",
+      "시간이 느리게 흐르는 공간",
+      "태엽 인형 병기의 무덤",
+      "태엽 기름의 찌든 냄새"
+    ],
+    "description": {
+      "visual": "발밑부터 수백 미터 절벽까지 거대한 청동 기아와 태엽들이 끝없이 맞물려 유기적으로 움직이며 둔탁한 금속음을 울려 퍼뜨린다.",
+      "auditory": "온 대지를 뒤흔드는 거대한 시계 추 소리와 톱니바퀴가 맞물릴 때 나는 찌걱거리는 금속 마찰음.",
+      "olfactory": "오래된 구리 동전 냄새와 뜨겁게 달아오른 기계 윤활유의 텁텁한 향."
+    },
+    "time_of_day_variants": {
+      "day": "태양빛이 수많은 황동 반사판에 굴절되어 분수처럼 찬란한 금빛 섬광을 사방에 흩뿌림.",
+      "night": "태엽의 움직임이 삐걱거리며 멈추는 구간이 생기고, 어둠 속에서 태엽 장치 눈을 가진 기계 망령들이 깨어남."
+    },
+    "weather_events": [
+      {
+        "event_name": "시간 왜곡 증기 폭풍",
+        "effect": "고압의 증기가 분출되며 플레이어의 행동 속도가 절반으로 느려지거나 일시적으로 과거의 잔상이 겹침."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "맞물리는 거대 태엽 틈새",
+        "effect": "이동 중 톱니바퀴 사이에 발이나 장비가 끼여 즉각적인 압착 물리 피해 및 장비 파손.",
+        "mitigation": "태엽이 맞물리는 타이밍을 계산해 점프하거나 지연 마법으로 톱니를 고정."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "묘지 중앙의 거대 시계추 인위적으로 조작",
+        "consequence": "공간의 시간이 역행하며 이미 처치했던 기계 마물이 부활하거나 과거의 유적이 튀어나옴."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "태엽 감은 가고일",
+        "청동 태엽 뱀",
+        "시간 포식자 망령",
+        "황동 오토마톤"
+      ],
+      "apex_predator_id": "monster_chronos_clockwork_dragon",
+      "regional_champion_npc_id": "npc_master_horologist_chronos",
+      "nomadic_tribes": [
+        "자신의 심장을 기계로 대체한 태엽 사제 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘을 향해 수천 미터 솟은 거대 황동 태엽 탑",
+        "시간이 멈춘 얼어붙은 증기 폭포"
+      ],
+      "archaeological_sites": [
+        "고대 태엽 문명의 제1기 시계태엽 궁전"
+      ],
+      "planar_rifts": [
+        "시간의 흐름이 깨진 무한의 시공간 균열"
+      ],
+      "natural_shelters": [
+        "거대 태엽 톱니 바퀴 밑의 건조한 정비실"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "태엽 코어 부품",
+        "시공간 윤활유",
+        "황동 태엽 조각"
+      ],
+      "rare_mineral_deposits": [
+        "크로노스 태엽 철광맥",
+        "시간 마나 결정석"
+      ],
+      "endemic_biological_resources": [
+        "기계 벌레의 강철 외골격",
+        "태양광 태엽 이끼"
+      ],
+      "trade_node_name": "시계태엽 영묘 입구 정비소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "황동 깡통에 담긴 고대 압착 보존식",
+        "delicacy": "증기 온천수로 데워 마시는 액체 마나 차",
+        "taboo_food": "태엽 묘지 중앙의 메인 시계추에 기름 대신 피를 바르는 행위"
+      },
+      "attire": {
+        "daily_wear": "가죽 조끼와 수많은 주머니가 달린 정비사용 앞치마",
+        "extreme_weather_gear": "증기 화상을 막아주는 두꺼운 황동 방호구와 고글"
+      },
+      "culture": {
+        "animism_and_faith": "시간의 신 '크로노스'에게 바치는 태엽 감기 의식",
+        "regional_taboo": "묘지 내에서 시계 바늘이 흘러가는 방향과 반대로 걷지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "영묘 최심부의 거대 태엽을 과거로 돌리면 후회했던 선택을 되돌릴 수 있다.",
+        "truth_flag": true,
+        "reality": "과거로 돌아가는 것은 맞으나, 그 대가로 현재의 존재 자체가 역사에서 완전히 지워짐."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_whispering_starlight_sea",
+    "name": "별빛이 잠든 거울 바다",
+    "continent_id": "continent_azure_reach",
+    "terrain": "coastal_port",
+    "climate_type": "신비로운 환상 해역",
+    "dominant_surface": "mirror_water",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "밤하늘의 별이 바닥에 비치는 거울 수면",
+      "파도가 치지 않는 고요한 호수 같은 바다",
+      "수면 아래 잠긴 천공의 도시 환영",
+      "별빛을 품은 심해 마수"
+    ],
+    "description": {
+      "visual": "끝없는 수면이 완벽한 거울처럼 기능하여 머리 위의 밤하늘과 발밑의 은하수가 하나로 이어진 듯한 경이로운 착시를 일으킴.",
+      "auditory": "파도 소리 대신 사방에서 은은하게 울려 퍼지는 천상의 하프 연주 같은 백색 소음.",
+      "olfactory": "맑고 시린 밤공기와 갓 내린 이슬, 은은한 밤하늘의 오존 향."
+    },
+    "time_of_day_variants": {
+      "day": "바다 전체가 눈부신 백은색 거울판으로 변해 사방에서 태양광을 거대 반사함.",
+      "night": "수면 위로 우주가 펼쳐진 듯 수천 개의 별빛이 바다 안에서 환하게 빛나며 장관을 연출."
+    },
+    "weather_events": [
+      {
+        "event_name": "유성우 소나기",
+        "effect": "하늘에서 별똥별이 수면 위로 쏟아지며 무작위 지역에 마력 폭발 및 운석 낙하 피해."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "거울 수면 착시 균열",
+        "effect": "수면이 너무 투명하고 매끄러워 깊이를 가늠할 수 없으며, 발을 디디는 순간 중력을 잃고 심해로 추락.",
+        "mitigation": "마법 부유 장비를 착용하거나 별빛 나침반이 가리키는 안전한 수로로만 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "거울 수면에 손을 담그고 소원 빌기",
+        "consequence": "플레이어의 내면의 욕망이 형상화되어 적대적인 분신(환영 마물)이 튀어나와 전투 발생."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "별빛 해파리 무리",
+        "거울 수면 환영 가이스트",
+        "은하수 가오리",
+        "별빛 고래"
+      ],
+      "apex_predator_id": "monster_astral_celestial_leviathan",
+      "regional_champion_npc_id": "npc_stargazer_celestia",
+      "nomadic_tribes": [
+        "별의 움직임을 읽으며 수면 위를 걷는 항해사 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "수면 위로 거꾸로 매달려 있는 듯한 공중 섬 군락",
+        "별빛이 응축되어 소용돌이치는 오로라 소용돌이"
+      ],
+      "archaeological_sites": [
+        "거울 바다 밑바닥에 가라앉은 고대 천문 관측 제국 유적"
+      ],
+      "planar_rifts": [
+        "우주 차원과 직접 이어지는 별빛의 문"
+      ],
+      "natural_shelters": [
+        "수면 위 기묘한 장력으로 떠 있는 거대 조개껍질 쉼터"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "응축된 별빛 가루",
+        "거울 수면 진주",
+        "은하수 산호초"
+      ],
+      "rare_mineral_deposits": [
+        "아스트랄 스타스톤 광맥",
+        "문라이트 실버 덩어리"
+      ],
+      "endemic_biological_resources": [
+        "별빛 해파리의 발광 액기스",
+        "은하수 가오리의 날개 가죽"
+      ],
+      "trade_node_name": "별빛 거울 항구 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "별빛 이슬을 머금고 자란 투명한 해초 샐러드",
+        "delicacy": "밤하늘의 오로라 색감을 띤 은하수 젤리 수프",
+        "taboo_food": "거울 수면에 비친 자신의 얼굴을 숟가락으로 떠서 먹는 행위"
+      },
+      "attire": {
+        "daily_wear": "밤하늘의 은하수를 수놓은 듯한 감색 실크 로브",
+        "extreme_weather_gear": "별빛 반사를 막아주는 은빛 차광 안경"
+      },
+      "culture": {
+        "animism_and_faith": "밤하늘의 별자리 주신에게 바치는 천문 관측 제의",
+        "regional_taboo": "거울 바다에 잉크나 오물을 풀어서 별빛을 더럽히지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "거울 바다의 가장 깊은 곳에 잠수하면 우주를 항해할 수 있는 은빛 배가 있다.",
+        "truth_flag": true,
+        "reality": "배는 실제로 존재하나, 탑승하는 순간 영원히 지상으로 돌아올 수 없는 우주 미아가 됨."
+      }
+    ],
+    "category": "coastal_port"
+  },
+  {
+    "id": "region_amber_resin_catacomb",
+    "name": "태고의 호박(琥珀) 수지 무덤",
+    "continent_id": "continent_verdant_veil",
+    "terrain": "dense_forest",
+    "climate_type": "원시 밀림 지대",
+    "dominant_surface": "solidified_amber",
+    "dominant_elemental_affinity": "nature",
+    "traits": [
+      "황금빛 투명한 호박 수지로 뒤덮인 밀림",
+      "수천 년 전 고대 생물이 박제된 나무 기둥",
+      "끈적하고 달콤한 송진 향의 질식 지대",
+      "고대 곤충형 마물의 거대 군락"
+    ],
+    "description": {
+      "visual": "숲 전체가 거대한 황금빛 호박 수지로 코팅되어 있으며, 투명한 나무 벽 안쪽마다 거대 선사 시대 괴수들과 식물들이 고스란히 박제되어 있다.",
+      "auditory": "두꺼운 수지 벽을 타고 울려 퍼지는 기괴한 공명음과 멀리서 들리는 고대 곤충들의 날갯짓 진동.",
+      "olfactory": "코끝을 진동시키는 달콤하면서도 텁텁한 소나무 송진과 꿀의 향기."
+    },
+    "time_of_day_variants": {
+      "day": "황금빛 호박 수지가 태양빛을 모아 숲 전체가 눈부신 황금빛 온실처럼 빛남.",
+      "night": "수지 안에 박제된 고대 생물들의 눈빛에서 미약한 인광이 흘러나와 기묘한 분위기 연출."
+    },
+    "weather_events": [
+      {
+        "event_name": "황금 송진 소나기",
+        "effect": "끈적한 액체 송진이 하늘에서 비처럼 내려 장비의 이동 속도를 늦추고 행동력을 봉쇄."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "미지의 반고체 호박 수지 웅덩이",
+        "effect": "겉보기엔 단단한 황금빛 바닥 같으나 밟으면 서서히 몸이 가라앉아 영원히 호박 속에 박제됨.",
+        "mitigation": "열 마법으로 수지를 녹이거나 마법 발판을 이용해 단단한 지면으로만 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "박제된 고대 괴수가 갇힌 호박 벽을 무기로 강하게 가격",
+        "consequence": "호박 벽이 깨어지며 수천 년 동안 잠들어 있던 고대 선사 시대 포식자가 깨어나 습격."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "호박 박제 좀비",
+        "거대 선사 시대 사마귀",
+        "송진 점액 슬라임",
+        "고대 숲의 벌레 군단"
+      ],
+      "apex_predator_id": "monster_amber_encased_primordial_behemoth",
+      "regional_champion_npc_id": "npc_amber_archaeologist_silas",
+      "nomadic_tribes": [
+        "호박 수지를 채집해 가공하는 정밀 장인 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "세계수 크기의 거대 호박 결정 거목",
+        "고대 생물이 통째로 박힌 황금빛 절벽"
+      ],
+      "archaeological_sites": [
+        "호박 속에 봉인된 제1기 원시 문명 제단"
+      ],
+      "planar_rifts": [
+        "원시 태고의 밀림 차원으로 이어지는 호박 균열"
+      ],
+      "natural_shelters": [
+        "속이 파여 호박 동굴이 된 거대 나무 밑동"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고순도 투명 호박 보석",
+        "고대 생물의 유전 액기스",
+        "황금 송진 꿀"
+      ],
+      "rare_mineral_deposits": [
+        "황금 호박 마나 핵석",
+        "태고의 호박석 광맥"
+      ],
+      "endemic_biological_resources": [
+        "선사 시대 곤충의 날개 가죽",
+        "호박 수지 오일"
+      ],
+      "trade_node_name": "황금 호박 채집 야영지"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "송진 향이 감도는 구운 밀가루 빵과 호박 꿀",
+        "delicacy": "수천 년 전 호박 속에서 채취한 고대 꿀로 만든 발효주",
+        "taboo_food": "인간의 형상이 박제된 호박 결정을 도끼로 깨서 안의 내용물을 먹는 행위"
+      },
+      "attire": {
+        "daily_wear": "송진이 묻지 않는 특수 처리된 가죽 로브",
+        "extreme_weather_gear": "끈적함을 차단하는 기름 코팅 전신 방호복"
+      },
+      "culture": {
+        "animism_and_faith": "태고의 밀림 어머니에게 바치는 호박 보석 공양",
+        "regional_taboo": "호박 수지 무덤 안에서 시끄럽게 소리치거나 폭발물을 사용하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "가장 큰 호박 거목 중심부의 투명한 수정 속에는 멸종된 신의 알이 들어 있다.",
+        "truth_flag": true,
+        "reality": "알은 진짜 있으나, 부화하는 순간 주변 반경 수 킬로미터의 생명력을 흡수해 황금 석상으로 만듦."
+      }
+    ],
+    "category": "dense_forest"
+  },
+  {
+    "id": "region_abyssal_coral_graveyard",
+    "name": "심해 산호의 잊혀진 무덤",
+    "continent_id": "continent_azure_reach",
+    "terrain": "underground_abyss",
+    "climate_type": "심해 수중대",
+    "dominant_surface": "black_coral_bed",
+    "dominant_elemental_affinity": "water",
+    "traits": [
+      "빛을 흡수하는 검은 피를 흘리는 산호 숲",
+      "바다의 압력이 극에 달한 심해 공동",
+      "가라앉은 고대 범선과 잔해들의 무덤",
+      "유령처럼 떠다니는 심해 마령"
+    ],
+    "description": {
+      "visual": "칠흑 같은 심해 지하 동굴 속에서 핏빛이나 잿빛을 띤 기괴한 거대 검은 산호들이 숲을 이루며 유령처럼 흔들림.",
+      "auditory": "물속을 타고 울려 퍼지는 고대 선박들의 삐걱거리는 돛대 소리와 수중 유령들의 흐느낌.",
+      "olfactory": "차가운 해수 냄새와 오래된 닻의 쇠붙이, 썩어가는 심해 진흙의 악취."
+    },
+    "time_of_day_variants": {
+      "day": "심해 지하 공동이라 지상의 빛은 전혀 들지 않으며 검은 산호들의 은은한 인광만 깜빡임.",
+      "night": "마찬가지로 외부의 변화 없이 수중 마령들의 마력이 최고조에 달함."
+    },
+    "weather_events": [
+      {
+        "event_name": "심해 소용돌이 해류",
+        "effect": "예고 없이 강력한 수중 소용돌이가 발생해 탐험대의 대열을 흩어놓고 압박 피해 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "검은 산호 가시 독침",
+        "effect": "스치기만 해도 신경을 마비시키는 강력한 수중 독소가 혈관을 타고 퍼져 행동불능 유발.",
+        "mitigation": "마법 잠수복을 착용하고 산호 군락과 일정 거리 유지하며 우회."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "가라앉은 고대 해적 왕의 유골함이나 보물 상자 건드리기",
+        "consequence": "주변에 잠들어 있던 수백 마리의 수중 언데드와 산호 마령들이 일제히 각성."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "산호 좀비 해적",
+        "심해 유령 레이스",
+        "검은 산호 기생충 떼",
+        "거대 앙코르 크라켄"
+      ],
+      "apex_predator_id": "monster_abyssal_undead_kraken_lord",
+      "regional_champion_npc_id": "npc_drowned_captain_barnaby",
+      "nomadic_tribes": [
+        "심해 산호에 기생하여 살아가는 반인반어 종족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "피를 흘리는 거대 검은 산호 왕좌",
+        "심해 열수구가 뿜어내는 거대 거품 기둥"
+      ],
+      "archaeological_sites": [
+        "수백 척의 해적선과 왕실 범선이 얽혀 있는 난파선 무덤"
+      ],
+      "planar_rifts": [
+        "명계의 바다 차원으로 이어지는 검은 소용돌이 균열"
+      ],
+      "natural_shelters": [
+        "가라앉은 거대 왕실 함선의 방호 마법이 남은 선장실"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "검은 산호 수지",
+        "심해 유령 진주",
+        "고대 항해사 의 보물 지도"
+      ],
+      "rare_mineral_deposits": [
+        "심해 아비스 마나 원석",
+        "난파선 청동 주괴"
+      ],
+      "endemic_biological_resources": [
+        "산호 마령의 핵석",
+        "심해 상어의 마력 가죽"
+      ],
+      "trade_node_name": "심해 난파선 밀거래 잠수정"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "심해 열수구 근처에서 잡힌 맹어 구이",
+        "delicacy": "발광 플랑크톤을 가공한 차가운 젤리 스프",
+        "taboo_food": "검은 산호 무덤에서 자라난 기생 조개의 살점 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "고압을 견디는 마법 잠수 로브",
+        "extreme_weather_gear": "수중 산소 공급 마스크와 티타늄 잠수 헬멧"
+      },
+      "culture": {
+        "animism_and_faith": "바다의 망령들에게 바치는 가라앉은 동전 공양",
+        "regional_taboo": "난파선 무덤 안에서 사자의 닻을 발로 걷어차지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "산호 무덤 한가운데의 유령선 선장실에 들어가면 과거 바다를 지배했던 왕의 보물을 얻는다.",
+        "truth_flag": true,
+        "reality": "보물은 있으나, 가져 나오는 순간 선장의 저주를 받아 영원히 유령선에서 벗어나지 못함."
+      }
+    ],
+    "category": "underground_abyss"
+  },
+  {
+    "id": "region_resonant_whispering_canyon",
+    "name": "공명하는 울음의 협곡",
+    "continent_id": "continent_crag_realm",
+    "terrain": "mountain_mine",
+    "climate_type": "고산 건조대",
+    "dominant_surface": "resonance_stone",
+    "dominant_elemental_affinity": "wind",
+    "traits": [
+      "바람이 불면 거대한 음악 소리를 내는 기암괴석",
+      "공명 현상으로 인한 음파 충격파",
+      "하늘을 가르는 거대 음파 조류",
+      "고대 음유시인들의 순례지"
+    ],
+    "description": {
+      "visual": "수천 개의 거대한 돌기둥과 절벽들이 거대한 파이프오르간처럼 얽혀 있으며, 바람이 불 때마다 시공을 울리는 거대한 화음이 연주됨.",
+      "auditory": "협곡 전체가 거대한 악기가 되어 울려 퍼지는 웅장하면서도 소름 돋는 파이프오르간 합주음.",
+      "olfactory": "건조하고 차가운 고산 대기의 냄새와 메마른 돌가루 향."
+    },
+    "time_of_day_variants": {
+      "day": "태양빛이 협곡의 돌기둥들을 비추며 바람의 세기에 따라 오묘한 장음과 단음이 교차함.",
+      "night": "바람이 차갑게 식으며 협곡의 화음이 슬픈 장송곡처럼 낮게 가라앉아 울려 퍼짐."
+    },
+    "weather_events": [
+      {
+        "event_name": "대음파 폭풍",
+        "effect": "협곡의 공명 극대화로 귀가 멀어지고 방어막이 깨지는 강력한 광역 음파 충격 피해 발생."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "공명 주파수 충격파",
+        "effect": "특정 음계가 울려 퍼질 때 플레이어의 마력과 심장박동이 동기화되어 일시적인 마비와 스턴 유발.",
+        "mitigation": "마법 방음 귀마개를 착용하거나 공명 주파수를 상쇄하는 소음 장비 휴대."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "협곡 벽면의 특정 돌기둥을 악기 연주하듯 순서대로 타격",
+        "consequence": "거대한 화음이 완성되며 협곡의 숨겨진 비밀 문이 열리고 고대 시인의 유물 등장."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "음파 하피",
+        "돌기둥 가고일",
+        "바람의 메아리 정령",
+        "공명 사슴"
+      ],
+      "apex_predator_id": "monster_resonance_siren_behemoth",
+      "regional_champion_npc_id": "npc_wandering_bard_aria",
+      "nomadic_tribes": [
+        "소리를 무기로 사용하는 음유시인 유목 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "세계에서 가장 큰 천연 바위 파이프오르간 절벽",
+        "바람이 머물며 소리를 가두는 공명 호수"
+      ],
+      "archaeological_sites": [
+        "고대 음악의 제국이 남긴 음파 원형 극장 유적"
+      ],
+      "planar_rifts": [
+        "소리와 진동의 차원으로 이어지는 음파 균열"
+      ],
+      "natural_shelters": [
+        "소리가 완벽하게 차단되는 천연 방음 암벽 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "공명석 가루",
+        "음파 차단 마석",
+        "바람의 현(絃)"
+      ],
+      "rare_mineral_deposits": [
+        "소닉 마나 크리스탈 광맥",
+        "오페라 실버 광석"
+      ],
+      "endemic_biological_resources": [
+        "공명 사슴의 뿔",
+        "바람 정령의 숨결 액기스"
+      ],
+      "trade_node_name": "음파 협곡 시인의 야영지"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "고산 견과류를 갈아 만든 단단한 에너지 바",
+        "delicacy": "협곡의 바람 소리를 들으며 숙성시킨 산양 치즈",
+        "taboo_food": "공명 주파수 폭풍이 치는 동안 협곡에서 고기를 굽는 행위"
+      },
+      "attire": {
+        "daily_wear": "바람에 날리지 않도록 몸에 밀착된 가죽 연주복",
+        "extreme_weather_gear": "청력 보호를 위한 마법 방음 귀마개와 후드"
+      },
+      "culture": {
+        "animism_and_faith": "바람과 소리의 거신에게 바치는 합창 제의",
+        "regional_taboo": "협곡에서 허가 없이 불협화음을 내어 바람의 노여움을 살 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "협곡 원형 극장의 중앙 무대에서 완벽한 연주를 해내면 세상의 모든 아픔을 치유하는 노래를 얻는다.",
+        "truth_flag": true,
+        "reality": "노래를 얻는 것은 맞으나, 연주를 마치는 순간 시력을 잃고 평생 소리만을 느끼며 살아감."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_crying_willow_bog",
+    "name": "울부짖는 버드나무 습지",
+    "continent_id": "continent_verdant_veil",
+    "terrain": "swamp_marsh",
+    "climate_type": "열대 습윤 습지대",
+    "dominant_surface": "black_peat",
+    "dominant_elemental_affinity": "darkness",
+    "traits": [
+      "검은 눈물을 흘리는 듯한 기괴한 수양버들 군락",
+      "사람의 목소리를 흉내 내는 습지 안개",
+      "깊이를 알 수 없는 검은 이토록 늪지",
+      "원혼들이 모여드는 상시 밤의 기운"
+    ],
+    "description": {
+      "visual": "진흙탕 위로 뼛속까지 시린 검은 나뭇가지를 드리운 수양버들들이 끝없이 늘어서 있으며, 나뭇가지마다 끈적한 검은 수액이 눈물처럼 뚝뚝 떨어진다.",
+      "auditory": "습지 안개 속에서 일행의 목소리를 그대로 흉내 내어 길을 묻는 기괴한 메아리와 흐느낌.",
+      "olfactory": "썩어가는 유기물과 짙은 이끼 냄새, 서늘한 묘지 흙의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "습지 상공을 뒤덮은 짙은 먹구름과 안개가 뒤덮어 대낮에도 칠흑 같은 잿빛 어둠이 유지됨.",
+      "night": "버드나무 가지마다 매달린 검은 수액 방울들이 푸른 도깨비불처럼 일제히 빛나며 기괴한 장관 연출."
+    },
+    "weather_events": [
+      {
+        "event_name": "통곡의 검은 비",
+        "effect": "슬픈 울음소리를 동반한 검은 비가 내려 시야를 가리고 플레이어의 정신력을 지속적으로 갉아먹음."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "목소리 유인 퀵샌드",
+        "effect": "가장 친한 동료의 목소리로 살려달라는 소리가 들려 그쪽으로 발을 디디면 순식간에 진흙 속으로 함몰.",
+        "mitigation": "동료의 목소리에 일일이 대답하지 말고 마법 탐지기로 실제 위치를 확인하며 전진."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "울부짖는 버드나무의 본체를 칼로 베어내기",
+        "consequence": "나무가 사람의 비명 소리를 지르며 주변의 모든 원혼과 늪지 마물들을 불러 모음."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "버드나무 사념체 레이스",
+        "습지 좀비",
+        "검은 눈물 거미",
+        "모조품 사서인 몬스터"
+      ],
+      "apex_predator_id": "monster_weeping_willow_banshee_queen",
+      "regional_champion_npc_id": "npc_mourning_witch_cassandra",
+      "nomadic_tribes": [
+        "원혼의 목소리를 차단하는 가면을 쓴 방랑자 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "수백 개의 얼굴이 새겨진 거대 통곡의 버드나무 왕",
+        "검은 눈물이 고여 만들어진 통곡의 호수"
+      ],
+      "archaeological_sites": [
+        "습지에 완전히 잠겨버린 고대 처형장 및 묘지 유적"
+      ],
+      "planar_rifts": [
+        "눈물과 슬픔의 차원으로 이어지는 잿빛 균열"
+      ],
+      "natural_shelters": [
+        "버드나무 뿌리 사이에 형성된 방호 마법이 깃든 공동 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "통곡의 버드나무 수액",
+        "원혼을 담는 유리 공병",
+        "검은 이토록 진흙"
+      ],
+      "rare_mineral_deposits": [
+        "모닝스타 소울 스톤 원석",
+        "비탄의 흑요석"
+      ],
+      "endemic_biological_resources": [
+        "버드나무 사념체의 핵",
+        "눈물 이끼 추출액"
+      ],
+      "trade_node_name": "통곡의 습지 방랑자 캠프"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "습지 이끼를 말려 만든 쌉싸름한 압착 비스킷",
+        "delicacy": "통곡의 호수에서 잡힌 눈먼 장어 구이와 매운 허브 수프",
+        "taboo_food": "습지 안개 속에서 들리는 목소리에 대답하며 요리한 음식 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "원혼의 소리를 흡수하는 귀마개가 달린 방수 가죽 로브",
+        "extreme_weather_gear": "검은 비를 막아주는 전신 방수 오일스킨 코트"
+      },
+      "culture": {
+        "animism_and_faith": "비탄의 여신에게 바치는 침묵과 눈물 공양 의식",
+        "regional_taboo": "습지 안에서 슬픈 생각에 잠겨 발걸음을 멈추지 말 것 (사념에 잠식됨)"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "통곡의 호수 한가운데에 서서 죽은 연인의 이름을 외치면 연인이 살아 돌아온다.",
+        "truth_flag": true,
+        "reality": "연인의 외형을 한 강력한 늪지 밴시가 나타나 플레이어의 영혼을 찢어 발김."
+      }
+    ],
+    "category": "swamp_marsh"
+  },
+  {
+    "id": "region_molten_glass_dunes",
+    "name": "작열하는 용융 유리 사막",
+    "continent_id": "continent_scorched_spine",
+    "terrain": "desert_wasteland",
+    "climate_type": "초고온 사막대",
+    "dominant_surface": "fused_glass",
+    "dominant_elemental_affinity": "fire",
+    "traits": [
+      "초고온의 벼락에 녹아 유리로 변해버린 사막 지형",
+      "거울처럼 빛 반사가 심한 투명 지면",
+      "유리 모래 바람이 휘몰아치는 사막",
+      "유리 골렘과 화염 수호자들의 낙원"
+    ],
+    "description": {
+      "visual": "모래알들이 과거 거대한 마법 벼락에 맞아 통째로 녹아내려 투명하고 매끄러운 유리 평원을 이뤄 햇빛을 찬란하게 반사함.",
+      "auditory": "유리가 깨지거나 마찰할 때 나는 챙강거리는 날카로운 소리와 작열하는 열풍 소리.",
+      "olfactory": "용광로에서 맡을 수 있는 타오르는 실리카와 강한 오존의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "지면 전체가 거대한 거울판처럼 태양빛을 무차별 반사해 지상과 상공 모두 완벽한 백색 섬광에 휩싸임.",
+      "night": "유리 지면에 밤하늘의 별빛이 투과되어 사방이 우주 속을 걷는 듯한 신비로운 야경 연출."
+    },
+    "weather_events": [
+      {
+        "event_name": "유리 모래 폭풍",
+        "effect": "미세한 유리 조각이 섞인 폭풍이 몰아쳐 방어구를 깎아내고 전신에 극심한 절단 피해."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "취약한 유리 지각 균열",
+        "effect": "얇게 굳은 유리판 위를 지나다 판이 깨지며 아래의 작열하는 용암 웅덩이로 추락.",
+        "mitigation": "특수 강화 부츠를 착용하거나 마법 발판을 이용해 두꺼운 유리 능선으로만 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "유리 사막 위에서 고열 마법이나 화염구 난사",
+        "consequence": "유리 지면이 추가로 녹아내리며 주변에 갇혀 있던 유리 골렘들이 대거 각성."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "투명 유리 스콜피온",
+        "유리 파편 가고일",
+        "불꽃 샐러맨더",
+        "크리스탈 미라"
+      ],
+      "apex_predator_id": "monster_molten_glass_phoenix",
+      "regional_champion_npc_id": "npc_glassmaker_ignis",
+      "nomadic_tribes": [
+        "유리를 가공해 특수 장비를 만드는 사막 장인 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘에서 내리꽂힌 거대 마법 벼락의 자국인 유리 크레이터",
+        "일렁이는 신기루 속 거대 투명 유리 궁전"
+      ],
+      "archaeological_sites": [
+        "고대 연금술사들이 유리 제조법을 연구하던 거대 화로 유적"
+      ],
+      "planar_rifts": [
+        "불과 실리카의 차원으로 이어지는 유리빛 균열"
+      ],
+      "natural_shelters": [
+        "두꺼운 유리 기둥 아래 형성된 그늘진 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고순도 마법 유리판",
+        "유리 스콜피온의 집게",
+        "작열의 실리카 가루"
+      ],
+      "rare_mineral_deposits": [
+        "태양광 반사 글래스톤",
+        "불꽃 마나 유리 코어"
+      ],
+      "endemic_biological_resources": [
+        "유리 스콜피온의 독낭",
+        "사막 유리초 수액"
+      ],
+      "trade_node_name": "유리 사막 관문 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "태양열로 건조시킨 사막 도마뱀 육포",
+        "delicacy": "유리 온실에서 재배한 투명한 과일 샐러드",
+        "taboo_food": "깨진 유리 조각에 묻은 핏자국이 있는 고기 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "빛 반사를 막는 검은색 차광 로브와 가죽 조끼",
+        "extreme_weather_gear": "유리 모래바람을 차단하는 전신 방호 마스크와 고글"
+      },
+      "culture": {
+        "animism_and_faith": "태양과 벼락의 신에게 바치는 유리 세공 공양",
+        "regional_taboo": "유리 사막 위에서 무기를 떨어뜨려 지면을 깨뜨리지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "사막 중심부의 투명 유리 궁전에 들어가면 모든 공격을 반사하는 방패를 얻는다.",
+        "truth_flag": true,
+        "reality": "방패는 존재하나, 방패를 드는 순간 사용자 역시 모든 마법을 반사당해 자멸함."
+      }
+    ],
+    "category": "desert_wasteland"
+  },
+  {
+    "id": "region_floating_shards_archipelago",
+    "name": "부서진 천공의 대지",
+    "continent_id": "continent_crag_realm",
+    "terrain": "mountain_mine",
+    "climate_type": "공중 고산대",
+    "dominant_surface": "floating_rock_soil",
+    "dominant_elemental_affinity": "wind",
+    "traits": [
+      "중력을 잃고 허공에 떠 있는 거대 암석 섬들",
+      "섬과 섬 사이를 잇는 부서진 쇠사슬과 돌다리",
+      "상시 몰아치는 고산 기류",
+      "하늘의 지배자 괴수들의 서식지"
+    ],
+    "description": {
+      "visual": "발밑이 아득한 구름 바다인 상태로, 수많은 거대한 바위 섬들이 중력을 거슬러 허공에 제각기 떠돌며 장관을 이룸.",
+      "auditory": "구름을 뚫고 몰아치는 거센 고산 바람 소리와 멀리서 들리는 천공 마수들의 울부짖음.",
+      "olfactory": "구름 속의 축축한 수증기와 희미한 오존, 차가운 고산 대기의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "구름 위로 내리쬐는 눈부신 직사광선이 떠 있는 섬들의 그림자를 구름 바다 위에 투사함.",
+      "night": "구름이 걷히며 사방이 은하수와 별빛으로 가득 차 마치 우주 속을 떠다니는 듯한 느낌 연출."
+    },
+    "weather_events": [
+      {
+        "event_name": "천공 중력 폭풍",
+        "effect": "섬들을 잇는 중력 필드가 요동치며 무작위 섬들이 위아래로 뒤집히거나 위치가 바뀜."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "섬과 섬 사이 아득한 추락사",
+        "effect": "섬과 섬 사이를 건너뛰다 실족하면 구름 바다 아래 수천 미터 지상으로 추락해 즉사.",
+        "mitigation": "비행 마법, 글라이더, 또는 마법 쇠사슬 로프를 이용해 안전하게 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "떠 있는 섬의 중심부에 박힌 중력 코어 스톤을 가격",
+        "consequence": "섬의 중력이 완전히 상실되어 하늘 높이 솟구치거나 다른 섬과 충돌."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "스톰 그리폰",
+        "천공 하피",
+        "구름 정령",
+        "와이번"
+      ],
+      "apex_predator_id": "monster_celestial_sky_lord_roc",
+      "regional_champion_npc_id": "npc_sky_captain_zephyr",
+      "nomadic_tribes": [
+        "비행선을 타고 섬들을 오가는 공중 해적 및 상인 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "거꾸로 매달려 폭포를 쏟아내는 역중력 천공 섬",
+        "천둥소리가 고여 있는 구름 바다의 소용돌이"
+      ],
+      "archaeological_sites": [
+        "고대 공중 제국이 남긴 천공 성채의 폐허"
+      ],
+      "planar_rifts": [
+        "하늘과 바람의 차원으로 이어지는 공중 균열"
+      ],
+      "natural_shelters": [
+        "풍식으로 파인 떠 있는 섬 내부의 천연 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "중력 제어석 조각",
+        "스톰 라이트 광석",
+        "천공 괴수의 깃털"
+      ],
+      "rare_mineral_deposits": [
+        "레비테이션 플로팅 스톤 원석",
+        "하늘빛 마나 결정"
+      ],
+      "endemic_biological_resources": [
+        "그리폰의 발톱 가죽",
+        "구름 정령의 숨결 액기스"
+      ],
+      "trade_node_name": "천공의 대지 비행선 부두"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "구름 속에서 채집한 수분이 가득한 고산 과일과 육포",
+        "delicacy": "하늘에서 잡힌 비행 거대 조개의 부드러운 관자 요리",
+        "taboo_food": "떠 있는 섬의 중심 코어 근처에서 자라난 이끼 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "바람을 가르는 가벼운 가죽 조끼와 비행사 모자",
+        "extreme_weather_gear": "낙하 방지용 마법 낙하산 하네스와 방풍 고글"
+      },
+      "culture": {
+        "animism_and_faith": "창공의 주신에게 바치는 비행선 출항 제의",
+        "regional_taboo": "섬의 끝자락에서 구름 아래를 향해 고함치거나 침을 뱉지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "가장 높이 떠 있는 전설의 무인도에 오르면 하늘을 지배하는 날개를 얻는다.",
+        "truth_flag": true,
+        "reality": "날개를 얻는 것은 맞으나, 지상으로 내려오는 순간 날개가 소멸해 다시는 날 수 없음."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_phosphorescent_mushroom_grotto",
+    "name": "형광 포자거인 숲",
+    "continent_id": "continent_under_realm",
+    "terrain": "underground_abyss",
+    "climate_type": "지하 암흑대",
+    "dominant_surface": "fungal_spore_floor",
+    "dominant_elemental_affinity": "nature",
+    "traits": [
+      "건물보다 거대한 발광 버섯들이 숲을 이룬 지하 공동",
+      "빛에 반응하여 폭발하거나 반응하는 균류 지형",
+      "지하 곤충들과 포자 생물들의 거대한 생태계",
+      "신비로운 푸르고 보란빛의 야광 풍경"
+    ],
+    "description": {
+      "visual": "어두운 지하 심연 속에서 수백 미터에 달하는 거대한 형광 버섯들이 눈부신 보라빛과 청록빛 빛을 내뿜어 거대한 지하 숲을 이룸.",
+      "auditory": "버섯 갓에서 포자가 터지며 내는 팝콘 같은 톡톡 소리와 기분 좋은 저주파의 웅웅거림.",
+      "olfactory": "습하고 달콤한 버섯 향과 숲속의 흙 냄새가 오묘하게 섞인 향기."
+    },
+    "time_of_day_variants": {
+      "day": "지하 심연이라 외부의 영향 없이 버섯들의 자가 발광으로 늘 환상적인 야광빛 유지.",
+      "night": "마찬가지로 변화 없이 균류의 마력이 고조되며 발광 세기가 더욱 강해짐."
+    },
+    "weather_events": [
+      {
+        "event_name": "형광 포자 눈비",
+        "effect": "하늘에서 빛나는 포자 가루가 눈처럼 내려 닿는 이들의 피로를 회복시키나 시야를 가림."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "발광 포자 연쇄 폭발 구덩이",
+        "effect": "강한 빛이나 화기를 가까이 대면 포자 주머니들이 연쇄 반응을 일으켜 강력한 마력 폭발 발생.",
+        "mitigation": "횃불 대신 암흑 마법이나 무소음 발광석을 이용해 조심스럽게 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "가장 거대한 왕관 버섯의 뿌리에 회복 마법 주입",
+        "consequence": "버섯이 거대한 대화의 의식을 열어 주변의 숨겨진 보물상자 위치를 알려줌."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "포자 요정",
+        "거대 발광 지렁이",
+        "균류 트롤",
+        "야광 거미"
+      ],
+      "apex_predator_id": "monster_mycelium_colossus_spore_beast",
+      "regional_champion_npc_id": "npc_mushroom_weaver_myco",
+      "nomadic_tribes": [
+        "발광 버섯의 진액을 채취해 약을 만드는 지하 요정 종족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "지하 심연을 밝히는 거대 버섯 왕관 나무",
+        "보석처럼 빛나는 형광 포자 이끼 호수"
+      ],
+      "archaeological_sites": [
+        "버섯 균사로 뒤덮인 고대 지하 연금술사들의 온실 유적"
+      ],
+      "planar_rifts": [
+        "원시 자연과 균류의 차원으로 이어지는 보라빛 균열"
+      ],
+      "natural_shelters": [
+        "속이 파여 아늑한 거대 발광 버섯 갓 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고순도 발광 포자 가루",
+        "균류 정제 마석",
+        "야광 버섯 꿀"
+      ],
+      "rare_mineral_deposits": [
+        "바이올렛 마나 스포어 광석",
+        "지하 호박석"
+      ],
+      "endemic_biological_resources": [
+        "발광 지렁이의 점액",
+        "형광 이끼 추출액"
+      ],
+      "trade_node_name": "발광 버섯 숲 요정 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "부드럽고 달콤한 구운 발광 버섯 갓 스테이크",
+        "delicacy": "형광 포자 이끼를 발효시켜 만든 영롱한 보라빛 와인",
+        "taboo_food": "숲의 중심에 있는 왕관 버섯의 핵심 포자 주머니를 터뜨려 먹는 행위"
+      },
+      "attire": {
+        "daily_wear": "발광 포자가 묻어도 티 나지 않는 어두운 보라색 실크 로브",
+        "extreme_weather_gear": "포자 흡입을 방지하는 요정의 실크 방독 후드"
+      },
+      "culture": {
+        "animism_and_faith": "지하 숲의 균류 대모에게 바치는 발광 포자 공양",
+        "regional_taboo": "숲속에서 강한 화기나 불길을 일으켜 버섯들을 태우지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "숲 가장 깊은 곳의 왕관 버섯 안에는 영원한 젊음을 주는 이슬이 맺힌다.",
+        "truth_flag": true,
+        "reality": "이슬은 진짜 있으나, 마시는 순간 신체 세포가 식물화되어 평생 버섯으로 뿌리내림."
+      }
+    ],
+    "category": "underground_abyss"
+  },
+  {
+    "id": "region_whispering_statue_wasteland",
+    "name": "눈물 흘리는 석상의 황무지",
+    "continent_id": "continent_scorched_spine",
+    "terrain": "desert_wasteland",
+    "climate_type": "저주받은 황무지",
+    "dominant_surface": "petrified_stone_dust",
+    "dominant_elemental_affinity": "earth",
+    "traits": [
+      "슬픈 표정으로 눈물을 흘리는 수천 개의 거대 석상들",
+      "메마르고 차가운 회색 모래 바람",
+      "석화 마법의 잔류 에너지가 감도는 대지",
+      "방문자의 영혼을 갉아먹는 고요함"
+    ],
+    "description": {
+      "visual": "끝없는 회색 황무지 위에 고대인들의 절망적인 얼굴을 한 수천 기의 거대한 돌 석상들이 도열해 있으며, 눈가에서는 끊임없이 맑은 물이 흘러내림.",
+      "auditory": "바람이 석상들의 입과 눈구멍을 지나며 내는 처절한 흐느낌과 곡소리.",
+      "olfactory": "차가운 석회 가루와 오래된 묘지의 흙 냄새, 비 내린 뒤의 흙탕물 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "회색 구름이 대지를 뒤덮어 늘 비 오기 직전의 침울하고 우중충한 분위기 유지.",
+      "night": "석상들이 흘리는 눈물이 달빛에 반사되어 황무지 전체가 은빛 눈물바다로 변모함."
+    },
+    "weather_events": [
+      {
+        "event_name": "석화의 안개비",
+        "effect": "내리는 비에 노출되면 신체 외곽부터 서서히 돌로 굳어지는 석화 저주 상태 이상 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "석화 응시 눈물 웅덩이",
+        "effect": "석상들의 눈물이 고인 웅덩이를 들여다보거나 밟으면 영구적인 이동 속도 저하 및 스턴.",
+        "mitigation": "눈을 가리는 안대 착용 및 정화 마법 유지."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "눈물 흘리는 석상의 얼굴을 어루만지거나 위로하기",
+        "consequence": "석상의 눈물이 보석으로 변하며 플레이어에게 저주를 해제하는 축복을 내려줌."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "석화 가고일",
+        "우는 사념체 밴시",
+        "회색 사막 골렘",
+        "돌 독수리"
+      ],
+      "apex_predator_id": "monster_petrified_medusa_queen_gorgon",
+      "regional_champion_npc_id": "npc_exiled_knight_gideon",
+      "nomadic_tribes": [
+        "석화 저주를 이겨낸 눈먼 수도승 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "황무지 한복판에 솟은 수백 미터 높이의 거대 어머니 석상",
+        "석상들의 눈물이 모여 흐르는 은빛 강줄기"
+      ],
+      "archaeological_sites": [
+        "석화의 저주로 멸망한 고대 왕국의 대성당 및 광장 유적"
+      ],
+      "planar_rifts": [
+        "슬픔과 저주의 차원으로 이어지는 회색 균열"
+      ],
+      "natural_shelters": [
+        "거대 석상의 굽어진 품 안의 아늑한 석실 공간"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "석화 방지 정화수",
+        "우는 석상의 눈물 보석",
+        "회색 사막 가죽"
+      ],
+      "rare_mineral_deposits": [
+        "페트리파이드 소울 스톤 원석",
+        "실버 그레이 슬레이트"
+      ],
+      "endemic_biological_resources": [
+        "석화 가고일의 날개 가죽",
+        "회색 사막 허브"
+      ],
+      "trade_node_name": "눈물 흘리는 황무지 수도원"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "정화수로 반죽해 구운 단단한 회색 호밀빵",
+        "delicacy": "석상 눈가에서 채집한 청정한 눈물수로 우려낸 약초 차",
+        "taboo_food": "석상들의 눈물 웅덩이에서 자란 물고기 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "석화 비를 막아주는 두꺼운 회색 방수 후드와 로브",
+        "extreme_weather_gear": "시선을 차단하는 마법 실크 안대와 마스크"
+      },
+      "culture": {
+        "animism_and_faith": "고대 슬픔의 여신에게 바치는 침묵과 눈물 제의",
+        "regional_taboo": "석상들의 눈을 정면으로 바라보며 조롱하거나 비웃지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "황무지 중앙의 거대 어머니 석상 눈물을 마시면 세상의 모든 저주가 정화된다.",
+        "truth_flag": true,
+        "reality": "저주는 정화되나, 그 순간 플레이어의 육신이 영원히 석상으로 변해 황무지의 일부가 됨."
+      }
+    ],
+    "category": "desert_wasteland"
+  },
+  {
+    "id": "region_mirage_crystal_sands",
+    "name": "신기루 수정 모래사막",
+    "continent_id": "continent_mana_nexus",
+    "terrain": "magical_anomaly",
+    "climate_type": "마나 과포화 사막",
+    "dominant_surface": "prismatic_crystal_sand",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "무지개빛으로 빛나는 마나 수정 모래",
+      "시시때때로 변하는 환상과 신기루",
+      "비전 마나가 소용돌이치는 사막",
+      "고대 마법사들의 숨겨진 유적"
+    ],
+    "description": {
+      "visual": "사막의 모래 대신 형형색색의 보석 가루와 수정 알갱이가 깔려 있어 태양빛을 받을 때마다 사방에 거대한 무지개 환영을 투사함.",
+      "auditory": "사막 바람에 수정들이 부딪히며 내는 수천 개의 영롱한 풍경소리와 환각적인 메아리.",
+      "olfactory": "짜릿하고 상쾌한 오존 냄새와 달콤한 비전 에테르의 향."
+    },
+    "time_of_day_variants": {
+      "day": "눈부신 무지개빛 난반사로 인해 시각 왜곡이 일어나며 사방에 가짜 오아시스와 도시가 나타남.",
+      "night": "수정 모래밭이 자체적인 마나 발광을 시작하며 밤하늘의 은하수와 겹쳐 몽환적인 야경 연출."
+    },
+    "weather_events": [
+      {
+        "event_name": "비전 마나 모래폭풍",
+        "effect": "마법 시전 능력을 폭주시키고 무작위 비전 속성 피해와 함께 환각 상태 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "마법 환영 싱크홀",
+        "effect": "눈앞에 펼쳐진 아름다운 오아시스로 다가가면 실제로는 마력 늪지여서 순식간에 함몰.",
+        "mitigation": "마나 탐지 나침반을 소지하여 가짜 환영과 진짜 지형을 구분하며 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "사막 한복판의 떠 있는 수정 피라미드에 마법 지팡이 접촉",
+        "consequence": "차원의 문이 열리며 고대 마법사의 수호 아카이브 골렘들이 소환되어 시험 시작."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "크리스탈 스콜피온",
+        "비전 환영 야수",
+        "마나 슬라임",
+        "수정 사막 호러"
+      ],
+      "apex_predator_id": "monster_prismatic_crystal_dragon",
+      "regional_champion_npc_id": "npc_master_illusionist_zane",
+      "nomadic_tribes": [
+        "수정 사막의 비밀을 연구하는 비전 유목민 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "허공에 떠서 회전하는 거대 무지개빛 수정 피라미드",
+        "빛의 레이저가 교차하는 무지개 협곡"
+      ],
+      "archaeological_sites": [
+        "고대 비전 마법사 공화국의 지하 아카이브 유적"
+      ],
+      "planar_rifts": [
+        "마법 차원의 중심부로 이어지는 프리즘 균열"
+      ],
+      "natural_shelters": [
+        "속이 파여 영롱하게 빛나는 거대 수정 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "프리즘 마나 수정 가루",
+        "환영 차단 부적",
+        "비전 렌즈 스톤"
+      ],
+      "rare_mineral_deposits": [
+        "에테르 프리스마이트 광맥",
+        "순수 마나 결정석"
+      ],
+      "endemic_biological_resources": [
+        "크리스탈 스콜피온의 독낭",
+        "빛나는 마나 선인장 수액"
+      ],
+      "trade_node_name": "프리즘 수정 사막 전초기지"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "수정 선인장 잎을 설탕에 절여 만든 비전 피클",
+        "delicacy": "마나 결정을 액화시켜 달콤하게 가공한 프리즘 캔디",
+        "taboo_food": "신기루 오아시스에서 발견한 정체불명의 빛나는 물 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "빛의 반사를 막는 은박 코팅 마법 로브",
+        "extreme_weather_gear": "마나 왜곡을 차단하는 납 성분 비전 보안경"
+      },
+      "culture": {
+        "animism_and_faith": "비전과 환영의 흐름에 바치는 마력 수정 공양",
+        "regional_taboo": "환영 속에서 들리는 친숙한 목소리를 따라 사막 깊은 곳으로 걸어가지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "사막 중심부의 떠 있는 수정 피라미드 꼭대기에 오르면 모든 마법의 시원을 알 수 있다.",
+        "truth_flag": true,
+        "reality": "시원은 알 수 있으나, 방대한 마력 정보가 뇌로 유입되어 영구적인 기억 상실이나 광증 유발."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_frozen_gears_cemetery",
+    "name": "얼어붙은 태엽의 공동묘지",
+    "continent_id": "continent_glacial_crown",
+    "terrain": "frozen_tundra",
+    "climate_type": "극지 기계 빙하대",
+    "dominant_surface": "frozen_brass_sheet",
+    "dominant_elemental_affinity": "ice",
+    "traits": [
+      "영구 동토와 거대한 녹슨 태엽들이 얼어붙어 뒤엉킨 지형",
+      "살인적인 극저온 냉기와 기계 윤활유의 동결",
+      "얼어붙어 멈춰버린 고대 오토마톤들의 무덤",
+      "오로라 빛 아래 반짝이는 거대한 얼음 톱니바퀴"
+    ],
+    "description": {
+      "visual": "끝없는 설산 능선 사이에 거대한 청동 기계 장치들과 태엽들이 만년설과 얼음에 뒤엉켜 멈춰 서 있는 기괴하고 웅장한 빙하 묘지.",
+      "auditory": "극한의 한기에 얼어붙은 태엽들이 수축하며 쩍쩍 갈라지는 파열음과 칼바람 소리.",
+      "olfactory": "폐를 얼려버릴 듯한 시린 공기와 오래된 기계 기름, 동결된 철의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "태양빛이 얼어붙은 황동판과 만년설에 반사되어 눈이 멀 정도로 찬란한 푸른 은빛 섬광 발생.",
+      "night": "초록빛 오로라가 하늘을 덮으며 얼어붙어 있던 기계 마물들의 눈에 불이 들어오기 시작함."
+    },
+    "weather_events": [
+      {
+        "event_name": "극지 태엽 눈보라",
+        "effect": "미세한 얼음 가루와 쇳가루가 섞인 폭풍이 몰아쳐 장비 내구도를 급격히 낮추고 동상 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "동결된 톱니바퀴 함정",
+        "effect": "눈에 보이지 않게 얼어붙은 거대 태엽 틈새를 밟으면 갑자기 태엽이 돌며 다리 골절.",
+        "mitigation": "마법 탐지기로 금속 반응을 확인하며 안전한 눈길로만 선별 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "얼어붙은 거대 오토마톤의 가슴 부품에 마법 열기 불어넣기",
+        "consequence": "마물이 해동되며 과거의 기억을 떠올려 플레이어에게 강력한 버프와 길을 안내해 줌."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "서리 태엽 스파이더",
+        "얼어붙은 오토마톤",
+        "설원 늑대",
+        "빙하 기계 망령"
+      ],
+      "apex_predator_id": "monster_glacial_clockwork_behemoth",
+      "regional_champion_npc_id": "npc_frozen_mechanist_vane",
+      "nomadic_tribes": [
+        "얼어붙은 기계를 수리해 생존하는 북방 유목민 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "거대한 얼음 폭포 속에 갇힌 거대 시계탑",
+        "오로라 빛을 반사하는 거대한 청빙 태엽 기둥"
+      ],
+      "archaeological_sites": [
+        "고대 기계 제국이 북방에 건설했던 대형 태엽 요새 폐허"
+      ],
+      "planar_rifts": [
+        "절대 영도와 기계 차원이 맞닿는 얼어붙은 균열"
+      ],
+      "natural_shelters": [
+        "거대 기계 흉갑 내부의 아늑한 방한 쉼터"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "동결 방지 기계 윤활유",
+        "서리 태엽 코어",
+        "만년빙정 가루"
+      ],
+      "rare_mineral_deposits": [
+        "청빙 냉기 마나 핵석",
+        "태엽 황동 광맥"
+      ],
+      "endemic_biological_resources": [
+        "기계 벌레의 서리 가죽",
+        "고산 설련초"
+      ],
+      "trade_node_name": "얼어붙은 태엽 묘지 전초기지"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "기계 열기로 데워 먹는 훈제 순록포 스튜",
+        "delicacy": "만년설 속에서 숙성시킨 발효 청어 기름 탕",
+        "taboo_food": "얼어붙은 오토마톤의 심장부에 고인 검은 기름 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "태엽 정비가 편리하도록 주머니가 많은 순록 가죽 방한 파카",
+        "extreme_weather_gear": "혹한과 설맹을 동시에 막아주는 방한 고글과 철제 투구"
+      },
+      "culture": {
+        "animism_and_faith": "눈보라와 기계의 신에게 바치는 톱니바퀴 공양 의식",
+        "regional_taboo": "묘지 내에서 멈춰 섰던 기계 장치를 함부로 분해하거나 파괴하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "묘지 가장 깊은 곳의 거대 시계탑을 작동시키면 멈춘 대륙의 시간이 다시 흐른다.",
+        "truth_flag": true,
+        "reality": "시간이 흐르는 것은 맞으나, 그 충격으로 북방 빙하가 무너져 대홍수가 발생함."
+      }
+    ],
+    "category": "frozen_tundra"
+  },
+  {
+    "id": "region_whispering_bone_grove",
+    "name": "속삭이는 뼈나무 숲",
+    "continent_id": "continent_verdant_veil",
+    "terrain": "dense_forest",
+    "climate_type": "저주받은 원시림",
+    "dominant_surface": "bone_dust_soil",
+    "dominant_elemental_affinity": "darkness",
+    "traits": [
+      "나뭇가지 대신 하얀 뼈가 자라난 기괴한 거대 숲",
+      "바람이 불 때마다 사람의 유언을 읊조리는 숲",
+      "원혼들과 사악한 야수들이 도사리는 음산한 밀림",
+      "피를 빨아먹는 붉은 이끼 카펫"
+    ],
+    "description": {
+      "visual": "검은 대지 위로 잎사귀 대신 앙상한 하얀 뼈와 두개골들이 나뭇가지처럼 얽혀 거대한 숲을 이루며 음산한 자아를 뽐냄.",
+      "auditory": "앙상한 뼈 나뭇가지들이 서로 부딪히며 내는 덜그덕거리는 소리와 귓가를 맴도는 처절한 속삭임.",
+      "olfactory": "오래된 묘지의 흙 냄새와 서늘한 석회 가루, 짙은 철분 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "숲 상공을 뒤덮은 잿빛 안개 때문에 늘 해질녘 같은 음산한 그림자가 드리워짐.",
+      "night": "뼈 나뭇가지들 사이로 푸른 도깨비불이 피어오르며 숲 전체가 거대한 유령 소굴로 변모."
+    },
+    "weather_events": [
+      {
+        "event_name": "원혼의 뼛가루 폭풍",
+        "effect": "날카로운 뼛가루가 바람에 날려 전신에 지속적인 절단 피해와 공포 상태 이상 유발."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "피를 빠는 붉은 이끼 늪",
+        "effect": "바닥을 덮은 붉은 이끼가 밟는 생명체의 체력을 실시간으로 흡수해 무기력증 유발.",
+        "mitigation": "정화 마법이 담긴 부츠를 착용하거나 이끼가 없는 단단한 뼈 길로만 이동."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "숲 중심부의 거대한 뼈나무의 두개골 가지를 꺾기",
+        "consequence": "나무가 피를 뿜어내며 주변에 잠들어 있던 수백 마리의 스켈레톤과 밴시 각성."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "뼈나무 사념체",
+        "스켈레톤 워리어",
+        "원혼 밴시",
+        "뼈 거미"
+      ],
+      "apex_predator_id": "monster_bone_dracolich_fragment",
+      "regional_champion_npc_id": "npc_necromancer_hunter_ezra",
+      "nomadic_tribes": [
+        "뼈 숲의 저주를 연구하며 살아가는 은둔 영혼술사 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "수만 개의 두개골로 이루어진 거대한 뼈의 언덕",
+        "피와 눈물이 고여 만들어진 비탄의 호수"
+      ],
+      "archaeological_sites": [
+        "고대 저주받은 마법사들이 생명의 금기를 연구하던 지하 연구소 유적"
+      ],
+      "planar_rifts": [
+        "명계와 원시 숲이 뒤틀린 뼈의 차원 균열"
+      ],
+      "natural_shelters": [
+        "거대 고대 거인의 늑골 사이에 형성된 방호 석실"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고순도 영혼 가루",
+        "뼈나무 가지 소재",
+        "비탄의 호수 정화수"
+      ],
+      "rare_mineral_deposits": [
+        "소울 스톤 원석",
+        "네크로맨서 본 글래스"
+      ],
+      "endemic_biological_resources": [
+        "뼈 거미의 독낭",
+        "원혼 레이스의 핵석"
+      ],
+      "trade_node_name": "뼈 숲 방랑자 밀거래 야영지"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "정화수로 반죽해 구운 마른 호밀빵과 육포",
+        "delicacy": "비탄의 호수에서 채집한 투명한 영혼 이끼 차",
+        "taboo_food": "붉은 이끼 늪에서 자라난 버섯이나 식물 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "원혼의 저주를 막아주는 부적이 주렁주렁 달린 가죽 로브",
+        "extreme_weather_gear": "뼛가루 폭풍을 차단하는 전신 밀폐형 방진 후드"
+      },
+      "culture": {
+        "animism_and_faith": "죽음과 환생의 신에게 바치는 뼛가루 공양 의식",
+        "regional_taboo": "숲속에서 죽은 자들의 이름을 큰소리로 부르며 장난치지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "뼈 숲 가장 깊은 곳의 두개골 언덕에 오르면 죽은 영웅과 대화할 수 있다.",
+        "truth_flag": true,
+        "reality": "영웅과 대화할 수 있는 것은 맞으나, 대화가 끝나는 순간 영웅의 원혼이 몸을 빼앗음."
+      }
+    ],
+    "category": "dense_forest"
+  },
+  {
+    "id": "region_starlight_obsidian_fjords",
+    "name": "별빛이 내리는 흑요석 협곡",
+    "continent_id": "continent_azure_reach",
+    "terrain": "coastal_port",
+    "climate_type": "신비로운 해안 협곡대",
+    "dominant_surface": "obsidian_cliff",
+    "dominant_elemental_affinity": "water",
+    "traits": [
+      "별빛을 받아 반짝이는 거대한 흑요석 해안 절벽",
+      "밤마다 수면 위로 떠오르는 신비로운 해양 영체들",
+      "파도가 치지 않는 고요하고 깊은 피오르 해역",
+      "고대 세이렌과 별빛 마물의 낙원"
+    ],
+    "description": {
+      "visual": "시커먼 흑요석으로 이루어진 수백 미터 높이의 피오르 절벽 사이로 밤하늘의 은하수가 고스란히 내려앉은 듯한 신비로운 바다가 펼쳐짐.",
+      "auditory": "잔잔한 해수가 흑요석 동굴 벽을 부드럽게 적시는 물소리와 멀리서 들리는 세이렌의 맑고 슬픈 노랫소리.",
+      "olfactory": "차가운 바다 공기와 밤이슬, 은은한 오존의 향."
+    },
+    "time_of_day_variants": {
+      "day": "시커먼 흑요석 절벽이 태양빛을 흡수해 서늘하고 고요한 그늘진 협곡 풍경 연출.",
+      "night": "수면 위로 별빛이 응축되며 협곡 전체가 우주 속의 바다처럼 영롱하게 빛남."
+    },
+    "weather_events": [
+      {
+        "event_name": "별빛 이슬 안개",
+        "effect": "신비로운 안개가 피어오르며 마법 시전 시 회복량이 증가하고 은신 능력이 극대화됨."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "세이렌의 유혹 음파 현상",
+        "effect": "협곡 깊숙한 곳에서 울려 퍼지는 세이렌의 노랫소리를 들으면 정신력 판정 실패 시 바다로 뛰어듦.",
+        "mitigation": "마법 방음 귀마개를 착용하거나 정신력 강화 부적 소지."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "흑요석 해안의 제단에 별빛 가루 뿌리기",
+        "consequence": "바다 밑에서 고대 별빛 고래가 떠올라 안전한 항해 경로를 안내해 줌."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "별빛 세이렌",
+        "흑요석 해안 가고일",
+        "은하수 해파리",
+        "심해 상어"
+      ],
+      "apex_predator_id": "monster_starlight_ocean_dragon_serpent",
+      "regional_champion_npc_id": "npc_siren_songstress_lyra",
+      "nomadic_tribes": [
+        "별빛의 노래를 연구하는 바다 유목민 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "별빛이 고여 만들어진 거대 흑요석 천연 풀장",
+        "수백 미터 높이의 흑요석 피오르 절벽 회랑"
+      ],
+      "archaeological_sites": [
+        "고대 해양 왕국이 별빛을 관측하던 해안 제단 유적"
+      ],
+      "planar_rifts": [
+        "별빛과 바다의 차원이 교차하는 신비로운 균열"
+      ],
+      "natural_shelters": [
+        "흑요석 절벽 사이에 파인 아늑한 천연 해식 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "흑요석 가루",
+        "별빛 응축수",
+        "세이렌의 비늘 장신구"
+      ],
+      "rare_mineral_deposits": [
+        "스텔라 옵시디언 원석",
+        "문라이트 진주"
+      ],
+      "endemic_biological_resources": [
+        "별빛 해파리의 발광 액기스",
+        "세이렌의 깃털"
+      ],
+      "trade_node_name": "별빛 피오르 해안 교역항"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "피오르 해역에서 잡힌 신선한 연어 구이와 해초 샐러드",
+        "delicacy": "별빛 이슬을 받아 만든 달콤한 은하수 젤리",
+        "taboo_food": "세이렌의 노랫소리가 들리는 해역에서 잡은 정체불명의 심해어 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "밤바다의 색을 닮은 감색 린넨 셔츠와 가벼운 방수 바지",
+        "extreme_weather_gear": "차가운 바닷바람을 막아주는 방수 실크 코트와 귀마개"
+      },
+      "culture": {
+        "animism_and_faith": "별빛과 바다의 여신에게 바치는 조율된 노랫소리 공양",
+        "regional_taboo": "밤중에 피오르 해안가에서 세이렌의 노랫소리를 따라 부르지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "피오르 해안 가장 깊은 동굴에서 세이렌과 함께 노래하면 모든 소원을 이룬다.",
+        "truth_flag": true,
+        "reality": "소원은 이루어지나, 그 대가로 목소리를 영원히 잃고 세이렌의 일원이 됨."
+      }
+    ],
+    "category": "coastal_port"
+  },
+  {
+    "id": "region_amber_clockwork_valley",
+    "name": "호박빛 태엽 협곡",
+    "continent_id": "continent_scorched_spine",
+    "terrain": "mountain_mine",
+    "climate_type": "증기 기관 고산대",
+    "dominant_surface": "amber_brass_rock",
+    "dominant_elemental_affinity": "metal",
+    "traits": [
+      "황금빛 호박 수지와 청동 기아가 뒤섞인 고산 협곡",
+      "증기 기관의 웅장한 증기 분출과 톱니바퀴 소리",
+      "시간이 느리게 흐르는 마법 공학 기계 장치",
+      "고대 기계 유적과 태엽 병기들의 안식처"
+    ],
+    "description": {
+      "visual": "거대한 황금빛 호박 결정체들과 정교한 청동 태엽들이 층층이 협곡 벽면에 박혀 있으며, 증기와 함께 거대한 톱니바퀴들이 맞물려 돌아감.",
+      "auditory": "협곡 전체를 울리는 거대한 시계태엽 톱니바퀴의 맞물림과 고압 증기의 웅장한 포효 소리.",
+      "olfactory": "달콤한 송진 향과 뜨겁게 달아오른 황동 기계 윤활유의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "태양빛이 황금빛 호박 결정체를 투과해 협곡 전체가 영롱한 오렌지빛 온실처럼 빛남.",
+      "night": "태엽 기계 장치들의 불빛이 일제히 켜지며 협곡이 거대한 환상 공장처럼 변모함."
+    },
+    "weather_events": [
+      {
+        "event_name": "증기 기관 안개 폭풍",
+        "effect": "고압의 뜨거운 증기가 협곡을 가득 채워 화상 피해 및 시야 차단 발생."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "고압 증기 분출 밸브",
+        "effect": "협곡 벽면의 밸브에서 무작위로 뿜어져 나오는 고압 증기에 닿을 경우 강력한 화상 및 넉백.",
+        "mitigation": "증기 압력을 낮추는 조절 밸브를 마법으로 잠그거나 안전한 우회로 이용."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "협곡 벽면의 거대 태엽 레버를 올바른 순서로 조작",
+        "consequence": "기계 장치가 작동하며 숨겨진 마법 공학 보물고의 문이 열림."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "청동 태엽 가고일",
+        "증기 기관 오토마톤",
+        "호박 수지 슬라임",
+        "기계 벌레 떼"
+      ],
+      "apex_predator_id": "monster_amber_clockwork_titan",
+      "regional_champion_npc_id": "npc_master_engineer_geppetto",
+      "nomadic_tribes": [
+        "마법 공학과 태엽을 다루는 엔지니어 길드 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "호박 결정 속에 거대한 태엽이 박힌 거대 암벽 절벽",
+        "증기 압력으로 솟구치는 온천 간헐천"
+      ],
+      "archaeological_sites": [
+        "고대 마법 공학 제국이 태엽 병기를 양산하던 거대 공장 유적"
+      ],
+      "planar_rifts": [
+        "기계와 시간의 차원이 만나는 황금빛 균열"
+      ],
+      "natural_shelters": [
+        "거대 태엽 톱니바퀴 밑의 건조한 정비실 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "호박빛 기계 코어",
+        "고순도 윤활유",
+        "청동 태엽 조각"
+      ],
+      "rare_mineral_deposits": [
+        "엠버 브라스 광맥",
+        "마법 공학 크리스탈"
+      ],
+      "endemic_biological_resources": [
+        "태엽 스파이더의 강철 실크",
+        "호박 수지 오일"
+      ],
+      "trade_node_name": "태엽 협곡 마법 공학 부두"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "증기 오븐에서 구워낸 단단한 호박 호밀빵",
+        "delicacy": "고압 증기로 쪄낸 산양 고기와 특제 송진 소스 찜",
+        "taboo_food": "중앙 메인 태엽 장치에 윤활유 대신 식용유를 붓는 행위"
+      },
+      "attire": {
+        "daily_wear": "주머니가 많고 내열 처리가 된 엔지니어 가죽 작업복",
+        "extreme_weather_gear": "증기 화상을 막아주는 황동 방호구와 방독 고글"
+      },
+      "culture": {
+        "animism_and_faith": "기계와 공학의 신에게 바치는 톱니바퀴 맞물림 제의",
+        "regional_taboo": "협곡 내에서 태엽 장치들의 작동을 강제로 멈추게 하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "협곡 최심부의 거대 중앙 공장 안에는 스스로 생각하는 인공 심장이 있다.",
+        "truth_flag": true,
+        "reality": "인공 심장은 실제로 존재하나, 작동시키는 순간 주변의 모든 기계 마물들이 그것을 흡수하려 폭주함."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_shimmering_geode_caverns",
+    "name": "빛나는 거대 수정 정동(晶洞) 동굴",
+    "continent_id": "continent_under_realm",
+    "terrain": "underground_abyss",
+    "climate_type": "지하 암흑대",
+    "dominant_surface": "geode_crystal_floor",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "방만한 거대 수정들이 동굴 벽을 가득 채운 지형",
+      "빛을 머금고 스스로 빛나는 영롱한 정동 공동",
+      "마나 에너지가 고여 만들어진 지하 수정 호수",
+      "수정 정령들과 비전 마수들의 은신처"
+    ],
+    "description": {
+      "visual": "어두운 지하 심연 속에서 거대한 보석과 자수성 크리스탈들이 동굴 사방을 가득 채워 눈이 부실 정도로 찬란한 오색빛을 발산함.",
+      "auditory": "수정들이 마력을 머금고 울리는 미세한 고주파 음색과 물방울이 떨어지는 청량한 소리.",
+      "olfactory": "상쾌한 오존 냄새와 차가운 수정의 향기."
+    },
+    "time_of_day_variants": {
+      "day": "지하 심연이라 외부의 영향 없이 수정들의 자체 발광으로 늘 환상적인 오색빛 유지.",
+      "night": "마찬가지로 변화 없이 마력 농도가 높아지며 수정들의 빛이 더욱 영롱해짐."
+    },
+    "weather_events": [
+      {
+        "event_name": "수정 마나 결정화 비",
+        "effect": "공기 중에 떠돌던 마나가 미세한 결정으로 응축되어 내리며 마법 시전 시 위력이 증대됨."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "날카로운 수정 결정 반사 충격",
+        "effect": "마법이나 빛을 비추는 순간 수정들이 빛을 증폭해 반사하며 광역 눈부심 및 비전 화상 유발.",
+        "mitigation": "빛을 흡수하는 암흑 마법 장비를 착용하거나 차광 고글 착용."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "동굴 중앙의 거대 자수성 기둥에 마나 결정 타격",
+        "consequence": "수정이 공명하며 주변의 숨겨진 비전 보물 상자 위치가 사방으로 투사됨."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "크리스탈 골렘",
+        "비전 수정 박쥐",
+        "수정 정령",
+        "마나 스파이더"
+      ],
+      "apex_predator_id": "monster_geode_crystalline_wyrm",
+      "regional_champion_npc_id": "npc_crystal_sage_amber",
+      "nomadic_tribes": [
+        "수정을 채집해 마법 도구를 만드는 지하 장인 집단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "동굴 전체가 하나의 거대한 보석으로 이루어진 수정 성전 공동",
+        "마나가 액체처럼 고여 있는 찬란한 자수성 수정 호수"
+      ],
+      "archaeological_sites": [
+        "고대 비전 마법사들이 수정을 채집하고 연구하던 지하 채굴장 유적"
+      ],
+      "planar_rifts": [
+        "비전 마나의 차원으로 이어지는 영롱한 크리스탈 균열"
+      ],
+      "natural_shelters": [
+        "거대 자수성 크리스탈 틈 사이에 형성된 아늑하고 안전한 석실"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고순도 자수성 크리스탈 조각",
+        "마나 증폭 렌즈 스톤",
+        "수정 정령의 핵석"
+      ],
+      "rare_mineral_deposits": [
+        "에테르 게오드 크리스탈 원석",
+        "레인보우 스포어 스톤"
+      ],
+      "endemic_biological_resources": [
+        "수정 박쥐의 날개 가죽",
+        "마나 호수 정화수"
+      ],
+      "trade_node_name": "수정 정동 동굴 지하 시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "수정 동굴 안에서 자란 연한 지하 버섯 볶음",
+        "delicacy": "마나 호수에서 채집한 투명한 크리스탈 수정 젤리",
+        "taboo_food": "정동 동굴 중심부의 핵심 마나 수정 기둥을 부수어 얻은 결정 섭취 금지"
+      },
+      "attire": {
+        "daily_wear": "빛 반사를 조절하는 차분한 감색 마법 로브",
+        "extreme_weather_gear": "강한 수정 반사를 막아주는 납 성분 차광 안경"
+      },
+      "culture": {
+        "animism_and_faith": "대지의 보석과 비전의 신에게 바치는 크리스탈 공양 의식",
+        "regional_taboo": "수정 동굴 내에서 무기를 휘둘러 불필요하게 결정을 깨뜨리지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "정동 동굴 가장 깊은 곳의 거대 자수성 호수에 몸을 담그면 마력 용량이 한계없이 확장된다.",
+        "truth_flag": true,
+        "reality": "마력 용량은 확장되나, 과도한 마나 유입으로 육신이 투명한 수정상으로 굳어져 사망함."
+      }
+    ],
+    "category": "underground_abyss"
   }
 ]

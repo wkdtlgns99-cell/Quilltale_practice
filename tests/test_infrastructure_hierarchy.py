@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 216 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 232 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 216
+    assert len(regions) == 232
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 216, f"Expected 216 region templates, got {len(data)}"
+    assert len(data) == 232, f"Expected 232 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 216
+    assert len(regions) == 232
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -2970,6 +2970,23 @@ def test_region_templates_json_integrity():
     assert aurora_tundra.dominant_surface == "aurora_crystal_sheet"
     assert "오로라 프리스마이트 광맥" in aurora_tundra.rare_mineral_deposits
     assert len(aurora_tundra.traits) >= 4
+
+    # Verify Batch 11 region
+    time_tomb = regions.get("region_clockwork_time_tomb")
+    assert time_tomb is not None
+    assert time_tomb.name == "멈춰버린 태엽의 영묘"
+    assert time_tomb.terrain == "mountain_mine"
+    assert time_tomb.dominant_surface == "brass_gear_floor"
+    assert "크로노스 태엽 철광맥" in time_tomb.rare_mineral_deposits
+    assert len(time_tomb.traits) >= 4
+
+    mirage_sands = regions.get("region_mirage_crystal_sands")
+    assert mirage_sands is not None
+    assert mirage_sands.name == "신기루 수정 모래사막"
+    assert mirage_sands.terrain == "magical_anomaly"
+    assert mirage_sands.dominant_surface == "prismatic_crystal_sand"
+    assert "에테르 프리스마이트 광맥" in mirage_sands.rare_mineral_deposits
+    assert len(mirage_sands.traits) >= 4
 
 
 
