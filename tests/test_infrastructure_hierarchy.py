@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 232 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 261 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 232
+    assert len(regions) == 261
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 232, f"Expected 232 region templates, got {len(data)}"
+    assert len(data) == 261, f"Expected 261 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 232
+    assert len(regions) == 261
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -2987,6 +2987,32 @@ def test_region_templates_json_integrity():
     assert mirage_sands.dominant_surface == "prismatic_crystal_sand"
     assert "에테르 프리스마이트 광맥" in mirage_sands.rare_mineral_deposits
     assert len(mirage_sands.traits) >= 4
+
+    # Verify Batch 12 regions
+    moonfall = regions.get("region_moonfall_valley")
+    assert moonfall is not None
+    assert moonfall.name == "월하낙성의 계곡"
+    assert moonfall.terrain == "magical_anomaly"
+    assert moonfall.dominant_surface == "silver_grass"
+    assert "월석" in moonfall.rare_mineral_deposits
+    assert len(moonfall.traits) >= 4
+
+    basin = regions.get("region_starfall_crater_basin")
+    assert basin is not None
+    assert basin.name == "별이 떨어진 분지"
+    assert basin.terrain == "desert_wasteland"
+    assert basin.dominant_surface == "star_crystal"
+    assert "성운석" in basin.rare_mineral_deposits
+    assert len(basin.traits) >= 4
+
+    rainbow_end = regions.get("region_end_of_rainbow")
+    assert rainbow_end is not None
+    assert rainbow_end.name == "무지개의 끝"
+    assert rainbow_end.terrain == "magical_anomaly"
+    assert rainbow_end.dominant_surface == "prismatic_ground"
+    assert "칠색석" in rainbow_end.rare_mineral_deposits
+    assert len(rainbow_end.traits) >= 4
+
 
 
 

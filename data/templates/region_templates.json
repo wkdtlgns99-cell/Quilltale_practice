@@ -24560,5 +24560,3157 @@
       }
     ],
     "category": "underground_abyss"
+  },
+  {
+    "id": "region_moonfall_valley",
+    "name": "월하낙성의 계곡",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "영야대",
+    "dominant_surface": "silver_grass",
+    "dominant_elemental_affinity": "moon",
+    "traits": [
+      "달빛이 지상으로 쏟아지는 계곡",
+      "영원한 밤",
+      "중력 왜곡",
+      "월령수 군락"
+    ],
+    "description": {
+      "visual": "깊은 계곡 전체가 은빛 달빛으로 가득 차 있다. 하늘에는 거대한 달이 비정상적으로 가까이 떠 있으며, 폭포와 나무와 바위의 그림자가 하늘을 향해 드리워진다.",
+      "auditory": "바람은 거의 없지만 어디선가 거대한 종이 울리는 듯한 낮은 공명이 계곡 전체를 떠돈다. 발걸음마다 풀잎에서 맑은 종소리가 난다.",
+      "olfactory": "차갑고 깨끗한 밤공기와 젖은 은초, 희미한 오존 향."
+    },
+    "time_of_day_variants": {
+      "day": "태양이 떠 있는 동안에도 계곡 내부만 영원한 밤을 유지한다.",
+      "night": "달빛이 극도로 강해지며 지면에 숨겨져 있던 월령수와 달의 정령들이 모습을 드러낸다."
+    },
+    "weather_events": [
+      {
+        "event_name": "월광 폭우",
+        "effect": "비 대신 액체처럼 응축된 달빛이 쏟아져 모든 생명체의 마력 회복량이 크게 증가하지만 그림자와 환영이 실체화된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "역중력 절벽",
+        "effect": "특정 지점을 넘는 순간 중력이 옆으로 뒤집혀 계곡 벽을 향해 추락한다.",
+        "mitigation": "월석을 지닌 채 이동하면 중력 왜곡을 감지할 수 있다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "보름달 밤에 계곡 입구의 은빛 연못에 달빛을 비춤",
+        "consequence": "숨겨진 진입로가 열리고 정상적인 세계와 분리된 심층 계곡으로 이동한다."
+      },
+      {
+        "player_action": "월령수를 베거나 불태움",
+        "consequence": "계곡 전체가 플레이어를 침입자로 인식하고 달의 수호자들이 출현한다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "월광 사슴",
+        "은빛 그림자 늑대",
+        "달의 정령",
+        "월령수 기생충"
+      ],
+      "apex_predator_id": "monster_moonfang_stag",
+      "regional_champion_npc_id": "npc_moon_priestess",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘로 흐르는 역류 폭포",
+        "달빛이 굳어 만들어진 은빛 호수"
+      ],
+      "archaeological_sites": [
+        "달을 숭배했던 멸망 왕국의 천문 제단"
+      ],
+      "planar_rifts": [
+        "월광계로 이어지는 반투명한 균열"
+      ],
+      "natural_shelters": [
+        "거대한 월령수의 공동"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "월광초",
+        "달사슴 뿔",
+        "응축 월광수"
+      ],
+      "rare_mineral_deposits": [
+        "월석",
+        "은월 결정"
+      ],
+      "endemic_biological_resources": [
+        "월령수 수액",
+        "야광 이끼"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "월광초를 넣은 야생고기 수프",
+        "delicacy": "달빛에 숙성한 은어",
+        "taboo_food": "월령수의 열매"
+      },
+      "attire": {
+        "daily_wear": "은빛 천으로 만든 야간 사냥복",
+        "extreme_weather_gear": "월석 장식 중력 고정 장비"
+      },
+      "culture": {
+        "animism_and_faith": "달을 살아 있는 신으로 숭배",
+        "regional_taboo": "달을 향해 무기를 겨누지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "계곡의 가장 깊은 곳에는 달이 지상으로 떨어진 흔적이 있다.",
+        "truth_flag": true,
+        "reality": "실제로 거대한 월신의 심장이 봉인되어 있다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_skyfall_isles",
+    "name": "천락군도",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "고공 온대",
+    "dominant_surface": "floating_islands",
+    "dominant_elemental_affinity": "wind",
+    "traits": [
+      "공중에 떠 있는 군도",
+      "역류하는 폭포",
+      "하늘고래 서식지",
+      "부유석 광맥"
+    ],
+    "description": {
+      "visual": "끝없는 구름바다 위로 수십 개의 거대한 섬이 떠 있다. 섬 아래에서는 폭포가 하늘을 향해 흐르고, 구름 사이로 거대한 고래들이 날아다닌다.",
+      "auditory": "멀리서 울리는 하늘고래의 울음과 바람을 가르는 거대한 날개 소리가 들린다.",
+      "olfactory": "차갑고 습한 고공의 공기와 부유석에서 발생하는 미세한 광물 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "태양빛이 구름바다를 황금색으로 물들이며 부유섬의 그림자가 구름 위를 천천히 이동한다.",
+      "night": "섬 주변의 별빛이 비정상적으로 밝아지고 밤하늘을 헤엄치는 거대한 생물들이 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "천공 번개폭풍",
+        "effect": "구름 아래에서 위로 솟는 번개가 발생하며 부유섬의 위치가 일시적으로 바뀐다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "구름바다 추락",
+        "effect": "섬 가장자리에서 떨어지면 수천 미터 아래로 추락한다.",
+        "mitigation": "부유석 장비나 비행 수단이 필요하다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "폭풍의 중심에서 부유석 나침반 사용",
+        "consequence": "숨겨진 최상층 부유섬이 나타난다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "하늘고블린",
+        "폭풍 하피",
+        "구름 해파리",
+        "천공 와이번"
+      ],
+      "apex_predator_id": "monster_sky_serpent",
+      "regional_champion_npc_id": "npc_sky_island_keeper",
+      "nomadic_tribes": [
+        "공중선을 타고 이동하는 천공 유목민"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "구름바다를 가르는 천공 폭포",
+        "거대한 부유섬 나무"
+      ],
+      "archaeological_sites": [
+        "하늘에 버려진 고대 제국의 수도"
+      ],
+      "planar_rifts": [
+        "폭풍계로 연결되는 하늘 균열"
+      ],
+      "natural_shelters": [
+        "부유섬 하부의 거대한 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "부유석",
+        "천공고래 기름",
+        "폭풍 깃털"
+      ],
+      "rare_mineral_deposits": [
+        "순도 높은 부유석 광맥",
+        "뇌전 결정"
+      ],
+      "endemic_biological_resources": [
+        "구름 이끼",
+        "하늘버섯"
+      ],
+      "trade_node_name": "천공선 비밀 항로"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "건조 하늘어",
+        "delicacy": "폭풍고래 육포",
+        "taboo_food": "구름 해파리의 핵"
+      },
+      "attire": {
+        "daily_wear": "가벼운 비행용 의복",
+        "extreme_weather_gear": "폭풍 방전 망토"
+      },
+      "culture": {
+        "animism_and_faith": "하늘고래를 천공의 선조로 숭배",
+        "regional_taboo": "구름바다에 돌을 던지지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "구름 위에는 아직도 살아 있는 고대 왕국이 존재한다.",
+        "truth_flag": true,
+        "reality": "실제로 시간이 멈춘 왕국 하나가 부유섬 최상층에 남아 있다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_crystal_sunken_sea",
+    "name": "수정해의 침몰 왕국",
+    "continent_id": "continent_unknown",
+    "terrain": "coastal_port",
+    "climate_type": "심해",
+    "dominant_surface": "crystal_seabed",
+    "dominant_elemental_affinity": "water",
+    "traits": [
+      "해저 왕국",
+      "거대한 수정 산호",
+      "침몰한 궁전",
+      "고대 해신의 흔적"
+    ],
+    "description": {
+      "visual": "바다 밑바닥에 거대한 왕국이 그대로 가라앉아 있다. 궁전과 탑 전체가 푸른 수정 산호로 뒤덮여 있고 도시 위를 거대한 심해 생물들이 지나간다.",
+      "auditory": "물속에서는 소리가 거의 들리지 않지만 멀리서 거대한 심장박동 같은 진동이 전해진다.",
+      "olfactory": "짙은 소금기와 해초 냄새, 수정 산호 특유의 금속성 향."
+    },
+    "time_of_day_variants": {
+      "day": "수면을 통과한 빛이 수정 산호에 반사되어 해저 전체가 푸르게 빛난다.",
+      "night": "수정 산호가 자체적으로 발광하며 침몰 도시의 영혼들이 거리를 배회한다."
+    },
+    "weather_events": [
+      {
+        "event_name": "심해 조류 역전",
+        "effect": "해류가 갑자기 뒤집혀 탐험자를 도시 중심부로 강제로 끌고 간다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "심해 압력",
+        "effect": "일반적인 생명체는 깊은 구역에서 지속적인 압력 피해를 입는다.",
+        "mitigation": "수압 보호 마법이나 심해 장비가 필요하다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "침몰한 왕궁의 종을 울림",
+        "consequence": "왕국 전체의 망령이 깨어난다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "수정 게",
+        "심해 인어",
+        "침몰 망령",
+        "해저 갑주어"
+      ],
+      "apex_predator_id": "monster_abyssal_leviathan",
+      "regional_champion_npc_id": "npc_drowned_queen",
+      "nomadic_tribes": [
+        "심해 인어 부족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "천 미터 높이의 수정 산호탑",
+        "해저 빛의 협곡"
+      ],
+      "archaeological_sites": [
+        "침몰한 왕궁",
+        "해신 제단"
+      ],
+      "planar_rifts": [
+        "수계 심층으로 이어지는 해구 균열"
+      ],
+      "natural_shelters": [
+        "거대 조개 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "심해 수정",
+        "해신 진주",
+        "수정 산호"
+      ],
+      "rare_mineral_deposits": [
+        "청해석",
+        "압력 결정"
+      ],
+      "endemic_biological_resources": [
+        "심해 진주조개",
+        "발광 해초"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "심해어",
+        "delicacy": "해신 진주조개",
+        "taboo_food": "왕궁 제단의 생선"
+      },
+      "attire": {
+        "daily_wear": "수중 이동용 해초 직물",
+        "extreme_weather_gear": "심해 압력 갑주"
+      },
+      "culture": {
+        "animism_and_faith": "침몰한 해신 숭배",
+        "regional_taboo": "왕궁의 왕좌에 앉지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "침몰 왕국의 왕은 아직도 왕좌에 앉아 있다.",
+        "truth_flag": true,
+        "reality": "왕은 죽지 않았으며 바다와 융합한 존재가 되었다."
+      }
+    ],
+    "category": "coastal_port"
+  },
+  {
+    "id": "region_eternal_autumn_grove",
+    "name": "영겁의 단풍림",
+    "continent_id": "continent_unknown",
+    "terrain": "dense_forest",
+    "climate_type": "영구 가을",
+    "dominant_surface": "red_leaf_carpet",
+    "dominant_elemental_affinity": "nature",
+    "traits": [
+      "끝나지 않는 가을",
+      "수천 년 된 고목",
+      "시간 왜곡",
+      "숲의 기억"
+    ],
+    "description": {
+      "visual": "붉은 단풍으로 뒤덮인 거대한 숲이 끝없이 이어진다. 나뭇잎은 떨어지는 순간 다시 가지로 되돌아가며 숲의 중앙에는 하늘을 가릴 만큼 거대한 고목이 서 있다.",
+      "auditory": "바람이 없는데도 수백만 장의 나뭇잎이 동시에 흔들린다. 때때로 오래전 사람들의 목소리가 숲에서 들려온다.",
+      "olfactory": "젖은 낙엽과 오래된 나무껍질, 달콤한 수액 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "붉은 잎 사이로 따뜻한 황금빛이 비친다.",
+      "night": "과거 이 숲을 방문했던 사람들의 기억이 환영으로 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "기억의 낙엽비",
+        "effect": "떨어진 낙엽을 밟으면 다른 사람의 과거 기억이 강제로 재생된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "시간 고리",
+        "effect": "같은 장소를 반복해서 지나게 되며 시간이 흐르지 않는다.",
+        "mitigation": "자신이 남긴 흔적을 따라가지 않고 숲의 소리를 기준으로 이동해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "고목의 이름을 정확하게 부름",
+        "consequence": "숲의 중심부로 이어지는 길이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "단풍 정령",
+        "고목 사슴",
+        "기억을 먹는 여우",
+        "수목인"
+      ],
+      "apex_predator_id": "monster_ancient_treant",
+      "regional_champion_npc_id": "npc_autumn_dryad",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘을 덮은 천년 고목",
+        "붉은 잎의 폭포"
+      ],
+      "archaeological_sites": [
+        "숲에 흡수된 고대 마을"
+      ],
+      "planar_rifts": [
+        "요정계로 이어지는 나무껍질 틈"
+      ],
+      "natural_shelters": [
+        "고목 내부의 거대한 공동"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "시간수액",
+        "영겁 단풍",
+        "기억 열매"
+      ],
+      "rare_mineral_deposits": [
+        "수목 마나석"
+      ],
+      "endemic_biological_resources": [
+        "기억버섯",
+        "천년 이끼"
+      ],
+      "trade_node_name": "요정계 비밀 교역로"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "숲의 열매와 버섯",
+        "delicacy": "천년 수액으로 만든 과실주",
+        "taboo_food": "기억 열매의 씨앗"
+      },
+      "attire": {
+        "daily_wear": "단풍 섬유 로브",
+        "extreme_weather_gear": "고목 껍질 망토"
+      },
+      "culture": {
+        "animism_and_faith": "숲 자체를 하나의 생명으로 숭배",
+        "regional_taboo": "고목에 이름을 새기지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "이 숲에서는 죽은 사람과 다시 대화할 수 있다.",
+        "truth_flag": true,
+        "reality": "숲이 기억하고 있는 사람의 의식을 잠시 재현할 수 있다."
+      }
+    ],
+    "category": "dense_forest"
+  },
+  {
+    "id": "region_giant_skeleton_valley",
+    "name": "신해골의 계곡",
+    "continent_id": "continent_unknown",
+    "terrain": "desert_wasteland",
+    "climate_type": "건조 극열대",
+    "dominant_surface": "bone_sand",
+    "dominant_elemental_affinity": "death",
+    "traits": [
+      "거대한 신의 해골",
+      "백골 사막",
+      "죽음의 마나",
+      "밤에만 이동 가능한 지역"
+    ],
+    "description": {
+      "visual": "사막 한가운데 산맥처럼 거대한 생물의 해골이 누워 있다. 갈비뼈 하나가 성벽보다 높으며 해골 주변의 모래는 모두 하얀 뼛가루로 이루어져 있다.",
+      "auditory": "낮에는 아무 소리도 없지만 밤이 되면 뼈 사이에서 수많은 속삭임이 들린다.",
+      "olfactory": "건조한 먼지와 오래된 뼈, 희미한 부패의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "극심한 열기로 인해 접근이 불가능에 가깝다.",
+      "night": "해골 주변의 죽은 것들이 움직이기 시작한다."
+    },
+    "weather_events": [
+      {
+        "event_name": "백골 모래폭풍",
+        "effect": "뼛가루가 피부를 찢으며 언데드가 폭풍 속에서 생성된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "사신의 모래",
+        "effect": "생명력을 서서히 흡수한다.",
+        "mitigation": "생명계 성유나 보호막을 사용해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "거대한 해골의 눈구멍에 불꽃을 넣음",
+        "consequence": "해골 전체가 잠시 깨어나며 숨겨진 심장실이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "백골 전갈",
+        "해골 망령",
+        "뼈를 먹는 벌레",
+        "사막 구울"
+      ],
+      "apex_predator_id": "monster_bone_colossus",
+      "regional_champion_npc_id": "npc_skeleton_oracle",
+      "nomadic_tribes": [
+        "해골을 신성시하는 유목 부족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "신해골의 갈비뼈 산맥",
+        "뼈로 이루어진 협곡"
+      ],
+      "archaeological_sites": [
+        "해골 내부의 봉인된 신전"
+      ],
+      "planar_rifts": [
+        "망자계와 연결된 검은 균열"
+      ],
+      "natural_shelters": [
+        "거대한 두개골 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "신골 파편",
+        "죽음의 모래",
+        "망령의 정수"
+      ],
+      "rare_mineral_deposits": [
+        "사령석",
+        "흑골 결정"
+      ],
+      "endemic_biological_resources": [
+        "뼈꽃",
+        "사체 버섯"
+      ],
+      "trade_node_name": "금지된 야간 교역로"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "건조 육포",
+        "delicacy": "사막 벌레 구이",
+        "taboo_food": "신해골 주변에서 사냥한 고기"
+      },
+      "attire": {
+        "daily_wear": "두꺼운 얼굴 가리개",
+        "extreme_weather_gear": "백골 폭풍 방호복"
+      },
+      "culture": {
+        "animism_and_faith": "죽은 거인을 조상신으로 숭배",
+        "regional_taboo": "해골의 이를 훔치지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "해골은 죽은 신의 것이라고 한다.",
+        "truth_flag": true,
+        "reality": "과거 세계를 집어삼키려 했던 태고의 신룡의 유골이다."
+      }
+    ],
+    "category": "desert_wasteland"
+  },
+  {
+    "id": "region_ocean_above",
+    "name": "천상의 바다",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "고공 해양",
+    "dominant_surface": "floating_water",
+    "dominant_elemental_affinity": "water",
+    "traits": [
+      "하늘에 거꾸로 매달린 바다",
+      "역중력",
+      "공중 해양 생물",
+      "고대 항구 유적"
+    ],
+    "description": {
+      "visual": "하늘 한가운데 거대한 바다가 떠 있다. 수천 톤의 물이 떨어지지 않은 채 거대한 푸른 대륙처럼 존재하며 그 안에서 고래와 해룡이 헤엄친다.",
+      "auditory": "지상에서는 파도 소리가 하늘에서 울려 퍼지며 천둥과 비슷한 저음으로 들린다.",
+      "olfactory": "짙은 바닷물과 폭풍 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "하늘의 바다가 태양을 반사하여 지상 전체에 푸른 빛을 드리운다.",
+      "night": "바다 속 생물들이 별처럼 빛난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "상공 해일",
+        "effect": "하늘의 바닷물이 일부 떨어져 지상에 거대한 폭우와 해일을 일으킨다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "역중력 수면",
+        "effect": "수면을 통과하는 순간 위쪽 바다로 빨려 들어간다.",
+        "mitigation": "부유석을 이용해 중력을 고정해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "폭풍우가 치는 순간 번개를 맞으며 비행",
+        "consequence": "천상의 바다 내부로 진입하는 균열이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "공중 고래",
+        "천공 해파리",
+        "해룡",
+        "폭풍어"
+      ],
+      "apex_predator_id": "monster_sky_leviathan",
+      "regional_champion_npc_id": "npc_sky_seafarer",
+      "nomadic_tribes": [
+        "공중선 선원 부족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘의 대양",
+        "구름 사이로 떨어지는 거대 폭포"
+      ],
+      "archaeological_sites": [
+        "바다에 잠긴 고대 공중항구"
+      ],
+      "planar_rifts": [
+        "원초 수계 균열"
+      ],
+      "natural_shelters": [
+        "거대 해파리 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "천공 진주",
+        "폭풍어 비늘",
+        "공중고래 지방"
+      ],
+      "rare_mineral_deposits": [
+        "하늘 산호석",
+        "청뢰석"
+      ],
+      "endemic_biological_resources": [
+        "별빛 해초",
+        "공중 산호"
+      ],
+      "trade_node_name": "전설의 천공항로"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "공중어 구이",
+        "delicacy": "천공고래 스테이크",
+        "taboo_food": "새끼 해룡"
+      },
+      "attire": {
+        "daily_wear": "방수 경량 선원복",
+        "extreme_weather_gear": "폭풍 항해용 부유갑"
+      },
+      "culture": {
+        "animism_and_faith": "바다와 하늘을 하나의 신으로 숭배",
+        "regional_taboo": "바다를 향해 불을 던지지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "하늘의 바다는 오래전 세계의 바다가 하늘로 올라간 것이라고 한다.",
+        "truth_flag": false,
+        "reality": "고대 문명이 중력을 뒤집어 만든 거대한 실험 시설이다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_silent_volcano",
+    "name": "무음화산의 정상",
+    "continent_id": "continent_unknown",
+    "terrain": "volcanic",
+    "climate_type": "화산성",
+    "dominant_surface": "black_glass",
+    "dominant_elemental_affinity": "fire",
+    "traits": [
+      "소리가 사라지는 화산",
+      "흑요석 대지",
+      "불의 신전",
+      "정지한 용암"
+    ],
+    "description": {
+      "visual": "분화구 안에 거대한 용암 폭포가 공중에서 완전히 멈춰 있다. 주변의 모든 지형은 검은 유리처럼 빛나며 하늘에는 재 대신 붉은 빛의 입자가 떠 있다.",
+      "auditory": "아무 소리도 들리지 않는다. 자신의 목소리조차 사라진다.",
+      "olfactory": "유황과 뜨거운 돌, 마력에 의해 정제된 금속 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "흑요석 지형이 태양빛을 반사하여 눈부시게 빛난다.",
+      "night": "정지한 용암이 별빛을 반사하며 천천히 움직이기 시작한다."
+    },
+    "weather_events": [
+      {
+        "event_name": "무음 분화",
+        "effect": "소리 없이 화산이 폭발하며 마법적인 충격파가 발생한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "정지 용암",
+        "effect": "접촉하는 순간 시간이 정상적으로 흐르며 막대한 화염 피해를 입는다.",
+        "mitigation": "시간 정지 상태를 유지하는 마법이 필요하다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "분화구 중앙에서 아무 소리도 내지 않고 1분간 대기",
+        "consequence": "불의 신전으로 향하는 계단이 나타난다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "흑요석 골렘",
+        "화염 정령",
+        "마그마 도마뱀",
+        "재의 망령"
+      ],
+      "apex_predator_id": "monster_silent_dragon",
+      "regional_champion_npc_id": "npc_fire_silent_priest",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "정지한 용암 폭포",
+        "검은 유리 분화구"
+      ],
+      "archaeological_sites": [
+        "불의 신전"
+      ],
+      "planar_rifts": [
+        "화염계의 정지된 문"
+      ],
+      "natural_shelters": [
+        "흑요석 용암동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "무음화산 흑요석",
+        "정지 용암 결정",
+        "화염 정령핵"
+      ],
+      "rare_mineral_deposits": [
+        "흑염철",
+        "태양석"
+      ],
+      "endemic_biological_resources": [
+        "화산 백합",
+        "불꽃 도마뱀의 심장"
+      ],
+      "trade_node_name": "비밀 대장장이 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "화산암 구이",
+        "delicacy": "불꽃 도마뱀 꼬리",
+        "taboo_food": "정지 용암에 익힌 고기"
+      },
+      "attire": {
+        "daily_wear": "열기 차단 작업복",
+        "extreme_weather_gear": "화염 내성 흑철 갑주"
+      },
+      "culture": {
+        "animism_and_faith": "불의 침묵신 숭배",
+        "regional_taboo": "화산 안에서 노래하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "화산 정상에서는 모든 소리가 죽는다고 한다.",
+        "truth_flag": true,
+        "reality": "화산 중심에 소리를 먹는 고대 정령이 봉인되어 있다."
+      }
+    ],
+    "category": "volcanic"
+  },
+  {
+    "id": "region_starfall_crater_basin",
+    "name": "별이 떨어진 분지",
+    "continent_id": "continent_unknown",
+    "terrain": "desert_wasteland",
+    "climate_type": "건조 온대",
+    "dominant_surface": "star_crystal",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "별의 낙하 지점",
+      "천체 광물",
+      "밤마다 변화하는 지형",
+      "고대 운석문명"
+    ],
+    "description": {
+      "visual": "거대한 원형 분지의 중앙에 하늘에서 떨어진 별의 잔해가 박혀 있다. 주변 사막은 검푸른 수정으로 변해 있으며 밤마다 별자리와 같은 빛이 지면에 나타난다.",
+      "auditory": "미세한 수정 진동음과 먼 곳에서 울리는 우주적인 저주파가 들린다.",
+      "olfactory": "뜨거운 광물과 오존, 비가 오기 직전의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "분지 전체가 일반적인 황무지처럼 보인다.",
+      "night": "별의 잔해가 활성화되며 새로운 길과 구조물이 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "유성우",
+        "effect": "작은 운석들이 떨어지며 새로운 자원과 적이 생성된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "천체 방사",
+        "effect": "마나가 비정상적으로 증가하다 폭발한다.",
+        "mitigation": "마력 억제 장비가 필요하다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "별이 가장 밝은 밤 분지 중앙에 도달",
+        "consequence": "지하에 존재하는 운석도시의 입구가 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "별빛 전갈",
+        "운석 골렘",
+        "공허 벌레",
+        "수정 사냥개"
+      ],
+      "apex_predator_id": "monster_star_devourer",
+      "regional_champion_npc_id": "npc_astral_archaeologist",
+      "nomadic_tribes": [
+        "별의 위치를 읽는 사막 점성 부족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "별의 분화구",
+        "밤에만 나타나는 수정 숲"
+      ],
+      "archaeological_sites": [
+        "운석 내부의 고대 도시"
+      ],
+      "planar_rifts": [
+        "공허계로 이어지는 별빛 균열"
+      ],
+      "natural_shelters": [
+        "운석 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "운석철",
+        "별의 결정",
+        "천체 유리"
+      ],
+      "rare_mineral_deposits": [
+        "성운석",
+        "공허철"
+      ],
+      "endemic_biological_resources": [
+        "별빛 선인장",
+        "공허 이끼"
+      ],
+      "trade_node_name": "유목민 별시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "건조 선인장빵",
+        "delicacy": "별빛 전갈 구이",
+        "taboo_food": "유성충의 살"
+      },
+      "attire": {
+        "daily_wear": "사막 유목복",
+        "extreme_weather_gear": "천체 방사 차단 망토"
+      },
+      "culture": {
+        "animism_and_faith": "별을 조상으로 믿음",
+        "regional_taboo": "떨어진 별을 밟지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "분지에 떨어진 별은 사실 누군가의 무덤이다.",
+        "truth_flag": true,
+        "reality": "별은 우주를 여행하던 고대 존재의 우주선이다."
+      }
+    ],
+    "category": "desert_wasteland"
+  },
+  {
+    "id": "region_forest_above_clouds",
+    "name": "구름 위의 원시림",
+    "continent_id": "continent_unknown",
+    "terrain": "dense_forest",
+    "climate_type": "고공 열대",
+    "dominant_surface": "giant_canopy",
+    "dominant_elemental_affinity": "nature",
+    "traits": [
+      "구름 위의 밀림",
+      "거목의 정상",
+      "공중 생태계",
+      "태고의 생명체"
+    ],
+    "description": {
+      "visual": "산맥보다 높은 거대한 나무들이 구름 위까지 솟아 있다. 그 나무들의 가지 사이에 또 하나의 밀림이 형성되어 있으며 거대한 생물들이 가지 사이를 이동한다.",
+      "auditory": "거대한 생물의 울음소리와 잎사귀를 흔드는 바람이 끊임없이 들린다.",
+      "olfactory": "습한 나무껍질과 꽃, 짙은 식물 향."
+    },
+    "time_of_day_variants": {
+      "day": "구름 위로 햇빛이 강하게 내리쬔다.",
+      "night": "수천 개의 꽃과 곤충이 동시에 발광한다."
+    },
+    "weather_events": [
+      {
+        "event_name": "구름 폭우",
+        "effect": "구름 자체가 비를 머금고 터지며 거대한 폭우가 쏟아진다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "거목 붕괴",
+        "effect": "가지가 무너지며 수백 미터 아래로 추락한다.",
+        "mitigation": "나무의 움직임을 관찰해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "구름 위까지 자란 특정 거목의 뿌리에 자연 마법 사용",
+        "consequence": "숨겨진 상층 생태계로 통하는 길이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "거대 나무늘보",
+        "구름 원숭이",
+        "거목 거미",
+        "원시 와이번"
+      ],
+      "apex_predator_id": "monster_primordial_treant",
+      "regional_champion_npc_id": "npc_sky_druid",
+      "nomadic_tribes": [
+        "거목 사이를 이동하는 수목 부족"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "구름을 뚫은 세계수",
+        "천공 밀림"
+      ],
+      "archaeological_sites": [
+        "거목 내부에 만들어진 고대 도시"
+      ],
+      "planar_rifts": [
+        "요정계 상층문"
+      ],
+      "natural_shelters": [
+        "거대한 나무 구멍"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "세계수 수액",
+        "천공 꽃가루",
+        "거목 목재"
+      ],
+      "rare_mineral_deposits": [
+        "수목 마나 결정"
+      ],
+      "endemic_biological_resources": [
+        "구름 이끼",
+        "태고의 약초"
+      ],
+      "trade_node_name": "수목 부족 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "열매와 거대 조류",
+        "delicacy": "세계수 꽃꿀",
+        "taboo_food": "세계수 새의 알"
+      },
+      "attire": {
+        "daily_wear": "나뭇잎 섬유 의복",
+        "extreme_weather_gear": "폭우용 수피 망토"
+      },
+      "culture": {
+        "animism_and_faith": "세계수를 살아 있는 신으로 숭배",
+        "regional_taboo": "거목의 뿌리를 자르지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "구름 위의 숲에는 인간보다 오래된 종족이 살고 있다.",
+        "truth_flag": true,
+        "reality": "태초부터 살아온 원시 수목인이 존재한다."
+      }
+    ],
+    "category": "dense_forest"
+  },
+  {
+    "id": "region_glass_mountain",
+    "name": "유리산맥의 왕좌",
+    "continent_id": "continent_unknown",
+    "terrain": "mountain_mine",
+    "climate_type": "고산",
+    "dominant_surface": "crystal_rock",
+    "dominant_elemental_affinity": "earth",
+    "traits": [
+      "유리처럼 투명한 산맥",
+      "지하 광대한 공동",
+      "결정화된 거인",
+      "빛의 굴절"
+    ],
+    "description": {
+      "visual": "산맥 전체가 투명한 수정으로 이루어져 있어 산 내부의 거대한 공동과 지하 호수가 밖에서도 보인다. 햇빛이 산맥을 통과하며 수천 개의 무지개를 만든다.",
+      "auditory": "바람이 불 때 산 전체에서 거대한 종소리와 같은 공명이 울린다.",
+      "olfactory": "차가운 암석과 수정의 금속성 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "햇빛이 산을 통과해 내부를 환하게 밝힌다.",
+      "night": "산맥 내부의 수정이 자체적으로 빛난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "수정 공명",
+        "effect": "산 전체가 진동하며 내부의 봉인된 생명체가 깨어난다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "굴절 낙하",
+        "effect": "빛과 공간의 방향이 왜곡되어 절벽의 위치를 잘못 판단하게 된다.",
+        "mitigation": "빛이 없는 상태에서 이동하거나 암흑 마법을 사용한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "산 정상의 특정 수정 세 개를 동시에 타격",
+        "consequence": "산 내부로 이어지는 거대한 계단이 생성된다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "수정 골렘",
+        "광석 식인충",
+        "결정 박쥐",
+        "암석 거인"
+      ],
+      "apex_predator_id": "monster_crystal_titan",
+      "regional_champion_npc_id": "npc_crystal_smith",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "투명 산맥",
+        "지하 수정 바다"
+      ],
+      "archaeological_sites": [
+        "결정화된 거인의 왕좌"
+      ],
+      "planar_rifts": [
+        "대지계로 통하는 결정문"
+      ],
+      "natural_shelters": [
+        "거대한 수정 공동"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "순수 수정",
+        "결정화된 암석",
+        "빛의 광석"
+      ],
+      "rare_mineral_deposits": [
+        "왕좌석",
+        "무지개 마나 결정"
+      ],
+      "endemic_biological_resources": [
+        "수정 이끼",
+        "광석균"
+      ],
+      "trade_node_name": "고대 광산 비밀시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "광산 곡물빵",
+        "delicacy": "수정버섯 요리",
+        "taboo_food": "왕좌석 주변의 생물"
+      },
+      "attire": {
+        "daily_wear": "광산 작업복",
+        "extreme_weather_gear": "수정 파편 방호 갑옷"
+      },
+      "culture": {
+        "animism_and_faith": "산을 잠든 거인으로 숭배",
+        "regional_taboo": "산의 공명을 흉내 내지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "산 정상에는 왕이 앉아 있다고 한다.",
+        "truth_flag": true,
+        "reality": "산맥 전체를 몸으로 삼은 고대 대지 거인이 잠들어 있다."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_mirror_lake",
+    "name": "거울호수",
+    "continent_id": "continent_unknown",
+    "terrain": "plains",
+    "climate_type": "온대",
+    "dominant_surface": "perfect_water",
+    "dominant_elemental_affinity": "illusion",
+    "traits": [
+      "완벽한 반사",
+      "또 다른 세계",
+      "거울 속 생명체",
+      "수면 이동"
+    ],
+    "description": {
+      "visual": "산맥과 하늘과 구름까지 완벽하게 반사하는 거대한 호수가 펼쳐져 있다. 바람이 전혀 불지 않아 수면은 유리판처럼 고요하다.",
+      "auditory": "호수 주변에서는 모든 소리가 평소보다 한 박자 늦게 되돌아온다.",
+      "olfactory": "맑은 물과 젖은 돌 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "현실 세계와 동일한 풍경을 반사한다.",
+      "night": "수면 속에는 현실과 다른 별자리가 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "거울비",
+        "effect": "빗방울 하나하나가 다른 장소의 모습을 보여준다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "거울 대체",
+        "effect": "호수에 오래 머물면 자신의 반사체가 현실의 자신을 대신하려 한다.",
+        "mitigation": "수면을 직접 바라보지 않는다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "자신의 반사체와 눈을 맞춤",
+        "consequence": "거울세계로 이동한다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "거울 늑대",
+        "수면 정령",
+        "반사체",
+        "환영 어부"
+      ],
+      "apex_predator_id": "monster_mirror_self",
+      "regional_champion_npc_id": "npc_mirror_keeper",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "완벽한 거울호수",
+        "하늘을 반사하는 절벽"
+      ],
+      "archaeological_sites": [
+        "호수 바닥의 반전 도시"
+      ],
+      "planar_rifts": [
+        "거울세계 균열"
+      ],
+      "natural_shelters": [
+        "호수 주변의 석회암 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "거울수",
+        "환영 진주",
+        "반사 수정"
+      ],
+      "rare_mineral_deposits": [
+        "거울석"
+      ],
+      "endemic_biological_resources": [
+        "수면 연꽃",
+        "환영 물고기"
+      ],
+      "trade_node_name": "거울세계 비밀시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "호수 물고기",
+        "delicacy": "환영어회",
+        "taboo_food": "자신과 닮은 물고기"
+      },
+      "attire": {
+        "daily_wear": "호수 유목민 복장",
+        "extreme_weather_gear": "거울 방지 두건"
+      },
+      "culture": {
+        "animism_and_faith": "호수 속 자신을 또 하나의 영혼으로 인정",
+        "regional_taboo": "밤에 자신의 얼굴을 물에 비추지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "거울호수에는 자신이 선택하지 않은 삶을 살아가는 또 다른 자신이 존재한다.",
+        "truth_flag": true,
+        "reality": "거울세계에는 모든 방문자의 대체 현실이 존재한다."
+      }
+    ],
+    "category": "plains"
+  },
+  {
+    "id": "region_void_chasm",
+    "name": "무저갱의 끝",
+    "continent_id": "continent_unknown",
+    "terrain": "underground_abyss",
+    "climate_type": "무기후",
+    "dominant_surface": "void_stone",
+    "dominant_elemental_affinity": "void",
+    "traits": [
+      "끝을 볼 수 없는 심연",
+      "별이 보이는 지하",
+      "공간 붕괴",
+      "고대 공허문"
+    ],
+    "description": {
+      "visual": "지하임에도 머리 위에는 별이 떠 있다. 절벽 아래는 빛조차 사라지는 검은 심연이며 거대한 돌섬들이 허공에 떠 있다.",
+      "auditory": "소리가 심연으로 빨려 들어가며 먼 곳에서 자신의 목소리가 뒤늦게 돌아온다.",
+      "olfactory": "냄새가 거의 존재하지 않는다. 공기 자체가 비어 있는 듯한 감각만 남는다."
+    },
+    "time_of_day_variants": {
+      "day": "지하의 별빛이 희미하게 유지된다.",
+      "night": "별이 가까워지며 심연 속 거대한 눈들이 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "공허파",
+        "effect": "주변의 마법과 빛이 일시적으로 사라진다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "공간 단절",
+        "effect": "일부 구역에서 지형과 거리가 불연속적으로 변한다.",
+        "mitigation": "공간 앵커를 설치해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "심연에 자신의 이름을 외침",
+        "consequence": "공허 속에 존재하는 자신의 잔향이 나타난다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "공허 벌레",
+        "심연 망령",
+        "별눈 박쥐",
+        "공허 사냥개"
+      ],
+      "apex_predator_id": "monster_void_serpent",
+      "regional_champion_npc_id": "npc_void_seer",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "지하의 별하늘",
+        "떠 있는 암석군"
+      ],
+      "archaeological_sites": [
+        "공허문을 만든 고대 문명 유적"
+      ],
+      "planar_rifts": [
+        "공허계 대균열"
+      ],
+      "natural_shelters": [
+        "떠 있는 바위섬의 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "공허석",
+        "무광 결정",
+        "공허 생물의 핵"
+      ],
+      "rare_mineral_deposits": [
+        "심연철",
+        "공허 결정"
+      ],
+      "endemic_biological_resources": [
+        "별눈 버섯",
+        "무광 이끼"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "지하 균류",
+        "delicacy": "공허어",
+        "taboo_food": "심연 생물의 눈"
+      },
+      "attire": {
+        "daily_wear": "어둠 적응복",
+        "extreme_weather_gear": "공간 앵커 장비"
+      },
+      "culture": {
+        "animism_and_faith": "공허를 모든 것의 어머니로 숭배",
+        "regional_taboo": "심연의 이름을 세 번 부르지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "심연의 가장 아래에는 세계의 끝이 있다.",
+        "truth_flag": false,
+        "reality": "세계의 끝이 아니라 다른 세계의 시작이 존재한다."
+      }
+    ],
+    "category": "underground_abyss"
+  },
+  {
+    "id": "region_sunken_sky_temple",
+    "name": "침몰한 천공신전",
+    "continent_id": "continent_unknown",
+    "terrain": "mountain_mine",
+    "climate_type": "고공",
+    "dominant_surface": "white_marble",
+    "dominant_elemental_affinity": "light",
+    "traits": [
+      "산 정상의 신전",
+      "공중에 떠 있는 잔해",
+      "태양광 제단",
+      "신의 흔적"
+    ],
+    "description": {
+      "visual": "거대한 산맥 정상에 신전이 서 있으나 건물의 절반은 하늘에 거꾸로 떠 있다. 두 부분 사이에는 빛으로 만들어진 다리가 연결되어 있다.",
+      "auditory": "신전 전체에서 낮은 합창 소리가 들리지만 실제 노래하는 존재는 없다.",
+      "olfactory": "차가운 돌과 향, 태양열로 달궈진 금속 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "태양빛이 제단에 집중되며 신전의 구조물이 움직인다.",
+      "night": "빛의 다리가 사라지고 신전 전체가 별빛으로 떠오른다."
+    },
+    "weather_events": [
+      {
+        "event_name": "태양광 폭발",
+        "effect": "제단에 저장된 빛이 폭발하여 광범위한 신성 피해를 준다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "성역의 낙하",
+        "effect": "신전 일부가 중력을 잃고 하늘로 떠오른다.",
+        "mitigation": "신전의 빛 기둥을 따라 이동한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "정오에 제단 앞에서 무기를 내려놓음",
+        "consequence": "숨겨진 신전의 지하층이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "빛의 수호자",
+        "성역 가고일",
+        "태양 정령",
+        "타락 천사"
+      ],
+      "apex_predator_id": "monster_fallen_seraph",
+      "regional_champion_npc_id": "npc_last_temple_guardian",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘에 떠 있는 산봉우리",
+        "태양빛 폭포"
+      ],
+      "archaeological_sites": [
+        "천공신전",
+        "신의 왕좌"
+      ],
+      "planar_rifts": [
+        "천상계의 닫힌 문"
+      ],
+      "natural_shelters": [
+        "산 정상 성소"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "성광석",
+        "신성한 향료",
+        "빛의 결정"
+      ],
+      "rare_mineral_deposits": [
+        "태양철",
+        "성휘석"
+      ],
+      "endemic_biological_resources": [
+        "성역 백합",
+        "빛이끼"
+      ],
+      "trade_node_name": "신전 순례로"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "성역 곡물빵",
+        "delicacy": "태양열 숙성 과실",
+        "taboo_food": "성소의 동물"
+      },
+      "attire": {
+        "daily_wear": "흰색 성직복",
+        "extreme_weather_gear": "고산 순례망토"
+      },
+      "culture": {
+        "animism_and_faith": "태양신 신앙",
+        "regional_taboo": "신전 안에서 거짓말하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "신전에는 아직 신이 살아 있다.",
+        "truth_flag": false,
+        "reality": "신은 사라졌지만 그 의지는 신전 자체에 남아 있다."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_blooming_abyss",
+    "name": "개화하는 심연",
+    "continent_id": "continent_unknown",
+    "terrain": "underground_abyss",
+    "climate_type": "지하 온습대",
+    "dominant_surface": "giant_flowers",
+    "dominant_elemental_affinity": "nature",
+    "traits": [
+      "꽃으로 뒤덮인 심연",
+      "거대한 지하 생태계",
+      "생명 마나 폭주",
+      "빛나는 꽃바다"
+    ],
+    "description": {
+      "visual": "지하 수천 미터 아래에 태양 대신 거대한 꽃들이 빛을 내는 세계가 펼쳐져 있다. 꽃 하나가 집보다 크며 꽃밭 사이로 강과 숲이 흐른다.",
+      "auditory": "꽃들이 개화할 때마다 낮은 종소리와 같은 진동이 퍼진다.",
+      "olfactory": "압도적으로 짙은 꽃향기와 달콤한 수액 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "거대한 꽃들이 열리며 주변을 밝힌다.",
+      "night": "꽃들이 닫히고 꽃 속에서 포식 생물이 나온다."
+    },
+    "weather_events": [
+      {
+        "event_name": "꽃가루 폭풍",
+        "effect": "강력한 환각과 치유 효과가 동시에 발생한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "식충화원",
+        "effect": "꽃들이 접근하는 생명체를 먹이로 인식한다.",
+        "mitigation": "꽃가루를 태우지 않고 조용히 통과해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "심연 중앙의 닫힌 꽃에 생명력을 나눠줌",
+        "consequence": "심층 생태계의 문이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "꽃벌레",
+        "식인꽃",
+        "지하 사슴",
+        "포자 골렘"
+      ],
+      "apex_predator_id": "monster_abyssal_flower_queen",
+      "regional_champion_npc_id": "npc_flower_dryad",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "지하 꽃바다",
+        "세계 최대의 개화목"
+      ],
+      "archaeological_sites": [
+        "꽃에 흡수된 고대 도시"
+      ],
+      "planar_rifts": [
+        "생명계 균열"
+      ],
+      "natural_shelters": [
+        "거대 꽃잎 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "심연 꽃꿀",
+        "생명 꽃가루",
+        "거대 꽃잎"
+      ],
+      "rare_mineral_deposits": [
+        "생명 결정"
+      ],
+      "endemic_biological_resources": [
+        "지하 태양화",
+        "불멸 이끼"
+      ],
+      "trade_node_name": "드문 지하 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "거대 뿌리채소",
+        "delicacy": "심연 꽃꿀",
+        "taboo_food": "꽃의 심장"
+      },
+      "attire": {
+        "daily_wear": "꽃섬유 의복",
+        "extreme_weather_gear": "포자 방호복"
+      },
+      "culture": {
+        "animism_and_faith": "모든 생명이 하나의 꽃에서 태어났다고 믿음",
+        "regional_taboo": "피어난 꽃을 함부로 꺾지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "심연 가장 깊은 곳에는 모든 생명을 기억하는 꽃이 있다.",
+        "truth_flag": true,
+        "reality": "세계의 생명력을 저장하는 태고의 생명핵이다."
+      }
+    ],
+    "category": "underground_abyss"
+  },
+  {
+    "id": "region_frozen_ocean_cathedral",
+    "name": "빙해의 거대성당",
+    "continent_id": "continent_unknown",
+    "terrain": "frozen_tundra",
+    "climate_type": "극지",
+    "dominant_surface": "blue_ice",
+    "dominant_elemental_affinity": "ice",
+    "traits": [
+      "빙하 내부 성당",
+      "얼어붙은 바다",
+      "빙해의 신",
+      "얼음 종탑"
+    ],
+    "description": {
+      "visual": "거대한 빙하 내부에 도시 하나를 품을 만큼 거대한 성당이 존재한다. 얼음 천장 너머로 얼어붙은 고래들이 마치 하늘을 날듯 박혀 있다.",
+      "auditory": "얼음 속에서 거대한 종이 울리며 진동이 빙하 전체로 퍼진다.",
+      "olfactory": "차가운 얼음과 오래된 향 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "빙하를 통과한 빛이 성당 전체를 푸르게 밝힌다.",
+      "night": "성당의 얼음 성화가 스스로 불타오른다."
+    },
+    "weather_events": [
+      {
+        "event_name": "빙하 성가",
+        "effect": "얼음 전체가 진동하여 빙벽이 무너지고 숨겨진 통로가 열린다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "살아 있는 빙벽",
+        "effect": "벽 자체가 움직이며 길을 바꾼다.",
+        "mitigation": "성당의 종소리를 따라 이동해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "얼음 종탑을 세 번 울림",
+        "consequence": "빙하 아래 봉인된 지하성당이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "빙령",
+        "얼음 성기사 망령",
+        "빙하 늑대",
+        "얼음 가고일"
+      ],
+      "apex_predator_id": "monster_frost_seraph",
+      "regional_champion_npc_id": "npc_frozen_bishop",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "빙하 속 얼음 성당",
+        "얼어붙은 고래 공동"
+      ],
+      "archaeological_sites": [
+        "고대 극지 왕국의 대성당"
+      ],
+      "planar_rifts": [
+        "빙결계 성문"
+      ],
+      "natural_shelters": [
+        "빙하 성당 지하 납골당"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "성빙",
+        "빙해 성유",
+        "극지 수정"
+      ],
+      "rare_mineral_deposits": [
+        "성스러운 빙정",
+        "빙혼석"
+      ],
+      "endemic_biological_resources": [
+        "빙하 백합",
+        "극지 발광 이끼"
+      ],
+      "trade_node_name": "빙해 순례로"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "빙어와 순록",
+        "delicacy": "빙해 고래고기",
+        "taboo_food": "성당의 얼음 물고기"
+      },
+      "attire": {
+        "daily_wear": "성직자용 순록 모피",
+        "extreme_weather_gear": "성빙 갑주"
+      },
+      "culture": {
+        "animism_and_faith": "빙해의 신 숭배",
+        "regional_taboo": "성당에서 불을 피우지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "빙하 깊은 곳에서 매일 밤 기도가 들린다.",
+        "truth_flag": true,
+        "reality": "천 년 전 죽은 성직자들이 아직도 신을 기다리고 있다."
+      }
+    ],
+    "category": "frozen_tundra"
+  },
+  {
+    "id": "region_golden_sky_steppe",
+    "name": "황금천공 초원",
+    "continent_id": "continent_unknown",
+    "terrain": "plains",
+    "climate_type": "고공 초원",
+    "dominant_surface": "golden_grass",
+    "dominant_elemental_affinity": "wind",
+    "traits": [
+      "하늘에 떠 있는 초원",
+      "황금빛 풀바다",
+      "거대 비행수",
+      "끝없는 바람"
+    ],
+    "description": {
+      "visual": "구름 위에 끝없이 펼쳐진 황금빛 초원이 존재한다. 초원 위에는 거대한 나무와 강이 흐르며 하늘을 달리는 말들이 무리를 이룬다.",
+      "auditory": "끊임없는 바람과 수천 마리의 비행수 발굽 소리가 들린다.",
+      "olfactory": "따뜻한 풀과 꽃, 맑은 고공 공기."
+    },
+    "time_of_day_variants": {
+      "day": "황금빛 초원이 태양빛을 받아 불타는 바다처럼 보인다.",
+      "night": "풀잎 하나하나가 별처럼 빛난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "천공 질주",
+        "effect": "거대한 비행수 무리가 초원을 가로질러 이동하며 플레이어를 휩쓸 수 있다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "끝없는 낭떠러지",
+        "effect": "초원 가장자리에는 구름 아래로 수천 미터의 절벽이 있다.",
+        "mitigation": "바람의 방향을 읽으며 이동한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "비행수의 선두를 따라감",
+        "consequence": "숨겨진 천공 부족의 마을로 인도된다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "천공마",
+        "황금 하피",
+        "구름 사자",
+        "폭풍 독수리"
+      ],
+      "apex_predator_id": "monster_sky_lion",
+      "regional_champion_npc_id": "npc_sky_horse_chieftain",
+      "nomadic_tribes": [
+        "천공마를 타는 황금 초원 유목민"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "구름 위의 황금 초원",
+        "천공 강"
+      ],
+      "archaeological_sites": [
+        "하늘에 묻힌 고대 왕국"
+      ],
+      "planar_rifts": [
+        "바람계 균열"
+      ],
+      "natural_shelters": [
+        "거대한 바위섬"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "천공초",
+        "폭풍마의 갈기",
+        "구름꿀"
+      ],
+      "rare_mineral_deposits": [
+        "부유석",
+        "풍령석"
+      ],
+      "endemic_biological_resources": [
+        "별빛 풀",
+        "천공 약초"
+      ],
+      "trade_node_name": "황금초원 유목민 시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "말린 육류와 곡물",
+        "delicacy": "구름꿀 빵",
+        "taboo_food": "선두 천공마"
+      },
+      "attire": {
+        "daily_wear": "가죽 유목복",
+        "extreme_weather_gear": "비행용 망토"
+      },
+      "culture": {
+        "animism_and_faith": "바람을 선조로 숭배",
+        "regional_taboo": "바람을 거스르는 깃발을 세우지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "초원의 끝에는 하늘의 왕이 사는 궁전이 있다.",
+        "truth_flag": true,
+        "reality": "구름 위에 거대한 용왕의 궁전이 존재한다."
+      }
+    ],
+    "category": "plains"
+  },
+  {
+    "id": "region_time_ruins",
+    "name": "시간에 버려진 폐허",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "시간 불안정",
+    "dominant_surface": "ancient_stone",
+    "dominant_elemental_affinity": "time",
+    "traits": [
+      "시간 정지 구역",
+      "과거와 미래의 중첩",
+      "사라진 문명",
+      "시간의 잔향"
+    ],
+    "description": {
+      "visual": "하나의 도시 안에 서로 다른 시대가 동시에 존재한다. 한쪽에서는 번성한 도시가 보이고 다른 쪽에서는 폐허가 보이며, 같은 사람이 서로 다른 시대의 모습으로 거리를 걷는다.",
+      "auditory": "과거의 시장 소리와 미래의 기계음, 전쟁의 함성이 동시에 들린다.",
+      "olfactory": "오래된 돌과 금속, 불탄 도시의 냄새가 뒤섞여 있다."
+    },
+    "time_of_day_variants": {
+      "day": "현재에 가까운 시대의 모습이 강하게 나타난다.",
+      "night": "도시의 먼 미래와 과거가 동시에 겹쳐진다."
+    },
+    "weather_events": [
+      {
+        "event_name": "시간 폭풍",
+        "effect": "일부 생명체의 시간이 급격하게 흐르거나 되감긴다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "시간 역행",
+        "effect": "행동의 결과가 몇 초 뒤 취소될 수 있다.",
+        "mitigation": "시간의 흐름이 정상인 기준점을 찾아야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "폐허의 시계탑을 거꾸로 작동",
+        "consequence": "도시가 한순간 전성기의 모습으로 되돌아간다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "시간 망령",
+        "시계 골렘",
+        "과거의 병사",
+        "미래의 사냥꾼"
+      ],
+      "apex_predator_id": "monster_time_eater",
+      "regional_champion_npc_id": "npc_time_archivist",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "시간이 멈춘 폭포"
+      ],
+      "archaeological_sites": [
+        "중첩된 고대 도시",
+        "시간탑"
+      ],
+      "planar_rifts": [
+        "시간계 균열"
+      ],
+      "natural_shelters": [
+        "시간이 정지된 건물"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "시간 모래",
+        "기억 금속",
+        "시간 결정"
+      ],
+      "rare_mineral_deposits": [
+        "시계석",
+        "연대석"
+      ],
+      "endemic_biological_resources": [
+        "시간초",
+        "회춘 열매"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "시대별로 다른 음식",
+        "delicacy": "미래의 과일",
+        "taboo_food": "자신이 태어나기 전의 음식"
+      },
+      "attire": {
+        "daily_wear": "시대가 뒤섞인 의복",
+        "extreme_weather_gear": "시간 고정 장치"
+      },
+      "culture": {
+        "animism_and_faith": "시간을 살아 있는 존재로 인식",
+        "regional_taboo": "자신의 미래 모습을 공격하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "폐허에서는 미래의 자신을 만날 수 있다.",
+        "truth_flag": true,
+        "reality": "방문자의 가능한 미래 중 하나가 실제로 나타난다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_rainbow_cavern",
+    "name": "무지개 지하왕국",
+    "continent_id": "continent_unknown",
+    "terrain": "underground_abyss",
+    "climate_type": "지하 온대",
+    "dominant_surface": "rainbow_crystal",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "무지개 수정 동굴",
+      "지하 왕국",
+      "빛의 강",
+      "결정화된 생태계"
+    ],
+    "description": {
+      "visual": "지하 전체가 무지개색 수정으로 이루어져 있다. 수정 사이로 빛나는 강이 흐르고 거대한 지하 도시가 절벽에 매달려 있다.",
+      "auditory": "수정들이 서로 공명하며 아름다운 음악을 만들어낸다.",
+      "olfactory": "맑은 물과 광물, 희미한 꽃향기."
+    },
+    "time_of_day_variants": {
+      "day": "수정이 외부의 빛을 받아 밝게 빛난다.",
+      "night": "수정 자체가 빛을 내며 지하 전체가 살아 움직이는 듯 보인다."
+    },
+    "weather_events": [
+      {
+        "event_name": "광채 폭발",
+        "effect": "수정에서 강력한 마나 파동이 발생한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "공명 붕괴",
+        "effect": "특정 소리와 마법이 수정 전체를 폭발시킬 수 있다.",
+        "mitigation": "수정의 진동에 맞춰 이동해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "수정의 노래를 따라 특정 음을 연주",
+        "consequence": "지하왕국의 봉인된 왕궁이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "수정 박쥐",
+        "무지개 슬라임",
+        "결정 요정",
+        "광석 골렘"
+      ],
+      "apex_predator_id": "monster_prismatic_dragon",
+      "regional_champion_npc_id": "npc_crystal_king",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "무지개 수정 동굴",
+        "빛의 지하강"
+      ],
+      "archaeological_sites": [
+        "지하 수정왕국"
+      ],
+      "planar_rifts": [
+        "비전계로 이어지는 결정문"
+      ],
+      "natural_shelters": [
+        "수정 종유석 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "무지개 결정",
+        "광채석",
+        "결정 꽃"
+      ],
+      "rare_mineral_deposits": [
+        "프리즘석",
+        "고순도 마나 결정"
+      ],
+      "endemic_biological_resources": [
+        "빛버섯",
+        "결정 꽃가루"
+      ],
+      "trade_node_name": "지하 수정시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "지하 버섯과 뿌리",
+        "delicacy": "결정 꽃꿀",
+        "taboo_food": "왕궁 수정열매"
+      },
+      "attire": {
+        "daily_wear": "수정 장식 의복",
+        "extreme_weather_gear": "공명 방호 장비"
+      },
+      "culture": {
+        "animism_and_faith": "수정을 살아 있는 음악으로 숭배",
+        "regional_taboo": "동굴에서 고함치지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "왕국의 모든 수정은 하나의 거대한 의식이라고 한다.",
+        "truth_flag": true,
+        "reality": "왕국 전체가 하나의 거대한 마법진이다."
+      }
+    ],
+    "category": "underground_abyss"
+  },
+  {
+    "id": "region_floating_waterfalls",
+    "name": "부유폭포의 성역",
+    "continent_id": "continent_unknown",
+    "terrain": "mountain_mine",
+    "climate_type": "고산 습윤대",
+    "dominant_surface": "floating_water",
+    "dominant_elemental_affinity": "water",
+    "traits": [
+      "공중에 떠 있는 폭포",
+      "거대한 산악 호수",
+      "물의 정령 성역",
+      "역류하는 강"
+    ],
+    "description": {
+      "visual": "산맥 사이의 물이 중력을 무시한 채 하늘로 흘러 올라간다. 수십 개의 폭포가 공중에 떠서 거대한 강을 이루고 있다.",
+      "auditory": "하늘을 흐르는 물의 굉음과 물의 정령들이 노래하는 듯한 소리가 들린다.",
+      "olfactory": "맑은 물과 젖은 돌, 고산 식물 향."
+    },
+    "time_of_day_variants": {
+      "day": "폭포가 햇빛을 받아 수천 개의 무지개를 만든다.",
+      "night": "물 자체가 푸르게 빛나며 밤하늘로 올라간다."
+    },
+    "weather_events": [
+      {
+        "event_name": "천공 해일",
+        "effect": "하늘에 떠 있던 물이 한꺼번에 움직이며 거대한 물의 파도가 된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "역류 낙하",
+        "effect": "물의 흐름을 잘못 타면 하늘 위로 빨려 올라가 실종된다.",
+        "mitigation": "물의 정령이 흐르는 방향을 관찰한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "폭포가 가장 높은 지점에서 물에 뛰어듦",
+        "consequence": "물의 정령계로 이어지는 숨겨진 성역이 나타난다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "물의 정령",
+        "공중 수룡",
+        "폭포 거북",
+        "무지개 물고기"
+      ],
+      "apex_predator_id": "monster_sky_water_dragon",
+      "regional_champion_npc_id": "npc_water_sage",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘로 흐르는 폭포",
+        "공중 호수"
+      ],
+      "archaeological_sites": [
+        "물의 성역 유적"
+      ],
+      "planar_rifts": [
+        "수계 성역문"
+      ],
+      "natural_shelters": [
+        "폭포 뒤편의 거대 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "성수",
+        "물의 진주",
+        "무지개 송어"
+      ],
+      "rare_mineral_deposits": [
+        "수류석",
+        "청수정"
+      ],
+      "endemic_biological_resources": [
+        "하늘연꽃",
+        "폭포 이끼"
+      ],
+      "trade_node_name": "물의 정령 비밀교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "고산어",
+        "delicacy": "무지개 송어",
+        "taboo_food": "성역의 물고기"
+      },
+      "attire": {
+        "daily_wear": "방수 산악복",
+        "extreme_weather_gear": "폭포 등반 장비"
+      },
+      "culture": {
+        "animism_and_faith": "물의 흐름을 신성하게 여김",
+        "regional_taboo": "폭포의 흐름을 막지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "가장 높은 폭포의 끝에는 바다가 있다.",
+        "truth_flag": true,
+        "reality": "폭포는 물의 근원계로 이어진다."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_dead_sun_desert",
+    "name": "죽은 태양의 황야",
+    "continent_id": "continent_unknown",
+    "terrain": "desert_wasteland",
+    "climate_type": "영구 황혼",
+    "dominant_surface": "black_sand",
+    "dominant_elemental_affinity": "dark",
+    "traits": [
+      "빛을 잃은 태양",
+      "영구 황혼",
+      "검은 모래",
+      "태양의 묘지"
+    ],
+    "description": {
+      "visual": "하늘에는 태양이 떠 있지만 전혀 빛을 내지 않는다. 검은 모래 위로 붉은 황혼만이 흐르고 지평선에는 거대한 검은 태양의 형상이 떠 있다.",
+      "auditory": "바람 소리조차 희미하며 멀리서 장례식의 합창 같은 소리가 들린다.",
+      "olfactory": "건조한 모래와 탄화된 돌 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "태양이 검은 원반으로 떠 있다.",
+      "night": "검은 태양이 지평선 아래로 내려가며 수많은 별이 동시에 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "검은 일식",
+        "effect": "모든 빛이 사라지고 강력한 암흑 생명체가 출현한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "태양 없는 열기",
+        "effect": "빛은 없지만 주변 온도는 지속적으로 상승한다.",
+        "mitigation": "검은 태양의 그림자 아래에서 이동한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "검은 태양을 향해 죽은 자의 이름을 부름",
+        "consequence": "태양의 묘지로 이어지는 길이 나타난다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "암흑 전갈",
+        "태양 망령",
+        "검은 사막늑대",
+        "황혼 하피"
+      ],
+      "apex_predator_id": "monster_dead_sun_dragon",
+      "regional_champion_npc_id": "npc_sun_gravekeeper",
+      "nomadic_tribes": [
+        "검은 태양을 숭배하는 유목민"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "검은 태양의 지평선",
+        "빛 없는 오아시스"
+      ],
+      "archaeological_sites": [
+        "태양의 묘지"
+      ],
+      "planar_rifts": [
+        "암흑계 균열"
+      ],
+      "natural_shelters": [
+        "검은 태양의 그림자 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "흑사",
+        "태양 망령의 재",
+        "암흑 결정"
+      ],
+      "rare_mineral_deposits": [
+        "흑태양석",
+        "일식철"
+      ],
+      "endemic_biological_resources": [
+        "황혼 선인장",
+        "검은 연꽃"
+      ],
+      "trade_node_name": "금지된 황혼시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "건조 사막육",
+        "delicacy": "황혼 선인장 과육",
+        "taboo_food": "검은 태양 아래서 죽은 생물"
+      },
+      "attire": {
+        "daily_wear": "검은 사막 로브",
+        "extreme_weather_gear": "열 차단 두건"
+      },
+      "culture": {
+        "animism_and_faith": "죽은 태양을 신으로 숭배",
+        "regional_taboo": "태양을 향해 웃지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "검은 태양은 언젠가 다시 빛날 것이다.",
+        "truth_flag": true,
+        "reality": "태양이 아니라 태양을 먹은 고대 존재의 눈이다."
+      }
+    ],
+    "category": "desert_wasteland"
+  },
+  {
+    "id": "region_dragon_graveyard",
+    "name": "용들의 최후원",
+    "continent_id": "continent_unknown",
+    "terrain": "mountain_mine",
+    "climate_type": "고산 건조대",
+    "dominant_surface": "dragon_bones",
+    "dominant_elemental_affinity": "dragon",
+    "traits": [
+      "용의 무덤",
+      "수천 개의 용골",
+      "용혼",
+      "고대 용의 기억"
+    ],
+    "description": {
+      "visual": "산맥 전체가 용의 뼈로 뒤덮여 있다. 수천 마리의 용골이 계곡과 능선을 이루며 거대한 고룡의 두개골이 산 정상에 쌓여 있다.",
+      "auditory": "바람이 뼈 사이를 지나갈 때 수많은 용의 포효처럼 들린다.",
+      "olfactory": "오래된 뼈와 화약, 마력에 타버린 암석 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "용골이 햇빛을 받아 흰색으로 빛난다.",
+      "night": "용의 영혼들이 푸른 불꽃으로 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "용혼 폭풍",
+        "effect": "수백 개의 용혼이 폭풍처럼 몰려다니며 강력한 마법을 방출한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "용의 기억",
+        "effect": "뼈에 닿으면 죽은 용의 기억을 강제로 경험한다.",
+        "mitigation": "정신 보호 마법이 필요하다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "고룡의 두개골 앞에서 용의 언어로 자신의 이름을 말함",
+        "consequence": "고룡의 기억 속으로 이동한다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "용골 해골",
+        "용혼",
+        "드래곤 웜",
+        "용의 유생"
+      ],
+      "apex_predator_id": "monster_ancient_dragon_spirit",
+      "regional_champion_npc_id": "npc_dragon_gravekeeper",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "용골 산맥",
+        "고룡의 두개골 계곡"
+      ],
+      "archaeological_sites": [
+        "고룡 공동묘지",
+        "용의 왕좌"
+      ],
+      "planar_rifts": [
+        "용의 차원으로 이어지는 균열"
+      ],
+      "natural_shelters": [
+        "거대한 용의 흉곽"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "용골",
+        "용의 심장석",
+        "용혼 결정"
+      ],
+      "rare_mineral_deposits": [
+        "용결정",
+        "고룡철"
+      ],
+      "endemic_biological_resources": [
+        "용혈초",
+        "용골 이끼"
+      ],
+      "trade_node_name": "용 사냥꾼들의 비밀시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "산양 고기",
+        "delicacy": "용혈초를 넣은 고기",
+        "taboo_food": "용의 살점"
+      },
+      "attire": {
+        "daily_wear": "용가죽 장비",
+        "extreme_weather_gear": "고룡골 방호구"
+      },
+      "culture": {
+        "animism_and_faith": "죽은 용을 선조로 숭배",
+        "regional_taboo": "용골을 함부로 훼손하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "모든 용이 죽는 날 마지막 용이 이곳으로 온다.",
+        "truth_flag": true,
+        "reality": "현재 살아 있는 고룡들도 죽음을 맞이하면 이곳으로 향한다."
+      }
+    ],
+    "category": "mountain_mine"
+  },
+  {
+    "id": "region_fairy_queen_garden",
+    "name": "요정여왕의 비밀정원",
+    "continent_id": "continent_unknown",
+    "terrain": "dense_forest",
+    "climate_type": "요정계 기후",
+    "dominant_surface": "giant_flowers",
+    "dominant_elemental_affinity": "fey",
+    "traits": [
+      "현실과 겹쳐진 요정계",
+      "거대한 꽃",
+      "영원한 봄",
+      "시간 불균형"
+    ],
+    "description": {
+      "visual": "작은 숲길을 통과한 순간 세계가 갑자기 거대한 꽃과 나무로 가득 찬 정원으로 변한다. 꽃 하나가 궁전만큼 크고 하늘에는 두 개의 달이 떠 있다.",
+      "auditory": "보이지 않는 악기들이 끊임없이 연주하며 꽃과 나무가 음악에 맞춰 움직인다.",
+      "olfactory": "압도적으로 달콤한 꽃향기와 과일 향."
+    },
+    "time_of_day_variants": {
+      "day": "영원한 봄의 햇살이 정원을 비춘다.",
+      "night": "꽃들이 모두 발광하며 요정들의 축제가 시작된다."
+    },
+    "weather_events": [
+      {
+        "event_name": "꽃잎 폭풍",
+        "effect": "꽃잎 속에서 요정들이 나타나 방문자의 기억과 이름을 가지고 장난친다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "시간의 차이",
+        "effect": "정원에서 하루를 보내면 현실에서는 수개월이 흐를 수 있다.",
+        "mitigation": "요정여왕의 허락을 받는다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "정원 입구에서 자신의 진짜 이름 대신 별명을 말함",
+        "consequence": "요정계 방문객으로 인정받아 깊은 정원에 진입할 수 있다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "요정",
+        "꽃사슴",
+        "환상 나비",
+        "장난꾸러기 픽시"
+      ],
+      "apex_predator_id": "monster_fey_giant_stag",
+      "regional_champion_npc_id": "npc_fairy_queen",
+      "nomadic_tribes": [
+        "요정 유랑극단"
+      ]
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "거대한 세계꽃",
+        "두 달이 비치는 연못"
+      ],
+      "archaeological_sites": [
+        "요정여왕의 고궁"
+      ],
+      "planar_rifts": [
+        "요정계 정식 관문"
+      ],
+      "natural_shelters": [
+        "거대 꽃 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "요정꿀",
+        "환상 꽃가루",
+        "영원한 장미"
+      ],
+      "rare_mineral_deposits": [
+        "요정석"
+      ],
+      "endemic_biological_resources": [
+        "시간꽃",
+        "꿈나비의 가루"
+      ],
+      "trade_node_name": "요정계 축제시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "과일과 꿀",
+        "delicacy": "꿈열매 파이",
+        "taboo_food": "요정이 선물한 음식의 거절"
+      },
+      "attire": {
+        "daily_wear": "꽃잎 의복",
+        "extreme_weather_gear": "환상 방호망토"
+      },
+      "culture": {
+        "animism_and_faith": "자연과 요정여왕 숭배",
+        "regional_taboo": "자신의 진짜 이름을 함부로 말하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "요정여왕에게 소원을 빌면 무엇이든 얻을 수 있다.",
+        "truth_flag": true,
+        "reality": "소원을 들어주지만 반드시 그에 상응하는 것을 가져간다."
+      }
+    ],
+    "category": "dense_forest"
+  },
+  {
+    "id": "region_world_tree_crown",
+    "name": "세계수의 수관",
+    "continent_id": "continent_unknown",
+    "terrain": "dense_forest",
+    "climate_type": "세계수 상층",
+    "dominant_surface": "living_wood",
+    "dominant_elemental_affinity": "life",
+    "traits": [
+      "세계수 최상층",
+      "구름 위의 숲",
+      "생명의 근원",
+      "고대 정령"
+    ],
+    "description": {
+      "visual": "구름보다 높은 세계수의 가지 위에 또 하나의 거대한 숲이 존재한다. 가지 하나가 산맥처럼 펼쳐져 있고 그 위에 강과 호수가 흐른다.",
+      "auditory": "세계수 자체의 맥박과 같은 울림이 지면 전체에서 들린다.",
+      "olfactory": "신선한 수액과 꽃, 비가 내린 숲의 향."
+    },
+    "time_of_day_variants": {
+      "day": "세계수 잎이 태양처럼 빛난다.",
+      "night": "나뭇잎 사이로 별이 아니라 다른 세계의 풍경이 보인다."
+    },
+    "weather_events": [
+      {
+        "event_name": "생명의 비",
+        "effect": "비를 맞은 생명체의 상처가 회복되지만 죽은 생명까지 되살아날 수 있다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "세계수의 맥동",
+        "effect": "주기적으로 나무 전체가 움직여 거대한 지형 변화가 발생한다.",
+        "mitigation": "맥동 주기를 관찰한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "세계수의 잎에 자신의 피 한 방울을 떨어뜨림",
+        "consequence": "세계수 내부의 생명핵으로 통하는 길이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "세계수 정령",
+        "천공 사슴",
+        "거대 나비",
+        "수목 거인"
+      ],
+      "apex_predator_id": "monster_world_tree_guardian",
+      "regional_champion_npc_id": "npc_world_tree_dryad",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "세계수의 수관",
+        "구름 위의 숲과 호수"
+      ],
+      "archaeological_sites": [
+        "세계수 내부의 고대 성소"
+      ],
+      "planar_rifts": [
+        "생명계 중심부"
+      ],
+      "natural_shelters": [
+        "세계수의 거대한 가지 공동"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "세계수 수액",
+        "생명의 잎",
+        "세계수 목재"
+      ],
+      "rare_mineral_deposits": [
+        "생명핵 결정"
+      ],
+      "endemic_biological_resources": [
+        "불멸의 열매",
+        "세계수 꽃"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "세계수 열매",
+        "delicacy": "불멸의 열매",
+        "taboo_food": "생명핵의 열매"
+      },
+      "attire": {
+        "daily_wear": "세계수 잎 직물",
+        "extreme_weather_gear": "수관 방풍망토"
+      },
+      "culture": {
+        "animism_and_faith": "세계수를 모든 생명의 어머니로 숭배",
+        "regional_taboo": "세계수에 자신의 이름을 새기지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "세계수의 가장 높은 가지에서는 다른 세계를 볼 수 있다.",
+        "truth_flag": true,
+        "reality": "세계수는 여러 차원을 연결하는 살아 있는 관문이다."
+      }
+    ],
+    "category": "dense_forest"
+  },
+  {
+    "id": "region_abyssal_city",
+    "name": "심연 아래의 도시",
+    "continent_id": "continent_unknown",
+    "terrain": "underground_abyss",
+    "climate_type": "지하 심연",
+    "dominant_surface": "black_marble",
+    "dominant_elemental_affinity": "void",
+    "traits": [
+      "심연 도시",
+      "검은 대리석 궁전",
+      "지하 별하늘",
+      "멸망한 문명"
+    ],
+    "description": {
+      "visual": "끝없는 지하 공동의 바닥에 거대한 도시가 펼쳐져 있다. 도시의 건물들은 검은 대리석으로 이루어져 있으며 하늘에는 가짜 별이 움직인다.",
+      "auditory": "도시 전체에서 멀리 울리는 종소리와 텅 빈 거리의 발소리가 들린다.",
+      "olfactory": "차가운 돌과 오래된 향, 마나의 금속성 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "가짜 태양이 도시를 밝힌다.",
+      "night": "도시의 모든 건물에 불이 켜지고 사라진 시민들의 환영이 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "검은 별비",
+        "effect": "가짜 하늘에서 검은 별이 떨어져 닿은 생명체의 마법을 흡수한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "도시의 시선",
+        "effect": "도시의 석상이 움직이며 침입자를 감시한다.",
+        "mitigation": "도시의 규칙을 따라 행동한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "도시 중앙의 빈 왕좌에 앉음",
+        "consequence": "도시 전체가 살아나며 시민들이 돌아온다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "석상 병사",
+        "공허 시민",
+        "검은 기사",
+        "심연 마도사"
+      ],
+      "apex_predator_id": "monster_abyssal_king",
+      "regional_champion_npc_id": "npc_last_king",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "지하 별하늘"
+      ],
+      "archaeological_sites": [
+        "심연 왕궁",
+        "고대 도서관",
+        "지하 대광장"
+      ],
+      "planar_rifts": [
+        "공허계 왕궁문"
+      ],
+      "natural_shelters": [
+        "버려진 주택"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "공허 서적",
+        "고대 마법도구",
+        "심연 금속"
+      ],
+      "rare_mineral_deposits": [
+        "공허철",
+        "왕궁석"
+      ],
+      "endemic_biological_resources": [
+        "심연 버섯",
+        "검은 이끼"
+      ],
+      "trade_node_name": "죽은 도시의 시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "지하 곡물",
+        "delicacy": "공허 버섯 스튜",
+        "taboo_food": "도시 시민의 환영이 만든 음식"
+      },
+      "attire": {
+        "daily_wear": "고대 도시 시민복",
+        "extreme_weather_gear": "공허 방호복"
+      },
+      "culture": {
+        "animism_and_faith": "도시 자체를 신성한 존재로 숭배",
+        "regional_taboo": "왕궁에서 자신의 이름을 말하지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "도시는 멸망하지 않았다. 단지 모두가 잠들어 있을 뿐이다.",
+        "truth_flag": true,
+        "reality": "왕궁의 왕이 도시 전체의 시간을 멈춰 멸망을 막았다."
+      }
+    ],
+    "category": "underground_abyss"
+  },
+  {
+    "id": "region_sea_of_stars",
+    "name": "별의 바다",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "무중력",
+    "dominant_surface": "star_dust",
+    "dominant_elemental_affinity": "astral",
+    "traits": [
+      "별가루로 이루어진 바다",
+      "무중력",
+      "천체 생명체",
+      "우주와 연결된 지역"
+    ],
+    "description": {
+      "visual": "끝없이 펼쳐진 검은 공간 위에 별가루로 이루어진 바다가 흐른다. 발밑에는 파도 대신 은하가 흐르고 하늘과 땅의 구분이 존재하지 않는다.",
+      "auditory": "소리는 존재하지 않지만 머릿속에서 먼 별들의 노래가 들린다.",
+      "olfactory": "냄새가 없으며 차갑고 텅 빈 감각만 느껴진다."
+    },
+    "time_of_day_variants": {
+      "day": "수많은 별이 하나의 거대한 태양처럼 빛난다.",
+      "night": "주변의 별이 가까워지며 직접 만질 수 있게 된다."
+    },
+    "weather_events": [
+      {
+        "event_name": "은하 폭풍",
+        "effect": "별가루가 폭풍처럼 휘몰아치며 위치와 방향 개념을 뒤섞는다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "무중력 표류",
+        "effect": "한번 이동 방향을 잃으면 영원히 표류할 수 있다.",
+        "mitigation": "별자리 하나를 기준점으로 삼아 이동한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "별 하나를 손으로 잡음",
+        "consequence": "해당 별이 가진 기억 속 세계로 이동한다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "별빛 해파리",
+        "성운뱀",
+        "천체 나비",
+        "공허 가오리"
+      ],
+      "apex_predator_id": "monster_astral_whale",
+      "regional_champion_npc_id": "npc_star_wanderer",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "별의 바다",
+        "걸어서 건널 수 있는 은하"
+      ],
+      "archaeological_sites": [
+        "고대 천체 관측소"
+      ],
+      "planar_rifts": [
+        "아스트랄계 대관문"
+      ],
+      "natural_shelters": [
+        "죽은 별의 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "별가루",
+        "성운 진주",
+        "천체 생명핵"
+      ],
+      "rare_mineral_deposits": [
+        "별철",
+        "성광석"
+      ],
+      "endemic_biological_resources": [
+        "성운꽃",
+        "별빛 해초"
+      ],
+      "trade_node_name": "아스트랄 방랑자 교역소"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "별빛 열매",
+        "delicacy": "성운 진주 요리",
+        "taboo_food": "살아 있는 별"
+      },
+      "attire": {
+        "daily_wear": "무중력 여행복",
+        "extreme_weather_gear": "성간 방호복"
+      },
+      "culture": {
+        "animism_and_faith": "별을 살아 있는 존재로 숭배",
+        "regional_taboo": "별을 이름 없이 부르지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "별의 바다 가장 깊은 곳에는 세계를 만든 존재가 잠들어 있다.",
+        "truth_flag": false,
+        "reality": "그곳에는 세계가 만들어지기 전의 원초적인 기억만 남아 있다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_ancient_battlefield_sky",
+    "name": "천공대전의 잔해",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "불안정",
+    "dominant_surface": "floating_ruins",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "공중에 정지한 전쟁",
+      "끝나지 않은 전투",
+      "거대한 병기",
+      "시간 정지"
+    ],
+    "description": {
+      "visual": "하늘 한가운데 수천 년 전의 전쟁이 그대로 멈춰 있다. 수백 척의 공중전함과 거대한 마법병기가 폭발하는 순간 그대로 정지해 있다.",
+      "auditory": "정지한 폭발 사이에서 아주 희미한 전쟁의 함성이 들린다.",
+      "olfactory": "타버린 금속과 마나 오존 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "전장의 모든 것이 정지해 있다.",
+      "night": "일부 병기의 시간이 몇 초씩 다시 움직인다."
+    },
+    "weather_events": [
+      {
+        "event_name": "전쟁 재개",
+        "effect": "정지한 전투가 1분 동안 실제로 재개된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "정지 폭발",
+        "effect": "멈춰 있던 폭발이 접촉 순간 다시 시작된다.",
+        "mitigation": "폭발의 경계를 확인하며 이동한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "전장의 깃발을 뽑음",
+        "consequence": "수천 년 전의 전쟁이 짧은 시간 동안 재현된다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "정지 병사",
+        "마법병기",
+        "전쟁 망령",
+        "공중 기사"
+      ],
+      "apex_predator_id": "monster_war_machine_colossus",
+      "regional_champion_npc_id": "npc_eternal_general",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "하늘에 멈춘 폭발",
+        "공중전함 군단"
+      ],
+      "archaeological_sites": [
+        "고대 전쟁 지휘선"
+      ],
+      "planar_rifts": [
+        "전쟁 당시 열린 차원 균열"
+      ],
+      "natural_shelters": [
+        "공중전함 내부"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고대 마법병기",
+        "전쟁 마나핵",
+        "천공선 잔해"
+      ],
+      "rare_mineral_deposits": [
+        "전쟁철",
+        "고대 마나 결정"
+      ],
+      "endemic_biological_resources": [
+        "전장 이끼",
+        "마력에 변이한 새"
+      ],
+      "trade_node_name": "유물 사냥꾼 비밀기지"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "보존 군량",
+        "delicacy": "고대 군량주",
+        "taboo_food": "전쟁 망령의 음식"
+      },
+      "attire": {
+        "daily_wear": "고대 군복",
+        "extreme_weather_gear": "공중전 방호구"
+      },
+      "culture": {
+        "animism_and_faith": "전사들의 영혼 숭배",
+        "regional_taboo": "정지한 병사의 무기를 훔치지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "전쟁은 아직 끝나지 않았다.",
+        "truth_flag": true,
+        "reality": "시간이 정상화되는 순간 전쟁은 다시 시작될 가능성이 있다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_cradle_of_dragons",
+    "name": "태룡의 둥지",
+    "continent_id": "continent_unknown",
+    "terrain": "volcanic",
+    "climate_type": "고열 화산대",
+    "dominant_surface": "dragon_glass",
+    "dominant_elemental_affinity": "dragon",
+    "traits": [
+      "태초의 용이 태어난 장소",
+      "용의 둥지",
+      "살아 있는 화산",
+      "원초 마나"
+    ],
+    "description": {
+      "visual": "화산 내부에 거대한 둥지가 존재한다. 둥지의 크기는 도시 하나와 맞먹으며 검은 유리 바닥 아래에서 붉은 마나가 맥박처럼 흐른다.",
+      "auditory": "지하 깊은 곳에서 거대한 심장박동과 어린 용들의 울음소리가 들린다.",
+      "olfactory": "화염과 황, 뜨거운 피, 마력의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "화산 내부의 붉은 마나가 약해진다.",
+      "night": "둥지의 마나가 강해지고 잠든 용들이 깨어난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "태룡의 숨결",
+        "effect": "화산 전체에서 원초적인 화염이 분출된다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "용의 마나",
+        "effect": "강력한 마나 압력으로 일반 생명체가 접근하기 어렵다.",
+        "mitigation": "용의 혈통이나 고위 마법 보호가 필요하다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "둥지 중앙에 용의 비늘을 놓음",
+        "consequence": "잠든 태룡의 의식이 플레이어에게 말을 건다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "화염룡",
+        "용의 유생",
+        "마그마 웜",
+        "용혈 박쥐"
+      ],
+      "apex_predator_id": "monster_primordial_dragon",
+      "regional_champion_npc_id": "npc_dragon_matriarch",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "태룡의 둥지",
+        "살아 있는 화산심장"
+      ],
+      "archaeological_sites": [
+        "고대 용의 제단"
+      ],
+      "planar_rifts": [
+        "용계의 원초문"
+      ],
+      "natural_shelters": [
+        "용의 둥지 외곽 공동"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "태룡의 비늘",
+        "원초 화염",
+        "용혈석"
+      ],
+      "rare_mineral_deposits": [
+        "태룡 결정",
+        "화룡철"
+      ],
+      "endemic_biological_resources": [
+        "용혈초",
+        "화염연꽃"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "화산육",
+        "delicacy": "용혈초 스튜",
+        "taboo_food": "용의 알"
+      },
+      "attire": {
+        "daily_wear": "화염 내성 의복",
+        "extreme_weather_gear": "용린 갑주"
+      },
+      "culture": {
+        "animism_and_faith": "태룡을 세계의 선조로 숭배",
+        "regional_taboo": "용의 둥지에서 무기를 뽑지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "태초의 용은 이미 죽었다.",
+        "truth_flag": false,
+        "reality": "태룡은 죽은 것이 아니라 세계의 지하에서 잠들어 있다."
+      }
+    ],
+    "category": "volcanic"
+  },
+  {
+    "id": "region_heavenly_library",
+    "name": "천공의 무한도서관",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "무기후",
+    "dominant_surface": "floating_bookshelves",
+    "dominant_elemental_affinity": "knowledge",
+    "traits": [
+      "끝없는 도서관",
+      "공중 서가",
+      "살아 있는 책",
+      "세계의 기록"
+    ],
+    "description": {
+      "visual": "하늘과 지하를 구분할 수 없는 거대한 공간에 수없이 많은 서가가 떠 있다. 책장 사이로 계단과 다리가 끝없이 이어진다.",
+      "auditory": "책장이 넘어가는 소리와 펜으로 글을 쓰는 소리가 끊임없이 들린다.",
+      "olfactory": "오래된 종이와 잉크, 마법 잔향의 냄새."
+    },
+    "time_of_day_variants": {
+      "day": "책들이 조용히 잠들어 있다.",
+      "night": "책들이 스스로 열리고 내용을 읽어주는 소리가 들린다."
+    },
+    "weather_events": [
+      {
+        "event_name": "지식의 폭우",
+        "effect": "수천 권의 책이 하늘에서 떨어지며 무작위 지식을 주입한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "망각의 서가",
+        "effect": "특정 책을 읽으면 자신의 기억 하나가 사라진다.",
+        "mitigation": "책 제목을 먼저 확인해야 한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "존재하지 않는 책의 제목을 검색",
+        "consequence": "세계가 아직 기록하지 않은 미래의 서가가 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "책벌레 골렘",
+        "잉크 정령",
+        "살아 있는 책",
+        "도서관 수호자"
+      ],
+      "apex_predator_id": "monster_librarian_primordial",
+      "regional_champion_npc_id": "npc_infinite_librarian",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "무한 서가",
+        "책으로 이루어진 하늘"
+      ],
+      "archaeological_sites": [
+        "최초의 기록실"
+      ],
+      "planar_rifts": [
+        "지식계 관문"
+      ],
+      "natural_shelters": [
+        "폐쇄된 서가"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "고대 지식서",
+        "마법서",
+        "기억 잉크"
+      ],
+      "rare_mineral_deposits": [
+        "기록석",
+        "지식 결정"
+      ],
+      "endemic_biological_resources": [
+        "책벌레의 기억액",
+        "잉크버섯"
+      ],
+      "trade_node_name": "비밀 마법사 시장"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "기억 과자",
+        "delicacy": "지식 잼",
+        "taboo_food": "도서관의 책벌레"
+      },
+      "attire": {
+        "daily_wear": "학자 로브",
+        "extreme_weather_gear": "기억 보호 후드"
+      },
+      "culture": {
+        "animism_and_faith": "지식을 신성시함",
+        "regional_taboo": "책을 찢지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "도서관에는 아직 일어나지 않은 사건도 기록되어 있다.",
+        "truth_flag": true,
+        "reality": "세계의 가능성을 기록하는 미래서고가 존재한다."
+      }
+    ],
+    "category": "magical_anomaly"
+  },
+  {
+    "id": "region_end_of_rainbow",
+    "name": "무지개의 끝",
+    "continent_id": "continent_unknown",
+    "terrain": "magical_anomaly",
+    "climate_type": "영구 무지개",
+    "dominant_surface": "prismatic_ground",
+    "dominant_elemental_affinity": "arcane",
+    "traits": [
+      "무지개의 실체",
+      "칠색 대지",
+      "감정에 반응하는 지형",
+      "세계 경계"
+    ],
+    "description": {
+      "visual": "무지개가 하늘에서 끝나는 곳에 도달하면 그 아래에는 무지개 자체가 대지처럼 펼쳐져 있다. 일곱 색의 지형이 각각 다른 환경을 이루며 수평선 너머에는 아무것도 없다.",
+      "auditory": "색깔마다 서로 다른 음이 울리며 걸음을 옮길 때마다 음계가 바뀐다.",
+      "olfactory": "색에 따라 꽃, 비, 바다, 흙 등 서로 다른 냄새가 번갈아 나타난다."
+    },
+    "time_of_day_variants": {
+      "day": "일곱 색의 지형이 선명하게 드러난다.",
+      "night": "무지개가 사라지고 별빛으로 만들어진 길이 나타난다."
+    },
+    "weather_events": [
+      {
+        "event_name": "색채 폭풍",
+        "effect": "주변의 색이 뒤섞이며 지형과 생명체의 속성이 일시적으로 변한다."
+      }
+    ],
+    "environmental_hazards": [
+      {
+        "hazard_name": "색의 상실",
+        "effect": "특정 색의 영역에 오래 머물면 해당 색과 관련된 감정이나 기억을 잃는다.",
+        "mitigation": "색이 변하는 경계를 빠르게 통과한다."
+      }
+    ],
+    "interaction_triggers": [
+      {
+        "player_action": "무지개의 일곱 색을 모두 밟음",
+        "consequence": "세계의 경계로 이어지는 문이 열린다."
+      }
+    ],
+    "ecology": {
+      "common_monsters": [
+        "색채 정령",
+        "무지개 사슴",
+        "프리즘 슬라임",
+        "빛의 나비"
+      ],
+      "apex_predator_id": "monster_prismatic_beast",
+      "regional_champion_npc_id": "npc_rainbow_keeper",
+      "nomadic_tribes": []
+    },
+    "landmarks_and_ruins": {
+      "natural_wonders": [
+        "무지개 대지",
+        "일곱 색 폭포"
+      ],
+      "archaeological_sites": [
+        "세계 경계의 문"
+      ],
+      "planar_rifts": [
+        "미지의 세계로 이어지는 무지개문"
+      ],
+      "natural_shelters": [
+        "프리즘 동굴"
+      ]
+    },
+    "resources": {
+      "specialties": [
+        "무지개 결정",
+        "색채 정수",
+        "프리즘 꽃"
+      ],
+      "rare_mineral_deposits": [
+        "칠색석",
+        "세계경계석"
+      ],
+      "endemic_biological_resources": [
+        "색채 꽃",
+        "프리즘 나비"
+      ],
+      "trade_node_name": "존재하지 않음"
+    },
+    "lifestyle_and_culture": {
+      "cuisine": {
+        "staple_food": "색채 열매",
+        "delicacy": "칠색 과실",
+        "taboo_food": "무색 열매"
+      },
+      "attire": {
+        "daily_wear": "칠색 직물",
+        "extreme_weather_gear": "프리즘 망토"
+      },
+      "culture": {
+        "animism_and_faith": "무지개를 세계의 다리로 숭배",
+        "regional_taboo": "무지개 끝에서 뒤를 돌아보지 말 것"
+      }
+    },
+    "lore_and_rumors": [
+      {
+        "rumor": "무지개의 끝에는 보물이 있다.",
+        "truth_flag": true,
+        "reality": "보물이 아니라 세계 바깥으로 향하는 문이 존재한다."
+      }
+    ],
+    "category": "magical_anomaly"
   }
 ]
