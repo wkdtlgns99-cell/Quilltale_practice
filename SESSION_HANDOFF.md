@@ -214,8 +214,8 @@
 3. **총 134종 Level 3 국가/영지 템플릿 완비 및 데이터 클래스 확장 (`data/templates/nation_templates.json`)**:
    - `Nation` 클래스에 `dominant_species: List[str] = field(default_factory=list)`(국가 주요 구성 종족 목록) 신설하여 대륙(`mortal_species`) - 국가(`dominant_species`) - 마을(`racial_demographics`)로 이어지는 3단 종족 계층 체계 완성.
    - 1차 29종 + 2차 26종 + 3차 7종 + 4차 15종 + 5차 16종 + 6차 10종 + 7차 31종 = 총 134종 국가 템플릿 100% 무결점 완비.
-4. **총 124종 Level 2 권역(Region) 템플릿 대폭 보강 및 적응 로더 완비 (`data/templates/region_templates.json`)**:
-   - 기존 41종 + 1차 20종 + 2차 21종 + 3차 15종 + 4차 15종 + 5차 12종 = 총 124종 고밀도 권역 전격 병합 (푸른 서리 빙하 크레바스, 화산재 재앙 황무지, 엉킨 뿌리 진흙 습원, 이끼 장막 고목림, 화강암 협곡 첨봉, 에테르 프리즘 사막, 산호초 산호 군도 라군, 녹슨 철가루 황무지, 그림자 지하 납골당, 황금 해바라기 초원, 천둥 번개 스파크 고원, 푸른 심연 해구 등 5차 12종 추가 탑재).
+4. **총 136종 Level 2 권역(Region) 템플릿 대폭 보강 및 적응 로더 완비 (`data/templates/region_templates.json`)**:
+   - 기존 41종 + 1차 20종 + 2차 21종 + 3차 15종 + 4차 15종 + 5차 12종 + 6차 12종 = 총 136종 고밀도 권역 전격 병합 (속삭이는 서리 계곡, 흑요석 화산 분지, 탁류의 진흙 습원, 고대 고사리 원시림, 날카로운 화강암 첨봉, 에테르 수정 고원, 환초 산호 제도, 고철 파편 황무지, 속삭이는 지하 납골당, 해바라기 산들바람 들판, 울부짖는 폭풍 고원, 신기루 수정 모래언덕 제2구역 등 6차 12종 추가 탑재).
    - `InfrastructureTemplateLoader.adapt_region_template_to_region` 고도화: 중첩 생태계(`ecology`), 유적(`landmarks_and_ruins`), 자원(`resources`), 식문화/복식/신앙(`lifestyle_and_culture`)을 `Region` 데이터클래스에 100% 바인딩.
 5. **`InfrastructureTemplateLoader` 전 계층 로더 라인업 완성**:
    - `load_settlement_templates()`, `load_nation_templates()`, `load_region_templates()`, `load_continent_templates()` 전 계층 로더 완비.
@@ -223,10 +223,10 @@
 ### 2. 테스트 및 평가 검증 상태
 - **인프라 계층 단위 테스트 50개 및 프로젝트 전체 299개 테스트 100% 무결점 통과**:
   - `tests/test_infrastructure_hierarchy.py`: 총 50개 테스트 전체 통과.
-    - `test_region_templates_json_integrity`: 124개 권역 템플릿 고유 ID, `traits >= 1`, 지형, 바닥 표면, 희귀 광맥, 몬스터 및 복식/식문화/신앙 프로필 전수 무결성 검증.
-    - `test_infrastructure_template_loader_regions`: 124개 권역 데이터 클래스 로딩 및 terrain/price multiplier 매핑 검증.
+    - `test_region_templates_json_integrity`: 136개 권역 템플릿 고유 ID, `traits >= 1`, 지형, 바닥 표면, 희귀 광맥, 몬스터 및 복식/식문화/신앙 프로필 전수 무결성 검증.
+    - `test_infrastructure_template_loader_regions`: 136개 권역 데이터 클래스 로딩 및 terrain/price multiplier 매핑 검증.
     - `test_nation_templates_json_integrity` (134개) & `test_infrastructure_template_loader_nations` (134개) 검증.
-  - 전체 회귀 결함 0건, 299 passed in 4.80s.
+  - 전체 회귀 결함 0건, 299 passed in 3.64s.
 - **DoD Gate 평가 검증 (`eval_runner.py --no-judge`)**:
   - `Invalid transition rate: 0.0%` (무결점 통과).
 
@@ -234,7 +234,7 @@
 - **현재 완료 상태**:
   - Level 0 우주론/세계관 57종 (`cosmology_templates.json`)
   - Level 1 대륙 120종 + 최강자/최강 몬스터 (`continent_templates.json`)
-  - Level 2 권역 124종 (`region_templates.json`) [목표 300개 중 124개 달성 (41.3%)]
+  - Level 2 권역 136종 (`region_templates.json`) [목표 300개 중 136개 달성 (45.3%)]
   - Level 3 국가 134종 (`nation_templates.json`)
   - Level 4 정주지/마을 215종 (`settlement_templates.json`)
 - **다음 세션 즉시 착수 작업**:

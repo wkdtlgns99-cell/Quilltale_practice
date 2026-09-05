@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 124 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 136 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 124
+    assert len(regions) == 136
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 124, f"Expected 124 region templates, got {len(data)}"
+    assert len(data) == 136, f"Expected 136 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 124
+    assert len(regions) == 136
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -2917,6 +2917,15 @@ def test_region_templates_json_integrity():
     assert crevasse.dominant_surface == "blue_ice_sheet"
     assert "청빙 철광맥" in crevasse.rare_mineral_deposits
     assert len(crevasse.traits) >= 4
+
+    # Verify Batch 6 region
+    frost_valleys = regions.get("region_whispering_frost_valleys")
+    assert frost_valleys is not None
+    assert frost_valleys.name == "속삭이는 서리 계곡"
+    assert frost_valleys.terrain == "frozen_tundra"
+    assert frost_valleys.dominant_surface == "frozen_tundra_soil"
+    assert "청빙 철광맥" in frost_valleys.rare_mineral_deposits
+    assert len(frost_valleys.traits) >= 4
 
 
 
