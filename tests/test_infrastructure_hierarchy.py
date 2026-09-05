@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 136 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 149 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 136
+    assert len(regions) == 149
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 136, f"Expected 136 region templates, got {len(data)}"
+    assert len(data) == 149, f"Expected 149 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 136
+    assert len(regions) == 149
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -2926,6 +2926,15 @@ def test_region_templates_json_integrity():
     assert frost_valleys.dominant_surface == "frozen_tundra_soil"
     assert "청빙 철광맥" in frost_valleys.rare_mineral_deposits
     assert len(frost_valleys.traits) >= 4
+
+    # Verify Batch 7 region
+    ice_crown = regions.get("region_ice_crown_glacier_edge")
+    assert ice_crown is not None
+    assert ice_crown.name == "얼어붙은 왕관 빙하 자락"
+    assert ice_crown.terrain == "frozen_tundra"
+    assert ice_crown.dominant_surface == "glacier_ice"
+    assert "청빙 철광맥" in ice_crown.rare_mineral_deposits
+    assert len(ice_crown.traits) >= 4
 
 
 
