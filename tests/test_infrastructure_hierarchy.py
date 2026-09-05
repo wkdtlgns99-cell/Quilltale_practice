@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 261 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 284 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 261
+    assert len(regions) == 284
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 261, f"Expected 261 region templates, got {len(data)}"
+    assert len(data) == 284, f"Expected 284 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 261
+    assert len(regions) == 284
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -3012,6 +3012,32 @@ def test_region_templates_json_integrity():
     assert rainbow_end.dominant_surface == "prismatic_ground"
     assert "칠색석" in rainbow_end.rare_mineral_deposits
     assert len(rainbow_end.traits) >= 4
+
+    # Verify Batch 13 regions
+    woven_silk = regions.get("region_woven_silk_abyss")
+    assert woven_silk is not None
+    assert woven_silk.name == "거미줄로 직조된 공중 대성당"
+    assert woven_silk.terrain == "underground_abyss"
+    assert woven_silk.dominant_surface == "spider_silk_web"
+    assert "실버 실크 마나 스포어 광맥" in woven_silk.rare_mineral_deposits
+    assert len(woven_silk.traits) >= 4
+
+    bone_monoliths = regions.get("region_floating_bone_monoliths")
+    assert bone_monoliths is not None
+    assert bone_monoliths.name == "하늘에 박힌 거대 유골 모놀리스"
+    assert bone_monoliths.terrain == "mountain_mine"
+    assert bone_monoliths.dominant_surface == "fossilized_bone_plate"
+    assert "스카이 본 모놀리스 원석" in bone_monoliths.rare_mineral_deposits
+    assert len(bone_monoliths.traits) >= 4
+
+    geode = regions.get("region_shimmering_geode_chambers")
+    assert geode is not None
+    assert geode.name == "영롱한 거대 크리스탈 정동 공동"
+    assert geode.terrain == "underground_abyss"
+    assert geode.dominant_surface == "crystal_geode_floor"
+    assert "에테르 게오드 크리스탈 원석" in geode.rare_mineral_deposits
+    assert len(geode.traits) >= 4
+
 
 
 

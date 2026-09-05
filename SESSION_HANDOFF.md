@@ -214,10 +214,9 @@
 3. **총 134종 Level 3 국가/영지 템플릿 완비 및 데이터 클래스 확장 (`data/templates/nation_templates.json`)**:
    - `Nation` 클래스에 `dominant_species: List[str] = field(default_factory=list)`(국가 주요 구성 종족 목록) 신설하여 대륙(`mortal_species`) - 국가(`dominant_species`) - 마을(`racial_demographics`)로 이어지는 3단 종족 계층 체계 완성.
    - 1차 29종 + 2차 26종 + 3차 7종 + 4차 15종 + 5차 16종 + 6차 10종 + 7차 31종 = 총 134종 국가 템플릿 100% 무결점 완비.
-4. **총 261종 Level 2 권역(Region) 템플릿 대폭 보강 및 적응 로더 완비 (`data/templates/region_templates.json`)**:
-   - 기존 41종 + 1차 20종 + 2차 21종 + 3차 15종 + 4차 15종 + 5차 12종 + 6차 12종 + 7차 13종 + 8차 16종 + 9차 35종 + 10차 16종 + 11차 16종 + 12차 29종 = 총 261종 고밀도 권역 전격 병합.
-   - 12차 29종 추가 탑재: 월하낙성의 계곡, 천락군도, 수정해의 침몰 왕국, 영겁의 단풍림, 신해골의 계곡, 천상의 바다, 무음화산의 정상, 별이 떨어진 분지(`region_starfall_crater_basin`), 구름 위의 원시림, 유리산맥의 왕좌, 거울호수, 무저갱의 끝, 침몰한 천공신전, 개화하는 심연, 빙해의 거대성당, 황금천공 초원, 시간에 버려진 폐허, 무지개 지하왕국, 부유폭포의 성역, 죽은 태양의 황야, 용들의 최후원, 요정여왕의 비밀정원, 세계수의 수관, 심연 아래의 도시, 별의 바다, 천공대전의 잔해, 태룡의 둥지, 천공의 무한도서관, 무지개의 끝.
-   - 기존 9차 `region_starfall_crater`(별의 추락지)와의 ID 충돌 방지를 위해 12차 신규 분지는 `region_starfall_crater_basin`으로 고유 식별 분리 완료.
+4. **총 284종 Level 2 권역(Region) 템플릿 대폭 보강 및 적응 로더 완비 (`data/templates/region_templates.json`)**:
+   - 기존 41종 + 1차 20종 + 2차 21종 + 3차 15종 + 4차 15종 + 5차 12종 + 6차 12종 + 7차 13종 + 8차 16종 + 9차 35종 + 10차 16종 + 11차 16종 + 12차 29종 + 13차 23종 = 총 284종 고밀도 권역 전격 병합.
+   - 13차 23종 추가 탑재: 거미줄로 직조된 공중 대성당, 하늘에 박힌 거대 유골 모놀리스, 수천 개의 핏빛 간헐천 지대, 노래하는 프리즘 모래평원, 얼어붙은 거인의 눈물 빙하, 별빛 실크 과수원 원시림, 파도가 연주하는 해식 동굴, 유리 제련 태엽 공장 폐허, 발광 균사 원시림, 번개가 조각한 파쇄의 암봉, 꿈을 짜는 환상 늪지대, 수정이 부서진 크리스탈 피오르, 황금빛 호박 수지 고원, 별빛이 바스라진 파쇄 암봉, 몽환의 꿈실 숲 원시림, 얼어붙은 크리스탈 미로 빙하, 조수가 조각한 거대 유골 아치 해안, 증기를 내뿜는 태엽 협곡, 영롱한 거대 크리스탈 정동 공동, 거미줄로 직조된 공중 대성당 제2구역, 하늘에 박힌 거대 유골 모놀리스 제2구역, 수천 개의 핏빛 간헐천 지대 제2구역, 노래하는 프리즘 모래평원 제2구역.
    - 모든 신규 템플릿에 `category` 및 `traits >= 4`, 10대 표준 지형 물가 매트릭스 100% 연동 무결성 확보.
 5. **`InfrastructureTemplateLoader` 전 계층 로더 라인업 완성**:
    - `load_settlement_templates()`, `load_nation_templates()`, `load_region_templates()`, `load_continent_templates()` 전 계층 로더 완비.
@@ -225,21 +224,22 @@
 ### 2. 테스트 및 평가 검증 상태
 - **인프라 계층 단위 테스트 50개 및 프로젝트 전체 299개 테스트 100% 무결점 통과**:
   - `tests/test_infrastructure_hierarchy.py`: 총 50개 테스트 전체 통과.
-    - `test_region_templates_json_integrity`: 261개 권역 템플릿 고유 ID, `traits >= 1`, 지형, 바닥 표면, 희귀 광맥, 몬스터 및 복식/식문화/신앙 프로필 전수 무결성 검증 (12차 `region_moonfall_valley`, `region_starfall_crater_basin`, `region_end_of_rainbow` 포함).
-    - `test_infrastructure_template_loader_regions`: 261개 권역 데이터 클래스 로딩 및 terrain/price multiplier 매핑 검증.
+    - `test_region_templates_json_integrity`: 284개 권역 템플릿 고유 ID, `traits >= 1`, 지형, 바닥 표면, 희귀 광맥, 몬스터 및 복식/식문화/신앙 프로필 전수 무결성 검증 (13차 `region_woven_silk_abyss`, `region_floating_bone_monoliths`, `region_shimmering_geode_chambers` 포함).
+    - `test_infrastructure_template_loader_regions`: 284개 권역 데이터 클래스 로딩 및 terrain/price multiplier 매핑 검증.
     - `test_nation_templates_json_integrity` (134개) & `test_infrastructure_template_loader_nations` (134개) 검증.
-  - 전체 회귀 결함 0건, 299 passed in 3.74s.
+  - 전체 회귀 결함 0건, 299 passed in 4.37s.
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
   - Level 0 우주론/세계관 57종 (`cosmology_templates.json`)
   - Level 1 대륙 120종 + 최강자/최강 몬스터 (`continent_templates.json`)
-  - Level 2 권역 261종 (`region_templates.json`) [목표 300개 중 261개 달성 (87.0%)]
+  - Level 2 권역 284종 (`region_templates.json`) [목표 300개 중 284개 달성 (94.7%)]
   - Level 3 국가 134종 (`nation_templates.json`)
   - Level 4 정주지/마을 215종 (`settlement_templates.json`)
 - **다음 세션 즉시 착수 작업**:
-  - 권역 템플릿 추가 투입 시 이어서 병합 (잔여 39개 추가하여 300개 목표치 달성),
+  - 권역 템플릿 추가 투입 시 이어서 병합 (잔여 16개 추가하여 300개 목표치 달성),
   - 또는 [4단계 하위 레이어] Level 5 마을 내 세부 시설(`Facility`) 슬롯화 및 기능 연동 진행.
+
 
 
 
