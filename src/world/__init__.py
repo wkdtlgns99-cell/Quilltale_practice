@@ -28,6 +28,7 @@ from .harvest_engine import AnatomyHarvestEngine, MonsterPart, PartAttackResult,
 from .outfit_engine import (
     OutfitMechanicsEngine, EncumbranceStatus, ArmorChafingResult, QuickDrawResult, EyewearHazardResult
 )
+from .stamina_engine import StaminaEngine
 
 __all__ = [
     "WorldState",
@@ -85,6 +86,7 @@ __all__ = [
     "ArmorChafingResult",
     "QuickDrawResult",
     "EyewearHazardResult",
+    "StaminaEngine",
 ]
 
 

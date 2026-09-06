@@ -202,6 +202,13 @@ class TwoPassEngine:
         # Economy shop restock
         EconomyEngine.restock_turn_ticks(state, delta_turns=1)
 
+        # Stamina natural recovery per turn (Player and NPCs in current location)
+        from src.world.stamina_engine import StaminaEngine
+        StaminaEngine.recover_turn(state.player)
+        for npc in state.npcs.values():
+            if getattr(npc, "location", "") == state.player.location:
+                StaminaEngine.recover_turn(npc)
+
         # Advance world simulation
         state.advance_world_simulation()
         state.advance_information_waves()
@@ -523,6 +530,14 @@ class TwoPassEngine:
                 if "player" not in state_delta:
                     state_delta["player"] = {}
                 state_delta["player"]["health"] = state.player.health
+            elif sk_res_type == "stamina":
+                from src.world.stamina_engine import StaminaEngine
+                c_res = StaminaEngine.consume(state.player, sk_cost)
+                if "player" not in state_delta:
+                    state_delta["player"] = {}
+                state_delta["player"]["stamina"] = state.player.stamina
+                if c_res.get("triggered_exhaustion"):
+                    fact_sheet.status_tick_logs.append("⚠️ [기력 고갈] 신체 한계에 도달하여 탈진(Exhaustion) 상태에 빠졌습니다! (방어력/행동 제약)")
 
             if sk_id in state.skills_db:
                 state.skills_db[sk_id].current_cooldown = sk_cd

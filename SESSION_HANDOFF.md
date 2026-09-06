@@ -254,52 +254,50 @@
 ## 📅 [2026-09-06] 현재 세션 개발 현황
 
 ### 1. 이번 세션 구현 완료 핵심 시스템
-1. **5계층 세분화 복식 시각화 구조체 (`ClothingLayer`) 및 TRPG 장비 역학 엔진 (`OutfitMechanicsEngine`) 전격 완공**:
-   - 1. 신체 특정 부위 장식: 팔/손목(팔찌/시계/뱅글/완갑), 발목/다리(발찌/가터벨트/각반), 얼굴/눈(안경/단안경/안대/서클릿), 목(목걸이/초커/부적).
-   - 2. 레이어드 및 기능성 의류: 이너웨어(속옷/보디수트/은신타이즈/갬비슨), 기본 상·하의(셔츠/바지), 조끼/코르셋/하네스/탄띠, 겉옷(코트/로브/흉갑).
-   - 3. 등 및 어깨 장식: 견갑/털 숄, 숏망토/롱망토/판초/머플러.
-   - 4. 풋웨어 및 보조: 가죽 부츠/군화, 니삭스/오버니삭스/가터스타킹/망사스타킹.
-   - 5. 수납 및 거치 장비: 모험가 백팩/크로스백/허벅지 파우치, 칼집/홀스터/화살통.
-   - 6. TRPG 현실 장비 역학: 백팩 적재 한중 확장, 퀵슬롯 활성화, 화살통 즉시 장전, 칼집 발도술 크리티컬, 갬비슨 갑옷 마찰 방호, 은신 타이즈 발소리 감쇠(-6dB), 단안경 감정 보너스(+25%), 안면 피격 렌즈 파손 위험(35%).
-2. **무기·의복·신체 정밀 조형 및 AI 이미지 일관성 앵커 시스템 & 속옷 비침 디테일 전격 완공**:
-   - **안면 이목구비 정밀 모델 (`FacialDetails`)**: 눈꺼풀(무쌍/속쌍/인아웃/아웃라인), 속눈썹, 눈썹, 콧대(오똑/버선/복코/매부리), 입술(앵두/도톰/얇은), 볼살/턱선(젖살/V라인/사각턱), 귀 모양(엘프귀), traits.
-   - **신체 치수 및 골격 모델 (`BodyMeasurements`)**: 등신비(6.5~8.5등신), 어깨 너비(직각/좁은), 흉부 볼륨(슬렌더/A~E컵/대흉근), 허리-골반 S라인(WHR 0.68), 다리 길이 비율(4:6 롱다리), 근육 데피니션, traits.
-   - **복식 텍스처 & 속옷 비침 (`ClothingLayer` 확장)**: 원단 재질(`fabric_materials`), 색상 팔레트(`color_palette`), 핏 실루엣(`fit_silhouette`: 슬림핏/스킨타이트), 속옷 실루엣 비침(`inner_silhouette_reveal`: none, faint_underwear_line, subtle_bra_contour, visible_panty_line, corset_ribs_ridge).
-   - **무기 조형 프로필 모델 (`ItemVisualProfile`)**: 날/타격부 형상, 가드/손잡이, 다마스쿠스 강철 무늬 마감, 마력 오라, 칼집 외형, 마모 상태, traits.
-   - **통합 프롬프트 빌더 (`OutfitMechanicsEngine.build_consistent_character_prompt`)**: 신체 치수 + 안면 이목구비 + 5계층 복식(속옷 비침 포함) + 장착 무기 조형을 단일 앵커 프롬프트로 융합.
-3. **🔥 [완료] 세계관 마법·이능 4대 범주(22대 계통) 전면 개편 및 서클별 N단 영창 & 언령(Logos) 진명/광역 시스템 완비**:
-   - **4대 범주 22대 술식 계통 정립**:
-     - 1. 일반 마법: 원소마법(`elemental_magic`, 마법사의 70% 점유).
-     - 2. 희귀/금기 마법: 혈마법(`blood_magic`), 흑마법(`dark_magic`), 대가마법(`sacrifice_toll`: 신체/수명/기억 제물), 사령술, 연금술, 예언마법, 소환마법, 룬마법, 계약마법, 꿈마법, 기억마법.
-     - 3. 초월/규칙 파괴 마법: 시공간마법(`spatiotemporal`: 공간 단절, 방어 100% 무시, 1턴 정지), 개념마법(`conceptual`: 영거리 0m 고정, 0dB 소리 봉인, 상처 말소), 성좌마법(`celestial`), 인과마법(`causality`), 언령마법(`logos_word`).
-     - 4. 비-마법 이능: 신성술(`divine_arts`: 사제/성기사 신앙·서약 기반, "신성술은 마법이 아니다"), 주술(`shamanic_curse`: 부두술 + 토템 + 혼령/자연령 빙의 폼체인지), 무협기공, 순수무예, 암습.
-   - **서클별 N단 영창 및 과부하 메커니즘**:
-     - `Player.mage_circle` (1~10클래스) 및 `max_incantation_words` (`1서클=2단어`, `2서클=3단어` ... `10서클=10단어`).
-     - 서클 초과 영창 시 `circle_overflow` 감지 및 마나 역류(Backfire) DC 페널티 부과.
-     - 과부하 수식어(`막시마`, `세쿠엔스`, `에룹티오`) 조합 시 위력 1.5배 증폭.
-   - **언령 마법 (Logos) 이원화**:
-     - 진명 모드 (`true_name_single`): 대상 진명 호명 시 단일 타겟 100% 억제, 아군 오폭 0.
-     - 무차별 광역 모드 (`indiscriminate_aoe`): 진명 없이 원초어 단독 포효 시 반경 내 적군·아군·구경꾼 전원 무차별 피격/기절.
-     - 위계 충돌 반작용 (`logos_backlash`): 시전자 vs 대상 의지 비교 실패 시 성대 파열(침묵 2턴) 및 2배 자해 피해.
-   - **데이터 및 템플릿 완비**:
-     - `data/templates/skill_templates.json` 총 69종 스킬 템플릿 완비.
-     - `SkillSystem.get_category_display_name()`으로 22개 전 계통 100% 한글 UI 명칭 보장.
+1. **리포지토리 위생 및 구조적 결함 정비 (Claude 지적 3대 결함 완벽 해결)**:
+   - `scratch/` 내 임시 스크립트 전면 제거 및 `.gitignore` 등록 격리.
+   - `data/legacy/` 내 164개 더미 JSON 깃 추적 해제 및 디스크 파일 정리, `tests/test_legacy.py` `monkeypatch` + `tmp_path` 격리 (영구 파일 누적 방지).
+   - `src/agents/profiler.py` ➔ `src/agents/combat_profiler.py` 리네이밍 (명칭 중복 해소).
+   - `AGENTS.md` 및 `SESSION_HANDOFF.md`에 [고정 규칙 9] 리포지토리 청결 및 모듈 네이밍 중복 방지 규칙 탑재.
+2. **Claude 백로그 4건 사전 분석 및 중복 방지 검토 (규칙 5 준수)**:
+   - 1) `bounty_engine.py`: 이미 완전 구현 및 단위 테스트 완료 상태 확인.
+   - 2) `legacy.py`: 캐릭터 아카이빙/스폰 기구현 완료. 가문 혈통(`lineage`)은 신설 대신 `legacy.py` 확장 대상.
+   - 3) `weather_engine.py`: 심부 체온(`body_temperature`), 저체온증(34도 이하 데미지), 열사병(39도 이상) 기구현 완료. `thermal_engine` 신설 불필요, `weather_engine` 확장 대상.
+   - 4) `puzzle_engine.py`: 유적/던전 기믹 해체 기구현 완료. `trap_engine` 신설 대신 `puzzle_engine`에 함정 기믹 통합 대상.
+3. **스태미너(기력) 시스템 및 물리 전투 자원 엔진 전격 완공 (`StaminaEngine`)**:
+   - **`src/world/stamina_engine.py`**:
+     - CON/AGI 비례 상한(`calculate_max_stamina`) 및 턴당 자연 회복량(`calculate_regen_rate`) 계산.
+     - 사전 검증(`can_afford`): 기력 부족 시 거부 + 탈진 상태 시 고비용(>20) 신체 행동 봉인.
+     - 기력 소모(`consume`): 기력 차감 및 0 도달 시 `status_engine.py`의 기존 `exhaustion`(탈진) 상태이상 자동 격발.
+     - 턴 자연 회복(`recover_turn`): 상한까지 자연 회복, 탈진 상태 시 50% 페널티 적용.
+     - 수치 제약: 밸런싱 세션 분리를 위해 확정 수치 대신 `TODO` 주석 및 플레이스홀더 유지.
+   - **`src/world/state.py`**:
+     - `Player` 및 `NPC`에 `stamina: int = 100`, `max_stamina: int = 100` 필드 탑재.
+     - `max_stamina_effective`, `stamina_regen_effective`, `stamina_status_ko` 프로퍼티 탑재.
+     - `WorldState.from_dict`에서 구버전 세이브(기력 필드 없는 구형 JSON) 로드 시 기본값 100 자동 주입 (100% 하위 호환 보장).
+   - **`src/world/validator.py`**:
+     - `ActionValidator`에서 `resource_type == "stamina"` 스킬 시전 시 `StaminaEngine.can_afford` 사전 검증 연동.
+   - **`src/world/two_pass_engine.py`**:
+     - 패스 1 스킬 실행 시 실시간 기력 차감 및 `triggered_exhaustion` 시 탈진 상태이상 및 안내 로그 출력.
+     - 턴 경과 시 플레이어 및 인근 NPC 턴당 자연 회복 연동.
+   - **`src/world/npc_skill_engine.py`**:
+     - `get_available_npc_skills`: 기력 부족한 스킬 필터링 제외.
+     - NPC AI: 저기력(stamina < 25) 시 스킬 아끼고 기본 공격으로 기력 보존하는 판단 로직 탑재.
+     - 전투 실행 시 NPC 기력 정상 차감.
+   - **`src/agents/game_master.py`**:
+     - GM 프롬프트 스킬 포맷팅에 한글 소모 자원(`[기력 소모: N]`) 명시적 노출.
 
 ### 2. 테스트 및 평가 검증 상태
-- **프로젝트 전체 368개 단위 테스트 100% 무결점 통과 (회귀 결함 0건)**:
-  - `tests/test_magic_schools.py`: 11개 신규 테스트 통과 (서클 단어수, 초과 페널티, 과부하 증폭, 진명 단일, 무차별 광역, 언령 반작용, 개념마법 3종, 시공간 절단, 22계통 UI 매핑).
-  - `pytest tests/`: **368 passed in 4.93s**.
+- **프로젝트 전체 375개 단위 테스트 100% 무결점 통과 (회귀 결함 0건)**:
+  - `tests/test_stamina_combat.py`: 7개 신규 테스트 통과 (기본 및 스탯 스케일링, 소모 및 추적, 부족 시전거부, 탈진 격발 및 행동 봉인, 턴 회복 및 탈진 페널티, NPC AI 연동, 구버전 세이브 역직렬화 호환성).
+  - `pytest tests/`: **375 passed in 4.87s**.
 - **DoD Gate Eval Runner 검증**:
   - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
-  - 마법·주술·언령 4대 범주 22대 계통 및 N단 영창/언령 이원화 시스템 100% 완공.
-- **다음 착수 작업 (Task 2)**:
-  - **🔥 [유저 요청 2번] 물리 스킬용 스태미너(기력) 시스템 실체화 및 물리 액션/전투 연동**:
-    - 1. `Player` 및 `NPC`에 `stamina: int = 100`, `max_stamina: int = 100` 공식 탑재 및 스탯(CON, AGI) 연동.
-    - 2. 물리/무술 스킬(`resource_type == "stamina"`) 시전 시 기력 차감 및 잔여 기력 부족 시 시전 불가 판정.
-    - 3. 기력 고갈(0) 시 탈진(`exhaustion`) 상태이상(방어력 급감, 행동 제약) 유발.
-    - 4. 턴 종료 시 스태미너 자연 회복(체력/민첩 스탯 비례) 및 탈진 시 회복 페널티.
-    - 5. NPC 스태미너 소모 및 AI 판단 연동.
-    - 6. 단위 테스트 `tests/test_stamina_combat.py` 작성 및 전체 회귀 검증.
+  - 스태미너(기력) 물리 전투 자원 시스템 100% 완공 및 검증 완료.
+- **다음 작업 후보**:
+  - 체간/강인도 물리 엔진 (`poise_engine.py`: 대형 둔기 체간 붕괴/그로기)
+  - 또는 원거리 탄약 소모/회수 물리 엔진 (`ammo_engine.py`)
+  - 또는 집/노트북 환경 복귀 후 실전 인터랙티브 플레이테스트 진행.

@@ -350,7 +350,10 @@ class GameMasterAgent:
             skill = state.skills_db.get(skill_id)
             if skill:
                 visual_note = skill.get_visual_description(state.player) if hasattr(skill, "get_visual_description") else ""
-                lines.append(f'  [{skill.skill_type.upper()}] {skill.name} (테마색: {getattr(skill, "color", "#94a3b8")}): {skill.description} | 연출 힌트: {visual_note}')
+                res_name = "마나" if skill.resource_type == "mana" else ("기력" if skill.resource_type == "stamina" else ("체력" if skill.resource_type == "hp" else skill.resource_type))
+                cost_str = f"[{res_name} 소모: {skill.resource_cost}]" if skill.resource_cost > 0 else "[무소모]"
+                cd_str = f"[쿨다운: {skill.cooldown_turns}턴]" if skill.cooldown_turns > 0 else ""
+                lines.append(f'  [{skill.skill_type.upper()}] {skill.name} {cost_str}{cd_str} (테마색: {getattr(skill, "color", "#94a3b8")}): {skill.description} | 연출 힌트: {visual_note}')
         return '\n'.join(lines)
 
     def _format_titles_context(self, state: WorldState) -> str:
@@ -396,7 +399,8 @@ class GameMasterAgent:
                 for s_id in npc.skills:
                     sk = state.skills_db.get(s_id)
                     if sk:
-                        res_str = f"{sk.resource_type} {sk.resource_cost}" if sk.resource_cost > 0 else "무소모"
+                        res_name = "마나" if sk.resource_type == "mana" else ("기력" if sk.resource_type == "stamina" else ("체력" if sk.resource_type == "hp" else sk.resource_type))
+                        res_str = f"{res_name} {sk.resource_cost}" if sk.resource_cost > 0 else "무소모"
                         cd_str = f"쿨 {sk.cooldown_turns}턴" if sk.cooldown_turns > 0 else "즉시"
                         curr_cd = f"(남은 쿨 {sk.current_cooldown}턴)" if getattr(sk, "current_cooldown", 0) > 0 else "(시전 가능)"
                         skill_descs.append(f"[{sk.name} ({res_str}, {cd_str}, {sk.base_value}수치 {curr_cd})]")

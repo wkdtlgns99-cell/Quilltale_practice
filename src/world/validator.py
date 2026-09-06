@@ -426,6 +426,16 @@ class ActionValidator:
                     None,
                     extra_flags
                 )
+            if matched_player_skill.resource_type == "stamina":
+                from src.world.stamina_engine import StaminaEngine
+                can_cast, reason = StaminaEngine.can_afford(state.player, matched_player_skill.resource_cost)
+                if not can_cast:
+                    return (
+                        False,
+                        f"[{matched_player_skill.name}]을(를) 펼칠 수 없습니다: {reason}",
+                        None,
+                        extra_flags
+                    )
 
             stat_key = matched_player_skill.scaling_stat
             stat_val = state.player.str_stat

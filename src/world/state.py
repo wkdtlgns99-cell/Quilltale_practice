@@ -945,6 +945,8 @@ class NPC:
     max_health: int = 50
     mana: int = 30
     max_mana: int = 30
+    stamina: int = 100
+    max_stamina: int = 100
     armor_class: int = 10
     gold: int = 15
     inventory: list[str] = field(default_factory=list)
@@ -1126,6 +1128,14 @@ class NPC:
     @property
     def max_mana_effective(self) -> int:
         return self.max_mana + max(0, self.intelligence - 10) * 5
+    @property
+    def max_stamina_effective(self) -> int:
+        from src.world.stamina_engine import StaminaEngine
+        return StaminaEngine.calculate_max_stamina(self)
+    @property
+    def stamina_regen_effective(self) -> int:
+        from src.world.stamina_engine import StaminaEngine
+        return StaminaEngine.calculate_regen_rate(self)
 
     @property
     def str_stat(self) -> int: return self.strength
@@ -1314,6 +1324,8 @@ class Player:
     max_health: int = 100
     mana: int = 50
     max_mana: int = 50
+    stamina: int = 100
+    max_stamina: int = 100
     level: int = 1
     exp: int = 0
     gold: int = 20
@@ -1429,6 +1441,27 @@ class Player:
         elif self.fatigue == 0:
             return "양호 (피로도 0: 완벽한 휴식, 주사위 판정 +1 메리트)"
         return "양호 (활력 넘침)"
+
+    @property
+    def max_stamina_effective(self) -> int:
+        from src.world.stamina_engine import StaminaEngine
+        return StaminaEngine.calculate_max_stamina(self)
+
+    @property
+    def stamina_regen_effective(self) -> int:
+        from src.world.stamina_engine import StaminaEngine
+        return StaminaEngine.calculate_regen_rate(self)
+
+    @property
+    def stamina_status_ko(self) -> str:
+        ratio = self.stamina / max(1, self.max_stamina_effective)
+        if ratio <= 0.0:
+            return "탈진 (신체 행동 불능 및 방어력 약화)"
+        elif ratio <= 0.25:
+            return "헐떡임 (기력 바닥, 무거운 기술 사용 불가)"
+        elif ratio <= 0.6:
+            return "숨참 (호흡 가쁨)"
+        return "완전 (기력 충만)"
 
     equipment_defense: int = 0
     equipment_stat_bonuses: dict = field(default_factory=dict)
@@ -3872,6 +3905,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             max_health=p_raw.get("max_health", 100) if isinstance(p_raw, dict) else 100,
             mana=p_raw.get("mana", 50) if isinstance(p_raw, dict) else 50,
             max_mana=p_raw.get("max_mana", 50) if isinstance(p_raw, dict) else 50,
+            stamina=p_raw.get("stamina", 100) if isinstance(p_raw, dict) else 100,
+            max_stamina=p_raw.get("max_stamina", 100) if isinstance(p_raw, dict) else 100,
             level=p_raw.get("level", 1) if isinstance(p_raw, dict) else 1,
             exp=p_raw.get("exp", 0) if isinstance(p_raw, dict) else 0,
             gold=p_raw.get("gold", 20) if isinstance(p_raw, dict) else 20,
@@ -3950,6 +3985,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 personality=personality, needs=needs, equipment=equipment,
                 combat_profile=combat_profile, visual=visual,
                 job="방랑자", level=1, health=50, max_health=50, mana=30, max_mana=30,
+                stamina=100, max_stamina=100,
                 armor_class=10, gold=15, strength=10, agility=10, intelligence=10,
                 constitution=10, wisdom=10, luck=10, crit_rate_bonus=0, crit_damage_bonus=0,
                 stats_revealed=False, is_legacy=False, legacy_id=None, age_delta=0,

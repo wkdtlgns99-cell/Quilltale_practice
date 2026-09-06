@@ -35,6 +35,11 @@ class NPCSkillEngine:
                 continue
             if skill.resource_type == "mana" and npc.mana < skill.resource_cost:
                 continue
+            if skill.resource_type == "stamina":
+                from src.world.stamina_engine import StaminaEngine
+                can_afford, _ = StaminaEngine.can_afford(npc, skill.resource_cost)
+                if not can_afford:
+                    continue
             if offensive_only and skill.role_type not in ["single_attack", "aoe_attack", "debuff_curse"]:
                 continue
             ready_skills.append(skill)
@@ -85,10 +90,16 @@ class NPCSkillEngine:
             else:
                 should_conserve_mana = (random.random() < 0.5)
 
+        # Low stamina check: if NPC stamina is low (< 25), conserve stamina for basic attacks unless high-aggro
+        npc_stamina = getattr(npc, "stamina", 100)
+        should_conserve_stamina = (npc_stamina < 25 and npc_aggro < 75)
+
         if ready_skills and not should_conserve_mana:
-            tier_weights = {"legendary": 5, "epic": 4, "rare": 3, "uncommon": 2, "common": 1}
-            ready_skills.sort(key=lambda s: tier_weights.get(s.tier, 1), reverse=True)
-            chosen_skill = ready_skills[0]
+            candidate_skills = [s for s in ready_skills if not (should_conserve_stamina and s.resource_type == "stamina")]
+            if candidate_skills:
+                tier_weights = {"legendary": 5, "epic": 4, "rare": 3, "uncommon": 2, "common": 1}
+                candidate_skills.sort(key=lambda s: tier_weights.get(s.tier, 1), reverse=True)
+                chosen_skill = candidate_skills[0]
 
         # Determine stat for roll
         stat_key = chosen_skill.scaling_stat if chosen_skill else "str"
@@ -115,6 +126,9 @@ class NPCSkillEngine:
         if chosen_skill:
             if chosen_skill.resource_type == "mana":
                 npc.mana = max(0, npc.mana - skill_cost)
+            elif chosen_skill.resource_type == "stamina":
+                from src.world.stamina_engine import StaminaEngine
+                StaminaEngine.consume(npc, skill_cost)
             chosen_skill.current_cooldown = chosen_skill.cooldown_turns
 
         if not is_hit and d20 != 1:
