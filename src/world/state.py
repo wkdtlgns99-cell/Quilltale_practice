@@ -1110,6 +1110,8 @@ class NPC:
     harvested_parts: list[str] = field(default_factory=list)      # 이미 해체/갈무리 완료된 부위 ID 목록
     mana_burn_state: dict = field(default_factory=dict)           # 마나 회로 손상도 및 에테르 변이 상태
     circadian: dict = field(default_factory=dict)                 # 수면 결핍 및 생체 각성 시계 상태
+    toxicity_state: dict = field(default_factory=dict)            # 간 독성 및 포션 내성 상태
+    alcohol_state: dict = field(default_factory=dict)             # 혈중 알코올 및 취기/숙취 상태
 
     def to_image_prompt_keywords(self) -> str:
         """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
@@ -1502,6 +1504,8 @@ class Player:
     mage_circle: int = 1                                   # 마법사 서클/클래스 (1~10클래스, 영창 고대어 단어 수 상한선 결정)
     mana_burn_state: dict = field(default_factory=dict)    # 마나 회로 손상도 및 에테르 변이 상태
     circadian: dict = field(default_factory=dict)          # 수면 결핍 및 생체 각성 시계 상태
+    toxicity_state: dict = field(default_factory=dict)     # 간 독성 및 포션 내성 상태
+    alcohol_state: dict = field(default_factory=dict)      # 혈중 알코올 및 취기/숙취 상태
     visual: NPCVisualDetails = field(default_factory=NPCVisualDetails)
     
     @property

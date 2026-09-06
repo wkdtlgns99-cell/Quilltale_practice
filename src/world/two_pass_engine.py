@@ -212,6 +212,12 @@ class TwoPassEngine:
             fact_sheet.weather_logs.extend(weather_magic_logs)
             fact_sheet.status_tick_logs.extend(weather_magic_logs)
 
+        # Toxicology & Liver Metabolism time progression (User Q1: Real in-game time decay)
+        from src.world.toxicology_engine import ToxicologyToleranceEngine
+        tox_time_logs = ToxicologyToleranceEngine.process_time_metabolism(state.player, elapsed_minutes=30)
+        if tox_time_logs:
+            fact_sheet.status_tick_logs.extend(tox_time_logs)
+
         # Celestial & Festival cycle turns
         celestial_logs = CelestialEngine.advance_celestial_turn(state)
         fact_sheet.celestial_logs = celestial_logs

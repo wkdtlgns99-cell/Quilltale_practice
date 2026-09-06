@@ -64,6 +64,15 @@ from .botany_engine import (
 from .weather_magic_engine import (
     WeatherMagicSimulationEngine, WeatherMagicSpec, ActiveWeatherAnomaly, WEATHER_MAGIC_REGISTRY
 )
+from .vein_restoration_engine import (
+    ManaVeinRestorationEngine, VeinSurgerySpec, VEIN_SURGERY_REGISTRY
+)
+from .toxicology_engine import (
+    ToxicologyToleranceEngine, PotionToxicityState
+)
+from .alcohol_engine import (
+    AlcoholIntoxicationEngine, AlcoholDrinkSpec, AlcoholMetabolismState, ALCOHOL_DRINK_REGISTRY
+)
 
 __all__ = [
     "WorldState",
@@ -180,6 +189,15 @@ __all__ = [
     "WeatherMagicSpec",
     "ActiveWeatherAnomaly",
     "WEATHER_MAGIC_REGISTRY",
+    "ManaVeinRestorationEngine",
+    "VeinSurgerySpec",
+    "VEIN_SURGERY_REGISTRY",
+    "ToxicologyToleranceEngine",
+    "PotionToxicityState",
+    "AlcoholIntoxicationEngine",
+    "AlcoholDrinkSpec",
+    "AlcoholMetabolismState",
+    "ALCOHOL_DRINK_REGISTRY",
 ]
 
 

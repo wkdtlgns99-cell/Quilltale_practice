@@ -333,6 +333,15 @@ class CampsiteRestEngine:
         sleep_logs = SleepDeprivationEngine.resolve_sleep(state.player, bedding_id=bedding_id, hours=hours, state=state)
         logs.extend(sleep_logs)
 
+        # Full rest toxicology reset & morning hangover resolution
+        from src.world.toxicology_engine import ToxicologyToleranceEngine
+        tox_logs = ToxicologyToleranceEngine.reset_on_full_rest(state.player)
+        logs.extend(tox_logs)
+
+        from src.world.alcohol_engine import AlcoholIntoxicationEngine
+        hangover_logs = AlcoholIntoxicationEngine.process_morning_hangover(state.player, hours_slept=hours)
+        logs.extend(hangover_logs)
+
         # Deduct campfire duration
         if camp.campfire_active:
             camp.campfire_minutes_remaining = max(0, camp.campfire_minutes_remaining - hours * 60)
