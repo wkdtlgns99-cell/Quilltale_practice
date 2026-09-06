@@ -11,8 +11,9 @@
 </DoD_Gate>
 
 <Prompt_Rules>
-1. NO regex/patch/temp scripts in `scratch/` for `src/agents/prompts.py`.
+1. NO regex/patch/temp scripts in `scratch/` for `src/agents/prompts.py` or any module.
 2. USE file edit tools directly. Do not omit code (no `...` or `/* same */`). Show full diff.
+3. REPO hygiene: `scratch/` is local-only and must NEVER be tracked in git. Unit tests must use `tmp_path` and never leak dummy JSON into production directories (`data/legacy/`, `data/saves/`).
 </Prompt_Rules>
 
 <No_Dup_Compatibility>
@@ -20,6 +21,7 @@
 2. JSON check: Verify `data/templates/*.json` and `data/legacy/*.json` key overlaps before adding.
 3. SAVE_LOAD: Ensure `WorldState` modifications include defaults/optional fields to prevent deserialization break with old JSON saves.
 4. ENCODING: Always read/write Korean text files as UTF-8 explicit. No implicit encoding.
+5. UNIQUE naming: Do not reuse identical module/file names across different packages (e.g. `profiler.py`). Use descriptive, disambiguated filenames (`combat_profiler.py` vs `engine/profiler.py`).
 </No_Dup_Compatibility>
 
 <Two_Pass_Resource>

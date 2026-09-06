@@ -1,4 +1,9 @@
-﻿import json
+"""
+Combat Tactics Profiler for Quilltale TRPG.
+Analyzes combat logs using LLM to extract participant strengths, weaknesses,
+and tactical intelligence (distinct from system performance EngineProfiler).
+"""
+import json
 import logging
 from src.llm import get_llm
 from src.core.config import LLM_NAME

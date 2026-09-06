@@ -13,7 +13,8 @@ def load_test_state() -> WorldState:
         return WorldState.from_json(f.read())
 
 
-def test_legacy_archive_and_lore_conversion():
+def test_legacy_archive_and_lore_conversion(monkeypatch, tmp_path):
+    monkeypatch.setattr("src.world.legacy.LEGACY_DIR", tmp_path)
     state = load_test_state()
     state.player.name = "엘릭"
     state.player.inventory.append("dagger")
@@ -37,7 +38,8 @@ def test_legacy_archive_and_lore_conversion():
     assert any("선술집 2층 궤짝" in entry for entry in lore_entries)
 
 
-def test_legacy_npc_spawning():
+def test_legacy_npc_spawning(monkeypatch, tmp_path):
+    monkeypatch.setattr("src.world.legacy.LEGACY_DIR", tmp_path)
     state = load_test_state()
     state.player.name = "발도르"
     state.player.location = "market"
