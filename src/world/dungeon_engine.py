@@ -143,6 +143,10 @@ class DungeonEngine:
                     hazard_level=base_danger
                 )
 
+                strata_map = {1: "limestone", 2: "sandstone", 3: "basalt", 4: "granite", 5: "obsidian"}
+                assigned_strata = strata_map.get(floor_num, "granite")
+                assigned_floor = "weathered_rock" if idx % 2 == 1 else "solid_rock"
+
                 room_loc = Location(
                     id=room_id,
                     name=r_name,
@@ -155,7 +159,9 @@ class DungeonEngine:
                     danger_level=base_danger,
                     monster_density=monster_dens,
                     npc_density=npc_dens,
-                    traits=["지하 던전", f"B{floor_num}F", r_type, "냉기", "밀실"]
+                    rock_strata=assigned_strata,
+                    floor_type=assigned_floor,
+                    traits=["지하 던전", f"B{floor_num}F", r_type, f"암반: {assigned_strata}", "냉기", "밀실"]
                 )
 
                 # Connect exits linearly within the floor

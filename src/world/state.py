@@ -1262,6 +1262,15 @@ class Location:
     danger_level: int = 20                         # 위험도 등급 (0~100)
     traps: list[str] = field(default_factory=list) # 해당 구역에 설치/잠복된 함정 인스턴스 ID 목록
     traits: list[str] = field(default_factory=list) # 장소 요약 특성 태그 (예: ["어둠", "피비린내", "엄폐물 풍부"])
+    rock_strata: str = "granite"                    # 암반 지질 ("limestone", "granite", "sandstone", "basalt", "obsidian")
+    structural_integrity: float = 100.0             # 암반 구조적 내구도 (0.0~120.0)
+    collapse_stage: str = "stable"                  # 낙반 붕괴 단계 ("stable", "cracking", "partial_collapse", "full_collapse")
+    floor_type: str = "solid_rock"                  # 지면 유형 ("solid_rock", "weathered_rock", "rotten_wood", "thin_crust", "ice_floor")
+    floor_durability: float = 100.0                 # 지면 내구도
+    floor_collapse_stage: str = "stable"            # 지면 균열/붕괴 상태 ("stable", "crack", "partial_break", "full_break")
+    ventilation_open: bool = False                  # 환기구 개방 여부
+    active_toxic_gas: Optional[str] = None          # 활성 유독 가스 ("carbon_dioxide", "sulfur_gas", "corpse_gas", "spore_cloud")
+    water_quality: str = "clean"                    # 지하수 수질 ("clean", "stagnant", "sewage", "corpse_contaminated", "mineral_toxic")
 
 
 
@@ -3962,7 +3971,10 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 id=k, name=k, description="", exits={}, visited=False,
                 items=[], npcs=[], environmental_hazards=[],
                 location_category="surface", dungeon_id=None, floor_depth=0,
-                monster_density=20, npc_density=50, danger_level=20, traps=[]
+                monster_density=20, npc_density=50, danger_level=20, traps=[],
+                rock_strata="granite", structural_integrity=100.0, collapse_stage="stable",
+                floor_type="solid_rock", floor_durability=100.0, floor_collapse_stage="stable",
+                ventilation_open=False, active_toxic_gas=None, water_quality="clean"
             )
 
         # NPCs

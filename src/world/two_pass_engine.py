@@ -214,6 +214,11 @@ class TwoPassEngine:
         sanity_logs = PartySanityEngine.process_turn_sanity(state)
         fact_sheet.status_tick_logs.extend(sanity_logs)
 
+        # Subterranean Cave Collapse & Environmental dynamics (Oxygen, toxic gas, floor hazard)
+        from src.world.cave_in_engine import CaveCollapseEngine
+        env_hazard_logs = CaveCollapseEngine.process_turn_environment(state)
+        fact_sheet.status_tick_logs.extend(env_hazard_logs)
+
         # Advance world simulation
         state.advance_world_simulation()
         state.advance_information_waves()
@@ -547,6 +552,24 @@ class TwoPassEngine:
             if sk_id in state.skills_db:
                 state.skills_db[sk_id].current_cooldown = sk_cd
 
+            # Subterranean impact & oxygen consumption (CaveCollapseEngine)
+            curr_loc = state.current_location()
+            if curr_loc and (getattr(curr_loc, "location_category", "") == "dungeon" or getattr(curr_loc, "floor_depth", 0) > 0 or "지하" in getattr(curr_loc, "name", "")):
+                from src.world.cave_in_engine import CaveCollapseEngine
+                sk_name = skill_info.get("name", "")
+                sk_elem = skill_info.get("element", "")
+                is_fire = any(f in (sk_name + sk_elem) for f in ["화염", "불꽃", "폭발", "이그니스", "fire"])
+                is_blunt = any(b in (sk_name + sk_elem) for b in ["강타", "둔기", "파쇄", "대지", "earth"])
+
+                if is_fire:
+                    oxy_logs = CaveCollapseEngine.consume_oxygen(state, amount=5.0, reason=sk_name)
+                    fact_sheet.status_tick_logs.extend(oxy_logs)
+                    _, _, vib_logs = CaveCollapseEngine.apply_vibration(curr_loc, "fireball_explosion", magic_circle=skill_info.get("magic_circle", 2), state=state)
+                    fact_sheet.status_tick_logs.extend(vib_logs)
+                elif is_blunt:
+                    _, _, vib_logs = CaveCollapseEngine.apply_vibration(curr_loc, "heavy_blunt_strike", state=state)
+                    fact_sheet.status_tick_logs.extend(vib_logs)
+
             # Conceptual Magic: Rule modifications
             if fact_sheet.extra_flags.get("conceptual_distance_zero"):
                 if hasattr(state, "combat_distances"):
@@ -656,6 +679,14 @@ class TwoPassEngine:
             else:
                 ok, nav_msg = DungeonEngine.ascend_floor(state)
             fact_sheet.status_tick_logs.append(nav_msg)
+
+        # 7.10 Ventilation Shaft Interaction
+        if "환기구" in action_lower_act and any(v in action_lower_act for v in ["열", "개방", "가동", "확보", "open"]):
+            curr_loc = state.current_location()
+            if curr_loc:
+                from src.world.cave_in_engine import CaveCollapseEngine
+                _, vent_msg = CaveCollapseEngine.open_ventilation(curr_loc)
+                fact_sheet.status_tick_logs.append(vent_msg)
 
         # 8. Party & Companion Autonomous Turns
         is_combat = (dice_res is not None and any(k in getattr(dice_res, "action_type", "") for k in ["combat", "magic", "공격", "전투", "스킬"]))

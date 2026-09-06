@@ -32,6 +32,10 @@ from .stamina_engine import StaminaEngine
 from .trap_engine import TrapEngine, TrapSpec, TrapInstance
 from .dungeon_engine import DungeonEngine, DungeonInstance, DungeonFloor, DungeonRoom
 from .party_sanity_engine import PartySanityEngine, MentalBreakdownSpec, MENTAL_BREAKDOWN_REGISTRY
+from .cave_in_engine import (
+    CaveCollapseEngine, CAVE_COLLAPSE_SYSTEM, DUNGEON_ENVIRONMENT_SYSTEMS,
+    RockStrataSpec, VibrationSourceSpec, CollapseStageSpec
+)
 
 __all__ = [
     "WorldState",
@@ -100,6 +104,12 @@ __all__ = [
     "PartySanityEngine",
     "MentalBreakdownSpec",
     "MENTAL_BREAKDOWN_REGISTRY",
+    "CaveCollapseEngine",
+    "CAVE_COLLAPSE_SYSTEM",
+    "DUNGEON_ENVIRONMENT_SYSTEMS",
+    "RockStrataSpec",
+    "VibrationSourceSpec",
+    "CollapseStageSpec",
 ]
 
 
