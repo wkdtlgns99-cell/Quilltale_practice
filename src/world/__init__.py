@@ -45,6 +45,16 @@ from .disease_engine import (
     EpidemicEngine, EPIDEMIC_SYSTEM, DISEASE_REGISTRY,
     DiseaseSpec, DiseaseStageSpec, ActiveInfection, InfectionAttemptResult
 )
+from .mana_burn_engine import (
+    ManaBurnEngine, EtherMutationSpec, ManaCircuitState, ETHER_MUTATIONS_REGISTRY
+)
+from .ration_engine import (
+    RationSpoilageEngine, FoodItemStatus, PreservationMethodSpec, PRESERVATION_METHODS
+)
+from .sleep_engine import (
+    SleepDeprivationEngine, CircadianClock, StimulantSpec, BeddingQualitySpec,
+    STIMULANTS_REGISTRY, BEDDING_REGISTRY
+)
 
 __all__ = [
     "WorldState",
@@ -135,6 +145,20 @@ __all__ = [
     "BackpackSpec",
     "BackpackStorageStatus",
     "BACKPACK_SPECS",
+    "ManaBurnEngine",
+    "EtherMutationSpec",
+    "ManaCircuitState",
+    "ETHER_MUTATIONS_REGISTRY",
+    "RationSpoilageEngine",
+    "FoodItemStatus",
+    "PreservationMethodSpec",
+    "PRESERVATION_METHODS",
+    "SleepDeprivationEngine",
+    "CircadianClock",
+    "StimulantSpec",
+    "BeddingQualitySpec",
+    "STIMULANTS_REGISTRY",
+    "BEDDING_REGISTRY",
 ]
 
 

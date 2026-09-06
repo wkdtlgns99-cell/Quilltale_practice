@@ -195,6 +195,16 @@ class TwoPassEngine:
         disease_ticks = EpidemicEngine.process_turn_infections(state)
         fact_sheet.status_tick_logs.extend(disease_ticks)
 
+        # Ration & Food Spoilage ticks
+        from src.world.ration_engine import RationSpoilageEngine
+        spoilage_ticks = RationSpoilageEngine.process_turn_spoilage(state)
+        fact_sheet.status_tick_logs.extend(spoilage_ticks)
+
+        # Sleep Deprivation & Circadian Clock ticks
+        from src.world.sleep_engine import SleepDeprivationEngine
+        circadian_ticks = SleepDeprivationEngine.process_turn_circadian(state)
+        fact_sheet.status_tick_logs.extend(circadian_ticks)
+
         # Celestial & Festival cycle turns
         celestial_logs = CelestialEngine.advance_celestial_turn(state)
         fact_sheet.celestial_logs = celestial_logs

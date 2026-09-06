@@ -1071,6 +1071,8 @@ class NPC:
     traits: list[str] = field(default_factory=list)               # NPC 요약 특성 태그 목록 (예: ["외눈 흉터", "주정뱅이", "실종된 기사"])
     anatomy_parts: dict = field(default_factory=dict)             # 부위 파괴용 신체 해부학적 부위 딕셔너리 {part_id: MonsterPart 또는 dict}
     harvested_parts: list[str] = field(default_factory=list)      # 이미 해체/갈무리 완료된 부위 ID 목록
+    mana_burn_state: dict = field(default_factory=dict)           # 마나 회로 손상도 및 에테르 변이 상태
+    circadian: dict = field(default_factory=dict)                 # 수면 결핍 및 생체 각성 시계 상태
 
     def to_image_prompt_keywords(self) -> str:
         """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
@@ -1461,6 +1463,8 @@ class Player:
     equipment_active_set_bonuses: list = field(default_factory=list)
     equipment_active_traits: list[str] = field(default_factory=list)
     mage_circle: int = 1                                   # 마법사 서클/클래스 (1~10클래스, 영창 고대어 단어 수 상한선 결정)
+    mana_burn_state: dict = field(default_factory=dict)    # 마나 회로 손상도 및 에테르 변이 상태
+    circadian: dict = field(default_factory=dict)          # 수면 결핍 및 생체 각성 시계 상태
     visual: NPCVisualDetails = field(default_factory=NPCVisualDetails)
     
     @property
