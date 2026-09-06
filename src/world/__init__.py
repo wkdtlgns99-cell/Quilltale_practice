@@ -55,6 +55,15 @@ from .sleep_engine import (
     SleepDeprivationEngine, CircadianClock, StimulantSpec, BeddingQualitySpec,
     STIMULANTS_REGISTRY, BEDDING_REGISTRY
 )
+from .campsite_engine import (
+    CampsiteRestEngine, CampsiteState, SentryShift, NightAmbushSpec, NIGHT_AMBUSH_REGISTRY
+)
+from .botany_engine import (
+    HerbalismBotanyEngine, PlantSpec, PLANT_REGISTRY
+)
+from .weather_magic_engine import (
+    WeatherMagicSimulationEngine, WeatherMagicSpec, ActiveWeatherAnomaly, WEATHER_MAGIC_REGISTRY
+)
 
 __all__ = [
     "WorldState",
@@ -159,6 +168,18 @@ __all__ = [
     "BeddingQualitySpec",
     "STIMULANTS_REGISTRY",
     "BEDDING_REGISTRY",
+    "CampsiteRestEngine",
+    "CampsiteState",
+    "SentryShift",
+    "NightAmbushSpec",
+    "NIGHT_AMBUSH_REGISTRY",
+    "HerbalismBotanyEngine",
+    "PlantSpec",
+    "PLANT_REGISTRY",
+    "WeatherMagicSimulationEngine",
+    "WeatherMagicSpec",
+    "ActiveWeatherAnomaly",
+    "WEATHER_MAGIC_REGISTRY",
 ]
 
 

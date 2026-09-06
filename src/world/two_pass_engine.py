@@ -205,6 +205,13 @@ class TwoPassEngine:
         circadian_ticks = SleepDeprivationEngine.process_turn_circadian(state)
         fact_sheet.status_tick_logs.extend(circadian_ticks)
 
+        # Active Weather Magic Anomalies ticks (Blizzards, Hail, Acid Rain, etc.)
+        from src.world.weather_magic_engine import WeatherMagicSimulationEngine
+        weather_magic_logs = WeatherMagicSimulationEngine.tick_anomalies(state, delta_minutes=30)
+        if weather_magic_logs:
+            fact_sheet.weather_logs.extend(weather_magic_logs)
+            fact_sheet.status_tick_logs.extend(weather_magic_logs)
+
         # Celestial & Festival cycle turns
         celestial_logs = CelestialEngine.advance_celestial_turn(state)
         fact_sheet.celestial_logs = celestial_logs
