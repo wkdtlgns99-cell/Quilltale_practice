@@ -237,6 +237,27 @@ class TwoPassEngine:
             if getattr(npc, "location", "") == state.player.location:
                 StaminaEngine.recover_turn(npc)
 
+        # Posture/Poise natural Sekiro-style recovery per turn
+        from src.world.poise_engine import PosturePoiseEngine
+        poise_rec_logs = PosturePoiseEngine.recover_posture_turn(state.player)
+        if poise_rec_logs:
+            fact_sheet.status_tick_logs.extend(poise_rec_logs)
+        for npc in state.npcs.values():
+            if getattr(npc, "location", "") == state.player.location:
+                PosturePoiseEngine.recover_posture_turn(npc)
+
+        # Battlefield Corpse Ecology & Decay progression (30 mins per turn)
+        from src.world.corpse_ecology_engine import CorpseEcologyEngine
+        corpse_decay_logs = CorpseEcologyEngine.process_turn_corpse_decay(state, delta_minutes=30)
+        if corpse_decay_logs:
+            fact_sheet.status_tick_logs.extend(corpse_decay_logs)
+
+        # Pupil Adaptation time tick (30m turn fully resolves any sensory adjustment)
+        from src.world.pupil_adaptation_engine import PupilAdaptationEngine
+        pupil_logs = PupilAdaptationEngine.tick_adaptation_seconds(state.player, delta_seconds=1800.0)
+        if pupil_logs:
+            fact_sheet.status_tick_logs.extend(pupil_logs)
+
         # Party & Companion Mental Sanity ticks (Darkness stress, safe recovery, breakdown counters)
         from src.world.party_sanity_engine import PartySanityEngine
         sanity_logs = PartySanityEngine.process_turn_sanity(state)
@@ -529,6 +550,9 @@ class TwoPassEngine:
                     # Kill events & Unique skill drops
                     if killed:
                         QuestEngine.progress_event(state, "kill", target_npc.id)
+                        from src.world.corpse_ecology_engine import CorpseEcologyEngine
+                        CorpseEcologyEngine.register_corpse_from_killed_actor(state, target_npc, killer=state.player)
+                        fact_sheet.quest_progress_logs.append(f"전장 시체 발생: [{target_npc.name}]의 유해가 쓰러졌습니다.")
                         from src.world.rumor_diffusion_engine import RumorDiffusionEngine
                         sig = 3 if getattr(target_npc, "tier", "commoner") in ["elite", "boss", "noble", "legendary"] else 2
                         rep_delta = 15 if target_npc.disposition == "hostile" else -20

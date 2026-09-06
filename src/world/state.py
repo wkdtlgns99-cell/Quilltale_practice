@@ -1112,6 +1112,8 @@ class NPC:
     circadian: dict = field(default_factory=dict)                 # 수면 결핍 및 생체 각성 시계 상태
     toxicity_state: dict = field(default_factory=dict)            # 간 독성 및 포션 내성 상태
     alcohol_state: dict = field(default_factory=dict)             # 혈중 알코올 및 취기/숙취 상태
+    posture_state: dict = field(default_factory=dict)             # 체간/강인도 및 가드 브레이크 상태
+    pupil_state: dict = field(default_factory=dict)               # 동공 조도 암적응/명적응 상태
 
     def to_image_prompt_keywords(self) -> str:
         """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
@@ -1506,6 +1508,8 @@ class Player:
     circadian: dict = field(default_factory=dict)          # 수면 결핍 및 생체 각성 시계 상태
     toxicity_state: dict = field(default_factory=dict)     # 간 독성 및 포션 내성 상태
     alcohol_state: dict = field(default_factory=dict)      # 혈중 알코올 및 취기/숙취 상태
+    posture_state: dict = field(default_factory=dict)      # 체간/강인도 및 가드 브레이크 상태
+    pupil_state: dict = field(default_factory=dict)        # 동공 조도 암적응/명적응 상태
     visual: NPCVisualDetails = field(default_factory=NPCVisualDetails)
     
     @property
@@ -1878,6 +1882,7 @@ class WorldState:
     active_rumors: list = field(default_factory=list) # 활성화된 지리 도로망 소문 확산 웨이브 목록
     active_campsite: Any = None                         # 활성화된 야영지 상태 (CampsiteState)
     active_weather_anomalies: dict = field(default_factory=dict) # 활성화된 기상 이변 딕셔너리 {anomaly_id: ActiveWeatherAnomaly}
+    active_corpses: dict = field(default_factory=dict)           # 활성화된 전장 시체 DB {corpse_id: CorpseInstance or dict}
 
 
 
@@ -4273,6 +4278,9 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 state.party[c_id] = Companion.from_dict(c_data)
             elif isinstance(c_data, Companion):
                 state.party[c_id] = c_data
+
+        # Battlefield Active Corpses DB
+        state.active_corpses = raw.get("active_corpses", {})
 
         return state
 

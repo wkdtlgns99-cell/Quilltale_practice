@@ -73,6 +73,15 @@ from .toxicology_engine import (
 from .alcohol_engine import (
     AlcoholIntoxicationEngine, AlcoholDrinkSpec, AlcoholMetabolismState, ALCOHOL_DRINK_REGISTRY
 )
+from .corpse_ecology_engine import (
+    CorpseEcologyEngine, CorpseInstance
+)
+from .pupil_adaptation_engine import (
+    PupilAdaptationEngine, PupilAdaptationState
+)
+from .poise_engine import (
+    PosturePoiseEngine, PosturePoiseState
+)
 
 __all__ = [
     "WorldState",
@@ -198,6 +207,12 @@ __all__ = [
     "AlcoholDrinkSpec",
     "AlcoholMetabolismState",
     "ALCOHOL_DRINK_REGISTRY",
+    "CorpseEcologyEngine",
+    "CorpseInstance",
+    "PupilAdaptationEngine",
+    "PupilAdaptationState",
+    "PosturePoiseEngine",
+    "PosturePoiseState",
 ]
 
 
