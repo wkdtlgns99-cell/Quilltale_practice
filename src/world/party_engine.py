@@ -216,6 +216,12 @@ class Companion:
     downed_state: CompanionDownedState = field(default_factory=CompanionDownedState)
     dialogue_lines: Dict[str, str] = field(default_factory=dict)
     is_active_party: bool = True
+    stress: int = 0                        # 0~100 스트레스 게이지
+    max_stress: int = 100
+    mental_status: str = "normal"          # "normal" 또는 멘탈 붕괴 ID
+    breakdown_turns_remaining: int = 0     # 붕괴 상태이상 잔여 턴수
+    personality_type: str = "stoic"        # brave, cowardly, loyal, selfish, suspicious, idealistic, survivalist, stoic
+    traits: List[str] = field(default_factory=list) # Rule 6
 
     def to_dict(self) -> dict:
         return {
@@ -247,6 +253,12 @@ class Companion:
             "downed_state": self.downed_state.to_dict(),
             "dialogue_lines": self.dialogue_lines,
             "is_active_party": self.is_active_party,
+            "stress": self.stress,
+            "max_stress": self.max_stress,
+            "mental_status": self.mental_status,
+            "breakdown_turns_remaining": self.breakdown_turns_remaining,
+            "personality_type": self.personality_type,
+            "traits": self.traits,
         }
 
     @classmethod
@@ -287,6 +299,12 @@ class Companion:
             downed_state=downed_obj,
             dialogue_lines=dict(data.get("dialogue_lines", {})),
             is_active_party=bool(data.get("is_active_party", True)),
+            stress=int(data.get("stress", 0)),
+            max_stress=int(data.get("max_stress", 100)),
+            mental_status=str(data.get("mental_status", "normal")),
+            breakdown_turns_remaining=int(data.get("breakdown_turns_remaining", 0)),
+            personality_type=str(data.get("personality_type", "stoic")),
+            traits=list(data.get("traits", [])),
         )
 
 
@@ -448,6 +466,13 @@ class PartyEngine:
             for skill in comp.combat_skills:
                 if skill.current_cooldown > 0:
                     skill.current_cooldown -= 1
+
+            # 1.5 Check Mental Breakdown Afflictions (Panic, Freeze, Flee, Refusal)
+            from src.world.party_sanity_engine import PartySanityEngine
+            allow_act, refuse_reason = PartySanityEngine.filter_companion_combat_intent(comp, "attack")
+            if not allow_act:
+                combat_logs.append(f"⚠️ {refuse_reason}")
+                continue
 
             # 2. Check Ultimate Ability Ready
             ult = comp.ultimate_ability

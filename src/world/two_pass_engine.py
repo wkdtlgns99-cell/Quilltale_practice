@@ -209,6 +209,11 @@ class TwoPassEngine:
             if getattr(npc, "location", "") == state.player.location:
                 StaminaEngine.recover_turn(npc)
 
+        # Party & Companion Mental Sanity ticks (Darkness stress, safe recovery, breakdown counters)
+        from src.world.party_sanity_engine import PartySanityEngine
+        sanity_logs = PartySanityEngine.process_turn_sanity(state)
+        fact_sheet.status_tick_logs.extend(sanity_logs)
+
         # Advance world simulation
         state.advance_world_simulation()
         state.advance_information_waves()

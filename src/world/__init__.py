@@ -31,6 +31,7 @@ from .outfit_engine import (
 from .stamina_engine import StaminaEngine
 from .trap_engine import TrapEngine, TrapSpec, TrapInstance
 from .dungeon_engine import DungeonEngine, DungeonInstance, DungeonFloor, DungeonRoom
+from .party_sanity_engine import PartySanityEngine, MentalBreakdownSpec, MENTAL_BREAKDOWN_REGISTRY
 
 __all__ = [
     "WorldState",
@@ -96,6 +97,9 @@ __all__ = [
     "DungeonInstance",
     "DungeonFloor",
     "DungeonRoom",
+    "PartySanityEngine",
+    "MentalBreakdownSpec",
+    "MENTAL_BREAKDOWN_REGISTRY",
 ]
 
 

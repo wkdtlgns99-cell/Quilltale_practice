@@ -146,9 +146,14 @@
     - 2. 지각(Perception) 함정 탐색, 민첩/지능 및 도적 도구(`thieves_tools`) 소모 해체, 실패 시 즉시 격발.
     - 3. 회피 세이빙 스로우, 피해/상태이상(출혈, 독, 기절 등), 소음(dB) 발생 어그로.
     - 4. 다층 지하 던전 인스턴스(B1F~B5F) 심도 스케일링(위험도 25~90, 몬스터 밀집도 40~95%, NPC 밀집도 0 수렴, 산소 농도 저하, 칠흑 어둠).
-- [ ] **4. 파티원 멘탈 붕괴 & 트라우마 엔진 (`PartySanityEngine`)**:
-  - **구현 대상**: [엔진: 확장] `src/world/party_engine.py`
-  - **기능**: 동료 사망, 칠흑 어둠 장기 체류, 식인/언데드 조우 시 스트레스 폭증, 공황 발작/망상/배신/탈주.
+- [x] **4. 🔥 [완료] 파티원 멘탈 붕괴 & 트라우마 엔진 (`PartySanityEngine`)**:
+  - **구현 대상**: [엔진: 신규] `src/world/party_sanity_engine.py`, [엔진: 확장] `src/world/party_engine.py`, `src/world/two_pass_engine.py`
+  - **기능**:
+    - 1. 15종 멘탈 붕괴/각성 스펙(`MentalBreakdownSpec`): 공황(Panic), 편집증(Paranoia), 이기주의(Selfishness), 절망(Hopelessness), 각성(Awakening), 해리(Dissociation), 광폭화(Rage), 얼어붙음(Freeze), 강박(Obsession), 퇴행(Regression), 도주 본능(Flight Instinct), 생존자 죄책감(Survivor's Guilt), 파괴 충동(Destructive Impulse), 감정 폐쇄(Emotional Shutdown), 허세(False Confidence).
+    - 2. 5대 스트레스 트리거: 칠흑 어둠 장기 체류(+2/턴), 동료/플레이어 빈사 목격(+15), 혐오체/미지의 존재 조우(+10), 함정 및 치명타 피격(+8/+12), 식량/식수 고갈.
+    - 3. 8대 성향별 가중치 테이블(`PERSONALITY_BREAKDOWN_WEIGHTS`): 용감(brave), 비겁(cowardly), 충직(loyal), 이기적(selfish), 의심(suspicious), 이상주의(idealistic), 생존주의(survivalist), 냉철(stoic).
+    - 4. 턴 틱 스트레스 검사(`process_turn_sanity`), 붕괴 시 전투 행동 거부/아군 공격/자해/방어 태세/패닉 도주 연동(`filter_companion_combat_intent`).
+    - 5. 규칙 6 준수: `MentalBreakdownSpec` 및 `Companion`에 `traits` 필드 의무 탑재.
 - [ ] **5. 날씨·체온 저체온증/열사병 생존 물리 엔진 (`ThermalSurvivalEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/thermal_engine.py`
   - **기능**: 영하 기온 + 젖은 옷 = 저체온증(턴당 체력 감소, 손 떨림 디버프), 화기 피우기/방한 모피 의무화.
@@ -305,17 +310,33 @@
    - **`src/world/validator.py` & `src/world/two_pass_engine.py`**:
      - 함정 탐색, 함정 해체, 던전 층간 이동 인텐트 검증 및 패스 1 결정론적 실행 연동.
 
+5. **파티원 멘탈 붕괴 & 스트레스 엔진 (`PartySanityEngine`) 전격 완공**:
+   - **`src/world/party_sanity_engine.py`**:
+     - 15종 멘탈 붕괴/각성 스펙(`MentalBreakdownSpec`): 공황(Panic), 편집증(Paranoia), 이기주의(Selfishness), 절망(Hopelessness), 각성(Awakening), 해리(Dissociation), 광폭화(Rage), 얼어붙음(Freeze), 강박(Obsession), 퇴행(Regression), 도주 본능(Flight Instinct), 생존자 죄책감(Survivor's Guilt), 파괴 충동(Destructive Impulse), 감정 폐쇄(Emotional Shutdown), 허세(False Confidence).
+     - 5대 스트레스 트리거: 칠흑 어둠 장기 체류(+2/턴), 동료/플레이어 빈사 목격(+15), 혐오체/미지의 존재 조우(+10), 함정 및 치명타 피격(+8/+12), 식량/식수 고갈.
+     - 8대 성향별 가중치 테이블(`PERSONALITY_BREAKDOWN_WEIGHTS`): brave, cowardly, loyal, selfish, suspicious, idealistic, survivalist, stoic.
+     - 턴 틱 스트레스 검사(`process_turn_sanity`), 붕괴 시 전투 행동 거부/아군 공격/자해/방어 태세/패닉 도주 연동(`filter_companion_combat_intent`).
+     - 규칙 6 준수: `MentalBreakdownSpec`에 `traits` 기본 탑재.
+   - **`src/world/party_engine.py`**:
+     - `Companion`에 `stress`, `max_stress`, `mental_status`, `breakdown_turns_remaining`, `personality_type`, `traits` 탑재.
+     - `from_dict` 역직렬화 시 `stress=0`, `mental_status='normal'` 기본값 주입으로 100% 하위 호환 보장.
+     - `process_companion_combat_turns`에 `PartySanityEngine.filter_companion_combat_intent` 연동하여 붕괴 상태에 따른 행동 거부/도주 적용.
+   - **`src/world/two_pass_engine.py`**:
+     - 턴 틱(`process_turn`) 시 파티원 멘탈 스트레스 자연 증가/체류 판정(`PartySanityEngine.process_turn_sanity`) 연동.
+
 ### 2. 테스트 및 평가 검증 상태
-- **프로젝트 전체 383개 단위 테스트 100% 무결점 통과 (회귀 결함 0건)**:
-  - `tests/test_dungeon_and_traps.py`: 8개 신규 단위 테스트 통과 (컨셉 매칭, 탐색 발견, 도구 해체 및 실패 격발, 회피 세이빙, 히든 맵 공간 왜곡, 층수 심도 스케일링, 하강/상승 이동, 세이브/로드 하위 호환).
-  - `pytest tests/`: **383 passed in 4.62s**.
+- **프로젝트 전체 391개 단위 테스트 100% 무결점 통과 (회귀 결함 0건)**:
+  - `tests/test_party_sanity.py`: 8개 신규 단위 테스트 통과 (스트레스 누적 및 붕괴 격발, 각성 발동, 성향별 가중치, 턴 경과 어둠 스트레스, 전투 행동 필터링, 동료 빈사 이벤트 스트레스, 동료 직렬화/역직렬화 하위 호환).
+  - `pytest tests/`: **391 passed in 4.58s**.
 - **DoD Gate Eval Runner 검증**:
   - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
-  - 스태미너 시스템 + 던전 탐험 계층 시스템 + 3대 맵 컨셉 함정 엔진 100% 완공.
+  - 스태미너 시스템 + 던전 탐험 계층 시스템 + 3대 맵 컨셉 함정 엔진 + 파티원 멘탈 붕괴 & 스트레스 엔진 100% 완공.
 - **다음 작업 후보**:
-  - 1순위: 파티원 멘탈 붕괴 & 트라우마 엔진 (`PartySanityEngine`: 공황 발작/망상/스트레스 폭증)
-  - 2순위: 체간/강인도 물리 엔진 (`poise_engine.py`: 대형 둔기 체간 붕괴/그로기)
-  - 3순위: 세계관별 4대 성장 스케일 프리셋 (`WorldPowerScalePresets`)
+  - 후보 1: 던전 구조적 붕괴 & 산소 고갈 질식 엔진 (`CaveCollapseEngine` / 백로그 6번)
+  - 후보 2: 날씨·체온 저체온증/열사병 생존 물리 엔진 (`ThermalSurvivalEngine` / 백로그 5번)
+  - 후보 3: 전염병·역병·기생충 감염 생체 엔진 (`EpidemicEngine` / 백로그 7번)
+  - 후보 4: 세계관별 4대 성장 스케일 프리셋 (`WorldPowerScalePresets`)
+
