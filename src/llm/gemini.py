@@ -62,7 +62,14 @@ class GeminiLLM(BaseLLM):
             raise RuntimeError("GEMINI_API_KEY is not set or client initialization failed.")
         final_prompt = f"{system}\n\n{prompt}" if system else prompt
 
-        candidate_models = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.1-pro-preview", self._model_name]
+        candidate_models = [
+            "gemini-3.1-flash-lite",
+            "gemini-3.5-flash-lite",
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
+            "gemini-3-flash-preview",
+            self._model_name
+        ]
         candidate_models = list(dict.fromkeys([m for m in candidate_models if m]))
 
         last_error = None

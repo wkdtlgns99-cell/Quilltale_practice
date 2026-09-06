@@ -230,3 +230,80 @@ class PerceptionEngine:
             "is_success": is_success,
             "sensory_clue_ko": narrative
         }
+
+    traits: List[str] = [
+        "감각 판정",
+        "은신 간파",
+        "위기 지각",
+        "찰나의 반응",
+        "A안 인지 인터럽트"
+    ]
+
+    @classmethod
+    def evaluate_combat_threat_perception(
+        cls,
+        victim: Any,
+        threat_source: Any,
+        threat_name: str,
+        distance_m: float,
+        duration_seconds: float,
+        is_surprise: bool = False
+    ) -> Dict[str, Any]:
+        """
+        [A안 원칙] 위협 인지 여부 및 반응 인터럽트 판정.
+        """
+        victim_per = getattr(victim, "effective_perception", getattr(victim, "perception", 10))
+        per_mod = (victim_per - 10) // 2
+
+        base_dc = 12
+        if distance_m >= 50.0:
+            base_dc += 4
+        elif distance_m >= 20.0:
+            base_dc += 2
+        elif distance_m <= 3.0:
+            base_dc -= 2
+
+        if is_surprise:
+            base_dc += 6
+
+        roll = DiceEngine.roll_d20()
+        total = roll + per_mod
+        is_perceived = total >= base_dc
+        margin = total - base_dc
+
+        if not is_perceived:
+            return {
+                "is_perceived": False,
+                "roll": roll,
+                "modifier": per_mod,
+                "total": total,
+                "dc": base_dc,
+                "margin": margin,
+                "perceived_at_second": None,
+                "time_remaining_seconds": 0.0,
+                "narrative_ko": f"기습적인 위협({threat_name})을 사전에 인지하지 못해 그대로 직격당합니다!",
+            }
+
+        if victim_per >= 15:
+            ratio = 0.15
+        elif margin >= 5:
+            ratio = 0.30
+        else:
+            ratio = 0.70
+
+        perceived_second = round(duration_seconds * ratio, 2)
+        remaining = round(duration_seconds * (1.0 - ratio), 2)
+        dist_at_perc = max(0.5, round(distance_m * (1.0 - ratio), 1))
+
+        return {
+            "is_perceived": True,
+            "roll": roll,
+            "modifier": per_mod,
+            "total": total,
+            "dc": base_dc,
+            "margin": margin,
+            "perceived_at_second": perceived_second,
+            "time_remaining_seconds": remaining,
+            "distance_at_perception_m": dist_at_perc,
+            "narrative_ko": f"예리한 감각으로 {dist_at_perc:.1f}m 전방에서 닥쳐오는 [{threat_name}]을 인지했습니다! (남은 대응 시간: {remaining:.2f}초)",
+        }

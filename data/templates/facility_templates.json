@@ -1,0 +1,761 @@
+[
+  {
+    "id": "fac_tmpl_tavern_inn",
+    "name": "달빛 나그네 주점",
+    "category": "trade_workshop",
+    "facility_type": "tavern_inn",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 35,
+    "noise_level": 65,
+    "soundproof_rating": 25,
+    "floor_material": "wood_creaky",
+    "lighting": 55,
+    "light_source_type": "fireplace",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 60,
+    "durability": 85,
+    "daily_maintenance_cost": 5,
+    "defense_rating": 15,
+    "flammability_rating": 45,
+    "lock_difficulty": 12,
+    "reinforcement_material": "wood",
+    "scent_intensity": 50,
+    "ceiling_height_meters": 2.8,
+    "hallway_width_meters": 2.2,
+    "cover_poise_durability": 40,
+    "services": {
+      "rest": 15,
+      "drink": 3,
+      "meal": 5,
+      "rumors": 5,
+      "hire_mercenary": true
+    },
+    "interactive_props": [
+      "벽난로 장작불",
+      "참나무 원형 탁자",
+      "맥주통 거치대",
+      "비상용 나무 빗장"
+    ],
+    "infiltration_points": [
+      "주방 환기구",
+      "지붕 다락방 창문",
+      "지하실 식자재 반입구"
+    ],
+    "hidden_compartments": [
+      "바닥 헐거운 판자 밑 비밀 홈",
+      "바텐더 계산대 아래 호신용 단검 거치대"
+    ],
+    "traits": [
+      "따뜻한 모닥불",
+      "취객들의 노랫소리",
+      "비밀 정보 거래처"
+    ],
+    "description": "험한 여행길에 지친 방랑자와 상인들이 모여 맥주잔을 부딪치고 대륙 각지의 소문을 나누는 유서 깊은 선술집 겸 여관."
+  },
+  {
+    "id": "fac_tmpl_general_store",
+    "name": "만물 보급상",
+    "category": "trade_workshop",
+    "facility_type": "general_store",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 20,
+    "noise_level": 40,
+    "soundproof_rating": 30,
+    "floor_material": "wood_creaky",
+    "lighting": 60,
+    "light_source_type": "candle",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 55,
+    "durability": 90,
+    "daily_maintenance_cost": 4,
+    "defense_rating": 20,
+    "flammability_rating": 40,
+    "lock_difficulty": 16,
+    "reinforcement_material": "wood",
+    "scent_intensity": 35,
+    "ceiling_height_meters": 3.0,
+    "hallway_width_meters": 2.0,
+    "cover_poise_durability": 45,
+    "services": {
+      "trade": true,
+      "buy_supplies": true,
+      "barter": true,
+      "appraisal": 5
+    },
+    "interactive_props": [
+      "황동 정밀 저울",
+      "유리 진열장",
+      "화물 적치 선반",
+      "장부 데스크"
+    ],
+    "infiltration_points": [
+      "후면 창고 적재문",
+      "지붕 환기 채광창"
+    ],
+    "hidden_compartments": [
+      "이중 장부 은닉 서랍",
+      "금고 뒤편 비밀 벽장"
+    ],
+    "traits": [
+      "온갖 잡화 비축",
+      "정직한 황동 저울",
+      "탐험 생존 보급품 완비"
+    ],
+    "description": "식량, 횃불, 밧줄부터 이국 상단에서 들여온 희귀한 향신료까지 모험과 생존에 필요한 물품을 취급하는 정직한 잡화점."
+  },
+  {
+    "id": "fac_tmpl_blacksmith_forge",
+    "name": "불꽃 모루 대장간",
+    "category": "trade_workshop",
+    "facility_type": "blacksmith_forge",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 15,
+    "noise_level": 80,
+    "soundproof_rating": 20,
+    "floor_material": "stone_flagstone",
+    "lighting": 70,
+    "light_source_type": "fireplace",
+    "water_supply_type": "상수도관",
+    "ventilation_quality": 75,
+    "durability": 110,
+    "daily_maintenance_cost": 8,
+    "defense_rating": 30,
+    "flammability_rating": 15,
+    "lock_difficulty": 15,
+    "reinforcement_material": "iron_reinforced",
+    "scent_intensity": 65,
+    "ceiling_height_meters": 4.0,
+    "hallway_width_meters": 2.5,
+    "cover_poise_durability": 70,
+    "services": {
+      "repair": 0.8,
+      "upgrade": 1.5,
+      "forge": true,
+      "buy_ore": true
+    },
+    "interactive_props": [
+      "거대 강철 모루",
+      "석탄 풀무 화로",
+      "급랭 냉각 수조",
+      "헤비 해머 거치대"
+    ],
+    "infiltration_points": [
+      "연기 배출 대형 굴뚝",
+      "야외 광석 하역장 덧문"
+    ],
+    "hidden_compartments": [
+      "모루 밑바닥 석조 홈",
+      "냉각 수조 바닥 방수함"
+    ],
+    "traits": [
+      "타오르는 풀무 화염",
+      "달궈진 강철의 열기",
+      "명품 무구 수선 공방"
+    ],
+    "description": "뜨거운 불꽃과 묵직한 망치 소리가 끊이지 않는 곳. 무기와 방어구의 내구도를 복구하고 광석을 제련하여 강철 장비를 주조한다."
+  },
+  {
+    "id": "fac_tmpl_apothecary_clinic",
+    "name": "생명약초 의원",
+    "category": "civic_communal",
+    "facility_type": "apothecary_clinic",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 15,
+    "noise_level": 25,
+    "soundproof_rating": 45,
+    "floor_material": "stone_flagstone",
+    "lighting": 50,
+    "light_source_type": "candle",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 70,
+    "durability": 80,
+    "daily_maintenance_cost": 6,
+    "defense_rating": 15,
+    "flammability_rating": 35,
+    "lock_difficulty": 18,
+    "reinforcement_material": "wood",
+    "scent_intensity": 60,
+    "ceiling_height_meters": 3.0,
+    "hallway_width_meters": 2.2,
+    "cover_poise_durability": 35,
+    "services": {
+      "heal_wounds": 20,
+      "cure_poison": 35,
+      "identify_herb": 10,
+      "brew_potion": true
+    },
+    "interactive_props": [
+      "약초 빻는 약절구",
+      "유리 증류 플라스크",
+      "약재 건조 선반",
+      "환자용 가죽 침상"
+    ],
+    "infiltration_points": [
+      "온실 약초밭 연결문",
+      "지붕 배연창"
+    ],
+    "hidden_compartments": [
+      "맹독 및 마약초 보관 이중 잠금장",
+      "약재 진열장 뒤 비밀 격실"
+    ],
+    "traits": [
+      "진한 건초와 약초 향",
+      "응급 지혈 설비 완비",
+      "해독 물약 전문 조제"
+    ],
+    "description": "자연의 약초와 연금술 추출액으로 상처를 꿰매고 독과 열병을 치료하는 정주지의 필수 구호 시설."
+  },
+  {
+    "id": "fac_tmpl_training_ground",
+    "name": "강철 기백 연무장",
+    "category": "defense_safety",
+    "facility_type": "training_ground",
+    "is_communal_public": true,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 50,
+    "noise_level": 75,
+    "soundproof_rating": 15,
+    "floor_material": "stone_flagstone",
+    "lighting": 65,
+    "light_source_type": "torch",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 85,
+    "durability": 120,
+    "daily_maintenance_cost": 7,
+    "defense_rating": 35,
+    "flammability_rating": 20,
+    "lock_difficulty": 14,
+    "reinforcement_material": "iron_reinforced",
+    "scent_intensity": 40,
+    "ceiling_height_meters": 4.5,
+    "hallway_width_meters": 3.0,
+    "cover_poise_durability": 65,
+    "services": {
+      "skill_train": ["검술", "방패술", "체술"],
+      "sparring": 15,
+      "weapon_maintenance": 10
+    },
+    "interactive_props": [
+      "짚단 훈련 표적",
+      "목검 및 목봉 거치대",
+      "체력 단련 석제 아령",
+      "승패 판정 징"
+    ],
+    "infiltration_points": [
+      "병영 후방 무기고 환기창",
+      "연무장 외곽 목책 틈새"
+    ],
+    "hidden_compartments": [
+      "교관 집무실 바닥 비밀 금고",
+      "무기 거치대 뒤 비밀 통로"
+    ],
+    "traits": [
+      "단련된 짚단 표적",
+      "목검 타격음 울림",
+      "엄격한 훈련 규율"
+    ],
+    "description": "마을 자경단과 방랑 무투가들이 실전 무예를 연마하고 대련을 통해 전투 기량을 시험하는 모래 연무장."
+  },
+  {
+    "id": "fac_tmpl_mage_tower_academy",
+    "name": "비전의 탑 학당",
+    "category": "civic_communal",
+    "facility_type": "mage_tower_academy",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 25,
+    "noise_level": 20,
+    "soundproof_rating": 60,
+    "floor_material": "carpet_soft",
+    "lighting": 55,
+    "light_source_type": "magic_crystal",
+    "water_supply_type": "마법성수",
+    "ventilation_quality": 65,
+    "durability": 100,
+    "daily_maintenance_cost": 15,
+    "defense_rating": 45,
+    "flammability_rating": 15,
+    "magic_ward_tier": 2,
+    "lock_difficulty": 24,
+    "reinforcement_material": "warded_adamantine",
+    "scent_intensity": 45,
+    "ceiling_height_meters": 3.8,
+    "hallway_width_meters": 2.5,
+    "cover_poise_durability": 55,
+    "services": {
+      "scroll_copy": 80,
+      "mana_recharge": 40,
+      "enchant_consult": 60,
+      "ancient_tongue_study": true
+    },
+    "interactive_props": [
+      "공명하는 마나석 구체",
+      "고대어 양피지 서책",
+      "연금술 촉매 도가니",
+      "천문 관측 망원경"
+    ],
+    "infiltration_points": [
+      "탑 꼭대기 비행체 발착장",
+      "비전 도서관 비밀 채광창"
+    ],
+    "hidden_compartments": [
+      "금지된 흑마도서 벽면 격실",
+      "마법진 작동 은닉 바닥 타일"
+    ],
+    "traits": [
+      "공명하는 마력석",
+      "떠다니는 양피지 서책",
+      "신비로운 에테르 향"
+    ],
+    "description": "고대어 주문을 연구하고 마도 결계와 스크롤을 제작하는 마법 연구 기관. 마나의 흐름을 조율하고 지식을 전수한다."
+  },
+  {
+    "id": "fac_tmpl_temple_shrine",
+    "name": "수호성소 신전",
+    "category": "civic_communal",
+    "facility_type": "temple_shrine",
+    "is_communal_public": true,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 40,
+    "noise_level": 15,
+    "soundproof_rating": 55,
+    "floor_material": "stone_flagstone",
+    "lighting": 60,
+    "light_source_type": "candle",
+    "water_supply_type": "마법성수",
+    "ventilation_quality": 80,
+    "durability": 110,
+    "daily_maintenance_cost": 8,
+    "defense_rating": 35,
+    "flammability_rating": 10,
+    "sanctification_rating": 90,
+    "lock_difficulty": 18,
+    "reinforcement_material": "stone",
+    "scent_intensity": 55,
+    "ceiling_height_meters": 5.5,
+    "hallway_width_meters": 3.2,
+    "cover_poise_durability": 60,
+    "services": {
+      "blessing": 50,
+      "cure_curse": 100,
+      "sanctuary": true,
+      "donate": true
+    },
+    "interactive_props": [
+      "정화의 은빛 성수반",
+      "신성 기도 제단",
+      "헌금 궤짝",
+      "봉헌 촛대"
+    ],
+    "infiltration_points": [
+      "신전 종루 사다리",
+      "지하 납골당 환기구"
+    ],
+    "hidden_compartments": [
+      "제단 밑 비밀 성유물함",
+      "고해성 사실 뒤 은닉 통로"
+    ],
+    "traits": [
+      "성스러운 스테인드글라스",
+      "정화의 성수반",
+      "경건한 침묵의 안식처"
+    ],
+    "description": "신들의 가호와 축복을 기원하는 성소. 영혼의 안식을 구하거나 악령과 저주를 정화하고자 하는 이들이 찾는 성스러운 장소."
+  },
+  {
+    "id": "fac_tmpl_guild_hall",
+    "name": "자유 용병 길드 지부",
+    "category": "civic_communal",
+    "facility_type": "guild_hall",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 30,
+    "noise_level": 60,
+    "soundproof_rating": 35,
+    "floor_material": "wood_creaky",
+    "lighting": 50,
+    "light_source_type": "torch",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 55,
+    "durability": 95,
+    "daily_maintenance_cost": 8,
+    "defense_rating": 25,
+    "flammability_rating": 35,
+    "lock_difficulty": 19,
+    "reinforcement_material": "iron_reinforced",
+    "scent_intensity": 45,
+    "ceiling_height_meters": 3.2,
+    "hallway_width_meters": 2.4,
+    "cover_poise_durability": 50,
+    "services": {
+      "quest_board": true,
+      "bounty_claim": true,
+      "guild_rank_test": 100,
+      "contract_broker": true
+    },
+    "interactive_props": [
+      "현상수배 공고판",
+      "길드 공인 도장 및 계약 데스크",
+      "보상금 교환 금고",
+      "길드원 랭크 보드"
+    ],
+    "infiltration_points": [
+      "지부장 집무실 베란다",
+      "지하실 비밀 서류고"
+    ],
+    "hidden_compartments": [
+      "극비 의뢰서 전용 이중 벽장",
+      "길드장 책상 밑 비밀 비상벨"
+    ],
+    "traits": [
+      "벽면 가득한 의뢰서",
+      "술잔 부딪치는 용병들",
+      "신용 보증 계약실"
+    ],
+    "description": "마수 토벌, 요인 호위, 미개척지 탐색 등 위험한 임무를 중개하고 공적을 기록해 보상금을 지급하는 공인 길드 지부."
+  },
+  {
+    "id": "fac_tmpl_guard_post_prison",
+    "name": "영지 경비 초소 및 감옥",
+    "category": "defense_safety",
+    "facility_type": "guard_post_prison",
+    "is_communal_public": true,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 25,
+    "noise_level": 45,
+    "soundproof_rating": 50,
+    "floor_material": "stone_flagstone",
+    "lighting": 40,
+    "light_source_type": "torch",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 40,
+    "durability": 120,
+    "daily_maintenance_cost": 10,
+    "defense_rating": 45,
+    "flammability_rating": 15,
+    "lock_difficulty": 22,
+    "reinforcement_material": "iron_reinforced",
+    "scent_intensity": 50,
+    "ceiling_height_meters": 3.5,
+    "hallway_width_meters": 2.0,
+    "cover_poise_durability": 70,
+    "services": {
+      "report_crime": true,
+      "pay_bail": 150,
+      "passport_check": true,
+      "weapon_deposit": true
+    },
+    "interactive_props": [
+      "쇠창살 감옥문",
+      "경비대 무기 보관함",
+      "비상 경종 도르래",
+      "죄수 장부 서가"
+    ],
+    "infiltration_points": [
+      "감옥 배수 빗물관",
+      "경비 초소 망루 사다리"
+    ],
+    "hidden_compartments": [
+      "압수물 보관 상자 이중 바닥",
+      "당직 경비병 책상 서랍 열쇠 묶음"
+    ],
+    "traits": [
+      "쇠창살 차가운 냉기",
+      "철저한 불심검문",
+      "창검 무기고 연계"
+    ],
+    "description": "정주지의 법률 집행과 치안 유지를 담당하는 거점. 용의자를 구금하고 성문 출입자의 신원과 밀수품을 감시한다."
+  },
+  {
+    "id": "fac_tmpl_public_bathhouse",
+    "name": "청정 온천 목욕탕",
+    "category": "sanitation_water",
+    "facility_type": "public_bathhouse",
+    "is_communal_public": true,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 30,
+    "noise_level": 35,
+    "soundproof_rating": 40,
+    "floor_material": "stone_flagstone",
+    "lighting": 60,
+    "light_source_type": "torch",
+    "water_supply_type": "상수도관",
+    "ventilation_quality": 80,
+    "durability": 90,
+    "daily_maintenance_cost": 7,
+    "defense_rating": 15,
+    "flammability_rating": 10,
+    "lock_difficulty": 12,
+    "reinforcement_material": "stone",
+    "scent_intensity": 50,
+    "ceiling_height_meters": 3.8,
+    "hallway_width_meters": 2.5,
+    "cover_poise_durability": 40,
+    "services": {
+      "fatigue_recovery": 25,
+      "massage": 15,
+      "secret_conspiracy": true
+    },
+    "interactive_props": [
+      "뜨거운 온천 욕조",
+      "한증막 증기 밸브",
+      "대리석 휴게 평상",
+      "수건 및 세척수 통"
+    ],
+    "infiltration_points": [
+      "증기 배출 환기 덕트",
+      "지하 배수 하수관"
+    ],
+    "hidden_compartments": [
+      "탈의실 락커 뒤 비밀 벽장",
+      "휴게실 바닥 은닉 격실"
+    ],
+    "traits": [
+      "자욱한 피로 회복 증기",
+      "천연 미네랄 온천수",
+      "은밀한 밀담 장소"
+    ],
+    "description": "피로를 풀고 여독을 씻어내는 공중 온욕 시설. 경계를 푼 유력자들이 알몸으로 밀담을 나누는 정보의 온상이기도 하다."
+  },
+  {
+    "id": "fac_tmpl_roving_peddler_stall",
+    "name": "유랑 방랑자의 노점 천막",
+    "category": "trade_workshop",
+    "facility_type": "roving_peddler_stall",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 10,
+    "noise_level": 55,
+    "soundproof_rating": 10,
+    "floor_material": "broken_glass",
+    "lighting": 60,
+    "light_source_type": "torch",
+    "water_supply_type": "없음",
+    "ventilation_quality": 90,
+    "durability": 60,
+    "daily_maintenance_cost": 2,
+    "defense_rating": 10,
+    "flammability_rating": 60,
+    "lock_difficulty": 14,
+    "reinforcement_material": "wood",
+    "scent_intensity": 45,
+    "ceiling_height_meters": 2.5,
+    "hallway_width_meters": 1.8,
+    "cover_poise_durability": 25,
+    "services": {
+      "rare_goods_trade": true,
+      "foreign_trinkets": true,
+      "haggling": true
+    },
+    "interactive_props": [
+      "이국 향신료 포대",
+      "방수 천막 지지대",
+      "노점 진열 돗자리",
+      "보따리 자물쇠 상자"
+    ],
+    "infiltration_points": [
+      "천막 뒤편 가죽 틈새",
+      "짐수레 밑바닥 공간"
+    ],
+    "hidden_compartments": [
+      "짐수레 이중 바닥 밀수품 격실",
+      "노점 카펫 아래 비밀 주머니"
+    ],
+    "traits": [
+      "오색 비단 차양",
+      "진귀한 이국 골동품",
+      "신출귀몰한 이동성"
+    ],
+    "description": "국경과 대륙을 넘나드는 유랑 상인의 가설 천막. 정식 상점에 없는 괴이하고 진귀한 물건들을 흥정할 수 있다."
+  },
+  {
+    "id": "fac_tmpl_workshop_mill",
+    "name": "풍력 방앗간과 목공 제재소",
+    "category": "food_storage",
+    "facility_type": "workshop_mill",
+    "is_communal_public": true,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 20,
+    "noise_level": 70,
+    "soundproof_rating": 25,
+    "floor_material": "wood_creaky",
+    "lighting": 50,
+    "light_source_type": "torch",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 65,
+    "durability": 95,
+    "daily_maintenance_cost": 5,
+    "defense_rating": 20,
+    "flammability_rating": 45,
+    "lock_difficulty": 14,
+    "reinforcement_material": "wood",
+    "scent_intensity": 45,
+    "ceiling_height_meters": 4.2,
+    "hallway_width_meters": 2.4,
+    "cover_poise_durability": 50,
+    "services": {
+      "grain_grind": 5,
+      "wood_cut": 10,
+      "cart_repair": 20,
+      "tool_sharpen": 3
+    },
+    "interactive_props": [
+      "거대 맷돌 구동 톱니",
+      "목재 절단 대형 톱",
+      "곡물 자루 적재 도르래",
+      "수력 회전축 레버"
+    ],
+    "infiltration_points": [
+      "물레방아 수로 진입구",
+      "곡물 반입 호퍼 슈트"
+    ],
+    "hidden_compartments": [
+      "곡물 창고 바닥 은닉 격실",
+      "톱밥 더미 밑 비밀 보관함"
+    ],
+    "traits": [
+      "회전하는 거대 맷돌",
+      "솔잎 톱밥 냄새",
+      "수력 물레방아 연동"
+    ],
+    "description": "곡물을 빻아 가루를 내고 원목을 가공해 건축 자재와 수레를 수리하는 마을의 핵심 생산 및 가공 기지."
+  },
+  {
+    "id": "fac_tmpl_dungeon_entrance",
+    "name": "봉인된 고대 지하 유적 입구",
+    "category": "defense_safety",
+    "facility_type": "dungeon_entrance",
+    "is_communal_public": false,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 15,
+    "noise_level": 15,
+    "soundproof_rating": 75,
+    "floor_material": "stone_flagstone",
+    "lighting": 20,
+    "light_source_type": "none",
+    "water_supply_type": "오염된침출수",
+    "ventilation_quality": 25,
+    "durability": 150,
+    "daily_maintenance_cost": 0,
+    "defense_rating": 50,
+    "flammability_rating": 5,
+    "lock_difficulty": 25,
+    "reinforcement_material": "warded_adamantine",
+    "trap_hazard_rating": 45,
+    "dungeon_max_depth_floors": 5,
+    "dungeon_core_element": "abyss",
+    "scent_intensity": 60,
+    "ceiling_height_meters": 4.0,
+    "hallway_width_meters": 2.0,
+    "cover_poise_durability": 80,
+    "services": {
+      "dungeon_delve": true,
+      "seal_inspection": true,
+      "loot_excavation": true
+    },
+    "interactive_props": [
+      "고대 룬 문자 봉인석",
+      "지하로 뻗은 부서진 나선 계단",
+      "녹슨 쇠사슬 족쇄",
+      "원혼의 석관"
+    ],
+    "infiltration_points": [
+      "지하 균열 틈새",
+      "무너진 석벽 틈새 배수로"
+    ],
+    "hidden_compartments": [
+      "석관 덮개 밑 은닉 보물함",
+      "룬 문자 회전 벽돌 뒤 석실"
+    ],
+    "traits": [
+      "음산한 지하 냉기",
+      "부서진 봉인 마법진",
+      "깊이를 알 수 없는 석조 계단"
+    ],
+    "description": "과거의 비극이나 고대 문명의 잔해가 잠들어 있는 지하 미궁 입구. 위험천만한 마수와 값진 유물이 함께 도사린다."
+  },
+  {
+    "id": "fac_tmpl_town_hall_manor",
+    "name": "자치 의회관 겸 촌장 집무실",
+    "category": "civic_communal",
+    "facility_type": "town_hall_manor",
+    "is_communal_public": true,
+    "is_wonder": false,
+    "building_status": "operational",
+    "construction_progress": 100,
+    "occupancy_limit": 40,
+    "noise_level": 35,
+    "soundproof_rating": 45,
+    "floor_material": "stone_flagstone",
+    "lighting": 65,
+    "light_source_type": "fireplace",
+    "water_supply_type": "공용우물",
+    "ventilation_quality": 70,
+    "durability": 105,
+    "daily_maintenance_cost": 8,
+    "defense_rating": 30,
+    "flammability_rating": 25,
+    "lock_difficulty": 18,
+    "reinforcement_material": "stone",
+    "scent_intensity": 35,
+    "ceiling_height_meters": 3.8,
+    "hallway_width_meters": 2.8,
+    "cover_poise_durability": 55,
+    "services": {
+      "tax_payment": true,
+      "residence_permit": 50,
+      "petition_hearing": true,
+      "town_assembly": true
+    },
+    "interactive_props": [
+      "장엄한 참나무 의회 탁자",
+      "영지 공문서 보관함",
+      "주민 청원함",
+      "영주 인장 데스크"
+    ],
+    "infiltration_points": [
+      "집무실 뒷마당 밀회문",
+      "지붕 장식창"
+    ],
+    "hidden_compartments": [
+      "의회 의장석 바닥 비밀 서랍",
+      "초상화 액자 뒤 비밀 금고"
+    ],
+    "traits": [
+      "장엄한 참나무 탁자",
+      "영지 법률 고문서관",
+      "주민 자치 청원함"
+    ],
+    "description": "마을 원로와 영지 관리가 모여 자치 현안을 논의하고 세금을 징수하며 공문서와 토지 대장을 보관하는 행정의 중심."
+  }
+]

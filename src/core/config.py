@@ -66,6 +66,7 @@ LUCK_CRIT_BONUS = 0.5
 # Equipment slots limits
 MAX_RINGS = 20
 MAX_EARRINGS = 8
+MAX_BRACELETS = 4
 
 # Incantation
 BASE_INCANTATION_CHARS = 10   # base chars per turn

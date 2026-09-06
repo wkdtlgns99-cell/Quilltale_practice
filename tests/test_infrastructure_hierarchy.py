@@ -2597,11 +2597,11 @@ def test_continental_apex_champion_and_monster_integrity():
 
 
 def test_infrastructure_template_loader_regions():
-    """InfrastructureTemplateLoader loads and adapts all 284 region templates with terrain mappings & price multipliers."""
+    """InfrastructureTemplateLoader loads and adapts all 304 region templates with terrain mappings & price multipliers."""
     from src.world.infrastructure import InfrastructureTemplateLoader, Region
 
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="test_continent")
-    assert len(regions) == 284
+    assert len(regions) == 304
 
     for rid, reg in regions.items():
         assert isinstance(reg, Region)
@@ -2868,7 +2868,7 @@ def test_region_templates_json_integrity():
         data = json.load(f)
 
     assert isinstance(data, list)
-    assert len(data) == 284, f"Expected 284 region templates, got {len(data)}"
+    assert len(data) == 304, f"Expected 304 region templates, got {len(data)}"
 
     seen_ids = set()
     for idx, item in enumerate(data):
@@ -2885,7 +2885,7 @@ def test_region_templates_json_integrity():
 
     # Verify loading and serialization
     regions = InfrastructureTemplateLoader.load_region_templates(continent_id="cont_test")
-    assert len(regions) == 284
+    assert len(regions) == 304
 
     # Verify newly added region with rich nested profile
     crimson = regions.get("region_crimson_caldera")
@@ -3037,6 +3037,766 @@ def test_region_templates_json_integrity():
     assert geode.dominant_surface == "crystal_geode_floor"
     assert "에테르 게오드 크리스탈 원석" in geode.rare_mineral_deposits
     assert len(geode.traits) >= 4
+
+    # Verify Batch 14 regions (300 target achieved: total 304 regions)
+    glass_sea = regions.get("region_hidden_041")
+    assert glass_sea is not None
+    assert glass_sea.name == "유리바다의 저편"
+    assert glass_sea.terrain == "coastal_port"
+    assert glass_sea.climate_type == "eternal_calm"
+    assert "성운석" in glass_sea.rare_mineral_deposits
+    assert len(glass_sea.traits) >= 3
+
+    upside_down = regions.get("region_hidden_044")
+    assert upside_down is not None
+    assert upside_down.name == "거꾸로 선 왕국"
+    assert upside_down.terrain == "mountain_mine"
+    assert "중력광" in upside_down.rare_mineral_deposits
+    assert len(upside_down.traits) >= 3
+
+    library_forest = regions.get("region_hidden_048")
+    assert library_forest is not None
+    assert library_forest.name == "잠들지 않는 도서관 숲"
+    assert library_forest.terrain == "dense_forest"
+    assert "문자석" in library_forest.rare_mineral_deposits
+    assert len(library_forest.traits) >= 3
+
+    edge_beach = regions.get("region_hidden_060")
+    assert edge_beach is not None
+    assert edge_beach.name == "세계가 끝나는 해변"
+    assert edge_beach.terrain == "coastal_port"
+    assert "공허석" in edge_beach.rare_mineral_deposits
+    assert len(edge_beach.traits) >= 3
+
+
+def test_assemble_settlement_roads_pairwise_and_bottlenecks():
+    """assemble_settlement_roads builds a deterministic 2D Euclidean road network with bidirectional symmetry and cross-border bottlenecks."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, Settlement
+    from src.world.geography import RoadType, RouteCategory
+
+    s1 = Settlement(
+        id="s_cap1",
+        name="제1수도",
+        nation_id="nation_alpha",
+        region_id="reg_1",
+        settlement_type="capital_metropolis",
+        coordinates=(0.0, 0.0),
+        traits=["대도시", "행정수도"]
+    )
+    s2 = Settlement(
+        id="s_cap2",
+        name="제2수도",
+        nation_id="nation_beta",
+        region_id="reg_2",
+        settlement_type="capital_metropolis",
+        coordinates=(10.0, 0.0),
+        traits=["상업수도", "교역중심"]
+    )
+    s3 = Settlement(
+        id="s_mine",
+        name="은빛 광산마을",
+        nation_id="nation_alpha",
+        region_id="reg_1",
+        settlement_type="mining_camp",
+        coordinates=(0.0, 15.0),
+        traits=["광산촌", "험준한지형"]
+    )
+    s4 = Settlement(
+        id="s_port",
+        name="갈매기 항구",
+        nation_id="nation_beta",
+        region_id="reg_2",
+        settlement_type="coastal_port",
+        coordinates=(20.0, 0.0),
+        traits=["항구", "어촌"]
+    )
+
+    settlements = {s.id: s for s in [s1, s2, s3, s4]}
+    connections_made = InfrastructureTemplateLoader.assemble_settlement_roads(
+        settlements,
+        max_connection_distance_km=25.0,
+        min_connections=1,
+        max_connections=3
+    )
+
+    assert connections_made >= 3
+
+    # 1. Bidirectional symmetry between s1 and s2
+    assert "s_cap2" in s1.roads
+    assert "s_cap1" in s2.roads
+    assert s1.roads["s_cap2"].distance_km == 10.0
+    assert s2.roads["s_cap1"].distance_km == 10.0
+
+    # 2. Cross-border bottleneck check (s1 is nation_alpha, s2 is nation_beta)
+    road_12 = s1.roads["s_cap2"]
+    assert road_12.is_bottleneck is True
+    assert road_12.bottleneck_type == "국경 관문"
+    assert road_12.route_category == RouteCategory.BOTTLENECK_PASS
+    assert road_12.toll_fee > 0
+    assert "국경 검문 관문" in road_12.traits
+
+    # 3. Capital to capital paved highway
+    assert road_12.road_type == RoadType.PAVED_HIGHWAY
+
+    # 4. Mining camp connection (s1 to s3: distance 15.0)
+    assert "s_mine" in s1.roads
+    road_13 = s1.roads["s_mine"]
+    assert road_13.road_type == RoadType.MOUNTAIN_PASS
+    assert "광석 운송로" in road_13.traits
+
+    # 5. Port connection
+    assert "s_port" in s2.roads
+    assert len(s2.roads["s_port"].traits) > 0
+
+
+def test_assemble_world_middle_layers_auto():
+    """InfrastructureTemplateLoader assembles middle layers (Level 3 Nation, Level 4 Settlement) with 2D roads and checkpoints."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, InfrastructureRegistry
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_world_middle_layers(
+        ws,
+        settlements_per_nation=3,
+        max_connection_distance_km=40.0
+    )
+
+    assert isinstance(reg, InfrastructureRegistry)
+    assert ws.infrastructure is reg
+    assert len(reg.continents) == 1
+    assert len(reg.regions) >= 4
+    assert len(reg.nations) >= 3
+    assert len(reg.settlements) >= 6
+
+    # Every settlement must be mapped to a registered nation and registered region
+    for sid, st in reg.settlements.items():
+        assert st.nation_id in reg.nations
+        assert st.region_id in reg.regions
+        assert len(st.roads) >= 1  # Guaranteed by min_connections=1
+        for dest_id, road in st.roads.items():
+            assert dest_id in reg.settlements
+            assert road.distance_km > 0.0
+            assert len(road.traits) > 0
+
+    # Cross-border checkpoints & international highways registration
+    total_border_gates = sum(len(nat.border_checkpoints) for nat in reg.nations.values())
+    total_highways = sum(len(nat.international_highways) for nat in reg.nations.values())
+    if total_border_gates > 0:
+        assert total_highways > 0
+        sample_nation = next(n for n in reg.nations.values() if n.international_highways)
+        hw = sample_nation.international_highways[0]
+        assert hw.travel_medium == "land"
+        assert hw.is_bottleneck is True
+        assert len(hw.traits) > 0
+
+    # Bottom-up totals verification
+    totals = reg.get_world_totals()
+    assert len(reg.settlements) >= 6
+    assert len(reg.nations) >= 3
+    assert totals["total_population"] > 0
+    assert "total_area_sq_km" in totals
+
+
+def test_assemble_world_middle_layers_explicit():
+    """assemble_world_middle_layers respects explicit nation_ids and settlement_ids."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    all_nations = InfrastructureTemplateLoader.load_nation_templates()
+    all_settlements = InfrastructureTemplateLoader.load_settlement_templates()
+
+    chosen_nations = list(all_nations.keys())[:2]
+    chosen_settlements = list(all_settlements.keys())[:4]
+
+    reg = InfrastructureTemplateLoader.assemble_world_middle_layers(
+        ws,
+        nation_ids=chosen_nations,
+        settlement_ids=chosen_settlements,
+        max_connection_distance_km=50.0
+    )
+
+    for nid in chosen_nations:
+        assert nid in reg.nations
+
+    for sid in chosen_settlements:
+        assert sid in reg.settlements
+        assert reg.settlements[sid].nation_id in chosen_nations
+        assert reg.settlements[sid].region_id in reg.regions
+
+
+def test_facility_templates_json_integrity():
+    """Validates facility_templates.json for 14 unique archetypes, valid fields, services, and traits >= 3."""
+    import json
+    from src.core.config import TEMPLATES_DIR
+    from src.world.infrastructure import InfrastructureTemplateLoader, FacilityType
+
+    path = TEMPLATES_DIR / "facility_templates.json"
+    assert path.exists(), "facility_templates.json must exist"
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    assert isinstance(data, list)
+    assert len(data) == 14
+
+    seen_types = set()
+    for item in data:
+        assert "id" in item and item["id"].startswith("fac_tmpl_")
+        assert "name" in item and len(item["name"]) > 0
+        assert "facility_type" in item
+        seen_types.add(item["facility_type"])
+        assert "category" in item
+        assert "services" in item and len(item["services"]) >= 1
+        assert "interactive_props" in item and len(item["interactive_props"]) >= 2
+        assert "infiltration_points" in item and len(item["infiltration_points"]) >= 1
+        assert "hidden_compartments" in item
+        assert "traits" in item and len(item["traits"]) >= 3
+
+    # All 14 FacilityTypes covered
+    for ft in FacilityType:
+        assert ft.value in seen_types
+
+    # Load via InfrastructureTemplateLoader
+    fac_map = InfrastructureTemplateLoader.load_facility_templates()
+    assert len(fac_map) == 14
+    for fid, fac in fac_map.items():
+        assert fac.id == fid
+        assert len(fac.traits) >= 3
+
+
+def test_assemble_settlement_facilities_slotting_and_categorization():
+    """assemble_settlement_facilities slots appropriate facilities by settlement type and populates categorized lists."""
+    from src.world.infrastructure import (
+        InfrastructureRegistry, InfrastructureTemplateLoader,
+        Continent, Region, Nation, Settlement
+    )
+
+    reg = InfrastructureRegistry()
+    reg.register_continent(Continent(id="cont_main", name="아르카디아 대륙"))
+    reg.register_region(Region(id="reg_plains", name="황금 평원", continent_id="cont_main"))
+    reg.register_nation(Nation(id="nat_sol", name="솔라리스 왕국", continent_id="cont_main"))
+
+    # Capital
+    cap = Settlement(
+        id="s_capital", name="성도 솔라리스", nation_id="nat_sol", region_id="reg_plains",
+        settlement_type="capital_metropolis", population=35000, specialties=["왕실 포도주", "기사단 방패"]
+    )
+    # Fortress
+    fort = Settlement(
+        id="s_fort", name="철벽 요새", nation_id="nat_sol", region_id="reg_plains",
+        settlement_type="fortress_citadel", population=6000, specialties=["강철 화살"]
+    )
+    # Mining camp
+    mine = Settlement(
+        id="s_mine", name="검은 모루 갱도", nation_id="nat_sol", region_id="reg_plains",
+        settlement_type="mining_camp", population=1200, specialties=["고순도 은광석"]
+    )
+    # Cursed fishing cove
+    cove = Settlement(
+        id="s_cove", name="망령 안개 포구", nation_id="nat_sol", region_id="reg_plains",
+        settlement_type="fishing_cove", population=800, specialties=["심해어 포"],
+        local_curses_and_taboos=["일식 날 밤 바다 밑 고대 미궁 봉인석 건드리지 않기"]
+    )
+
+    for s in [cap, fort, mine, cove]:
+        reg.register_settlement(s)
+
+    created_count = InfrastructureTemplateLoader.assemble_settlement_facilities(reg)
+    assert created_count >= 20
+
+    # Capital checks: has tavern, general_store, town_hall, blacksmith, apothecary, training, mage_tower, temple, guild, guard, bathhouse
+    assert len(cap.facility_ids) >= 10
+    assert len(cap.commercial_shops) >= 4  # general_store, blacksmith, apothecary, tavern
+    assert len(cap.training_facilities) >= 2  # training_ground, mage_tower_academy
+    assert len(cap.guild_halls) >= 1  # guild_hall
+
+    # Fortress checks: military focus
+    assert len(fort.facility_ids) >= 6
+    assert any("guard_post" in fid for fid in fort.facility_ids)
+    assert any("training_ground" in fid for fid in fort.facility_ids)
+
+    # Mining camp checks: mining and dungeon
+    assert any("blacksmith" in fid for fid in mine.facility_ids)
+    assert any("dungeon_entrance" in fid for fid in mine.facility_ids)
+
+    # Cursed cove checks: dungeon entrance added due to curse lore keyword
+    assert any("dungeon_entrance" in fid for fid in cove.facility_ids)
+
+    # Verify facility attributes
+    sample_fac = reg.facilities[cap.facility_ids[0]]
+    assert len(sample_fac.traits) >= 3
+    assert len(sample_fac.services) >= 1
+    assert "광장" in sample_fac.exits
+    assert cap.name in sample_fac.name
+
+
+def test_facility_hierarchy_resolution_and_pricing():
+    """Facilities resolve through full bottom-up hierarchy and integrate with natural pricing & tariffs."""
+    from src.world.infrastructure import (
+        InfrastructureRegistry, Continent, Region, Nation, Settlement, Facility, FacilityCategory
+    )
+
+    reg = InfrastructureRegistry()
+    reg.register_continent(Continent(id="cont_a", name="아르카디아 대륙"))
+    reg.register_region(Region(
+        id="reg_a", name="풍요의 곡창", continent_id="cont_a",
+        natural_price_multipliers={"ore": 1.5, "grain": 0.5}
+    ))
+    reg.register_nation(Nation(
+        id="nat_a", name="발로르 왕국", continent_id="cont_a", tariff_rate=0.2
+    ))
+    reg.register_settlement(Settlement(
+        id="st_a", name="황금 이삭 마을", nation_id="nat_a", region_id="reg_a"
+    ))
+    reg.register_facility(Facility(
+        id="fac_market", name="황금 이삭 대시장", settlement_id="st_a",
+        category=FacilityCategory.TRADE_WORKSHOP, facility_type="general_store",
+        traits=["곡물 집산지", "활기찬 시장", "치안 양호"]
+    ))
+
+    # 1. Instant O(1) Bottom-Up Hierarchy Resolution
+    path = reg.resolve_hierarchy("fac_market")
+    assert path["facility"].name == "황금 이삭 대시장"
+    assert path["settlement"].name == "황금 이삭 마을"
+    assert path["nation"].name == "발로르 왕국"
+    assert path["region"].name == "풍요의 곡창"
+    assert path["continent"].name == "아르카디아 대륙"
+
+    # 2. Cascading Pricing via Facility: domestic transaction
+    price_domestic = reg.calculate_effective_price(
+        item_category="ore", base_price=100, facility_id="fac_market", buyer_nation_id="nat_a"
+    )
+    assert price_domestic["region_multiplier"] == 1.5
+    assert price_domestic["tariff_rate"] == 0.0
+    assert price_domestic["final_price"] == 150  # 100 * 1.5 * 1.0
+
+    # 3. Cascading Pricing via Facility: cross-border foreign buyer
+    price_foreign = reg.calculate_effective_price(
+        item_category="ore", base_price=100, facility_id="fac_market", buyer_nation_id="foreign_nat"
+    )
+    assert price_foreign["region_multiplier"] == 1.5
+    assert price_foreign["tariff_rate"] == 0.2
+    assert price_foreign["final_price"] == 180  # 100 * 1.5 * 1.2
+
+
+def test_assemble_world_middle_layers_end_to_end_with_facilities():
+    """assemble_world_middle_layers executes end-to-end (Level 0~5) and auto-slots facilities for all settlements."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, InfrastructureRegistry
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_world_middle_layers(
+        ws,
+        settlements_per_nation=3,
+        include_facilities=True
+    )
+
+    assert isinstance(reg, InfrastructureRegistry)
+    assert len(reg.continents) == 1
+    assert len(reg.regions) >= 4
+    assert len(reg.nations) >= 3
+    assert len(reg.settlements) >= 6
+    assert len(reg.facilities) >= 30  # At least 5 facilities per settlement * 6 settlements
+
+    for fid, fac in reg.facilities.items():
+        assert fac.settlement_id in reg.settlements
+        assert len(fac.traits) >= 3
+        # Hierarchy resolves cleanly for every facility
+        path = reg.resolve_hierarchy(fid)
+        assert path["settlement"] is not None
+        assert path["nation"] is not None
+        assert path["region"] is not None
+        assert path["continent"] is not None
+
+
+def test_e2e_full_6_tier_hierarchy_and_assemble_full_world():
+    """End-to-End master assembly test: Level 0 Cosmology to Level 5 Facilities."""
+    from src.world.infrastructure import InfrastructureTemplateLoader, InfrastructureRegistry
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws,
+        settlements_per_nation=3,
+        max_connection_distance_km=45.0,
+        include_facilities=True
+    )
+
+    assert isinstance(reg, InfrastructureRegistry)
+    assert ws.infrastructure is reg
+
+    # Level 0: WorldState
+    assert ws.world_name != ""
+    assert ws.world_genre != ""
+    assert len(ws.world_traits) >= 3
+    assert ws.total_population > 0
+
+    # Level 1: Continent
+    assert len(reg.continents) == 1
+    cont = next(iter(reg.continents.values()))
+    assert cont.name != ""
+    assert len(cont.traits) >= 3
+
+    # Level 2: Region
+    assert len(reg.regions) >= 4
+    for r in reg.regions.values():
+        assert r.continent_id == cont.id
+        assert r.terrain != ""
+        assert len(r.traits) >= 3
+
+    # Level 3: Nation
+    assert len(reg.nations) >= 3
+    for nat in reg.nations.values():
+        assert nat.continent_id == cont.id
+        assert nat.population > 0
+        assert len(nat.traits) >= 3
+
+    # Level 4: Settlement
+    assert len(reg.settlements) >= 6
+    for st in reg.settlements.values():
+        assert st.nation_id in reg.nations
+        assert st.region_id in reg.regions
+        assert len(st.roads) >= 1
+        assert len(st.facility_ids) >= 3
+        assert len(st.traits) >= 3
+
+    # Level 5: Facility
+    assert len(reg.facilities) >= 25
+    for fac in reg.facilities.values():
+        assert fac.settlement_id in reg.settlements
+        assert len(fac.traits) >= 3
+        assert len(fac.services) >= 1
+        assert "광장" in fac.exits
+
+
+def test_e2e_cascading_commercial_and_diplomatic_trade():
+    """Verifies cascading trade pricing through Level 5 Facility across diplomatic relations."""
+    from src.world.infrastructure import InfrastructureRegistry, Continent, Region, Nation, Settlement, Facility, FacilityCategory
+
+    reg = InfrastructureRegistry()
+    reg.register_continent(Continent(id="c_val", name="발리리아 구 대륙"))
+    reg.register_region(Region(
+        id="r_iron", name="철의 협곡", continent_id="c_val",
+        natural_price_multipliers={"ore": 0.5, "silk": 2.5}
+    ))
+    reg.register_nation(Nation(
+        id="nat_seller", name="강철 제국", continent_id="c_val", tariff_rate=0.2,
+        diplomatic_relations={"nat_ally": "allied", "nat_neutral": "neutral", "nat_enemy": "hostile", "nat_war": "at_war"}
+    ))
+    reg.register_settlement(Settlement(
+        id="st_forge_hub", name="모루 성채", nation_id="nat_seller", region_id="r_iron"
+    ))
+    reg.register_facility(Facility(
+        id="fac_iron_bazaar", name="철의 만물 시장", settlement_id="st_forge_hub",
+        category=FacilityCategory.TRADE_WORKSHOP, facility_type="general_store",
+        traits=["무기 시장", "광석 집산지", "삼엄한 경비"]
+    ))
+
+    # Base ore = 100, silk = 100
+    # 1. Domestic: ore = 100 * 0.5 * 1.0 = 50, silk = 100 * 2.5 * 1.0 = 250
+    p_dom_ore = reg.calculate_effective_price("ore", 100, "fac_iron_bazaar", buyer_nation_id="nat_seller")
+    assert p_dom_ore["final_price"] == 50
+    p_dom_silk = reg.calculate_effective_price("silk", 100, "fac_iron_bazaar", buyer_nation_id="nat_seller")
+    assert p_dom_silk["final_price"] == 250
+
+    # 2. Allied: 50% tariff discount (0.2 * 0.5 = 0.1 -> mult 1.1)
+    p_ally = reg.calculate_effective_price("ore", 100, "fac_iron_bazaar", buyer_nation_id="nat_ally")
+    assert p_ally["final_price"] == int(100 * 0.5 * 1.1)  # 55
+
+    # 3. Neutral: standard tariff (0.2 -> mult 1.2)
+    p_neu = reg.calculate_effective_price("ore", 100, "fac_iron_bazaar", buyer_nation_id="nat_neutral")
+    assert p_neu["final_price"] == int(100 * 0.5 * 1.2)  # 60
+
+    # 4. Hostile: double tariff (0.2 * 2.0 = 0.4 -> mult 1.4)
+    p_hostile = reg.calculate_effective_price("ore", 100, "fac_iron_bazaar", buyer_nation_id="nat_enemy")
+    assert p_hostile["final_price"] == int(100 * 0.5 * 1.4)  # 70
+
+    # 5. At war: 100% embargo surcharge (mult 2.0)
+    p_war = reg.calculate_effective_price("ore", 100, "fac_iron_bazaar", buyer_nation_id="nat_war")
+    assert p_war["final_price"] == int(100 * 0.5 * 2.0)  # 100
+
+
+def test_e2e_cascading_5_dimension_lifestyle_resolution():
+    """Verifies resolve_settlement_lifestyle merges Attire, Cuisine, Culture, Logistics across all tiers."""
+    from src.world.infrastructure import (
+        InfrastructureRegistry, Continent, Region, Nation, Settlement,
+        AttireHierarchyProfile, CuisineProfile, CulturalNormsProfile, LogisticsNetwork,
+        TransitVehicle
+    )
+
+    reg = InfrastructureRegistry()
+    reg.register_continent(Continent(
+        id="c1", name="대륙1",
+        attire=AttireHierarchyProfile(labor_lower_class=["삼베옷"]),
+        cuisine=CuisineProfile(staples=["호밀빵"]),
+        culture=CulturalNormsProfile(faith_and_beliefs=["태양신앙"])
+    ))
+    reg.register_region(Region(
+        id="r1", name="권역1", continent_id="c1",
+        attire=AttireHierarchyProfile(middle_practical_class=["방한 양모 조끼"]),
+        cuisine=CuisineProfile(proteins_and_salts=["산양고기 염장"]),
+        culture=CulturalNormsProfile(faith_and_beliefs=["숲의 정령 숭배"])
+    ))
+    reg.register_nation(Nation(
+        id="n1", name="국가1", continent_id="c1",
+        attire=AttireHierarchyProfile(upper_ruling_class=["황금 자수 비단 로브"]),
+        cuisine=CuisineProfile(beverages_and_water=["왕실 적포도주"]),
+        culture=CulturalNormsProfile(seasonal_events=["건국 기념 기사제"]),
+        logistics=LogisticsNetwork(transit_vehicles=[
+            TransitVehicle(id="v1", name="국영 수송 마차", category="land")
+        ])
+    ))
+    reg.register_settlement(Settlement(
+        id="s1", name="마을1", nation_id="n1", region_id="r1",
+        attire=AttireHierarchyProfile(labor_lower_class=["방수 가죽 덧옷"]),
+        cuisine=CuisineProfile(staples=["훈제 은송어 조림"]),
+        culture=CulturalNormsProfile(social_structure=["어부 자치 원로회"]),
+        logistics=LogisticsNetwork(transit_vehicles=[
+            TransitVehicle(id="v2", name="연안 나룻배", category="water")
+        ])
+    ))
+
+    life = reg.resolve_settlement_lifestyle("s1")
+    assert "attire" in life
+    assert "cuisine" in life
+    assert "culture" in life
+    assert "transit_vehicles" in life
+
+    # Verified multi-tier merger
+    assert "삼베옷" in life["attire"]["labor_lower_class"]
+    assert "방수 가죽 덧옷" in life["attire"]["labor_lower_class"]
+    assert "방한 양모 조끼" in life["attire"]["middle_practical_class"]
+    assert "황금 자수 비단 로브" in life["attire"]["upper_ruling_class"]
+
+    assert "호밀빵" in life["cuisine"]["staples"]
+    assert "훈제 은송어 조림" in life["cuisine"]["staples"]
+    assert "산양고기 염장" in life["cuisine"]["proteins_and_salts"]
+    assert "왕실 적포도주" in life["cuisine"]["beverages_and_water"]
+
+    assert "태양신앙" in life["culture"]["faith_and_beliefs"]
+    assert "숲의 정령 숭배" in life["culture"]["faith_and_beliefs"]
+    assert "건국 기념 기사제" in life["culture"]["seasonal_events"]
+    assert "어부 자치 원로회" in life["culture"]["social_structure"]
+
+    assert len(life["transit_vehicles"]) == 2
+
+
+def test_e2e_worldstate_serialization_full_roundtrip():
+    """WorldState with full 6-tier infrastructure survives complete to_json -> from_json roundtrip."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=2, include_facilities=True
+    )
+
+    original_fac_count = len(reg.facilities)
+    original_st_count = len(reg.settlements)
+    original_pop = ws.total_population
+    sample_fac_id = next(iter(reg.facilities.keys()))
+
+    # Calculate price before serialization
+    price_before = reg.calculate_effective_price("ore", 100, sample_fac_id)
+
+    # Serialize & Deserialize
+    json_str = ws.to_json()
+    assert isinstance(json_str, str)
+    assert len(json_str) > 1000
+
+    restored_ws = WorldState.from_json(json_str)
+    assert restored_ws.infrastructure is not None
+    restored_reg = restored_ws.infrastructure
+
+    # Verify counts & integrity
+    assert len(restored_reg.continents) == len(reg.continents)
+    assert len(restored_reg.regions) == len(reg.regions)
+    assert len(restored_reg.nations) == len(reg.nations)
+    assert len(restored_reg.settlements) == original_st_count
+    assert len(restored_reg.facilities) == original_fac_count
+    assert restored_ws.total_population == original_pop
+
+    # Verify hierarchy resolution on restored state
+    path = restored_reg.resolve_hierarchy(sample_fac_id)
+    assert path["facility"] is not None
+    assert path["settlement"] is not None
+    assert path["nation"] is not None
+    assert path["region"] is not None
+    assert path["continent"] is not None
+
+    # Verify price calculation matches on restored state
+    price_after = restored_reg.calculate_effective_price("ore", 100, sample_fac_id)
+    assert price_after["final_price"] == price_before["final_price"]
+
+
+# =====================================================================
+# Entity-Infrastructure Binding Tests (NPC, Item, Skill, Monster, Quest)
+# =====================================================================
+def test_bind_settlement_npcs():
+    """Verifies resident NPCs are spawned into facilities with jobs, stats, and traits."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=2, include_facilities=True
+    )
+
+    npc_count = InfrastructureTemplateLoader.bind_settlement_npcs(ws, registry=reg)
+    assert npc_count > 0
+    assert len(ws.npcs) == npc_count
+
+    # Check NPC properties
+    for npc_id, npc in ws.npcs.items():
+        assert npc.name
+        assert npc.job
+        assert npc.location in reg.facilities
+        assert len(npc.traits) >= 3, f"NPC {npc_id} must have at least 3 traits"
+        assert npc.health > 0
+        assert npc.gold >= 0
+        fac = reg.facilities[npc.location]
+        assert npc_id in fac.npcs
+
+    # Check key holder was assigned on applicable facilities
+    for fac in reg.facilities.values():
+        if fac.facility_type in ["general_store", "blacksmith_forge", "guard_post_prison"]:
+            assert fac.key_holder_npc_id, f"Facility {fac.id} should have key_holder_npc_id"
+
+
+def test_bind_facility_inventories():
+    """Verifies commercial facilities are stocked with specialty items and effective pricing."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=2, include_facilities=True
+    )
+
+    item_count = InfrastructureTemplateLoader.bind_facility_inventories(ws, registry=reg)
+    assert item_count > 0
+    assert len(ws.items) == item_count
+
+    # Verify item properties and traits
+    for item_id, item in ws.items.items():
+        assert item.name
+        assert item.item_type in ["consumable", "tool", "misc", "weapon", "armor", "accessory", "material"]
+        assert item.value > 0
+        assert len(item.traits) >= 2, f"Item {item_id} must have >=2 traits"
+        assert item.location in reg.facilities
+        fac = reg.facilities[item.location]
+        assert item_id in fac.items
+
+
+def test_bind_training_facilities():
+    """Verifies martial skills and phonetic ancient magic words are bound to training facilities."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=2, include_facilities=True
+    )
+
+    fac_configured = InfrastructureTemplateLoader.bind_training_facilities(ws, registry=reg)
+    assert fac_configured > 0
+
+    for fac in reg.facilities.values():
+        if fac.facility_type == "training_ground":
+            assert "available_skills" in fac.services
+            assert len(fac.services["available_skills"]) >= 2
+            assert fac.services["training_cost_gold"] > 0
+        elif fac.facility_type == "mage_tower_academy":
+            assert "available_skills" in fac.services
+            assert "ancient_words" in fac.services
+            # Rule 4: Korean phonetic transcriptions for ancient words
+            for word in fac.services["ancient_words"]:
+                assert any(hangul in word for hangul in ["바르", "카르", "이그니스", "모투스"])
+
+
+def test_bind_region_monsters_and_spawn_factory():
+    """Verifies monster template RAG factory instantiates hostile NPCs with loot and traits."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=1, include_facilities=False
+    )
+
+    # 1. Test single monster spawn from template
+    mob = InfrastructureTemplateLoader.spawn_monster_from_template(
+        "copper_scaled_thunder_catfish", "wilderness_1", ws, registry=reg
+    )
+    assert mob is not None
+    assert mob.disposition == "hostile"
+    assert mob.health > 0
+    assert mob.armor_class > 0
+    assert len(mob.traits) >= 3
+    assert len(mob.inventory) >= 1  # loot drops registered as items
+    assert mob.id in ws.npcs
+
+    # 2. Test binding monsters across all regions
+    m_count = InfrastructureTemplateLoader.bind_region_monsters(ws, registry=reg)
+    assert m_count >= 1
+
+
+def test_bind_settlement_quests():
+    """Verifies notice board quests and investigation quests are bound to settlements."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=2, include_facilities=True
+    )
+    InfrastructureTemplateLoader.bind_settlement_npcs(ws, registry=reg)
+
+    quest_count = InfrastructureTemplateLoader.bind_settlement_quests(ws, registry=reg)
+    assert quest_count > 0
+    assert len(ws.quests) == quest_count
+
+    for q_id, quest in ws.quests.items():
+        assert quest.title
+        assert quest.category in ["hunt", "investigation"]
+        assert len(quest.stages) >= 1
+        assert quest.rewards.get("gold", 0) > 0
+        assert len(quest.traits) >= 3
+
+
+def test_master_bind_world_entities_pipeline():
+    """Verifies master assemble_full_world with bind_entities=True assembles entire living world."""
+    from src.world.infrastructure import InfrastructureTemplateLoader
+    from src.world.state import WorldState
+
+    ws = WorldState()
+    reg = InfrastructureTemplateLoader.assemble_full_world(
+        ws, settlements_per_nation=2, include_facilities=True, bind_entities=True
+    )
+
+    assert len(reg.continents) > 0
+    assert len(reg.regions) > 0
+    assert len(reg.nations) > 0
+    assert len(reg.settlements) > 0
+    assert len(reg.facilities) > 0
+
+    assert len(ws.npcs) > 0
+    assert len(ws.items) > 0
+    assert len(ws.quests) > 0
+    assert ws.total_population > 0
+
+    # Ensure serialization survives with all bound entities
+    json_str = ws.to_json()
+    restored = WorldState.from_json(json_str)
+    assert len(restored.npcs) == len(ws.npcs)
+    assert len(restored.items) == len(ws.items)
+    assert len(restored.quests) == len(ws.quests)
+
+
+
+
+
 
 
 

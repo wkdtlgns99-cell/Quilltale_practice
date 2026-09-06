@@ -16,6 +16,43 @@ ACQUISITION_SOURCES = [
 ]
 
 class SkillSystem:
+    CATEGORY_DISPLAY_NAMES = {
+        "elemental_magic": "원소마법",
+        "arcane_magic": "원소마법",
+        "blood_magic": "혈마법",
+        "dark_magic": "흑마법",
+        "sacrifice_toll": "대가마법",
+        "necromancy": "사령술",
+        "alchemy": "연금술",
+        "divination": "예언마법",
+        "summoning": "소환마법",
+        "runic": "룬마법",
+        "pact_binding": "계약마법",
+        "oneiric": "꿈마법",
+        "mnemonic": "기억마법",
+        "spatiotemporal": "시공간마법",
+        "conceptual": "개념마법",
+        "celestial": "성좌마법",
+        "causality": "인과마법",
+        "logos_word": "언령마법",
+        "divine_arts": "신성술",
+        "divine": "신성술",
+        "holy_miracle": "신성술",
+        "shamanic_curse": "주술",
+        "curse_voodoo": "주술",
+        "martial_qi": "무협기공",
+        "physical": "순수무예",
+        "martial_arts": "격투무술",
+        "subterfuge": "암습/은밀",
+        "taming": "조련",
+        "psionics": "초능력",
+    }
+
+    @classmethod
+    def get_category_display_name(cls, category: str) -> str:
+        """Returns 100% natural Korean display name for any skill/magic school category."""
+        return cls.CATEGORY_DISPLAY_NAMES.get(category, category)
+
     @staticmethod
     def can_player_acquire(player: Player, skill: Skill, state: WorldState) -> Tuple[bool, str]:
         """Check if player can acquire a skill. Returns (can_acquire, reason_ko)."""
@@ -201,9 +238,21 @@ class SkillSystem:
                 }.get(d6.get("element", "물리")) or
                 {
                     "martial_qi": "#f97316", "alchemy": "#14b8a6", "subterfuge": "#64748b",
-                    "holy_miracle": "#fbbf24", "necromancy": "#a855f7", "curse_voodoo": "#d946ef",
-                    "psionics": "#ec4899", "taming": "#84cc16"
+                    "holy_miracle": "#fbbf24", "divine_arts": "#fbbf24", "divine": "#fbbf24",
+                    "necromancy": "#a855f7", "curse_voodoo": "#d946ef", "shamanic_curse": "#d946ef",
+                    "psionics": "#ec4899", "taming": "#84cc16",
+                    "arcane_magic": "#818cf8", "elemental_magic": "#38bdf8",
+                    "blood_magic": "#dc2626", "dark_magic": "#581c87", "sacrifice_toll": "#7f1d1d",
+                    "divination": "#818cf8", "summoning": "#059669", "runic": "#d97706",
+                    "pact_binding": "#9333ea", "oneiric": "#c084fc", "mnemonic": "#6366f1",
+                    "spatiotemporal": "#2563eb", "conceptual": "#475569", "celestial": "#0284c7",
+                    "causality": "#0ea5e9", "logos_word": "#e11d48", "physical": "#94a3b8",
+                    "martial_arts": "#ea580c",
                 }.get(d1.get("category", "physical")) or "#94a3b8"
+            ),
+            traits=(
+                raw.get("traits") or d1.get("traits") or
+                [SkillSystem.get_category_display_name(d1.get("category", "physical"))]
             )
         )
 

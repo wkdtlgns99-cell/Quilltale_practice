@@ -172,3 +172,66 @@ def test_game_master_agent_two_pass_turn_flow():
     assert state.last_npc_action is not None
     assert result["dice_result"] is not None
     assert len(state.history) > 0
+
+
+def test_gm_prompts_xml_structure_and_formatting():
+    from src.agents.prompts import GM_SYSTEM_PROMPT, GM_TURN_PROMPT_TEMPLATE, MAGIC_SYSTEM_PROMPT
+
+    # 1. Verify GM_SYSTEM_PROMPT semantic XML sections and core rules
+    assert "<System_Guardrails>" in GM_SYSTEM_PROMPT
+    assert "<Anti_Hallucination>" in GM_SYSTEM_PROMPT
+    assert "<Anti_Melodrama>" in GM_SYSTEM_PROMPT
+    assert "<Localization_and_Atmosphere>" in GM_SYSTEM_PROMPT
+    assert "<Combat_and_Action_Mechanics>" in GM_SYSTEM_PROMPT
+    assert "<Turn_Economy>" in GM_SYSTEM_PROMPT
+    assert "<Speed_and_Interruption>" in GM_SYSTEM_PROMPT
+    assert "<Ecosystem_and_BDI_Cognition>" in GM_SYSTEM_PROMPT
+    assert "<Sensory_Focalization_and_Survival>" in GM_SYSTEM_PROMPT
+    assert "<Response_Format>" in GM_SYSTEM_PROMPT
+
+    # Verify Korean output requirement and Fog of War
+    assert "100% Korean Output" in GM_SYSTEM_PROMPT
+    assert "NameKnownToPlayer: NO" in GM_SYSTEM_PROMPT
+    assert "Strict Fog of War" in GM_SYSTEM_PROMPT
+
+    # 2. Verify MAGIC_SYSTEM_PROMPT structure and ancient word phonetic rule
+    assert "<Incantation_System>" in MAGIC_SYSTEM_PROMPT
+    assert "<Modular_Grammar_Structure>" in MAGIC_SYSTEM_PROMPT
+    assert "<Power_and_Penalties>" in MAGIC_SYSTEM_PROMPT
+    assert "바르(발화/열에너지)" in MAGIC_SYSTEM_PROMPT
+    assert "고대어 한글 발음 표기 원칙" in MAGIC_SYSTEM_PROMPT
+
+    # 3. Verify GM_TURN_PROMPT_TEMPLATE formatting with all 22 required placeholders
+    placeholders = {
+        "environmental_anchoring": "어두운 던전 입구",
+        "deterministic_fact_sheet": "FACT: Locked gate",
+        "npc_bdi_context": "BDI: hostile guard",
+        "world_context": "WORLD: dark fantasy",
+        "map_context": "MAP: dungeon",
+        "off_screen_context": "OFFSCREEN: patrols moving",
+        "skills_context": "SKILLS: none",
+        "titles_context": "TITLES: adventurer",
+        "rag_memory_context": "MEMORY: none",
+        "graph_context": "GRAPH: empty",
+        "quest_context": "QUEST: find key",
+        "shop_context": "SHOP: closed",
+        "crafting_context": "CRAFTING: available",
+        "party_context": "PARTY: solo",
+        "status_ticks_context": "STATUS: normal",
+        "physics_reaction_context": "PHYSICS: cold iron",
+        "dice_roll_context": "DICE: roll 15 vs DC 12 SUCCESS",
+        "interrupt_context": "INTERRUPT: none",
+        "incant_context": "INCANT: none",
+        "recent_history": "Turn 0: Started",
+        "parsed_action_summary": "[대사]: 없음 | [행동]: 열쇠로 문을 연다",
+        "action": "열쇠로 문을 연다",
+    }
+    formatted = GM_TURN_PROMPT_TEMPLATE.format(**placeholders)
+    assert "<Turn_Execution>" in formatted
+    assert "<Environmental_Anchoring>" in formatted
+    assert "어두운 던전 입구" in formatted
+    assert "<Player_Action>" in formatted
+    assert "열쇠로 문을 연다" in formatted
+    assert "<Generation_Instructions>" in formatted
+    assert "narration" in formatted
+

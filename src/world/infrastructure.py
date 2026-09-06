@@ -14,10 +14,11 @@ from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 import json
 import logging
+import math
 import random
 
 from src.core.config import TEMPLATES_DIR
-from src.world.geography import RoadConnection, RouteCategory
+from src.world.geography import RoadConnection, RouteCategory, RoadType
 
 logger = logging.getLogger(__name__)
 
@@ -857,6 +858,7 @@ class Facility:
     @classmethod
     def from_dict(cls, data: dict) -> "Facility":
         clean = dict(data)
+        clean.setdefault("settlement_id", "")
         if "category" in clean and isinstance(clean["category"], str):
             try:
                 clean["category"] = FacilityCategory(clean["category"])
@@ -911,8 +913,32 @@ class InfrastructureRegistry:
     def register_facility(self, facility: Facility) -> None:
         self.facilities[facility.id] = facility
         if facility.settlement_id in self.settlements:
-            if facility.id not in self.settlements[facility.settlement_id].facility_ids:
-                self.settlements[facility.settlement_id].facility_ids.append(facility.id)
+            st = self.settlements[facility.settlement_id]
+            if facility.id not in st.facility_ids:
+                st.facility_ids.append(facility.id)
+
+            ftype = facility.facility_type
+            if ftype in ["general_store", "blacksmith_forge", "apothecary_clinic", "tavern_inn"]:
+                if facility.id not in st.commercial_shops:
+                    st.commercial_shops.append(facility.id)
+            if ftype in ["training_ground", "mage_tower_academy"]:
+                if facility.id not in st.training_facilities:
+                    st.training_facilities.append(facility.id)
+            if ftype == "guild_hall":
+                if facility.id not in st.guild_halls:
+                    st.guild_halls.append(facility.id)
+            if ftype == "roving_peddler_stall":
+                if facility.id not in st.active_peddlers:
+                    st.active_peddlers.append(facility.id)
+            if facility.building_status in ["under_construction", "under_repair"]:
+                if facility.id not in st.under_construction_facilities:
+                    st.under_construction_facilities.append(facility.id)
+            elif facility.building_status in ["ruined", "abandoned"]:
+                if facility.id not in st.ruined_facilities:
+                    st.ruined_facilities.append(facility.id)
+            if facility.is_wonder:
+                if facility.id not in st.world_wonders:
+                    st.world_wonders.append(facility.id)
 
     # -----------------------------------------------------------------
     # Cascading Bottom-Up Hierarchy Resolution
@@ -1845,6 +1871,24 @@ class InfrastructureTemplateLoader:
         return nations
 
     @classmethod
+    def load_facility_templates(cls, filepath: Optional[Path | str] = None) -> Dict[str, Facility]:
+        """Loads all Facility archetype dataclass objects from facility_templates.json."""
+        target_path = Path(filepath) if filepath else (TEMPLATES_DIR / "facility_templates.json")
+        if not target_path.exists():
+            logger.warning(f"Facility templates file not found: {target_path}")
+            return {}
+
+        with open(target_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        facilities: Dict[str, Facility] = {}
+        for item in data:
+            if isinstance(item, dict) and "id" in item:
+                fac = Facility.from_dict(item)
+                facilities[fac.id] = fac
+        return facilities
+
+    @classmethod
     def inject_cosmology_to_world_state(cls, world_state: Any, cosmo_dict: dict) -> None:
         """Injects Level 0 cosmological laws, era, and pantheon into WorldState."""
         world_state.world_name = cosmo_dict.get("world_name", getattr(world_state, "world_name", ""))
@@ -1962,3 +2006,1083 @@ class InfrastructureTemplateLoader:
         world_state.infrastructure = reg
         reg.recalculate_totals()
         return reg
+
+    @classmethod
+    def assemble_settlement_roads(
+        cls,
+        settlements: Dict[str, Settlement],
+        max_connection_distance_km: float = 35.0,
+        min_connections: int = 1,
+        max_connections: int = 4,
+    ) -> int:
+        """
+        Connects settlements via 2D Euclidean distance into a deterministic road network graph.
+        - Calculates pairwise Euclidean distance: dist = sqrt((x1-x2)^2 + (y1-y2)^2).
+        - Connects nearest neighbors (min min_connections, max max_connections).
+        - Determines RoadType and RouteCategory:
+          * Major settlements (capital/fortress) or short distance (<=12km) -> PAVED_HIGHWAY / TRUNK_HIGHWAY
+          * Mining camps -> MOUNTAIN_PASS
+          * Coastal ports -> DIRT_ROAD (coastal trade)
+          * Other -> DIRT_ROAD / BRANCH_ROAD
+        - Cross-border roads (origin.nation_id != dest.nation_id):
+          * is_bottleneck = True, bottleneck_type = "국경 관문"
+          * route_category = BOTTLENECK_PASS, toll_fee = calculated
+          * traits includes "국경 검문 관문"
+        - Bidirectional symmetry guaranteed (A->B implies B->A).
+        Returns total road connections created (undirected count).
+        """
+        from src.world.geography import ROAD_SPEED_MULTIPLIERS, ROAD_HAZARD_BASE
+
+        s_list = list(settlements.values())
+        if len(s_list) < 2:
+            return 0
+
+        # Precompute pairwise distances
+        pairs = []
+        for i in range(len(s_list)):
+            for j in range(i + 1, len(s_list)):
+                s1 = s_list[i]
+                s2 = s_list[j]
+                x1, y1 = s1.coordinates if s1.coordinates else (0.0, 0.0)
+                x2, y2 = s2.coordinates if s2.coordinates else (0.0, 0.0)
+                d = math.hypot(x1 - x2, y1 - y2)
+                if d <= 0.0:
+                    d = 5.0
+                pairs.append((round(d, 1), s1, s2))
+
+        # Sort pairs by distance ascending
+        pairs.sort(key=lambda p: p[0])
+
+        connection_counts: Dict[str, int] = {s.id: len(s.roads) for s in s_list}
+        connections_made = 0
+
+        def create_connection(s_from: Settlement, s_to: Settlement, dist: float) -> RoadConnection:
+            is_cross_border = (
+                s_from.nation_id != s_to.nation_id and
+                bool(s_from.nation_id) and
+                bool(s_to.nation_id)
+            )
+            is_major_link = (
+                s_from.settlement_type in ["capital_metropolis", "fortress_citadel"] and
+                s_to.settlement_type in ["capital_metropolis", "fortress_citadel"]
+            )
+            is_mine = (
+                s_from.settlement_type == "mining_camp" or
+                s_to.settlement_type == "mining_camp"
+            )
+            is_port = (
+                s_from.settlement_type == "coastal_port" or
+                s_to.settlement_type == "coastal_port"
+            )
+
+            # Determine road type & category
+            if is_major_link or dist <= 12.0:
+                rtype = RoadType.PAVED_HIGHWAY
+                rcat = RouteCategory.TRUNK_HIGHWAY
+                rname = f"{s_from.name}-{s_to.name} 포장 왕도"
+                traits = ["왕도 포장 가도", "순찰대 상시 배치", "안전한 대로"]
+            elif is_mine:
+                rtype = RoadType.MOUNTAIN_PASS
+                rcat = RouteCategory.BRANCH_ROAD
+                rname = f"{s_from.name}-{s_to.name} 산악 고갯길"
+                traits = ["험준한 산길", "낙석 주의", "광석 운송로"]
+            elif is_port:
+                rtype = RoadType.DIRT_ROAD
+                rcat = RouteCategory.BRANCH_ROAD
+                rname = f"{s_from.name}-{s_to.name} 해안 교역로"
+                traits = ["해안 교역로", "해풍 습기", "물류 가도"]
+            else:
+                rtype = RoadType.DIRT_ROAD
+                rcat = RouteCategory.BRANCH_ROAD
+                rname = f"{s_from.name}-{s_to.name} 연락 흙길"
+                traits = ["평탄한 흙길", "일반 통행로"]
+
+            # Cross-border bottleneck override
+            is_bottleneck = False
+            bottleneck_type = ""
+            toll = 0
+            if is_cross_border:
+                rcat = RouteCategory.BOTTLENECK_PASS
+                is_bottleneck = True
+                bottleneck_type = "국경 관문"
+                toll = max(5, int(dist * 0.5))
+                rname = f"{s_from.name}-{s_to.name} 국경 관문로"
+                traits.extend(["국경 검문 관문", "밀수 단속 구역", "통행증 필수"])
+
+            return RoadConnection(
+                destination_id=s_to.id,
+                distance_km=dist,
+                road_type=rtype,
+                speed_multiplier=ROAD_SPEED_MULTIPLIERS.get(rtype, 1.0),
+                hazard_level=ROAD_HAZARD_BASE.get(rtype, 20),
+                toll_fee=toll,
+                road_name_ko=rname,
+                route_category=rcat,
+                is_bottleneck=is_bottleneck,
+                bottleneck_type=bottleneck_type,
+                traits=list(dict.fromkeys(traits)),
+            )
+
+        # Pass 1: Ensure minimum connections for isolated settlements
+        for s in s_list:
+            if connection_counts[s.id] < min_connections:
+                candidates = []
+                for d, s1, s2 in pairs:
+                    if s1.id == s.id and s2.id not in s.roads:
+                        candidates.append((d, s2))
+                    elif s2.id == s.id and s1.id not in s.roads:
+                        candidates.append((d, s1))
+                candidates.sort(key=lambda c: c[0])
+                for d, other in candidates:
+                    if connection_counts[s.id] >= min_connections:
+                        break
+                    s.roads[other.id] = create_connection(s, other, d)
+                    other.roads[s.id] = create_connection(other, s, d)
+                    connection_counts[s.id] += 1
+                    connection_counts[other.id] += 1
+                    connections_made += 1
+
+        # Pass 2: Connect neighboring settlements up to max_connections if within max_connection_distance_km
+        for d, s1, s2 in pairs:
+            if s2.id in s1.roads:
+                continue
+            if d > max_connection_distance_km:
+                continue
+            if connection_counts[s1.id] >= max_connections or connection_counts[s2.id] >= max_connections:
+                continue
+
+            s1.roads[s2.id] = create_connection(s1, s2, d)
+            s2.roads[s1.id] = create_connection(s2, s1, d)
+            connection_counts[s1.id] += 1
+            connection_counts[s2.id] += 1
+            connections_made += 1
+
+        return connections_made
+
+    @classmethod
+    def assemble_world_middle_layers(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        nation_ids: Optional[List[str]] = None,
+        settlement_ids: Optional[List[str]] = None,
+        settlements_per_nation: int = 4,
+        max_connection_distance_km: float = 40.0,
+        include_facilities: bool = True,
+    ) -> InfrastructureRegistry:
+        """
+        Assembles Level 3 (Nation) and Level 4 (Settlement) into the infrastructure hierarchy.
+        1. Ensures upper layers (Level 0~2) are assembled.
+        2. Selects and registers nations compatible with the continent.
+        3. Selects and registers settlements, mapping them to nations and regions.
+        4. Connects settlements into a deterministic 2D road network (assemble_settlement_roads).
+        5. Identifies cross-border roads, binding them to nation international_highways and border_checkpoints.
+        6. Recalculates bottom-up population and area totals across all tiers.
+        """
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg or not reg.continents or not reg.regions:
+            reg = cls.assemble_world_upper_layers(world_state, registry=reg)
+
+        continent = next(iter(reg.continents.values()))
+        cont_id = continent.id
+
+        # 1. Load & Select Nations
+        all_nations = cls.load_nation_templates(continent_id=cont_id)
+        chosen_nations: List[Nation] = []
+
+        if nation_ids:
+            for nid in nation_ids:
+                if nid in all_nations:
+                    chosen_nations.append(all_nations[nid])
+        elif continent.nation_ids:
+            for nid in continent.nation_ids:
+                if nid in all_nations and all_nations[nid] not in chosen_nations:
+                    chosen_nations.append(all_nations[nid])
+
+        if not chosen_nations and all_nations:
+            ruling_seen = set()
+            for nat in all_nations.values():
+                if nat.ruling_system not in ruling_seen:
+                    chosen_nations.append(nat)
+                    ruling_seen.add(nat.ruling_system)
+                if len(chosen_nations) >= 3:
+                    break
+            if not chosen_nations:
+                chosen_nations = list(all_nations.values())[:3]
+
+        for nat in chosen_nations:
+            nat.continent_id = cont_id
+            reg.register_nation(nat)
+
+        # 2. Load & Select Settlements
+        all_settlements = cls.load_settlement_templates()
+        active_regions = list(reg.regions.values())
+        chosen_settlements: List[Settlement] = []
+
+        if settlement_ids:
+            for sid in settlement_ids:
+                if sid in all_settlements:
+                    chosen_settlements.append(all_settlements[sid])
+        else:
+            available_settlements = list(all_settlements.values())
+            used_ids = set()
+
+            for nat_idx, nat in enumerate(chosen_nations):
+                nat_settlements: List[Settlement] = []
+
+                # Find capital first
+                for st in available_settlements:
+                    if st.id not in used_ids and st.settlement_type == "capital_metropolis":
+                        nat_settlements.append(st)
+                        used_ids.add(st.id)
+                        break
+
+                # Fill satellite settlements
+                for st in available_settlements:
+                    if len(nat_settlements) >= settlements_per_nation:
+                        break
+                    if st.id not in used_ids:
+                        nat_settlements.append(st)
+                        used_ids.add(st.id)
+
+                # Bind nation and region to these settlements
+                for s_idx, st in enumerate(nat_settlements):
+                    st.nation_id = nat.id
+                    target_reg = active_regions[(nat_idx + s_idx) % len(active_regions)]
+                    st.region_id = target_reg.id
+                    reg.register_settlement(st)
+                    chosen_settlements.append(st)
+
+        # If user explicitly passed settlement_ids, register them
+        if settlement_ids:
+            for idx, st in enumerate(chosen_settlements):
+                if (not st.nation_id or st.nation_id not in reg.nations) and chosen_nations:
+                    st.nation_id = chosen_nations[idx % len(chosen_nations)].id
+                if (not st.region_id or st.region_id not in reg.regions) and active_regions:
+                    st.region_id = active_regions[idx % len(active_regions)].id
+                reg.register_settlement(st)
+
+        # 3. Assemble 2D Settlement Road Network
+        cls.assemble_settlement_roads(
+            reg.settlements,
+            max_connection_distance_km=max_connection_distance_km,
+            min_connections=1,
+            max_connections=4,
+        )
+
+        # 4. Bind Cross-Border Gates & International Highways
+        for s_from in reg.settlements.values():
+            if not s_from.nation_id or s_from.nation_id not in reg.nations:
+                continue
+            nat_from = reg.nations[s_from.nation_id]
+
+            for dest_id, road in s_from.roads.items():
+                s_to = reg.settlements.get(dest_id)
+                if not s_to or not s_to.nation_id:
+                    continue
+
+                if s_from.nation_id != s_to.nation_id:
+                    # Register border checkpoint settlement
+                    if s_from.id not in nat_from.border_checkpoints:
+                        nat_from.border_checkpoints.append(s_from.id)
+
+                    # Register inter-tier highway
+                    highway = InterTierRoute(
+                        origin_id=nat_from.id,
+                        destination_id=s_to.nation_id,
+                        route_name=road.road_name_ko,
+                        route_category=road.route_category,
+                        distance_km=road.distance_km,
+                        travel_medium="land",
+                        toll_fee=road.toll_fee,
+                        is_bottleneck=road.is_bottleneck,
+                        bottleneck_type=road.bottleneck_type,
+                        traits=list(road.traits),
+                        description=f"{s_from.name}({nat_from.name})에서 {s_to.name}으로 통하는 국경 관문 가도",
+                    )
+                    if not any(h.origin_id == highway.origin_id and h.destination_id == highway.destination_id for h in nat_from.international_highways):
+                        nat_from.international_highways.append(highway)
+
+        # 5. Slot & Attach Level 5 Facilities
+        if include_facilities:
+            cls.assemble_settlement_facilities(reg)
+
+        # 6. Bottom-Up Totals Recalculation
+        reg.recalculate_totals()
+        world_state.infrastructure = reg
+        if hasattr(world_state, "sync_infrastructure_totals"):
+            world_state.sync_infrastructure_totals()
+        return reg
+
+    @classmethod
+    def assemble_settlement_facilities(
+        cls,
+        registry: InfrastructureRegistry,
+        settlement_ids: Optional[List[str]] = None,
+        facility_templates: Optional[Dict[str, Facility]] = None,
+    ) -> int:
+        """
+        Slots and attaches Level 5 Facilities to settlements based on scale, type, and local specialties.
+        - Loads 14 archetypes from facility_templates.json if not provided.
+        - Determines facility composition:
+          * Baseline: tavern_inn, general_store, town_hall_manor.
+          * capital_metropolis: + blacksmith_forge, apothecary_clinic, training_ground, mage_tower_academy, temple_shrine, guild_hall, guard_post_prison, public_bathhouse.
+          * fortress_citadel: + blacksmith_forge, guard_post_prison, training_ground, workshop_mill, temple_shrine.
+          * mining_camp: + blacksmith_forge, workshop_mill, dungeon_entrance.
+          * coastal_port / fishing_cove: + workshop_mill, temple_shrine, apothecary_clinic.
+          * monastic_town: + temple_shrine, apothecary_clinic, mage_tower_academy.
+          * oasis_crossroad / nomad_camp: + roving_peddler_stall, guard_post_prison, temple_shrine.
+          * treetop_village: + apothecary_clinic, workshop_mill, temple_shrine.
+          * farming_village / other: + blacksmith_forge, apothecary_clinic, workshop_mill.
+        - Customizes names, services, and inventory using settlement name and specialties.
+        - Establishes internal/external exits connecting to the settlement's town square.
+        - Populates traits ensuring at least 3 traits per facility.
+        - Registers into registry via register_facility (which auto-populates categorized lists).
+        Returns total facilities created.
+        """
+        templates = facility_templates or cls.load_facility_templates()
+        tmpl_by_type: Dict[str, Facility] = {}
+        for fac in templates.values():
+            if fac.facility_type not in tmpl_by_type:
+                tmpl_by_type[fac.facility_type] = fac
+
+        target_settlements = [
+            s for s in registry.settlements.values()
+            if settlement_ids is None or s.id in settlement_ids
+        ]
+
+        facilities_created = 0
+
+        for st in target_settlements:
+            st_type = st.settlement_type
+            pop = st.population
+            types_to_add: List[str] = ["tavern_inn", "general_store", "town_hall_manor"]
+
+            if st_type == "capital_metropolis":
+                types_to_add.extend([
+                    "blacksmith_forge", "apothecary_clinic", "training_ground",
+                    "mage_tower_academy", "temple_shrine", "guild_hall",
+                    "guard_post_prison", "public_bathhouse"
+                ])
+            elif st_type == "fortress_citadel":
+                types_to_add.extend([
+                    "blacksmith_forge", "guard_post_prison", "training_ground",
+                    "workshop_mill", "temple_shrine"
+                ])
+            elif st_type == "mining_camp":
+                types_to_add.extend([
+                    "blacksmith_forge", "workshop_mill", "dungeon_entrance"
+                ])
+            elif st_type in ["coastal_port", "fishing_cove"]:
+                types_to_add.extend([
+                    "workshop_mill", "temple_shrine", "apothecary_clinic"
+                ])
+            elif st_type == "monastic_town":
+                types_to_add.extend([
+                    "temple_shrine", "apothecary_clinic", "mage_tower_academy"
+                ])
+            elif st_type in ["oasis_crossroad", "nomad_camp"]:
+                types_to_add.extend([
+                    "roving_peddler_stall", "guard_post_prison", "temple_shrine"
+                ])
+            elif st_type == "treetop_village":
+                types_to_add.extend([
+                    "apothecary_clinic", "workshop_mill", "temple_shrine"
+                ])
+            else:
+                types_to_add.extend([
+                    "blacksmith_forge", "apothecary_clinic", "workshop_mill"
+                ])
+
+            # Population & context checks
+            if pop >= 10000 and "guard_post_prison" not in types_to_add:
+                types_to_add.append("guard_post_prison")
+            if pop >= 5000 and "temple_shrine" not in types_to_add:
+                types_to_add.append("temple_shrine")
+
+            # Check for dungeon / ruin presence from local curses, scandals or grievances
+            combined_lore = " ".join(st.local_curses_and_taboos + st.hidden_scandals + st.historical_grievances)
+            has_curse_or_dungeon = any(
+                keyword in combined_lore
+                for keyword in ["미궁", "던전", "유적", "원혼", "납골당", "폐광", "괴담", "심연"]
+            )
+            if has_curse_or_dungeon and "dungeon_entrance" not in types_to_add:
+                types_to_add.append("dungeon_entrance")
+
+            unique_types = list(dict.fromkeys(types_to_add))
+
+            for ftype in unique_types:
+                tmpl = tmpl_by_type.get(ftype)
+                fac_id = f"fac_{st.id}_{ftype}"
+
+                if fac_id in registry.facilities:
+                    continue
+
+                fac_name = f"{st.name} {tmpl.name if tmpl else ftype}"
+                fac_desc = tmpl.description if tmpl else f"{st.name}의 {ftype} 시설"
+
+                items: List[str] = list(tmpl.items) if tmpl else []
+                if ftype in ["general_store", "tavern_inn", "roving_peddler_stall"] and st.specialties:
+                    items.extend(st.specialties)
+
+                traits: List[str] = list(tmpl.traits) if tmpl else [f"{st.name} 소속 시설", "현지 주민 애용", "안정된 거점"]
+                traits.append(f"{st.name} 관할")
+                traits = list(dict.fromkeys(traits))
+
+                exits: Dict[str, str] = {
+                    "광장": f"{st.name} 중앙 광장",
+                    "거리": f"{st.name} 중심가"
+                }
+
+                fac = Facility(
+                    id=fac_id,
+                    name=fac_name,
+                    settlement_id=st.id,
+                    category=tmpl.category if tmpl else FacilityCategory.TRADE_WORKSHOP,
+                    is_communal_public=tmpl.is_communal_public if tmpl else False,
+                    is_wonder=tmpl.is_wonder if tmpl else False,
+                    facility_type=ftype,
+                    building_status="operational",
+                    construction_progress=100,
+                    occupancy_limit=tmpl.occupancy_limit if tmpl else 20,
+                    noise_level=tmpl.noise_level if tmpl else 40,
+                    soundproof_rating=tmpl.soundproof_rating if tmpl else 30,
+                    floor_material=tmpl.floor_material if tmpl else "wood_creaky",
+                    lighting=tmpl.lighting if tmpl else 50,
+                    light_source_type=tmpl.light_source_type if tmpl else "torch",
+                    water_supply_type=tmpl.water_supply_type if tmpl else "공용우물",
+                    ventilation_quality=tmpl.ventilation_quality if tmpl else 50,
+                    durability=tmpl.durability if tmpl else 100,
+                    daily_maintenance_cost=tmpl.daily_maintenance_cost if tmpl else 5,
+                    defense_rating=tmpl.defense_rating if tmpl else 20,
+                    flammability_rating=tmpl.flammability_rating if tmpl else 30,
+                    trap_hazard_rating=tmpl.trap_hazard_rating if tmpl else 0,
+                    magic_ward_tier=tmpl.magic_ward_tier if tmpl else 0,
+                    lock_difficulty=tmpl.lock_difficulty if tmpl else 15,
+                    reinforcement_material=tmpl.reinforcement_material if tmpl else "wood",
+                    scent_intensity=tmpl.scent_intensity if tmpl else 40,
+                    ceiling_height_meters=tmpl.ceiling_height_meters if tmpl else 3.0,
+                    hallway_width_meters=tmpl.hallway_width_meters if tmpl else 2.2,
+                    cover_poise_durability=tmpl.cover_poise_durability if tmpl else 50,
+                    dungeon_max_depth_floors=tmpl.dungeon_max_depth_floors if tmpl else 0,
+                    dungeon_core_element=tmpl.dungeon_core_element if tmpl else "none",
+                    sanctification_rating=tmpl.sanctification_rating if tmpl else 50,
+                    services=dict(tmpl.services) if tmpl else {},
+                    interactive_props=list(tmpl.interactive_props) if tmpl else ["참나무 탁자", "출입구 빗장"],
+                    infiltration_points=list(tmpl.infiltration_points) if tmpl else ["후방 창고문", "환기창"],
+                    hidden_compartments=list(tmpl.hidden_compartments) if tmpl else ["바닥 비밀 홈"],
+                    items=items,
+                    exits=exits,
+                    traits=traits,
+                    description=fac_desc,
+                )
+                registry.register_facility(fac)
+                facilities_created += 1
+
+        return facilities_created
+
+    @classmethod
+    def assemble_full_world(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        cosmo_id: Optional[str] = None,
+        continent_id: Optional[str] = None,
+        region_ids: Optional[List[str]] = None,
+        nation_ids: Optional[List[str]] = None,
+        settlement_ids: Optional[List[str]] = None,
+        settlements_per_nation: int = 4,
+        max_connection_distance_km: float = 40.0,
+        include_facilities: bool = True,
+        bind_entities: bool = False,
+    ) -> InfrastructureRegistry:
+        """
+        Master factory assembling the complete 6-Tier Realistic World Infrastructure:
+        Level 0 (Cosmology & Laws) -> Level 1 (Continent & Language) -> Level 2 (Region & Climate) ->
+        Level 3 (Nation & Tariffs) -> Level 4 (Settlement & 2D Roads) -> Level 5 (Facility & Services).
+        """
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if cosmo_id or continent_id or region_ids or not reg or not reg.continents or not reg.regions:
+            reg = cls.assemble_world_upper_layers(
+                world_state,
+                cosmo_id=cosmo_id,
+                continent_id=continent_id,
+                region_ids=region_ids,
+                registry=reg,
+            )
+
+        mid_reg = cls.assemble_world_middle_layers(
+            world_state,
+            registry=reg,
+            nation_ids=nation_ids,
+            settlement_ids=settlement_ids,
+            settlements_per_nation=settlements_per_nation,
+            max_connection_distance_km=max_connection_distance_km,
+            include_facilities=include_facilities,
+        )
+
+        if bind_entities:
+            cls.bind_world_entities(world_state, registry=mid_reg)
+
+        return mid_reg
+
+    # -----------------------------------------------------------------
+    # Entity Binding: 1. NPC & Demographics Binding
+    # -----------------------------------------------------------------
+    @classmethod
+    def bind_settlement_npcs(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        settlement_ids: Optional[List[str]] = None,
+    ) -> int:
+        """
+        Binds resident NPCs to settlement facilities based on racial demographics and facility types.
+        Populates world_state.npcs and updates facility.npcs and facility.key_holder_npc_id.
+        """
+        from src.world.state import NPC
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg:
+            return 0
+
+        target_settlements = [
+            s for s in reg.settlements.values()
+            if settlement_ids is None or s.id in settlement_ids
+        ]
+
+        # Job mapping: (job_title, name_suffix, tier, base_traits, stats, gold)
+        JOB_MAP = {
+            FacilityType.TAVERN_INN.value: ("선술집 주인", "주모", "commoner", ["마을 소식통", "호탕함", "외지인 경계"], {"str": 11, "con": 12, "wis": 11}, 45),
+            FacilityType.GENERAL_STORE.value: ("잡화상인", "잡화상", "commoner", ["흥정의 달인", "계산적", "자물쇠 소지"], {"int": 12, "wis": 12}, 60),
+            FacilityType.BLACKSMITH_FORGE.value: ("대장장이", "모루장인", "commoner", ["우직함", "화염 저항", "정밀 단조"], {"str": 14, "con": 13}, 35),
+            FacilityType.APOTHECARY_CLINIC.value: ("의원 약초사", "약초사", "commoner", ["약초 감별", "응급 지혈", "침착함"], {"int": 13, "wis": 13}, 25),
+            FacilityType.TRAINING_GROUND.value: ("연무장 교관", "수석교관", "intermediate", ["엄격함", "검술 달인", "전투 흉터"], {"str": 15, "agi": 13, "ac": 14}, 30),
+            FacilityType.MAGE_TOWER_ACADEMY.value: ("마탑 학자", "비전학사", "intermediate", ["비전 연구", "고대어 해독", "지적 호기심"], {"int": 16, "wis": 14, "mana": 60}, 50),
+            FacilityType.TEMPLE_SHRINE.value: ("성소 사제", "주임사제", "commoner", ["신실함", "치유 기도", "금기 엄수"], {"wis": 15, "con": 11}, 20),
+            FacilityType.GUILD_HALL.value: ("길드 접수원", "길드원", "commoner", ["의뢰 조율", "정보통", "비밀 엄수"], {"int": 12, "agi": 11}, 40),
+            FacilityType.GUARD_POST_PRISON.value: ("경비대장", "수비대장", "intermediate", ["철통 경계", "엄격한 법 집행", "불심검문"], {"str": 14, "con": 13, "ac": 15}, 35),
+            FacilityType.PUBLIC_BATHHOUSE.value: ("목욕탕 관리인", "욕장지기", "commoner", ["온천 감정", "소문 경청", "친절함"], {"wis": 11, "cha": 12}, 20),
+            FacilityType.ROVING_PEDDLER_STALL.value: ("유랑 행상인", "보따리상", "commoner", ["이국 진귀품", "방랑벽", "흥정 유도"], {"agi": 12, "int": 12}, 50),
+            FacilityType.WORKSHOP_MILL.value: ("제재소 장인", "공방장", "commoner", ["목재 가공", "도르래 기술", "근면함"], {"str": 13, "con": 12}, 25),
+            FacilityType.DUNGEON_ENTRANCE.value: ("유적 묘지기", "파수꾼", "commoner", ["음산한 분위기", "고대 경고문", "봉인 감시"], {"wis": 14, "int": 11}, 15),
+            FacilityType.TOWN_HALL_MANOR.value: ("영주/촌장", "영주", "intermediate", ["영지 행정", "원로원 의장", "정치적 수완"], {"int": 13, "wis": 13, "con": 12}, 120),
+        }
+
+        npcs_spawned = 0
+        for st in target_settlements:
+            primary_species = "인간"
+            if st.racial_demographics:
+                primary_species = max(st.racial_demographics.items(), key=lambda x: x[1])[0]
+
+            for fac_id in st.facility_ids:
+                fac = reg.facilities.get(fac_id)
+                if not fac:
+                    continue
+
+                existing = [nid for nid in fac.npcs if hasattr(world_state, "npcs") and nid in world_state.npcs]
+                if existing:
+                    continue
+
+                f_type = fac.facility_type
+                info = JOB_MAP.get(f_type, ("시설 관리인", "관리인", "commoner", ["성실함", "현지 적응", "시설 유지"], {}, 20))
+                job, suffix, tier, base_traits, stats, gold = info
+
+                npc_id = f"npc_{st.id}_{f_type}_{len(fac.npcs) + 1}"
+                npc_name = f"{st.name} {suffix}"
+                desc = f"{st.name}의 {fac.name}에 상주하는 {primary_species} {job}."
+
+                npc_traits = list(base_traits)
+                if primary_species != "인간":
+                    npc_traits.append(f"{primary_species} 혈통")
+                if st.traits:
+                    npc_traits.append(st.traits[0])
+
+                health = 60 if tier == "intermediate" else 50
+                mana = stats.get("mana", 40 if tier == "intermediate" else 30)
+
+                npc = NPC(
+                    id=npc_id,
+                    name=npc_name,
+                    description=desc,
+                    location=fac.id,
+                    job=job,
+                    tier=tier,
+                    health=health,
+                    max_health=health,
+                    mana=mana,
+                    max_mana=mana,
+                    armor_class=stats.get("ac", 10),
+                    gold=gold,
+                    strength=stats.get("str", 10),
+                    agility=stats.get("agi", 10),
+                    intelligence=stats.get("int", 10),
+                    constitution=stats.get("con", 10),
+                    wisdom=stats.get("wis", 10),
+                    faction_id=st.nation_id,
+                    traits=npc_traits,
+                )
+
+                if hasattr(world_state, "npcs"):
+                    world_state.npcs[npc_id] = npc
+
+                if npc_id not in fac.npcs:
+                    fac.npcs.append(npc_id)
+
+                if not fac.key_holder_npc_id and f_type in [
+                    FacilityType.GENERAL_STORE.value,
+                    FacilityType.BLACKSMITH_FORGE.value,
+                    FacilityType.TOWN_HALL_MANOR.value,
+                    FacilityType.GUARD_POST_PRISON.value,
+                ]:
+                    fac.key_holder_npc_id = npc_id
+
+                npcs_spawned += 1
+
+        return npcs_spawned
+
+    # -----------------------------------------------------------------
+    # Entity Binding: 2. Item & Commercial Inventory Binding
+    # -----------------------------------------------------------------
+    @classmethod
+    def bind_facility_inventories(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        settlement_ids: Optional[List[str]] = None,
+    ) -> int:
+        """
+        Populates commercial facilities with stock items tailored to settlement & regional specialties.
+        Applies cascading regional price multipliers and national tariffs.
+        """
+        from src.world.state import Item
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg:
+            return 0
+
+        target_settlements = [
+            s for s in reg.settlements.values()
+            if settlement_ids is None or s.id in settlement_ids
+        ]
+
+        items_stocked = 0
+        for st in target_settlements:
+            region = reg.regions.get(st.region_id)
+            specialties = list(st.specialties or [])
+            if region and region.specialties:
+                specialties.extend(region.specialties)
+
+            for fac_id in st.facility_ids:
+                fac = reg.facilities.get(fac_id)
+                if not fac:
+                    continue
+
+                f_type = fac.facility_type
+                if f_type not in [
+                    FacilityType.TAVERN_INN.value,
+                    FacilityType.GENERAL_STORE.value,
+                    FacilityType.BLACKSMITH_FORGE.value,
+                    FacilityType.APOTHECARY_CLINIC.value,
+                    FacilityType.ROVING_PEDDLER_STALL.value,
+                ]:
+                    continue
+
+                existing = [iid for iid in fac.items if hasattr(world_state, "items") and iid in world_state.items]
+                if existing:
+                    continue
+
+                raw_items: List[Tuple[str, str, str, int, dict, List[str]]] = []
+
+                if f_type == FacilityType.TAVERN_INN.value:
+                    raw_items.append(("drink", f"{st.name} 특산주", "consumable", 12, {"restore_fatigue": 15}, ["향토 주류", "피로 회복", "향긋함"]))
+                    raw_items.append(("ration", f"{st.name} 구운 보존식", "consumable", 15, {"restore_hp": 20}, ["따뜻한 식사", "체력 회복", "염장 가공"]))
+
+                elif f_type == FacilityType.GENERAL_STORE.value:
+                    raw_items.append(("rope", "견고한 등반 밧줄", "tool", 20, {"utility": "climb_advantage"}, ["탐험 장비", "마끈 직조"]))
+                    raw_items.append(("torch_kit", "방수 횃불 세트", "misc", 15, {"light_duration": 60}, ["조명 도구", "송진 코팅"]))
+                    if specialties:
+                        spec_name = specialties[0]
+                        raw_items.append(("specialty", f"가공된 {spec_name}", "misc", 40, {"trade_good": True}, [f"{st.name} 특산물", "원산지 보증"]))
+
+                elif f_type == FacilityType.BLACKSMITH_FORGE.value:
+                    b_tier = max(1, st.blacksmith_tier)
+                    dmg = 8 + b_tier * 2
+                    def_val = 5 + b_tier
+                    raw_items.append(("sword", f"{st.name}산 단련 검", "weapon", 50 * b_tier, {"damage": dmg}, [f"단련도 {b_tier}급", "절삭력", "정밀 단조"]))
+                    raw_items.append(("armor", f"{st.name}산 방호 흉갑", "armor", 60 * b_tier, {"defense": def_val}, [f"방호도 {b_tier}급", "이음새 보강", "물리 저항"]))
+                    raw_items.append(("repair_kit", "휴대용 모루 수리 키트", "tool", 25, {"repair_durability": 30}, ["무구 수리", "휴대용 공구"]))
+
+                elif f_type == FacilityType.APOTHECARY_CLINIC.value:
+                    raw_items.append(("bandage", "소독 지혈 붕대", "consumable", 12, {"stop_bleeding": True}, ["응급 처치", "약초 살균"]))
+                    raw_items.append(("healing_salve", "농축 산약초 연고", "consumable", 30, {"restore_hp": 30}, ["외상 치료", "천연 생약"]))
+                    if region and (region.environmental_toxicity > 0 or region.survival_hazards):
+                        raw_items.append(("antitoxin", "청정 해독 물약", "consumable", 40, {"cure_poison": True}, ["환경 독성 정화", "비전 해독제"]))
+
+                elif f_type == FacilityType.ROVING_PEDDLER_STALL.value:
+                    raw_items.append(("curio", "먼 이국의 황동 나침반", "misc", 70, {"navigation_bonus": True}, ["이국 진귀품", "정밀 기계", "희소성"]))
+                    raw_items.append(("talisman", "수호의 짐승뼈 부적", "accessory", 55, {"ward_minor": True}, ["토착 주술", "정령의 가호"]))
+
+                for idx, (suffix, iname, itype, base_val, props, itraits) in enumerate(raw_items):
+                    item_id = f"item_{st.id}_{fac.id}_{suffix}_{idx + 1}"
+                    price_info = reg.calculate_effective_price(itype, base_val, fac.id)
+                    eff_price = int(price_info.get("final_price", base_val)) if isinstance(price_info, dict) else int(price_info)
+
+                    item = Item(
+                        id=item_id,
+                        name=iname,
+                        description=f"{fac.name}에서 취급하는 {itype} 품목.",
+                        location=fac.id,
+                        item_type=itype,
+                        value=eff_price,
+                        properties=props,
+                        traits=itraits,
+                    )
+                    if itype == "weapon":
+                        item.damage = props.get("damage", 8)
+                    elif itype == "armor":
+                        item.defense = props.get("defense", 5)
+
+                    if hasattr(world_state, "items"):
+                        world_state.items[item_id] = item
+
+                    if item_id not in fac.items:
+                        fac.items.append(item_id)
+
+                    items_stocked += 1
+
+        return items_stocked
+
+    # -----------------------------------------------------------------
+    # Entity Binding: 3. Skill & Magic Training Facility Binding
+    # -----------------------------------------------------------------
+    @classmethod
+    def bind_training_facilities(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        settlement_ids: Optional[List[str]] = None,
+    ) -> int:
+        """
+        Binds trainable martial skills, magic spells, and phonetic ancient words
+        to training grounds and mage tower academies.
+        """
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg:
+            return 0
+
+        target_settlements = [
+            s for s in reg.settlements.values()
+            if settlement_ids is None or s.id in settlement_ids
+        ]
+
+        facilities_configured = 0
+        for st in target_settlements:
+            for fac_id in st.facility_ids:
+                fac = reg.facilities.get(fac_id)
+                if not fac:
+                    continue
+
+                if fac.facility_type == FacilityType.TRAINING_GROUND.value:
+                    fac.services["available_skills"] = [
+                        "강타(Strike)", "철벽 방패세(Shield Guard)", "회전 베기(Whirlwind Slash)", "전투의 포효(Battle Cry)"
+                    ]
+                    fac.services["training_cost_gold"] = 25 * max(1, st.development_tier)
+                    fac.services["mastery_limit_tier"] = min(4, st.development_tier + 1)
+                    facilities_configured += 1
+
+                elif fac.facility_type == FacilityType.MAGE_TOWER_ACADEMY.value:
+                    fac.services["available_skills"] = [
+                        "화염구(Fireball)", "에테르 방벽(Aether Barrier)", "마력 탐지(Mana Sight)", "비전 섬광(Arcane Flash)"
+                    ]
+                    # Ancient Magic Phonetic Words adhering to Rule 4
+                    fac.services["ancient_words"] = [
+                        "바르(발화/열에너지)", "카르(강제/물리운동)", "이그니스(화염)", "모투스(기동)"
+                    ]
+                    fac.services["training_cost_gold"] = 40 * max(1, st.development_tier)
+                    fac.services["mana_density_rating"] = st.local_mana_density_override or 50
+                    facilities_configured += 1
+
+        return facilities_configured
+
+    # -----------------------------------------------------------------
+    # Entity Binding: 4. Monster & Predator Ecosystem Binding
+    # -----------------------------------------------------------------
+    @classmethod
+    def load_monster_templates(cls, filepath: Optional[Path] = None) -> List[Dict[str, Any]]:
+        target_path = filepath or (TEMPLATES_DIR / "monster_templates.json")
+        if not target_path.exists():
+            return []
+        try:
+            with open(target_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, list) else []
+        except Exception as e:
+            logger.warning(f"Failed to load monster templates from {target_path}: {e}")
+            return []
+
+    @classmethod
+    def spawn_monster_from_template(
+        cls,
+        template_id_or_name: str,
+        location_id: str,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+    ) -> Optional[Any]:
+        """
+        Deterministic Factory: Converts a monster template into a hostile NPC entity
+        and registers it in world_state.npcs.
+        """
+        from src.world.state import NPC, Item
+        templates = cls.load_monster_templates()
+        matched = None
+        for tmpl in templates:
+            if tmpl.get("id") == template_id_or_name or tmpl.get("name") == template_id_or_name:
+                matched = tmpl
+                break
+            if template_id_or_name.lower() in tmpl.get("name", "").lower() or template_id_or_name.lower() in tmpl.get("id", "").lower():
+                matched = tmpl
+                break
+
+        if not matched and templates:
+            matched = templates[0]
+
+        if not matched:
+            return None
+
+        stat_prof = matched.get("stat_profile", {})
+        hp = stat_prof.get("hp", 60)
+        ac = stat_prof.get("ac", 12)
+        str_val = stat_prof.get("str", 12)
+        agi_val = stat_prof.get("agi", 10)
+        int_val = stat_prof.get("int", 8)
+        con_val = stat_prof.get("con", 12)
+
+        existing_npcs = getattr(world_state, "npcs", {})
+        mob_id = f"mob_{matched.get('id', 'beast')}_{len(existing_npcs) + 1}"
+        mob_name = matched.get("name", "야생 마수")
+        mob_theme = matched.get("concept_theme", "괴수")
+        weakness = matched.get("weakness_exploit", "정밀 타격")
+
+        traits = [mob_theme, f"약점: {weakness[:20]}", "적대 마수", matched.get("tier", "commoner")]
+
+        skills = []
+        if matched.get("extractable_skill"):
+            skills.append(matched["extractable_skill"])
+
+        mob = NPC(
+            id=mob_id,
+            name=mob_name,
+            description=f"[{mob_theme}] {matched.get('observation_clue', '살기를 뿜어내는 마수.')}",
+            location=location_id,
+            job="마수/괴수",
+            tier=matched.get("tier", "commoner"),
+            disposition="hostile",
+            health=hp,
+            max_health=hp,
+            armor_class=ac,
+            strength=str_val,
+            agility=agi_val,
+            intelligence=int_val,
+            constitution=con_val,
+            skills=skills,
+            traits=traits,
+        )
+
+        drops = matched.get("drops_and_materials", [])
+        for idx, drop_name in enumerate(drops):
+            drop_id = f"item_{mob_id}_drop_{idx + 1}"
+            loot_item = Item(
+                id=drop_id,
+                name=drop_name,
+                description=f"{mob_name}의 사체에서 채취 가능한 특수 전리품.",
+                location=mob_id,
+                item_type="material",
+                value=30,
+                traits=[mob_name, "마수 전리품", "연금술 소재"],
+            )
+            if hasattr(world_state, "items"):
+                world_state.items[drop_id] = loot_item
+            mob.inventory.append(drop_id)
+
+        if hasattr(world_state, "npcs"):
+            world_state.npcs[mob_id] = mob
+
+        return mob
+
+    @classmethod
+    def bind_region_monsters(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        region_ids: Optional[List[str]] = None,
+    ) -> int:
+        """
+        Maps regional apex predators and terrain-compatible monsters to regions and peripheral settlements.
+        """
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg:
+            return 0
+
+        templates = cls.load_monster_templates()
+        if not templates:
+            return 0
+
+        target_regions = [
+            r for r in reg.regions.values()
+            if region_ids is None or r.id in region_ids
+        ]
+
+        monsters_spawned = 0
+        for idx, region in enumerate(target_regions):
+            matched_tmpl = None
+            if region.apex_predator_id:
+                for t in templates:
+                    if t.get("id") == region.apex_predator_id:
+                        matched_tmpl = t
+                        break
+            if not matched_tmpl:
+                matched_tmpl = templates[idx % len(templates)]
+
+            loc_id = f"loc_{region.id}_wilderness"
+            mob = cls.spawn_monster_from_template(matched_tmpl["id"], loc_id, world_state, registry=reg)
+            if mob:
+                monsters_spawned += 1
+
+        return monsters_spawned
+
+    # -----------------------------------------------------------------
+    # Entity Binding: 5. Quest & Notice Board Binding
+    # -----------------------------------------------------------------
+    @classmethod
+    def bind_settlement_quests(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        settlement_ids: Optional[List[str]] = None,
+    ) -> int:
+        """
+        Binds notice board quests and historical grievance investigations
+        to settlements, registering them into world_state.quests.
+        """
+        from src.world.quest_engine import Quest, QuestStage
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg:
+            return 0
+
+        target_settlements = [
+            s for s in reg.settlements.values()
+            if settlement_ids is None or s.id in settlement_ids
+        ]
+
+        quests_created = 0
+        for st in target_settlements:
+            giver_id = ""
+            for fac_id in st.facility_ids:
+                fac = reg.facilities.get(fac_id)
+                if fac and fac.npcs:
+                    giver_id = fac.npcs[0]
+                    break
+
+            # 1. Bounty / Hunt Quest
+            q_hunt_id = f"quest_{st.id}_hunt"
+            q_hunt = Quest(
+                id=q_hunt_id,
+                title=f"[{st.name}] 외곽 출몰 마수 토벌령",
+                category="hunt",
+                giver_npc_id=giver_id,
+                description=f"{st.name} 외곽 지대의 마수 출몰로 인한 주민 위협. 수비대 협조 요청.",
+                stages=[
+                    QuestStage(stage_id=1, type="talk", target=giver_id, description_ko="마을 광장 공고 확인 및 정보 탐문"),
+                    QuestStage(stage_id=2, type="kill", target="monster", description_ko="외곽 출몰 마수 처치 및 흔적 확보"),
+                ],
+                rewards={"gold": 75 * max(1, st.development_tier), "reputation": 10},
+                traits=[st.name, "마을 토벌령", "현상수배", "공식 의뢰"],
+            )
+
+            if not hasattr(world_state, "quests"):
+                world_state.quests = {}
+
+            if q_hunt_id not in world_state.quests:
+                world_state.quests[q_hunt_id] = q_hunt
+                quests_created += 1
+
+            # 2. Investigation Quest from Scandals or Grievances
+            scandals = list(getattr(st, "hidden_scandals", [])) + list(getattr(st, "historical_grievances", []))
+            if scandals:
+                scandal = scandals[0]
+                q_inv_id = f"quest_{st.id}_investigate"
+                q_inv = Quest(
+                    id=q_inv_id,
+                    title=f"[{st.name}] 진상 조사: {scandal[:20]}",
+                    category="investigation",
+                    giver_npc_id=giver_id,
+                    description=f"마을에 떠도는 내막 '{scandal}'의 실체와 배후를 조사하라.",
+                    stages=[
+                        QuestStage(stage_id=1, type="reach", target="tavern", description_ko="주점 및 골목길에서 소문 탐문"),
+                        QuestStage(stage_id=2, type="talk", target=giver_id, description_ko="증거물 확보 및 관련자 대질"),
+                    ],
+                    rewards={"gold": 60 * max(1, st.development_tier), "reputation": 8},
+                    traits=[st.name, "진상 조사", "비밀 탐색", "향토 스캔들"],
+                )
+                if q_inv_id not in world_state.quests:
+                    world_state.quests[q_inv_id] = q_inv
+                    quests_created += 1
+
+        return quests_created
+
+    # -----------------------------------------------------------------
+    # Entity Binding: Master Pipeline
+    # -----------------------------------------------------------------
+    @classmethod
+    def bind_world_entities(
+        cls,
+        world_state: Any,
+        registry: Optional[InfrastructureRegistry] = None,
+        settlement_ids: Optional[List[str]] = None,
+        region_ids: Optional[List[str]] = None,
+        bind_npcs: bool = True,
+        bind_items: bool = True,
+        bind_training: bool = True,
+        bind_monsters: bool = True,
+        bind_quests: bool = True,
+    ) -> Dict[str, int]:
+        """
+        Master integration pipeline binding live entities (NPCs, Shop Items,
+        Training Skills, Region Monsters, Notice Quests) into the 6-tier infrastructure.
+        """
+        reg = registry or getattr(world_state, "infrastructure", None)
+        if not reg:
+            return {}
+
+        results = {
+            "npcs_spawned": 0,
+            "items_stocked": 0,
+            "training_facilities_configured": 0,
+            "monsters_spawned": 0,
+            "quests_posted": 0,
+        }
+
+        if bind_npcs:
+            results["npcs_spawned"] = cls.bind_settlement_npcs(
+                world_state, registry=reg, settlement_ids=settlement_ids
+            )
+        if bind_items:
+            results["items_stocked"] = cls.bind_facility_inventories(
+                world_state, registry=reg, settlement_ids=settlement_ids
+            )
+        if bind_training:
+            results["training_facilities_configured"] = cls.bind_training_facilities(
+                world_state, registry=reg, settlement_ids=settlement_ids
+            )
+        if bind_monsters:
+            results["monsters_spawned"] = cls.bind_region_monsters(
+                world_state, registry=reg, region_ids=region_ids
+            )
+        if bind_quests:
+            results["quests_posted"] = cls.bind_settlement_quests(
+                world_state, registry=reg, settlement_ids=settlement_ids
+            )
+
+        return results
+
+
+

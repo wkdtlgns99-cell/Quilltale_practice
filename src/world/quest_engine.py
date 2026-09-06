@@ -129,6 +129,7 @@ class Quest:
     failure_penalty: Dict[str, Any] = field(default_factory=dict)
     accepted_turn: int = 0
     completed_turn: int = 0
+    traits: List[str] = field(default_factory=list) # 퀘스트 요약 특성 태그 목록 (예: ["토벌령", "긴급", "마을 공고"])
 
     @property
     def current_stage(self) -> Optional[QuestStage]:
@@ -167,6 +168,7 @@ class Quest:
             "failure_penalty": self.failure_penalty,
             "accepted_turn": self.accepted_turn,
             "completed_turn": self.completed_turn,
+            "traits": self.traits,
         }
 
     @classmethod
@@ -195,6 +197,7 @@ class Quest:
             failure_penalty=dict(data.get("failure_penalty", {})),
             accepted_turn=int(data.get("accepted_turn", 0)),
             completed_turn=int(data.get("completed_turn", 0)),
+            traits=list(data.get("traits", [])),
         )
 
 

@@ -388,6 +388,8 @@ class ActionValidator:
                     target_ac = loc_npcs[0].armor_class
                     target_npc_id = loc_npcs[0].id
 
+        target_npc = state.npcs.get(target_npc_id) if target_npc_id else None
+
         # Check if player declared a specific learned skill
         matched_player_skill = None
         if state.player.skills:
@@ -439,6 +441,7 @@ class ActionValidator:
             extra_flags['player_skill_used'] = {
                 'skill_id': matched_player_skill.id,
                 'skill_name': matched_player_skill.name,
+                'category': matched_player_skill.category,
                 'resource_type': matched_player_skill.resource_type,
                 'resource_cost': matched_player_skill.resource_cost,
                 'cooldown_turns': matched_player_skill.cooldown_turns,
@@ -447,7 +450,35 @@ class ActionValidator:
                 'armor_penetration': matched_player_skill.armor_penetration,
             }
 
-            effective_dc = max(5, int(target_ac * (1.0 - getattr(matched_player_skill, "armor_penetration", 0.0))))
+            # Special Magic Category Engine Flags
+            if matched_player_skill.category == "spatiotemporal":
+                extra_flags['spatiotemporal_space_severance'] = True
+                armor_pen = 1.0
+            else:
+                armor_pen = getattr(matched_player_skill, "armor_penetration", 0.0)
+
+            if matched_player_skill.category == "conceptual":
+                if "거리" in matched_player_skill.name:
+                    extra_flags['conceptual_distance_zero'] = True
+                if "소리" in matched_player_skill.name:
+                    extra_flags['conceptual_sound_seal'] = True
+                if "상처" in matched_player_skill.name:
+                    extra_flags['conceptual_wound_erase'] = True
+
+            if matched_player_skill.category == "causality":
+                extra_flags['causality_reversal'] = True
+
+            if matched_player_skill.category == "logos_word":
+                extra_flags['is_logos_word'] = True
+                has_target_named = bool(target_npc and (target_npc.name.lower() in action_lower or target_npc.id.lower() in action_lower))
+                if has_target_named:
+                    extra_flags['logos_mode'] = 'true_name_single'
+                    extra_flags['is_friendly_fire_aoe'] = False
+                else:
+                    extra_flags['logos_mode'] = 'indiscriminate_aoe'
+                    extra_flags['is_friendly_fire_aoe'] = True
+
+            effective_dc = max(5, int(target_ac * (1.0 - armor_pen)))
 
             dice_result = DiceEngine.perform_check(
                 action_type=f"스킬: {matched_player_skill.name}",
@@ -476,19 +507,70 @@ class ActionValidator:
         shaping_act = any(v in action_clean.lower() for v in ["날린", "날려", "쏜다", "쏘아", "발사", "내뿜", "던진", "뿜어", "투사", "공격"])
         is_intuitive_shaping = shaping_elem and shaping_form and shaping_act and not is_inquiry_intent
 
-        is_magic_combat = (is_magic_attack_noun or ("마법" in action_clean.lower() and is_magic_attack_verb) or is_intuitive_shaping) and not is_inquiry_intent
+        ancient_check_list = [
+            "이그니스", "사기타", "볼란스", "풀구르", "빈쿨룸", "서큐엔스", "글라키에스",
+            "스피라", "에룹티오", "테라", "스쿠툼", "스타티오", "아페르타", "프락투라",
+            "실렌티움", "모르템", "레베르시오", "누둠"
+        ]
+        has_ancient_words_present = any(w in action_clean for w in ancient_check_list)
+        is_magic_combat = (is_magic_attack_noun or ("마법" in action_clean.lower() and is_magic_attack_verb) or is_intuitive_shaping or has_ancient_words_present) and not is_inquiry_intent
 
-        if is_magic_combat:
+        if dice_result is None and is_magic_combat:
             has_incant_speech = bool(parsed["dialogue"]) or ("영창" in action_lower)
             is_no_incant = not has_incant_speech
             extra_flags['is_no_incantation'] = is_no_incant
 
             # Check for unknown / unlearned magic words in incantation
             incant_text = parsed["dialogue"] or action_clean
-            all_ancient_vocab = ["이그니스", "사기타", "볼란스", "풀구르", "빈쿨룸", "서큐엔스", "글라키에스", "스피라", "에룹티오", "테라", "스쿠툼", "임팩투스", "움브라", "바르", "카르"]
-            spoken_ancient_words = [w for w in all_ancient_vocab if w in incant_text]
+            if not parsed["dialogue"] and target_npc:
+                incant_text = incant_text.replace(target_npc.name, " ").replace(target_npc.id, " ")
+            all_ancient_vocab = [
+                "이그니스", "사기타", "볼란스", "풀구르", "빈쿨룸", "서큐엔스", "글라키에스",
+                "스피라", "에룹티오", "테라", "스쿠툼", "임팩투스", "움브라", "바르", "카르",
+                "막시마", "세쿠엔스", "아우라", "프로푼둠",
+                "스타티오", "아페르타", "프락투라", "실렌티움", "모르템", "레베르시오", "누둠"
+            ]
+            logos_primordial_words = ["스타티오", "아페르타", "프락투라", "실렌티움", "모르템", "레베르시오", "누둠"]
+            overcharge_modifiers = ["막시마", "세쿠엔스", "에룹티오", "아우라", "프로푼둠"]
 
-            if is_intuitive_shaping and not spoken_ancient_words:
+            spoken_ancient_words = [w for w in all_ancient_vocab if w in incant_text]
+            spoken_logos = [w for w in logos_primordial_words if w in incant_text]
+
+            # 1. Logos (언령 마법) Branch
+            if spoken_logos:
+                word = spoken_logos[0]
+                extra_flags['is_logos_word'] = True
+                extra_flags['logos_word'] = word
+                has_target_named = bool(target_npc and (target_npc.name.lower() in action_lower or target_npc.id.lower() in action_lower))
+                if has_target_named:
+                    extra_flags['logos_mode'] = 'true_name_single'
+                    extra_flags['is_friendly_fire_aoe'] = False
+                else:
+                    extra_flags['logos_mode'] = 'indiscriminate_aoe'
+                    extra_flags['is_friendly_fire_aoe'] = True
+
+                # Logos Contested Willpower: Player WIS + Level vs Target Level + WIS
+                caster_power = state.player.wisdom + state.player.level
+                target_power = (target_npc.wisdom + target_npc.level) if target_npc else 10
+                if getattr(target_npc, "tier", "commoner") in ["intermediate", "legend"]:
+                    target_power += 5
+
+                logos_dc = max(6, 10 + (target_power - caster_power))
+                extra_flags['backfire_risk'] = True
+                extra_flags['logos_backlash'] = True
+
+                dice_result = DiceEngine.perform_check(
+                    action_type=f"원초 언령 진언: [{word}] ({'진명 단일' if has_target_named else '무차별 광역'})",
+                    stat_value=state.player.wisdom,
+                    dc=logos_dc,
+                    base_damage=28,
+                    scaling=2.2,
+                    target_npc_id=target_npc_id,
+                    target_part=target_part,
+                    is_no_incantation=False,
+                    fatigue=fatigue_val,
+                )
+            elif is_intuitive_shaping and not spoken_ancient_words:
                 # Intuitive Mana Shaping: High INT + WIS + PER synergy!
                 int_mod = DiceEngine.stat_modifier(state.player.intelligence)
                 wis_mod = max(0, DiceEngine.stat_modifier(state.player.wisdom))
@@ -513,19 +595,45 @@ class ActionValidator:
 
                 unknown_count = len(unknown_words)
                 dc_penalty = unknown_count * 4
+
+                # Check Mage Circle Word Limit
+                max_circle_words = getattr(state.player, "max_incantation_words", 2)
+                if len(spoken_ancient_words) > max_circle_words:
+                    overflow = len(spoken_ancient_words) - max_circle_words
+                    dc_penalty += overflow * 5
+                    extra_flags['circle_overflow'] = True
+                    extra_flags['circle_overflow_count'] = overflow
+
                 effective_dc = target_ac + dc_penalty
 
-                if unknown_count > 0:
+                if unknown_count > 0 or extra_flags.get('circle_overflow'):
                     extra_flags['backfire_risk'] = True
                     extra_flags['unknown_words'] = unknown_words
-                    extra_flags['unknown_count'] = unknown_count
+                    extra_flags['unknown_count'] = unknown_count + extra_flags.get('circle_overflow_count', 0)
+
+                # Check Overcharge
+                has_overcharge = any(m in spoken_ancient_words for m in overcharge_modifiers)
+                base_dmg = 12
+                scale = 1.8
+                if has_overcharge:
+                    extra_flags['is_overcharged'] = True
+                    base_dmg = int(base_dmg * 1.5)
+                    scale = scale * 1.3
+
+                action_label = "마법 공격"
+                if has_overcharge and dc_penalty > 0:
+                    action_label = f"과부하 마법 영창 (DC+{dc_penalty} 페널티)"
+                elif has_overcharge:
+                    action_label = "과부하 마법 영창"
+                elif dc_penalty > 0:
+                    action_label = f"미학습 마법 영창 (DC+{dc_penalty} 페널티)"
 
                 dice_result = DiceEngine.perform_check(
-                    action_type=f"미학습 마법 영창 (DC+{dc_penalty} 페널티)" if unknown_count > 0 else "마법 공격",
+                    action_type=action_label,
                     stat_value=state.player.intelligence,
                     dc=effective_dc,
-                    base_damage=12,
-                    scaling=1.8,
+                    base_damage=base_dmg,
+                    scaling=scale,
                     target_npc_id=target_npc_id,
                     target_part=target_part,
                     is_no_incantation=is_no_incant,
@@ -535,7 +643,7 @@ class ActionValidator:
                 extra_flags['interrupt_counter'] = True
 
         # B. Generic Physical Combat Attack (0 mana standard attack to conserve resources)
-        elif not is_inquiry_intent and any(v in action_clean.lower() for v in ["공격", "찌르", "베", "벤", "찍", "내려치", "후려", "타격", "때리", "칼로", "검으", "단검으", "도끼", "attack", "strike", "stab", "slash"]):
+        elif dice_result is None and not is_inquiry_intent and any(v in action_clean.lower() for v in ["공격", "찌르", "베", "벤", "찍", "내려치", "후려", "타격", "때리", "칼로", "검으", "단검으", "도끼", "attack", "strike", "stab", "slash"]):
             eq_wep = state.get_equipped_weapon_item()
             base_dmg = eq_wep.damage if eq_wep else 3
             scaling = eq_wep.scaling_factor if eq_wep else 1.0

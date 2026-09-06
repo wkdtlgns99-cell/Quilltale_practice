@@ -17,6 +17,7 @@ from src.core.config import (
     MAX_LEVELUP_STAT_GAIN,
     MAX_RINGS,
     MAX_EARRINGS,
+    MAX_BRACELETS,
     BASE_CRIT_RATE,
     CRIT_RATE_PER_POINT,
     LUCK_CRIT_BONUS,
@@ -43,8 +44,16 @@ class EquipmentSlots:
     boots: Optional[str] = None
     gloves: Optional[str] = None
     cape: Optional[str] = None
-    rings: list[str] = field(default_factory=list)   # max 20
-    earrings: list[str] = field(default_factory=list) # max 8
+    neck: Optional[str] = None                        # 목걸이/초커/부적/펜던트
+    belt: Optional[str] = None                        # 허리띠/전술 벨트/탄띠/하네스
+    shoulders: Optional[str] = None                   # 견갑/어깨 장식/털 숄
+    storage: Optional[str] = None                     # 백팩/수납 가방/파우치
+    innerwear: Optional[str] = None                   # 갬비슨/속옷/은신 타이즈
+    rings: list[str] = field(default_factory=list)      # max 20
+    earrings: list[str] = field(default_factory=list)   # max 8
+    bracelets: list[str] = field(default_factory=list)  # max 4 (팔찌/시계/아대)
+    traits: list[str] = field(default_factory=lambda: ["장비 슬롯", "착용 슬롯", "의장 세분화"])
+
 
 
 @dataclass
@@ -71,7 +80,11 @@ class Skill:
     # 1. 기본 식별 & 계통 (Identification & School)
     id: str
     name: str                                           # 스킬명 (예: "음혈부두술: 저주의 못", "화산파 육합검결")
-    category: str = "physical"                          # 10대 계통 (physical, martial_qi, arcane_magic, holy_miracle, necromancy, curse_voodoo, alchemy, taming, psionics, subterfuge)
+    category: str = "physical"                          # 22대 계통:
+    # 1. 일반 원소마법(70%): elemental_magic (구 arcane_magic 호환)
+    # 2. 희귀/금기: blood_magic, dark_magic, sacrifice_toll, necromancy, alchemy, divination, summoning, runic, pact_binding, oneiric, mnemonic
+    # 3. 초월/규칙파괴: spatiotemporal, conceptual, celestial, causality, logos_word
+    # 4. 비-마법 이능: divine_arts (구 divine/holy_miracle), shamanic_curse (구 curse_voodoo, 혼령/자연령/토템 통합), martial_qi, physical, martial_arts, subterfuge, taming, psionics
     skill_type: str = "active"                          # active(능동) | passive(상시) | toggle(유지) | reaction(반격) | unique
     role_type: str = "single_attack"                    # single_attack | aoe_attack | heal | buff | debuff_curse | defense_guard | summon | utility
     tier: str = "common"                                # common(기초) | uncommon(숙련) | rare(비전) | epic(절기) | legendary(신화/오의)
@@ -160,6 +173,7 @@ class Skill:
     incantation_or_formula: str = ""                    # 영창/심법/공식 본문
     visual_fx_description: str = ""                     # AI GM 연출 묘사 지문
     color: str = "#94a3b8"                              # 스킬 고유 테마 색상 (HEX 코드, UI/스킬북 배지/효과 연출용)
+    traits: list[str] = field(default_factory=list)     # 스킬 요약 특성 태그 목록 (예: ["광역 결빙", "즉발 반격", "비기"])
 
     def get_visual_description(self, caster: Any = None) -> str:
         """Returns narrative visual description blending skill's element/effect with caster's personal mana aura."""
@@ -179,6 +193,92 @@ class Title:
     stat_bonuses: dict = field(default_factory=dict)  # {'crit_rate': 5, 'strength': 2}
     is_unique: bool = True              # Only 1 holder per world
     acquired_turn: int = 0
+
+
+@dataclass
+class ItemVisualProfile:
+    """
+    Granular visual anatomy and finish profile for weapons, armor, and gear.
+    Prevents visual drift in AI image generation across turns.
+    """
+    blade_or_head: str = ""          # 날/타격부 형상 (예: "혈조(Fuller)가 파인 양날 직검", "완만한 곡선의 단면도", "육중한 쐐기형 강철 해머 헤드")
+    guard_and_hilt: str = ""         # 코등이/가드/손잡이 (예: "황동 사자 머리 가드와 흑가죽 손잡이", "원형 흑철 코등이")
+    finish_and_material: str = ""    # 마감/재질 (예: "물결치는 다마스쿠스 강철 무늬", "거친 단조 흑철", "고대 룬 각인 은도금")
+    glow_or_aura: str = ""           # 마력 오라/발광 (예: "칼날을 타고 흐르는 은은한 푸른빛 에테르 기운", "불꽃 아지랑이")
+    sheath_appearance: str = ""      # 칼집/거치대 외형 (예: "놋쇠 띠를 두른 흑가죽 칼집", "금속 보강 목재 칼집")
+    wear_condition: str = ""         # 마모 상태 (예: "면도날처럼 시퍼렇게 연마된 날", "거친 교전의 미세한 이 빠짐")
+    traits: list[str] = field(default_factory=lambda: ["무기 조형", "칼날 형상", "장비 디테일"])
+
+    def to_korean_summary(self) -> str:
+        parts = []
+        if self.blade_or_head:
+            parts.append(f"날/헤드: {self.blade_or_head}")
+        if self.guard_and_hilt:
+            parts.append(f"가드/손잡이: {self.guard_and_hilt}")
+        if self.finish_and_material:
+            parts.append(f"재질: {self.finish_and_material}")
+        if self.glow_or_aura:
+            parts.append(f"오라: {self.glow_or_aura}")
+        if self.sheath_appearance:
+            parts.append(f"칼집: {self.sheath_appearance}")
+        if self.wear_condition:
+            parts.append(f"상태: {self.wear_condition}")
+        return " | ".join(parts) if parts else ""
+
+    def to_prompt_keywords(self) -> str:
+        kw = []
+        if self.blade_or_head:
+            b_map = {
+                "혈조": "double-edged straight blade with deep fuller groove",
+                "직검": "straight double-edged blade",
+                "곡도": "curved single-edge blade",
+                "해머": "heavy flanged warhammer head",
+                "도끼": "bearded battleaxe head",
+                "창": "leaf-shaped spearhead",
+            }
+            mapped = next((v for k, v in b_map.items() if k in self.blade_or_head), self.blade_or_head)
+            kw.append(mapped)
+        if self.guard_and_hilt:
+            g_map = {
+                "사자": "lion-headed ornate brass crossguard and leather-wrapped hilt",
+                "십자": "steel crossguard with leather grip",
+                "코등이": "circular iron tsuba guard",
+            }
+            mapped = next((v for k, v in g_map.items() if k in self.guard_and_hilt), self.guard_and_hilt)
+            kw.append(mapped)
+        if self.finish_and_material:
+            f_map = {
+                "다마스쿠스": "flowing damascus steel wave patterns",
+                "흑철": "rough forged dark iron finish",
+                "룬": "ancient glowing runic engravings on silver blade",
+                "은도금": "silver-plated mirror finish",
+            }
+            mapped = next((v for k, v in f_map.items() if k in self.finish_and_material), self.finish_and_material)
+            kw.append(mapped)
+        if self.glow_or_aura:
+            a_map = {
+                "푸른": "ethereal faint blue aura radiating along the blade",
+                "화염": "flickering flame aura radiating heat distortion",
+                "칠흑": "wisps of dark shadowy smoke clinging to blade",
+            }
+            mapped = next((v for k, v in a_map.items() if k in self.glow_or_aura), self.glow_or_aura)
+            kw.append(mapped)
+        if self.sheath_appearance:
+            s_map = {
+                "흑가죽": "black leather scabbard with brass fittings",
+                "목재": "polished hardwood scabbard with steel bands",
+            }
+            mapped = next((v for k, v in s_map.items() if k in self.sheath_appearance), self.sheath_appearance)
+            kw.append(mapped)
+        if self.wear_condition:
+            w_map = {
+                "면도날": "razor-sharp polished edge",
+                "이 빠짐": "battle-worn notched edge with faint scratch marks",
+                "녹슨": "weathered rusted surface with ancient wear",
+            }
+            mapped = next((v for k, v in w_map.items() if k in self.wear_condition), self.wear_condition)
+            kw.append(mapped)
+        return ", ".join(kw) if kw else ""
 
 
 @dataclass
@@ -212,6 +312,14 @@ class Item:
     max_durability: int = 100       # 최대 내구도
     rune_slots: int = 0             # 룬 소켓 구멍 개수 (0~3)
     socketed_runes: list[str] = field(default_factory=list) # 각인된 룬 ID 목록
+    traits: list[str] = field(default_factory=list) # 아이템 요약 특성 태그 목록 (예: ["명품 장인의 각인", "고대 유물", "밀수품"])
+
+    # Physical Combat Mechanics
+    draw_weight_lbs: float = 0.0          # 활/쇠뇌 장력 (lbs, 예: 40~150 lbs)
+    windup_seconds: float = 0.0           # 공격 준비 선딜레이 초 (0.0이면 무기 종류별 기본값)
+    stagger_power: float = 0.0            # 피격 저지력/경직 유발 수치
+    physics_tags: list[str] = field(default_factory=list) # 물리 태그 (예: ["thrust", "slash", "blunt", "jab", "straight", "projectile"])
+    visual: Optional[ItemVisualProfile] = None # 무기/장비 조형 및 마감 프로필
 
     @property
     def display_weight(self) -> str:
@@ -297,6 +405,11 @@ class Item:
         if inspection:
             lines.append(f"감정: {inspection}")
 
+        if self.visual:
+            v_sum = self.visual.to_korean_summary()
+            if v_sum:
+                lines.append(f"조형: {v_sum}")
+
         return "\n".join(lines)
 
     @property
@@ -319,6 +432,22 @@ class Item:
             "misc": "호기심을 자극하는 독특한 재질과 구조를 갖추고 있습니다."
         }
         return type_appraisals.get(self.item_type, "겉면의 질감과 만듦새에서 세월의 흔적이 느껴집니다.")
+
+    def to_korean_visual_summary(self) -> str:
+        """Returns a sensory Korean summary of the item's visual anatomy and finish."""
+        if self.visual:
+            v_sum = self.visual.to_korean_summary()
+            if v_sum:
+                return f"[{self.name}] {v_sum}"
+        return f"[{self.name}] {self.description}"
+
+    def to_image_prompt_keywords(self) -> str:
+        """Returns English prompt keywords for the item's visual profile."""
+        if self.visual:
+            v_kw = self.visual.to_prompt_keywords()
+            if v_kw:
+                return f"{self.name}, {v_kw}"
+        return f"detailed {self.item_type} {self.name}"
 
 
 
@@ -359,6 +488,387 @@ class Faction:
 
 
 @dataclass
+class FacialDetails:
+    """
+    Granular facial feature details for deterministic visual consistency in AI image generation.
+    Anchors micro-features: eyelids, eyelashes, eyebrows, nose bridge, lips, cheeks/jaw, ears.
+    """
+    eye_lids: str = ""        # 눈꺼풀: "무쌍(monolid)", "인아웃라인 쌍꺼풀", "아웃라인 짙은 쌍꺼풀", "속쌍꺼풀"
+    eye_lashes: str = ""      # 속눈썹: "길고 짙은 속눈썹", "풍성한 속눈썹", "자연스러운 속눈썹", "짧은 속눈썹"
+    eyebrows: str = ""        # 눈썹: "단정한 완만한 아치형", "짙은 송충이 눈썹", "날카로운 일자 눈썹", "가늘고 고운 눈썹"
+    nose_bridge: str = ""     # 콧대: "오똑하고 곧은 높은 콧대", "날렵한 버선코", "낮고 둥근 복코", "강인한 매부리코", "작고 아담한 코"
+    lips_and_mouth: str = ""  # 입술/입: "도톰하고 붉은 앵두 입술", "얇고 단호한 일자 입술", "입꼬리가 살짝 올라간 입매", "도톰한 아랫입술"
+    cheeks_and_jaw: str = ""  # 볼살/턱선: "통통한 볼살(젖살)", "갸름하고 날렵한 V라인 턱선", "각진 강인한 사각턱", "광대뼈가 살짝 드러난 슬림한 볼"
+    ear_shape: str = ""       # 귀 모양: "둥근 귓바퀴", "끝이 뾰족한 엘프형 귀", "작고 밀착된 귀"
+    traits: list[str] = field(default_factory=lambda: ["이목구비", "안면 조형", "얼굴 디테일"])
+
+    def to_korean_summary(self) -> str:
+        parts = []
+        if self.nose_bridge:
+            parts.append(f"콧대: {self.nose_bridge}")
+        if self.eye_lids or self.eye_lashes or self.eyebrows:
+            eye_feats = [f for f in [self.eyebrows, self.eye_lids, self.eye_lashes] if f]
+            parts.append(f"눈매: {', '.join(eye_feats)}")
+        if self.lips_and_mouth:
+            parts.append(f"입술: {self.lips_and_mouth}")
+        if self.cheeks_and_jaw:
+            parts.append(f"얼굴형: {self.cheeks_and_jaw}")
+        if self.ear_shape:
+            parts.append(f"귀: {self.ear_shape}")
+        return " | ".join(parts) if parts else ""
+
+    def to_prompt_keywords(self) -> str:
+        kw = []
+        if self.eye_lids:
+            lid_map = {
+                "무쌍": "monolid eyes",
+                "속쌍": "subtle hooded eyelids",
+                "인아웃": "delicate in-out double eyelids",
+                "아웃라인": "distinct parallel double eyelids",
+                "쌍꺼풀": "double eyelids",
+            }
+            mapped = next((v for k, v in lid_map.items() if k in self.eye_lids), self.eye_lids)
+            kw.append(mapped)
+        if self.eye_lashes:
+            lash_map = {
+                "길": "long dark eyelashes",
+                "풍성": "dense lush eyelashes",
+                "짧": "short subtle eyelashes",
+            }
+            mapped = next((v for k, v in lash_map.items() if k in self.eye_lashes), self.eye_lashes)
+            kw.append(mapped)
+        if self.eyebrows:
+            brow_map = {
+                "아치": "neat arched eyebrows",
+                "송충이": "thick bushy eyebrows",
+                "일자": "straight sharp eyebrows",
+                "가는": "slender delicate eyebrows",
+                "가늘": "slender delicate eyebrows",
+            }
+            mapped = next((v for k, v in brow_map.items() if k in self.eyebrows), self.eyebrows)
+            kw.append(mapped)
+        if self.nose_bridge:
+            nose_map = {
+                "오똑": "high defined straight nose bridge",
+                "버선": "refined dainty upturned nose",
+                "복코": "soft rounded nose tip",
+                "매부리": "prominent aquiline hooked nose",
+                "작은": "petite delicate nose",
+                "아담": "petite delicate nose",
+            }
+            mapped = next((v for k, v in nose_map.items() if k in self.nose_bridge), self.nose_bridge)
+            kw.append(mapped)
+        if self.lips_and_mouth:
+            lip_map = {
+                "앵두": "plump reddish cherry lips",
+                "도톰": "full plump lips",
+                "얇": "thin decisive lips",
+                "올라간": "slight natural upturned smile corners",
+            }
+            mapped = next((v for k, v in lip_map.items() if k in self.lips_and_mouth), self.lips_and_mouth)
+            kw.append(mapped)
+        if self.cheeks_and_jaw:
+            jaw_map = {
+                "젖살": "soft youthful round cheeks with baby fat",
+                "통통": "soft youthful cheeks",
+                "v라인": "sharp slender V-line jawline",
+                "갸름": "slender delicate jawline",
+                "사각": "strong chiseled square jaw",
+                "광대": "high sculpted cheekbones",
+            }
+            mapped = next((v for k, v in jaw_map.items() if k in self.cheeks_and_jaw.lower()), self.cheeks_and_jaw)
+            kw.append(mapped)
+        if self.ear_shape:
+            ear_map = {
+                "엘프": "pointed elven ears",
+                "뾰족": "tapered pointed ears",
+                "밀착": "compact ears close to head",
+            }
+            mapped = next((v for k, v in ear_map.items() if k in self.ear_shape), self.ear_shape)
+            kw.append(mapped)
+        return ", ".join(kw) if kw else ""
+
+
+@dataclass
+class BodyMeasurements:
+    """
+    Detailed physical proportions and skeletal measurements for visual consistency.
+    Anchors head ratio, shoulder width, bust size, waist-hip ratio (S-curve), leg length, muscle definition.
+    """
+    head_ratio: float = 7.5          # 등신비 (예: 6.5, 7.0, 7.5, 8.0, 8.5등신)
+    shoulder_width: str = ""         # 어깨 너비: "넓은 직각 어깨", "가냘프고 좁은 어깨", "역삼각형 벌크 어깨", "자연스러운 표준 어깨"
+    bust_size: str = ""              # 흉부: "슬렌더(A컵/평평함)", "자연스러운 볼륨(B~C컵)", "풍만한 볼륨감(D~E컵)", "다부진 대흉근"
+    waist_hip_ratio: str = ""        # 허리-골반 S라인: "잘록한 허리와 도드라진 골반 S라인(WHR 0.68)", "슬림 스트레이트 라인", "넓은 골반과 탄탄한 하체"
+    leg_length_ratio: str = ""       # 다리 길이: "상하체 4:6 비율의 긴 롱다리", "균형 잡힌 표준 비율(5:5)", "단단하고 굵직한 하체"
+    muscle_definition: str = ""      # 근육 데피니션: "선명한 복근과 잔근육", "린매스(슬림 근육)", "매끄럽고 부드러운 유선형", "벌크업 근육질", "왜소하고 마른 체형"
+    traits: list[str] = field(default_factory=lambda: ["신체 치수", "체형 비율", "골격 규격"])
+
+    def to_korean_summary(self) -> str:
+        parts = []
+        if self.head_ratio > 0:
+            parts.append(f"{self.head_ratio:.1f}등신")
+        if self.shoulder_width:
+            parts.append(f"어깨: {self.shoulder_width}")
+        if self.bust_size:
+            parts.append(f"흉부: {self.bust_size}")
+        if self.waist_hip_ratio:
+            parts.append(f"골반/허리: {self.waist_hip_ratio}")
+        if self.leg_length_ratio:
+            parts.append(f"다리비율: {self.leg_length_ratio}")
+        if self.muscle_definition:
+            parts.append(f"근육: {self.muscle_definition}")
+        return " | ".join(parts) if parts else ""
+
+    def to_prompt_keywords(self) -> str:
+        kw = []
+        if self.head_ratio > 0:
+            kw.append(f"{self.head_ratio:.1f} head-to-body proportion")
+        if self.shoulder_width:
+            s_map = {
+                "넓은": "broad square shoulders",
+                "직각": "crisp straight shoulders",
+                "가냘": "narrow delicate shoulders",
+                "좁은": "slender narrow shoulders",
+                "역삼각": "broad athletic V-taper shoulders",
+            }
+            mapped = next((v for k, v in s_map.items() if k in self.shoulder_width), self.shoulder_width)
+            kw.append(mapped)
+        if self.bust_size:
+            b_map = {
+                "풍만": "voluptuous well-endowed bust",
+                "d~e": "full bust size D-cup",
+                "e컵": "curvaceous bust size E-cup",
+                "b~c": "moderate natural bust size C-cup",
+                "슬렌더": "slender petite chest A-cup",
+                "평평": "flat slender chest",
+                "대흉근": "defined muscular pectoral chest",
+            }
+            mapped = next((v for k, v in b_map.items() if k in self.bust_size.lower()), self.bust_size)
+            kw.append(mapped)
+        if self.waist_hip_ratio:
+            w_map = {
+                "잘록": "hourglass figure with narrow waist and curvy hips (0.68 WHR)",
+                "s라인": "pronounced feminine S-curve hips and slim waist",
+                "스트레이트": "slim straight waistline",
+                "넓은 골반": "wide feminine hips and toned lower body",
+            }
+            mapped = next((v for k, v in w_map.items() if k in self.waist_hip_ratio.lower()), self.waist_hip_ratio)
+            kw.append(mapped)
+        if self.leg_length_ratio:
+            l_map = {
+                "롱다리": "long slender legs with 4:6 upper-to-lower body ratio",
+                "4:6": "long graceful legs with 4:6 golden proportion",
+                "5:5": "balanced standard leg proportions",
+                "굵직": "thick sturdy legs",
+            }
+            mapped = next((v for k, v in l_map.items() if k in self.leg_length_ratio), self.leg_length_ratio)
+            kw.append(mapped)
+        if self.muscle_definition:
+            m_map = {
+                "복근": "toned defined abs and lean muscular definition",
+                "잔근육": "lean athletic muscle tone",
+                "린매스": "lean toned physique",
+                "유선형": "smooth soft streamline body",
+                "벌크업": "bulky heavily-muscled build",
+                "왜소": "slender delicate frame",
+            }
+            mapped = next((v for k, v in m_map.items() if k in self.muscle_definition), self.muscle_definition)
+            kw.append(mapped)
+        return ", ".join(kw) if kw else ""
+
+
+@dataclass
+class ClothingLayer:
+    """
+    Ultra-detailed 5-layer visual & functional outfit structure.
+    Encompasses:
+    1. Body ornaments (arms/wrists, ankle/legs, face/head, neck)
+    2. Layered & functional garments (innerwear, base upper/lower, waist layer/corset/harness, outerwear)
+    3. Back & shoulder decorations (shoulders/pauldrons, capes/cloaks/shawls)
+    4. Footwear & leg accessories (shoes/boots, socks/stockings)
+    5. Storage & gear mounts (backpacks/pouches, scabbards/holsters/quivers)
+    6. Garment visual profile (fabrics, color palette, fit silhouette, inner silhouette reveal)
+    """
+    # 1. 신체 특정 부위 장식 (Body Ornaments & Accessories)
+    head_face: list[str] = field(default_factory=list)      # 안경, 단안경(모노클), 안대, 선글라스, 코걸이, 귀걸이
+    neck_acc: list[str] = field(default_factory=list)       # 목걸이, 초커, 부적, 펜던트, 스카프
+    arms_wrists: list[str] = field(default_factory=list)    # 팔찌, 시계, 뱅글, 아대(손목 보호대), 장갑, 완갑
+    ankle_legs: list[str] = field(default_factory=list)     # 발찌, 가터벨트, 레그 워머, 가죽 각반(Greaves)
+
+    # 2. 레이어드 및 기능성 의류 (Layered & Functional Garments)
+    innerwear: list[str] = field(default_factory=list)      # 속옷, 보디수트, 은신 타이즈, 갬비슨(누비옷)
+    base_upper: str = ""                                    # 셔츠, 블라우스, 튜닉
+    base_lower: str = ""                                    # 바지, 슬랙스, 스커트
+    waist_layer: str = ""                                   # 조끼(Vest), 코르셋, 뷔스티에, 멜빵(서스펜더), 전술 하네스, 허리띠/탄띠
+    outerwear: str = ""                                     # 코트, 로브, 판금 흉갑, 재킷
+
+    # 3. 등 및 어깨 장식 (Back & Shoulder Silhouettes)
+    shoulders: str = ""                                     # 견갑(Pauldrons), 털 숄(Fur wrap)
+    cape_back: str = ""                                     # 숏망토, 롱망토, 판초, 머플러
+
+    # 4. 신발 및 풋웨어 보조 (Footwear & Legwear)
+    footwear: str = ""                                      # 가죽 부츠, 군화, 샌들, 구두
+    socks_stockings: str = ""                               # 니삭스, 오버니삭스, 가터 스타킹, 망사 스타킹, 면양말
+
+    # 5. 수납 및 장비 악세서리 (Storage & Weapon Mounts)
+    bags_storage: list[str] = field(default_factory=list)   # 백팩, 크로스백, 허벅지 파우치, 벨트 주머니(Pouch)
+    weapon_mounts: list[str] = field(default_factory=list)  # 칼집(Scabbard), 권총집(Holster), 화살통(Quiver)
+
+    # 6. 의복 정밀 재질, 컬러, 핏 및 비침 프로필 (Visual Garment Consistency)
+    fabric_materials: dict[str, str] = field(default_factory=dict) # 부위별 원단 재질 {"outer": "두꺼운 양모", "inner": "실크"}
+    color_palette: list[str] = field(default_factory=list)         # 색상 팔레트 ["칠흑빛(#1a1a1a)", "은사 자수"]
+    fit_silhouette: str = ""                                       # 핏: "몸에 밀착되는 슬림핏/스킨타이트", "루즈핏", "코르셋핏"
+    inner_silhouette_reveal: str = "none"                          # 속옷 실루엣 비침: "none", "faint_underwear_line", "subtle_bra_contour", "visible_panty_line", "corset_ribs_ridge"
+    wear_condition: str = ""                                       # 마모/상태: "새것처럼 윤기 흐름", "오랜 방랑의 흙먼지와 해진 밑단"
+
+    # 요약 특성 태그 (의무 탑재)
+    traits: list[str] = field(default_factory=lambda: ["복식 레이어", "외형 디테일", "장비 실루엣", "의복 질감", "이너웨어 비침"])
+
+    def to_korean_summary(self) -> str:
+        """Constructs an atmospheric, natural Korean summary string of the layered outfit."""
+        sections = []
+
+        # 겉옷 & 이너웨어
+        garment_parts = []
+        if self.outerwear:
+            garment_parts.append(f"겉옷: {self.outerwear}")
+        if self.base_upper or self.base_lower:
+            base_str = " / ".join(filter(None, [self.base_upper, self.base_lower]))
+            garment_parts.append(f"의복: {base_str}")
+        if self.waist_layer:
+            garment_parts.append(f"허리/조끼: {self.waist_layer}")
+        if self.innerwear:
+            garment_parts.append(f"이너: {', '.join(self.innerwear)}")
+        if garment_parts:
+            sections.append(" | ".join(garment_parts))
+
+        # 등 및 어깨
+        silhouette_parts = []
+        if self.shoulders:
+            silhouette_parts.append(f"어깨: {self.shoulders}")
+        if self.cape_back:
+            silhouette_parts.append(f"등: {self.cape_back}")
+        if silhouette_parts:
+            sections.append(" | ".join(silhouette_parts))
+
+        # 장신구류
+        acc_parts = []
+        if self.head_face:
+            acc_parts.append(f"머리/안면: {', '.join(self.head_face)}")
+        if self.neck_acc:
+            acc_parts.append(f"목: {', '.join(self.neck_acc)}")
+        if self.arms_wrists:
+            acc_parts.append(f"손목/팔: {', '.join(self.arms_wrists)}")
+        if self.ankle_legs:
+            acc_parts.append(f"다리/발목: {', '.join(self.ankle_legs)}")
+        if acc_parts:
+            sections.append(" | ".join(acc_parts))
+
+        # 신발 및 양말
+        foot_parts = []
+        if self.socks_stockings:
+            foot_parts.append(self.socks_stockings)
+        if self.footwear:
+            foot_parts.append(self.footwear)
+        if foot_parts:
+            sections.append(f"발: {'에 '.join(foot_parts) if len(foot_parts) > 1 else foot_parts[0]}")
+
+        # 수납 및 무기 거치대
+        gear_parts = []
+        if self.bags_storage:
+            gear_parts.append(f"수납: {', '.join(self.bags_storage)}")
+        if self.weapon_mounts:
+            gear_parts.append(f"거치: {', '.join(self.weapon_mounts)}")
+        if gear_parts:
+            sections.append(" | ".join(gear_parts))
+
+        # 정밀 재질, 컬러, 핏 및 속옷 비침
+        style_parts = []
+        if self.fabric_materials:
+            mats = ", ".join(f"{k}: {v}" for k, v in self.fabric_materials.items())
+            style_parts.append(f"원단: {mats}")
+        if self.color_palette:
+            style_parts.append(f"색상: {', '.join(self.color_palette)}")
+        if self.fit_silhouette:
+            style_parts.append(f"핏: {self.fit_silhouette}")
+        if self.inner_silhouette_reveal and self.inner_silhouette_reveal != "none":
+            reveal_ko_map = {
+                "faint_underwear_line": "얇고 밀착된 옷감 너머 은은한 속옷 라인",
+                "subtle_bra_contour": "딱 붙는 상의 위로 은근하게 드러나는 브라 윤곽",
+                "visible_panty_line": "달라붙는 하의 위로 살짝 드러나는 팬티 라인",
+                "corset_ribs_ridge": "의상 위로 비치는 코르셋 뼈대 굴곡 자국",
+            }
+            r_ko = reveal_ko_map.get(self.inner_silhouette_reveal, self.inner_silhouette_reveal)
+            style_parts.append(f"비침: {r_ko}")
+        if self.wear_condition:
+            style_parts.append(f"상태: {self.wear_condition}")
+        if style_parts:
+            sections.append(" | ".join(style_parts))
+
+        return " ❖ ".join(sections) if sections else "수수한 평복"
+
+    def to_prompt_keywords(self) -> str:
+        """Constructs rich English prompt keywords for AI image generation."""
+        keywords = []
+        if self.color_palette:
+            keywords.append(f"color palette of {', '.join(self.color_palette)}")
+        if self.fabric_materials:
+            mats = ", ".join(f"{k} made of {v}" for k, v in self.fabric_materials.items())
+            keywords.append(f"crafted from {mats}")
+        if self.fit_silhouette:
+            fit_map = {
+                "스킨타이트": "skin-tight form-fitting silhouette",
+                "슬림": "slim form-fitting silhouette",
+                "루즈": "flowing loose-fitting silhouette",
+                "오버": "oversized relaxed silhouette",
+                "코르셋": "tight-laced hourglass corset silhouette",
+            }
+            mapped_fit = next((v for k, v in fit_map.items() if k in self.fit_silhouette), self.fit_silhouette)
+            keywords.append(mapped_fit)
+        if self.outerwear:
+            keywords.append(f"wearing {self.outerwear}")
+        if self.base_upper or self.base_lower:
+            bases = [b for b in [self.base_upper, self.base_lower] if b]
+            keywords.append(f"dressed in {' with '.join(bases)}")
+        if self.waist_layer:
+            keywords.append(f"{self.waist_layer}")
+        if self.innerwear:
+            keywords.append(f"layered over {', '.join(self.innerwear)}")
+        if self.inner_silhouette_reveal and self.inner_silhouette_reveal != "none":
+            reveal_en_map = {
+                "faint_underwear_line": "faint underwear seam line visible through form-fitting fabric",
+                "subtle_bra_contour": "subtle contour of innerwear bra straps visible under skin-tight top",
+                "visible_panty_line": "subtle panty line contour showing through tight leggings",
+                "corset_ribs_ridge": "faint corset boning ridges showing under dress",
+            }
+            mapped_reveal = reveal_en_map.get(self.inner_silhouette_reveal, self.inner_silhouette_reveal)
+            keywords.append(mapped_reveal)
+        if self.shoulders:
+            keywords.append(f"{self.shoulders} on shoulders")
+        if self.cape_back:
+            keywords.append(f"{self.cape_back}")
+        if self.head_face:
+            keywords.append(f"wearing {', '.join(self.head_face)}")
+        if self.neck_acc:
+            keywords.append(f"{', '.join(self.neck_acc)} around neck")
+        if self.arms_wrists:
+            keywords.append(f"{', '.join(self.arms_wrists)}")
+        if self.ankle_legs:
+            keywords.append(f"{', '.join(self.ankle_legs)}")
+        if self.socks_stockings:
+            keywords.append(f"{self.socks_stockings}")
+        if self.footwear:
+            keywords.append(f"{self.footwear}")
+        if self.bags_storage:
+            keywords.append(f"carrying {', '.join(self.bags_storage)}")
+        if self.weapon_mounts:
+            keywords.append(f"equipped with {', '.join(self.weapon_mounts)}")
+        if self.wear_condition:
+            keywords.append(f"fabric condition: {self.wear_condition}")
+        return ", ".join(keywords) if keywords else "simple traveler clothing"
+
+
+@dataclass
 class NPCVisualDetails:
     """
     Ultra-detailed visual anatomy for high-fidelity narration and AI Image Generation (Flux/SD).
@@ -380,6 +890,11 @@ class NPCVisualDetails:
     clothing_style: str = ""                     # 의복/복식 (예: "기름때 묻은 가죽 조끼", "은사 사제 로브")
     distinctive_accessories: list[str] = field(default_factory=list) # 특이 소품/장신구 (예: ["외눈 안경", "놋쇠 나침반 목걸이"])
     posture_and_vibe: str = ""                   # 자세와 분위기 (예: "초조하게 손을 비비는 태도", "호기심 어린 눈망울")
+    outfit: ClothingLayer = field(default_factory=ClothingLayer) # 5레이어 초정밀 복식 및 장비 구조체
+    face_details: FacialDetails = field(default_factory=FacialDetails) # 세부 안면 이목구비 조형
+    body_measurements: BodyMeasurements = field(default_factory=BodyMeasurements) # 신체 치수 및 골격 규격
+    traits: list[str] = field(default_factory=lambda: ["해부학적 외형", "시각적 디테일", "복식 레이어", "신체 치수", "안면 조형"])
+
 
 
 @dataclass
@@ -445,6 +960,7 @@ class NPC:
     perception: int = 10        # 감각/지각 (Perception) - 도난/기습/함정/위화감 감지
     crit_rate_bonus: int = 0
     crit_damage_bonus: int = 0
+    mage_circle: int = 1        # 마법사 서클/클래스 (1~10클래스)
 
     @property
     def perception_stat(self) -> int: return self.perception
@@ -490,42 +1006,89 @@ class NPC:
     faction_role: str = ""                                        # 세력 내 직책/신분
     mana_color: str = "창백한 푸른빛 에테르"                     # 개인 마나/오라 고유 색상 및 성질
     mana_color_hex: str = "#38bdf8"
+    traits: list[str] = field(default_factory=list)               # NPC 요약 특성 태그 목록 (예: ["외눈 흉터", "주정뱅이", "실종된 기사"])
+    anatomy_parts: dict = field(default_factory=dict)             # 부위 파괴용 신체 해부학적 부위 딕셔너리 {part_id: MonsterPart 또는 dict}
+    harvested_parts: list[str] = field(default_factory=list)      # 이미 해체/갈무리 완료된 부위 ID 목록
 
     def to_image_prompt_keywords(self) -> str:
         """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
         v = self.visual
-        features_en = ", ".join(v.facial_features) if v.facial_features else "detailed facial features"
+        features_parts = list(v.facial_features) if v.facial_features else []
+        if hasattr(v, "face_details") and v.face_details:
+            f_kw = v.face_details.to_prompt_keywords()
+            if f_kw:
+                features_parts.append(f_kw)
+        features_en = ", ".join(features_parts) if features_parts else "detailed facial features"
+
+        body_parts = []
+        if v.height_cm > 0:
+            body_parts.append(f"{v.height_cm}cm")
+        if v.build_archetype:
+            body_parts.append(v.build_archetype)
+        if hasattr(v, "body_measurements") and v.body_measurements:
+            b_kw = v.body_measurements.to_prompt_keywords()
+            if b_kw:
+                body_parts.append(b_kw)
+        body_en = " ".join(body_parts) if body_parts else "medium build"
+
         acc_en = ", ".join(v.distinctive_accessories) if v.distinctive_accessories else "detailed accessories"
+        outfit_en = v.outfit.to_prompt_keywords() if (hasattr(v, "outfit") and v.outfit and any([
+            v.outfit.outerwear, v.outfit.base_upper, v.outfit.base_lower,
+            v.outfit.waist_layer, v.outfit.innerwear, v.outfit.shoulders,
+            v.outfit.cape_back, v.outfit.footwear, v.outfit.bags_storage,
+            v.outfit.weapon_mounts, v.outfit.head_face, v.outfit.neck_acc,
+            v.outfit.arms_wrists, v.outfit.ankle_legs, v.outfit.socks_stockings,
+            getattr(v.outfit, "fabric_materials", None), getattr(v.outfit, "color_palette", None),
+            getattr(v.outfit, "fit_silhouette", ""), getattr(v.outfit, "inner_silhouette_reveal", "") != "none"
+        ])) else (f"wearing {v.clothing_style}" if v.clothing_style else "wearing traveler clothing")
         return (
             f"cinematic fantasy portrait of {v.species} {v.life_stage} {self.job}, {v.age_apparent}, "
-            f"{v.height_cm}cm {v.build_archetype}, {v.hair_color} {v.hair_style}, {v.eye_shape} with {v.eye_color} eyes, "
-            f"{v.skin_tone}, {features_en}, wearing {v.clothing_style}, {acc_en}, {v.posture_and_vibe}, "
+            f"{body_en}, {v.hair_color} {v.hair_style}, {v.eye_shape} with {v.eye_color} eyes, "
+            f"{v.skin_tone}, {features_en}, {outfit_en}, {acc_en}, {v.posture_and_vibe}, "
             f"highly detailed face, realistic skin texture, intricate clothing folds, volumetric lighting, masterpiece, 8k"
         )
 
     def to_korean_visual_summary(self) -> str:
         """Returns a high-density sensory Korean summary of the NPC's physical appearance."""
         v = self.visual
-        feat_str = f"특징: {', '.join(v.facial_features)}" if v.facial_features else ""
+        feat_parts = []
+        if v.facial_features:
+            feat_parts.append(f"특징: {', '.join(v.facial_features)}")
+        face_str = v.face_details.to_korean_summary() if (hasattr(v, "face_details") and v.face_details) else ""
+        if face_str:
+            feat_parts.append(face_str)
         acc_str = f"소품: {', '.join(v.distinctive_accessories)}" if v.distinctive_accessories else ""
-        extras = " | ".join(filter(None, [feat_str, acc_str]))
+        if acc_str:
+            feat_parts.append(acc_str)
+        extras = " | ".join(filter(None, feat_parts))
         extras_part = f" ({extras})" if extras else ""
 
         species_str = f"{v.species} {v.life_stage}".strip() if (v.species or v.life_stage) else "인물"
         height_str = f"{v.height_cm}cm " if v.height_cm > 0 else ""
         build_str = v.build_archetype or "보통 체형"
+        body_str = v.body_measurements.to_korean_summary() if (hasattr(v, "body_measurements") and v.body_measurements) else ""
+        if body_str:
+            build_str = f"{build_str}[{body_str}]"
         age_str = f"(겉보기 {v.age_apparent})" if v.age_apparent else ""
         hair_str = f"{v.hair_color} {v.hair_style}".strip() if (v.hair_color or v.hair_style) else ""
         eye_str = f"{v.eye_shape}({v.eye_color} 눈동자)" if (v.eye_shape and v.eye_color) else (f"{v.eye_color} 눈동자" if v.eye_color else (v.eye_shape or ""))
         skin_str = v.skin_tone or ""
-        clothes_str = v.clothing_style or ""
+        outfit_summary = v.outfit.to_korean_summary() if (hasattr(v, "outfit") and v.outfit and any([
+            v.outfit.outerwear, v.outfit.base_upper, v.outfit.base_lower,
+            v.outfit.waist_layer, v.outfit.innerwear, v.outfit.shoulders,
+            v.outfit.cape_back, v.outfit.footwear, v.outfit.bags_storage,
+            v.outfit.weapon_mounts, v.outfit.head_face, v.outfit.neck_acc,
+            v.outfit.arms_wrists, v.outfit.ankle_legs, v.outfit.socks_stockings,
+            getattr(v.outfit, "fabric_materials", None), getattr(v.outfit, "color_palette", None),
+            getattr(v.outfit, "fit_silhouette", ""), getattr(v.outfit, "inner_silhouette_reveal", "") != "none"
+        ])) else (v.clothing_style or "")
 
         parts = [
             f"{height_str}{build_str}{age_str}".strip(),
             hair_str,
             eye_str,
             skin_str,
-            clothes_str
+            outfit_summary
         ]
         desc_core = ", ".join(filter(None, parts)) or "보통 체형"
         return f"[{species_str} / {self.job}] {desc_core}{extras_part}"
@@ -799,7 +1362,62 @@ class Player:
     active_alias: Optional[str] = None                     # 통성명용 가명 (예: "외눈의 방랑자 잭")
     mana_color: str = "푸른빛 에테르"                            # 개인 마나/오라 고유 색상 및 성질
     mana_color_hex: str = "#38bdf8"
+    traits: list[str] = field(default_factory=list)        # 플레이어 요약 특성 태그 목록 (예: ["불사의 각인", "고대어 해독가"])
+    sub_stats: dict[str, float] = field(default_factory=dict) # 무한 확장 서브스탯 딕셔너리
+    poise: float = 0.0                                     # 기본 강인도 (피격 저지력 내성)
+    equipment_defense: int = 0
+    equipment_stat_bonuses: dict = field(default_factory=dict)
+    equipment_active_set_bonuses: list = field(default_factory=list)
+    equipment_active_traits: list[str] = field(default_factory=list)
+    mage_circle: int = 1                                   # 마법사 서클/클래스 (1~10클래스, 영창 고대어 단어 수 상한선 결정)
+    visual: NPCVisualDetails = field(default_factory=NPCVisualDetails)
     
+    @property
+    def max_incantation_words(self) -> int:
+        """Maximum ancient words combinable in a single spell incantation based on mage circle."""
+        # 1-class = 2 words ([원소] + [기동])
+        # 2-class = 3 words ([원소] + [형태] + [기동])
+        # 3-class = 4 words ... up to 10-class = 10 words
+        return min(10, max(2, self.mage_circle + 1))
+
+    @property
+    def outfit(self) -> ClothingLayer:
+        return self.visual.outfit
+
+    def to_korean_visual_summary(self) -> str:
+        """Returns a high-density sensory Korean summary of the Player's physical appearance and outfit."""
+        v = self.visual
+        outfit_summary = v.outfit.to_korean_summary() if (hasattr(v, "outfit") and v.outfit and any([
+            v.outfit.outerwear, v.outfit.base_upper, v.outfit.base_lower,
+            v.outfit.waist_layer, v.outfit.innerwear, v.outfit.shoulders,
+            v.outfit.cape_back, v.outfit.footwear, v.outfit.bags_storage,
+            v.outfit.weapon_mounts, v.outfit.head_face, v.outfit.neck_acc,
+            v.outfit.arms_wrists, v.outfit.ankle_legs, v.outfit.socks_stockings,
+            getattr(v.outfit, "fabric_materials", None), getattr(v.outfit, "color_palette", None),
+            getattr(v.outfit, "fit_silhouette", ""), getattr(v.outfit, "inner_silhouette_reveal", "") != "none"
+        ])) else (v.clothing_style or "평범한 모험가 복장")
+        title_str = f"[{self.active_title}] " if self.active_title else ""
+        body_str = v.body_measurements.to_korean_summary() if (hasattr(v, "body_measurements") and v.body_measurements) else ""
+        face_str = v.face_details.to_korean_summary() if (hasattr(v, "face_details") and v.face_details) else ""
+        phys_parts = [p for p in [body_str, face_str] if p]
+        phys_summary = f" ({' / '.join(phys_parts)})" if phys_parts else ""
+        return f"{title_str}{self.name}{phys_summary} - {outfit_summary}"
+
+    def to_image_prompt_keywords(self) -> str:
+        """Generates rich keywords for AI image generation of Player."""
+        v = self.visual
+        outfit_en = v.outfit.to_prompt_keywords() if (hasattr(v, "outfit") and v.outfit) else "traveler clothing"
+        body_en = v.body_measurements.to_prompt_keywords() if (hasattr(v, "body_measurements") and v.body_measurements) else ""
+        face_en = v.face_details.to_prompt_keywords() if (hasattr(v, "face_details") and v.face_details) else ""
+        parts = [f"cinematic fantasy portrait of protagonist {self.name}"]
+        if body_en:
+            parts.append(body_en)
+        if face_en:
+            parts.append(face_en)
+        parts.append(outfit_en)
+        parts.append("volumetric lighting, highly detailed, 8k")
+        return ", ".join(parts)
+
     @property
     def fatigue_status_ko(self) -> str:
         if self.fatigue >= 80:
@@ -932,6 +1550,90 @@ class Player:
         eq_def = getattr(self, "equipment_defense", 0)
         self.base_armor_class = value - self.agi_mod - eq_def
 
+    # Realistic Physical & Combat Properties
+    @property
+    def movement_speed_mps(self) -> float:
+        """이동 속도 (m/s). 민첩 10=4.5m/s (조깅), 민첩 15=10.5m/s (인간 정점/우사인 볼트 최고 속도)."""
+        base = 4.5 + (self.effective_agility - 10) * 1.2
+        return max(1.0, round(base, 2))
+
+    @property
+    def max_draw_weight_lbs(self) -> float:
+        """최대 당길 수 있는 활 장력 (lbs). 근력 10=50 lbs, 근력 15=150 lbs (영국 장궁병 정점)."""
+        base = 50.0 + (self.effective_strength - 10) * 20.0
+        return max(10.0, round(base, 1))
+
+    @property
+    def windup_multiplier(self) -> float:
+        """선딜레이 배율. 민첩 10=1.0, 민첩 15=0.5 (선딜레이 50% 단축)."""
+        base = 1.0 - (self.effective_agility - 10) * 0.1
+        return max(0.2, round(base, 2))
+
+    @property
+    def incantation_speed_multiplier(self) -> float:
+        """영창 속도 배율. 지혜 10=1.0, 지혜 15=0.5 (영창 시간 50% 단축)."""
+        base = 1.0 - (self.wis_stat - 10) * 0.1
+        return max(0.2, round(base, 2))
+
+    @property
+    def effective_poise(self) -> float:
+        """유효 강인도 (체질 + 방어구 무게/방어력 보정)."""
+        base = self.poise + max(0, self.effective_constitution - 10) * 2.0
+        eq_def = getattr(self, "equipment_defense", 0)
+        return max(0.0, round(base + eq_def * 0.5, 1))
+
+    def allocate_stat(self, stat_name: str, amount: int = 1) -> bool:
+        """자유 분배 스탯 포인트를 7대 핵심 스탯에 투자."""
+        if amount <= 0 or self.stat_points < amount:
+            return False
+        stat_map = {
+            "strength": "strength", "근력": "strength", "str": "strength",
+            "agility": "agility", "민첩": "agility", "dex": "agility", "agi": "agility",
+            "constitution": "constitution", "체질": "constitution", "체력": "constitution", "con": "constitution",
+            "intelligence": "intelligence", "지능": "intelligence", "int": "intelligence",
+            "wisdom": "wisdom", "지혜": "wisdom", "wis": "wisdom",
+            "perception": "perception", "감각": "perception", "인지": "perception", "per": "perception",
+            "luck": "luck", "행운": "luck", "luk": "luck",
+        }
+        target_field = stat_map.get(stat_name.lower())
+        if not target_field or not hasattr(self, target_field):
+            return False
+        current_val = getattr(self, target_field)
+        setattr(self, target_field, current_val + amount)
+        self.stat_points -= amount
+        return True
+
+    def add_exp(self, amount: int) -> dict:
+        """경험치를 획득하고 필요 시 레벨업 처리: req_exp(L) = 100 * L^1.5."""
+        if amount <= 0:
+            return {"leveled_up": False, "levels_gained": 0, "current_level": self.level, "exp": self.exp}
+        self.exp += amount
+        levels_gained = 0
+        while True:
+            req = int(100 * (self.level ** 1.5))
+            if self.exp >= req:
+                self.exp -= req
+                self.level += 1
+                levels_gained += 1
+                self.stat_points += 3
+                hp_gain = 5 + (self.effective_constitution // 3)
+                mp_gain = 3 + (self.effective_intelligence // 3)
+                self.max_health += hp_gain
+                self.max_mana += mp_gain
+                self.health = self.max_health
+                self.mana = self.max_mana
+            else:
+                break
+        return {
+            "leveled_up": levels_gained > 0,
+            "levels_gained": levels_gained,
+            "current_level": self.level,
+            "exp": self.exp,
+            "stat_points": self.stat_points,
+            "max_health": self.max_health,
+            "max_mana": self.max_mana,
+        }
+
 
 @dataclass
 class WorldState:
@@ -1007,6 +1709,9 @@ class WorldState:
     active_festival_turns: int = 0               # 남은 축제 지속 턴 수
 
     # In-Game Time & Periodical Publishing System
+    calendar_epoch_name: str = "제국력"           # 기년법 연호 명칭 (예: "제국력", "성휘력", "태초력")
+    start_year: int = 0                         # 0이면 cosmology_template/world_lore 또는 고유 시드 연도 사용
+    distances: dict[str, float] = field(default_factory=dict) # 전투 엔티티 간 상대 거리 매트릭스 ("id_a::id_b" -> float meters)
     start_minute: int = 8 * 60                  # 기본 시작 시각: 1일차 월요일 08:00 (480분)
     last_daily_paper_day: int = 0               # 마지막으로 일간지가 발간된 날짜
     last_weekly_paper_week: int = 0             # 마지막으로 주간지가 발간된 주차
@@ -1041,6 +1746,67 @@ class WorldState:
     def day_of_week_ko(self) -> str:
         days = ["월", "화", "수", "목", "금", "토", "일"]
         return days[(self.current_day - 1) % 7]
+
+    @property
+    def effective_start_year(self) -> int:
+        if self.start_year > 0:
+            return self.start_year
+        if self.cosmology_template and "start_year" in self.cosmology_template:
+            try:
+                return int(self.cosmology_template["start_year"])
+            except (ValueError, TypeError):
+                pass
+        if self.world_lore and "start_year" in self.world_lore:
+            try:
+                return int(self.world_lore["start_year"])
+            except (ValueError, TypeError):
+                pass
+        # Deterministic seed based on world_id or world_name
+        seed_str = self.world_id or self.world_name or "quilltale_default"
+        val = sum(ord(c) * (i + 1) for i, c in enumerate(seed_str))
+        return 100 + (val % 2500)
+
+    @property
+    def current_year(self) -> int:
+        days_per_year = max(1, self.days_per_month * self.months_per_year)
+        return self.effective_start_year + ((self.current_day - 1) // days_per_year)
+
+    @property
+    def current_month(self) -> int:
+        return 1 + (((self.current_day - 1) // max(1, self.days_per_month)) % max(1, self.months_per_year))
+
+    @property
+    def current_day_of_month(self) -> int:
+        return 1 + ((self.current_day - 1) % max(1, self.days_per_month))
+
+    @property
+    def current_season(self) -> str:
+        m = self.current_month
+        if 3 <= m <= 5:
+            return "봄 (해빙기)"
+        elif 6 <= m <= 8:
+            return "여름 (혹서기)"
+        elif 9 <= m <= 11:
+            return "가을 (수확기)"
+        return "겨울 (혹한기)"
+
+    @property
+    def calendar_display_ko(self) -> str:
+        return f"{self.calendar_epoch_name} {self.current_year}년 {self.current_month}월 {self.current_day_of_month}일 ({self.day_of_week_ko}요일) {self.current_hour:02d}:{self.current_minute:02d} [{self.current_season}]"
+
+    def get_distance(self, entity_a_id: str, entity_b_id: str, default: float = 5.0) -> float:
+        """두 엔티티 간의 상대 거리(미터) 반환 (대칭 거리)."""
+        if entity_a_id == entity_b_id:
+            return 0.0
+        k = f"{min(entity_a_id, entity_b_id)}::{max(entity_a_id, entity_b_id)}"
+        return self.distances.get(k, default)
+
+    def set_distance(self, entity_a_id: str, entity_b_id: str, distance_m: float) -> None:
+        """두 엔티티 간의 상대 거리(미터) 설정 (대칭 거리)."""
+        if entity_a_id == entity_b_id:
+            return
+        k = f"{min(entity_a_id, entity_b_id)}::{max(entity_a_id, entity_b_id)}"
+        self.distances[k] = max(0.0, round(float(distance_m), 2))
 
     @property
     def time_display_ko(self) -> str:
@@ -1091,6 +1857,8 @@ class WorldState:
         bonuses = EquipmentEngine.calculate_equipment_bonuses(self, target)
         target.equipment_defense = bonuses["total_defense"]
         target.equipment_stat_bonuses = bonuses["stat_bonuses"]
+        target.equipment_active_set_bonuses = bonuses.get("active_set_bonuses", [])
+        target.equipment_active_traits = bonuses.get("active_traits", [])
 
     def simulate_npc_needs_and_economy(self) -> list[str]:
         """
@@ -1690,8 +2458,16 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             equipment_lines.append(f"머리: {self.items[self.player.equipment.head].name}")
         if self.player.equipment.face and self.player.equipment.face in self.items:
             equipment_lines.append(f"얼굴: {self.items[self.player.equipment.face].name}")
+        if self.player.equipment.neck and self.player.equipment.neck in self.items:
+            equipment_lines.append(f"목: {self.items[self.player.equipment.neck].name}")
         if self.player.equipment.chest and self.player.equipment.chest in self.items:
             equipment_lines.append(f"상의: {self.items[self.player.equipment.chest].name}")
+        if self.player.equipment.innerwear and self.player.equipment.innerwear in self.items:
+            equipment_lines.append(f"이너: {self.items[self.player.equipment.innerwear].name}")
+        if self.player.equipment.shoulders and self.player.equipment.shoulders in self.items:
+            equipment_lines.append(f"어깨: {self.items[self.player.equipment.shoulders].name}")
+        if self.player.equipment.belt and self.player.equipment.belt in self.items:
+            equipment_lines.append(f"허리: {self.items[self.player.equipment.belt].name}")
         if self.player.equipment.legs and self.player.equipment.legs in self.items:
             equipment_lines.append(f"하의: {self.items[self.player.equipment.legs].name}")
         if self.player.equipment.boots and self.player.equipment.boots in self.items:
@@ -1700,12 +2476,17 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             equipment_lines.append(f"장갑: {self.items[self.player.equipment.gloves].name}")
         if self.player.equipment.cape and self.player.equipment.cape in self.items:
             equipment_lines.append(f"망토: {self.items[self.player.equipment.cape].name}")
+        if self.player.equipment.storage and self.player.equipment.storage in self.items:
+            equipment_lines.append(f"수납: {self.items[self.player.equipment.storage].name}")
         for idx, ring in enumerate(self.player.equipment.rings):
             if ring in self.items:
                 equipment_lines.append(f"반지{idx+1}: {self.items[ring].name}")
         for idx, earring in enumerate(self.player.equipment.earrings):
             if earring in self.items:
                 equipment_lines.append(f"귀걸이{idx+1}: {self.items[earring].name}")
+        for idx, bracelet in enumerate(getattr(self.player.equipment, "bracelets", [])):
+            if bracelet in self.items:
+                equipment_lines.append(f"팔찌{idx+1}: {self.items[bracelet].name}")
         
         equipment_str = ", ".join(equipment_lines) if equipment_lines else "없음"
         
@@ -1839,11 +2620,16 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             ("무기", self.player.equipment.weapon),
             ("머리", self.player.equipment.head),
             ("얼굴", self.player.equipment.face),
+            ("목", getattr(self.player.equipment, "neck", None)),
+            ("어깨", getattr(self.player.equipment, "shoulders", None)),
             ("상의", self.player.equipment.chest),
+            ("이너", getattr(self.player.equipment, "innerwear", None)),
+            ("허리", getattr(self.player.equipment, "belt", None)),
             ("하의", self.player.equipment.legs),
             ("신발", self.player.equipment.boots),
             ("장갑", self.player.equipment.gloves),
             ("망토", self.player.equipment.cape),
+            ("수납", getattr(self.player.equipment, "storage", None)),
         ]:
 
             if item_id and item_id in self.items:
@@ -1860,6 +2646,11 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 item = self.items[ear_id]
                 tt = f"슬롯: 귀걸이{idx+1}\n" + item.tooltip_text
                 eq_tags.append(f"<span class='qt-hover-tag' data-tooltip='{tt}'>귀걸이{idx+1}: {item.name}</span>")
+        for idx, br_id in enumerate(getattr(self.player.equipment, "bracelets", [])):
+            if br_id in self.items:
+                item = self.items[br_id]
+                tt = f"슬롯: 팔찌{idx+1}\n" + item.tooltip_text
+                eq_tags.append(f"<span class='qt-hover-tag' data-tooltip='{tt}'>팔찌{idx+1}: {item.name}</span>")
 
 
         if not eq_tags:
@@ -2146,8 +2937,28 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             loyalty=p_data.get("loyalty", 50),
             aggression=p_data.get("aggression", 50)
         )
-        needs = NPCNeeds(**data.get("needs", {})) if "needs" in data else NPCNeeds()
-        equipment = EquipmentSlots(**data.get("equipment", {})) if "equipment" in data else EquipmentSlots()
+        needs = NPCNeeds(**data.get("needs", {})) if "needs" in data and isinstance(data.get("needs"), dict) else NPCNeeds()
+        eq_raw = data.get("equipment", {}) if isinstance(data.get("equipment"), dict) else {}
+        eq_fields = {f.name for f in fields(EquipmentSlots)}
+        equipment = EquipmentSlots(**{k: v for k, v in eq_raw.items() if k in eq_fields})
+
+        v_data = data.get("visual", {})
+        if isinstance(v_data, dict):
+            valid_v = {f.name for f in fields(NPCVisualDetails)}
+            visual = NPCVisualDetails(**{k: v for k, v in v_data.items() if k in valid_v})
+            if isinstance(getattr(visual, "face_details", None), dict):
+                valid_f = {f.name for f in fields(FacialDetails)}
+                visual.face_details = FacialDetails(**{k: v for k, v in visual.face_details.items() if k in valid_f})
+            if isinstance(getattr(visual, "body_measurements", None), dict):
+                valid_b = {f.name for f in fields(BodyMeasurements)}
+                visual.body_measurements = BodyMeasurements(**{k: v for k, v in visual.body_measurements.items() if k in valid_b})
+            if isinstance(getattr(visual, "outfit", None), dict):
+                valid_o = {f.name for f in fields(ClothingLayer)}
+                visual.outfit = ClothingLayer(**{k: v for k, v in visual.outfit.items() if k in valid_o})
+        elif isinstance(v_data, NPCVisualDetails):
+            visual = v_data
+        else:
+            visual = NPCVisualDetails()
 
         npc = NPC(
             id=npc_id,
@@ -2168,6 +2979,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             gold=data.get("gold", 10),
             inventory=data.get("inventory", []),
             equipment=equipment,
+            visual=visual,
             strength=data.get("strength", 10),
             agility=data.get("agility", 10),
             intelligence=data.get("intelligence", 10),
@@ -2198,7 +3010,9 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             self_image_vs_reputation=data.get("self_image_vs_reputation", ""),
             hidden_side=data.get("hidden_side", ""),
             education_level=data.get("education_level", ""),
-            financial_state=data.get("financial_state", "")
+            financial_state=data.get("financial_state", ""),
+            anatomy_parts=data.get("anatomy_parts", {}),
+            harvested_parts=data.get("harvested_parts", [])
         )
         self.npcs[npc_id] = npc
         loc_id = npc.location
@@ -2366,13 +3180,15 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 self.items[item_id].location = loc.id
                 
                 # Unequip if equipped
-                for slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape"]:
-                    if getattr(self.player.equipment, slot) == item_id:
+                for slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape", "neck", "belt", "shoulders", "storage", "innerwear"]:
+                    if getattr(self.player.equipment, slot, None) == item_id:
                         setattr(self.player.equipment, slot, None)
                 if item_id in self.player.equipment.rings:
                     self.player.equipment.rings.remove(item_id)
                 if item_id in self.player.equipment.earrings:
                     self.player.equipment.earrings.remove(item_id)
+                if item_id in getattr(self.player.equipment, "bracelets", []):
+                    self.player.equipment.bracelets.remove(item_id)
                 self.recalculate_equipment_stats(self.player)
                 changes.append(f"Player dropped {self.items[item_id].name}")
 
@@ -2382,7 +3198,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             slot = update["equip_slot"].get("slot")
             if item_id in self.player.inventory and item_id in self.items:
                 item = self.items[item_id]
-                if slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape"]:
+                if slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape", "neck", "belt", "shoulders", "storage", "innerwear"]:
                     setattr(self.player.equipment, slot, item_id)
                     changes.append(f"Equipped {item.name} to {slot}")
                 elif slot == "ring":
@@ -2393,14 +3209,18 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     if len(self.player.equipment.earrings) < MAX_EARRINGS:
                         self.player.equipment.earrings.append(item_id)
                         changes.append(f"Equipped {item.name} to earring slot")
+                elif slot in ["bracelet", "bracelets"]:
+                    if len(getattr(self.player.equipment, "bracelets", [])) < MAX_BRACELETS:
+                        self.player.equipment.bracelets.append(item_id)
+                        changes.append(f"Equipped {item.name} to bracelet slot")
                 self.recalculate_equipment_stats(self.player)
 
         # 4.5 Item unequip
         if "unequip_slot" in update:
             item_id = update["unequip_slot"].get("item_id")
             slot = update["unequip_slot"].get("slot")
-            if slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape"]:
-                if getattr(self.player.equipment, slot) == item_id or not item_id:
+            if slot in ["weapon", "head", "face", "chest", "legs", "boots", "gloves", "cape", "neck", "belt", "shoulders", "storage", "innerwear"]:
+                if getattr(self.player.equipment, slot, None) == item_id or not item_id:
                     setattr(self.player.equipment, slot, None)
                     changes.append(f"Unequipped from {slot}")
             elif slot == "ring":
@@ -2417,6 +3237,13 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 elif not item_id and self.player.equipment.earrings:
                     self.player.equipment.earrings.pop()
                     changes.append("Unequipped earring")
+            elif slot in ["bracelet", "bracelets"]:
+                if item_id in getattr(self.player.equipment, "bracelets", []):
+                    self.player.equipment.bracelets.remove(item_id)
+                    changes.append(f"Unequipped bracelet {item_id}")
+                elif not item_id and getattr(self.player.equipment, "bracelets", []):
+                    self.player.equipment.bracelets.pop()
+                    changes.append("Unequipped bracelet")
             self.recalculate_equipment_stats(self.player)
 
         # 5. NPC state updates (alive, disposition, health, stats_revealed)
@@ -3028,6 +3855,15 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         equipment = safe_init(EquipmentSlots, eq_raw)
 
         p_name = p_raw.get("name", "방랑자") if isinstance(p_raw, dict) else "방랑자"
+        p_vis_raw = p_raw.get("visual", {}) if isinstance(p_raw, dict) else {}
+        p_visual = safe_init(NPCVisualDetails, p_vis_raw)
+        if isinstance(getattr(p_visual, "face_details", None), dict):
+            p_visual.face_details = safe_init(FacialDetails, p_visual.face_details)
+        if isinstance(getattr(p_visual, "body_measurements", None), dict):
+            p_visual.body_measurements = safe_init(BodyMeasurements, p_visual.body_measurements)
+        if isinstance(getattr(p_visual, "outfit", None), dict):
+            p_visual.outfit = safe_init(ClothingLayer, p_visual.outfit)
+
         state.player = Player(
             name=p_name,
             location=p_raw.get("location", "start") if isinstance(p_raw, dict) else "start",
@@ -3053,13 +3889,17 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             known_facts=p_raw.get("known_facts", []) if isinstance(p_raw, dict) else [],
             combat_profile=safe_init(CombatProfile, p_raw.get("combat_profile", {}) if isinstance(p_raw, dict) else {}),
             equipment=equipment,
+            visual=p_visual,
             skills=p_raw.get("skills", []) if isinstance(p_raw, dict) else [],
             titles=p_raw.get("titles", []) if isinstance(p_raw, dict) else [],
             active_title=p_raw.get("active_title") if isinstance(p_raw, dict) else None,
             known_magic_words=p_raw.get("known_magic_words", []) if isinstance(p_raw, dict) else [],
             injuries=p_raw.get("injuries", []) if isinstance(p_raw, dict) else [],
             unnoticed_thefts=p_raw.get("unnoticed_thefts", []) if isinstance(p_raw, dict) else [],
-            traumas=p_raw.get("traumas", []) if isinstance(p_raw, dict) else []
+            traumas=p_raw.get("traumas", []) if isinstance(p_raw, dict) else [],
+            traits=p_raw.get("traits", []) if isinstance(p_raw, dict) else [],
+            sub_stats=p_raw.get("sub_stats", {}) if isinstance(p_raw, dict) else {},
+            poise=float(p_raw.get("poise", 0.0)) if isinstance(p_raw, dict) else 0.0
         )
         from src.world.status_engine import StatusEffect
         raw_p_status = p_raw.get("status_effects", {}) if isinstance(p_raw, dict) else {}
@@ -3097,6 +3937,12 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             combat_profile = safe_init(CombatProfile, cp_dict)
             v_dict = npc_dict.pop("visual", {})
             visual = safe_init(NPCVisualDetails, v_dict)
+            if isinstance(getattr(visual, "face_details", None), dict):
+                visual.face_details = safe_init(FacialDetails, visual.face_details)
+            if isinstance(getattr(visual, "body_measurements", None), dict):
+                visual.body_measurements = safe_init(BodyMeasurements, visual.body_measurements)
+            if isinstance(getattr(visual, "outfit", None), dict):
+                visual.outfit = safe_init(ClothingLayer, visual.outfit)
 
             npc = safe_init(
                 NPC, npc_dict,
@@ -3115,7 +3961,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 financial_state="", skills=[], titles=[], attitude_description="",
                 interests=[], current_activity="", schedule=[], off_screen_logs=[],
                 last_seen_turn=0, physical_traces=[], fatigue=0, reputation=0, goal="",
-                blackmail_secret="", faction_id="", faction_role=""
+                blackmail_secret="", faction_id="", faction_role="", traits=[],
+                anatomy_parts={}, harvested_parts=[]
             )
             npc.memories = [safe_init(MemoryEntry, m) for m in raw_memories if isinstance(m, dict)]
             n_status_dict = {}
@@ -3168,17 +4015,32 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         # Items
         state.items = {}
         for k, v in raw.get("items", {}).items():
-            state.items[k] = safe_init(
+            item_obj = safe_init(
                 Item, v,
                 id=k, name=k, description="", location=state.player.location,
                 item_type="misc", damage=0, defense=0, value=0,
                 scaling_stat="str", scaling_factor=1.0, properties={},
                 weight=1.0, size="small", required_strength=10,
                 can_store_in_bag=True, can_wield_as_weapon=True,
-                improvised_damage=2, document_text="", utility_function="", puzzle_hint=""
+                improvised_damage=2, document_text="", utility_function="", puzzle_hint="",
+                draw_weight_lbs=0.0, windup_seconds=0.0, stagger_power=0.0, physics_tags=[],
+                traits=[]
             )
+            if isinstance(getattr(item_obj, "visual", None), dict):
+                item_obj.visual = safe_init(ItemVisualProfile, item_obj.visual)
+            state.items[k] = item_obj
 
-        # In-Game Time Periodical State
+        # In-Game Time & Periodical State
+        state.calendar_epoch_name = raw.get("calendar_epoch_name", "제국력")
+        state.start_year = raw.get("start_year", 0)
+        raw_distances = raw.get("distances", {})
+        state.distances = {}
+        if isinstance(raw_distances, dict):
+            for dk, dv in raw_distances.items():
+                try:
+                    state.distances[str(dk)] = float(dv)
+                except (ValueError, TypeError):
+                    pass
         state.start_minute = raw.get("start_minute", 8 * 60)
         state.last_daily_paper_day = raw.get("last_daily_paper_day", 0)
         state.last_weekly_paper_week = raw.get("last_weekly_paper_week", 0)

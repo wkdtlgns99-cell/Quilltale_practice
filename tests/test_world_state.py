@@ -58,3 +58,31 @@ def test_context_summary_contains_facts():
     assert "부서진 플라곤" in summary
     assert "north" in summary.lower()
     assert "dagger" in summary.lower()
+
+
+def test_traits_field_presence_and_serialization():
+    from src.world.state import Item, NPC, Skill, Player
+    item = Item(id="i1", name="명검", description="", location="loc1", traits=["명품 각인", "예리함"])
+    npc = NPC(id="n1", name="마르타", description="", location="loc1", traits=["주정뱅이", "실종된 기사"])
+    skill = Skill(id="s1", name="화염구", traits=["원거리 폭발", "화상"])
+    player = Player(traits=["불사의 각인", "방랑자"])
+
+    assert item.traits == ["명품 각인", "예리함"]
+    assert npc.traits == ["주정뱅이", "실종된 기사"]
+    assert skill.traits == ["원거리 폭발", "화상"]
+    assert player.traits == ["불사의 각인", "방랑자"]
+
+    # Verify WorldState roundtrip with traits
+    ws = WorldState()
+    ws.items["i1"] = item
+    ws.npcs["n1"] = npc
+    ws.skills_db["s1"] = skill
+    ws.player = player
+
+    json_str = ws.to_json()
+    restored = WorldState.from_json(json_str)
+
+    assert restored.items["i1"].traits == ["명품 각인", "예리함"]
+    assert restored.npcs["n1"].traits == ["주정뱅이", "실종된 기사"]
+    assert restored.skills_db["s1"].traits == ["원거리 폭발", "화상"]
+    assert restored.player.traits == ["불사의 각인", "방랑자"]

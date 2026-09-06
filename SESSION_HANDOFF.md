@@ -17,6 +17,15 @@
 >
 > **[고정 규칙 6] 클래스 작성 시 요약 특성(traits) 의무 탑재 규칙 (절대 수정/삭제 불가):**
 > 6. 월드/지리/정치/시설/개체 등 게임 내 주요 클래스 데이터 모델을 신설하거나 확장할 때, 플레이어 UI 요약, AI(GM) 서술 앵커링, 돌발 이벤트 판정에 사용될 `traits: List[str] = field(default_factory=list)`(요약 특성 태그 목록) 필드를 무조건 기본 탑재한다.
+>
+> **[고정 규칙 7] 제안/질의 시 구체적 설명 의무 탑재 규칙 (절대 수정/삭제 불가):**
+> 7. 유저에게 무언가를 제안하거나 물어볼 때 대충 "~~할까?" 식으로 모호하게 묻지 말고, 그것이 시스템/게임플레이/코드상에서 구체적으로 무엇인지, 왜 필요한지 알아들을 수 있게 명확하고 짧은 설명을 반드시 덧붙여서 보고한다.
+>
+> **[고정 규칙 8] 외부 AI(GPT/Claude) 연동 및 프롬프트 제공 규칙 (절대 수정/삭제 불가):**
+> 8. 유저 요청 작업 시 다음 3원칙을 준수한다:
+>    - 1) 해야 할 작업은 외부 LLM(GPT/Claude 등)에 즉시 입력할 수 있는 구체적인 실행 프롬프트 형태로 제공한다.
+>    - 2) 내부 연산이나 시스템 코드가 필요할 때는 완성형 코드가 아닌 명확한 인터페이스/뼈대(스켈레톤) 구조만 제공한다.
+>    - 3) 세부 데이터 계산, 수치 연산, 방대한 데이터/콘텐츠 생성은 GPT나 Claude가 수행하도록 역할을 명확히 분담한다.
 
 ---
 
@@ -52,7 +61,7 @@
 ## 3. [해야 할 일(Backlog)]
 
 ### [똥컴/학원 환경 — 순수 시스템/로직/엔진 고도화]
-- [ ] **🔥 [절대 최우선 착수 0순위] 6계층 거시-미시 현실 인프라 뼈대 시스템 (Level 0 ~ Level 5)**:
+- [x] **🔥 [완료] 6계층 거시-미시 현실 인프라 뼈대 시스템 (Level 0 ~ Level 5)**:
   - **구현 대상**: [아키텍처 전면 개편] `src/world/infrastructure.py`, `src/world/state.py`, `generator.py`, `geography.py`
   - **계층 구조 설계**:
     - **Level 0 (세계관/행성 - Cosmology/World)**: 천문 주기, 마나 기원, 신성 조약, 시대 배경 (`cosmology_templates.json` 57종 연동).
@@ -67,30 +76,63 @@
       - [x] **1-2. 지리/기후 권역(Level 2)**: 10대 지형, 4계절 기후대, 자연 자원 물가(0.3x~5.0x), 인구, 면적, 천연 특산품(`specialties`), 환경 위험, 시야/소음 차폐(`Region`).
       - [x] **1-3. 국가/영지(Level 3)**: 정치 체제, 영토 경계, 공식 화폐/환율, 관세율(0~50%), 국경 검문소(통행증/밀수), 법률/금기, 인구, 면적, 국가 특산품(`specialties`), 외교 관계(`Nation`).
       - [x] **1-4. 정주지/마을(Level 4)**: 정주지 등급/격(수도/요새/농촌/광산/항구), 2D 좌표, 인구, 행정 면적, 종족비, 치안도, 성벽 등급, 도로망, 식량/식수 자급율, 위생도, 향토 특산품(`specialties`), 중앙 광장 시설물, 성문·해자, 마구간, 물레방아/풍차, 방화수조, 검역소, 지하 하수망, 방목지(`Settlement`).
-    - [x] **2단계: 상위 레이어(0~2층) 템플릿 연동**: 총 120종 대륙 템플릿 완비(`continent_templates.json`: 동양/선협/무협/괴담/신선 및 다크 판타지 등 전 120종 대륙 최강자/최강 몬스터 스케치 및 ID 포인터 전면 탑재) + `cosmology_templates.json`(57종) 및 `region_templates.json`(41종)을 `InfrastructureTemplateLoader`로 정밀 매핑/결합 완료.
-    - [ ] **🔥 [다음 세션 즉시 착수 차례] 3단계: 중간 레이어(3~4층) 국가/마을 영토 매핑**: 4대 왕국 및 국경선, 관세율, 마을 단위(`Settlement`: 좌표, 인구, 치안도) 도로망 결합.
-    - [ ] **4단계: 하위 레이어(5층) 마을 내 인프라 배치**: 마을별 상점, 대장간, 학교, 신전, 주점 등 세부 시설 슬롯화 및 기능 연동.
-    - [ ] **5단계: [최종] 전 계층 수직 통합 검수 (End-to-End)**: 시설에서 마을 ➔ 국가(관세) ➔ 권역(자연 물가) ➔ 대륙(언어) ➔ 세계관(마나)까지 상하향식 연동 100% 통합 단위 테스트.
+    - [x] **2단계: 상위 레이어(0~2층) 템플릿 연동**: 총 120종 대륙 템플릿 완비(`continent_templates.json`: 동양/선협/무협/괴담/신선 및 다크 판타지 등 전 120종 대륙 최강자/최강 몬스터 스케치 및 ID 포인터 전면 탑재) + `cosmology_templates.json`(57종) 및 `region_templates.json`(목표 300종 전격 돌파 총 304종 완비)을 `InfrastructureTemplateLoader`로 정밀 매핑/결합 완료.
+    - [x] **3단계: 중간 레이어(3~4층) 국가/마을 영토 매핑 완비**: 국가별 정주지 귀속 바인딩 + 2D 유클리드 좌표 기반 결정론적 도로망(`assemble_settlement_roads`) 자동 연결(쌍방향 대칭, 도로 등급/특성/통행료) + 국경 관문 검문소(`border_checkpoints`) 및 대륙 간/국가 간 간선 가도(`international_highways`) 자동 등록 + 상하향식 인구/면적 총합 재계산(`recalculate_totals`) 완비.
+    - [x] **4단계: 하위 레이어(5층) 마을 내 인프라 배치 완비**: 14종 시설 유형(`FacilityType`) 전 종목 아키타입 템플릿(`facility_templates.json`) 신설 + 정주지 유형별/규모별 3~10종 시설 결정론적 자동 슬롯화(`assemble_settlement_facilities`) + 정주지 상업/수련/길드 목록 자동 분류 및 O(1) 계층 역추적/관세 연동 완비.
+    - [x] **5단계: [최종] 전 계층 수직 통합 검수 (End-to-End 완료)**: 시설에서 마을 ➔ 국가(관세) ➔ 권역(자연 물가) ➔ 대륙(언어) ➔ 세계관(마나)까지 상하향식 연동 100% 통합 단위 테스트 및 WorldState 직렬화/역직렬화 완비.
   - **작업 원칙**: 다른 백로그 전면 중단하고, 1단계부터 5단계까지 순차적으로 100% 완료한 후 다음 백로그 진행.
-- [ ] **🔥 [인프라 5단계 완료 직후 착수 0.5순위] 월드 엔티티(배우 & 소품) 및 시간/역법 인프라 연동 시스템 (NPC, Item, Skill, Monster, Quest, Time)**:
-  - **구현 대상**: [연동 파이프라인] `src/world/generator.py`, `src/world/state.py`, `src/world/time_engine.py` (또는 기존 state 확장), `data/templates/`
-  - **기능 및 연동 순서**:
-    1. **NPC & 종족 인프라 배치**: 4계층 마을 인구/종족비 및 5계층 시설(상점, 대장간, 주점)에 상주 NPC 자동 스폰 및 직책(영주/국왕/거상) ID 바인딩.
-    2. **Item & 장비 상점/루팅 연동**: 2계층 권역 특산물 및 5계층 시설 유형(`facility_type`)에 맞는 상점 재고 진열(`items`), 10개 장비 슬롯 템플릿 연동.
-    3. **Skill & 마법 훈련 연동**: 5계층 훈련장/마탑(`training_ground`, `mage_tower_academy`) 제공 스킬/고대어 연동 및 마나 밀도 기반 시전 환경 결합.
-    4. **Monster & 포식자 생태계 연동**: 2계층 권역 최상위 포식자(`apex_predator_id`) 및 4계층 외곽 마수 침식도(`monster_infestation_index`) 스폰 테이블 연동.
-    5. **Quest & 사건 나비효과 연동**: 4계층 마을 공고판(`town_square_features`) 현상수배/의뢰 및 역사적 원한(`historical_grievances`) 퀘스트화.
-    6. **Turn & 시간/천문 역법 계절 시뮬레이션 연동 (`TimeCalendarEngine` & WorldState 역법 체계)**:
-       - **기존 코드 확장**: `WorldState` 기존 `days_per_month(30)`, `months_per_year(12)`, `time_elapsed_minutes` 기반에 `start_year`, `current_year`, `current_month`, `current_day_of_month`, `current_season`(봄/여름/가을/겨울) 프로퍼티 및 캘린더 역법 체계 결합.
-       - **행동별 표준 소요 시간 & 실시간 나비효과 연동**:
-         - 탐색(10분), 대화(1~5분), 전투(턴당 6초/교전 후 정리 5분), 제작(30~120분), 이동(거리/이동속도 연산 분), 단기 휴식(60분), 장기 수면(480분) 가변 시간 전진 체계.
-         - 시간 전진 ➔ 퀘스트 시한 마감(`quest_engine`), 소문 확산(`rumor_diffusion_engine`), 시설/상점 주야간 영업시간, 일출/일몰 조도(은신 판정), 계절별 기온 편차(저체온증/열사병)와 유기적 100% 결합.
-- [ ] **1. 물리적 은신/잠입/도청 엔진 (`StealthInfiltrationEngine`)**:
+- [x] **🔥 [완료 0.5순위] 월드 엔티티(배우 & 소품) 인프라 연동 시스템 (NPC, Item, Skill, Monster, Quest)**:
+  - **구현 대상**: [연동 파이프라인] `src/world/infrastructure.py`, `src/world/state.py`, `src/world/quest_engine.py`
+  - **세부 연동 항목**:
+    - [x] 1. **NPC & 종족 인프라 배치**: 4계층 마을 인구/종족비 및 5계층 시설(상점, 대장간, 주점)에 상주 NPC 자동 스폰 및 직책(영주/국왕/거상) ID 바인딩 (`bind_settlement_npcs`).
+    - [x] 2. **Item & 장비 상점/루팅 연동**: 2계층 권역 특산물 및 5계층 시설 유형(`facility_type`)에 맞는 상점 재고 진열(`items`), 실시간 관세/물가 배율 적용 (`bind_facility_inventories`).
+    - [x] 3. **Skill & 마법 훈련 연동**: 5계층 훈련장/마탑(`training_ground`, `mage_tower_academy`) 제공 스킬/고대어 연동 및 마나 밀도 기반 시전 환경 결합 (`bind_training_facilities`).
+    - [x] 4. **Monster & 포식자 생태계 연동**: 2계층 권역 최상위 포식자(`apex_predator_id`) 및 4계층 외곽 마수 침식도(`monster_infestation_index`) 스폰 테이블 연동 (`bind_region_monsters`, `spawn_monster_from_template`).
+    - [x] 5. **Quest & 사건 나비효과 연동**: 4계층 마을 공고판(`town_square_features`) 현상수배/의뢰 및 역사적 원한(`historical_grievances`) 퀘스트화 (`bind_settlement_quests`).
+    - [x] 6. **Master Pipeline**: `InfrastructureTemplateLoader.bind_world_entities()` 및 `assemble_full_world(..., bind_entities=True)` 완비.
+- [x] **🔥 [완료] 현실 물리 전투 거리·액션 타임트랙 & 스탯·인지·역법 통합 엔진 (Calendar, Turn & Combat Physics Engine)**:
+  - **구현 대상**: `src/world/state.py`, `src/world/stat_engine.py`, `src/world/attack_physics_engine.py`, `src/world/combat_time_track_engine.py`, `src/world/time_calendar_engine.py`
+  - **구현 완료 기능**:
+    - [x] 1. `start_year` 랜덤 및 세계관 기년법 자율화 (`calendar_epoch_name`, 1~3000년 시드 연도).
+    - [x] 2. 촘촘한 일상 15종 가변 시간 매트릭스 (`DAILY_ACTION_DURATIONS`, 잠입 15~30분, 연구 60~180분, 요리 30~60분 등).
+    - [x] 3. 인간계 정점 스탯 15 기준 앵커링 (민첩 15=우사인 볼트 10.5m/s, 근력 15=장궁 150 lbs 완발, 지혜 15=영창 50% 단축).
+    - [x] 4. 무한 확장 서브스탯 딕셔너리 (`sub_stats: Dict[str, float]`) 및 레벨업 경험치 곡선 (\(100 \times L^{1.5}\)) + 스탯 포인트 3점 지급.
+    - [x] 5. 미터(m) 단위 상대 거리 매트릭스 (`distances`) & 초장거리(51~150m+) 5대 사거리 구간 (`CombatDistanceManager`).
+    - [x] 6. 태그 기반 물리 공격 엔진 (`AttackPhysicsEngine`: `thrust` 가속도 운동에너지, `slash` 출혈, `blunt` 뼈 골절/저지력, `jab` 0.15초 캔슬, `straight` 넉백, `projectile` 장력 판정).
+    - [x] 7. [A안 인지 엔진 기반] 리액션 인터럽트 트리거 (`PerceptionEngine`, `ActionTimeTrackEngine`: 위협 인지 시에만 턴 정지/반응 기회 부여, 미인지 시 기습 직격).
+    - [x] 8. 시간 경과 나비효과 (조도 전환, 기온 보정, 22시 상점 문 닫음).
+    - [x] 9. 세이브/로드 역직렬화 100% 하위 호환성 유지.
+- [x] **1. 🔥 [완료] 물리적 은신/잠입/도청 엔진 (`StealthInfiltrationEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/stealth_engine.py`
-  - **기능**: 조도(암흑/달빛/횃불), 바닥 재질(진흙/마른 짚/삐걱이는 목재), 소음(dB), 바람 방향(체취 감지) 기반 결정론적 은신/도청 연산.
-- [ ] **2. 몬스터 부위 파괴 & 특수 소재 채집 엔진 (`AnatomyHarvestEngine`)**:
-  - **구현 대상**: [엔진: 신규] `src/world/harvest_engine.py`
-  - **기능**: 와이번 날개막 찢기, 베히모스 뿔 절단, 해체 단검 내구도 소모 및 스킬 기반 고유 연금술/제작 소재 획득.
+  - **구현 완료 기능**:
+    - [x] 1. 조도(Lighting lx) 역학: 룩스(lx) 거리 역제곱 감쇠 및 암흑(DC +8)부터 횃불 정면(DC -6) 육안 식별.
+    - [x] 2. 바닥 재질 음향(dB): 양탄자(10dB), 진흙(20dB), 석판(28dB), 삐걱 목재(48dB), 깨진 유리(68dB).
+    - [x] 3. [유저 피드백] 4대 보행 보법(`creeping_toe` -20dB, `running_sprint` +28dB) 및 민첩(AGI 15) 관절 완충 상쇄(-14dB).
+    - [x] 4. [유저 피드백] 배경 소음 마스킹 시 [지면 미세 진동(Micro-Vibration)] 감지 (발소리가 묻혀도 발바닥 진동으로 기척 간파).
+    - [x] 5. 풍향(풍상/풍하) 및 위생도 저하/피비린내 체취 분자 확산 판정.
+    - [x] 6. 차폐 매질(문틈 8dB, 판자벽 15dB, 원목문 25dB, 석벽 45dB) 투과율 기반 도청(`evaluate_eavesdropping`) 및 비밀 청취.
+- [ ] **🔥 [신규 백로그] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`)**:
+  - **구현 대상**: `src/world/stat_engine.py`, `src/world/state.py`, `cosmology_templates.json`
+  - **기능**: 세계관마다 다른 레벨 상한 및 스탯 성장률 프리셋 결합:
+    - 1. 로우 판타지(발더게3형): 최대 12~20렙, 렙당 스탯 0~1개, 상한 20~30, 대미지 10~50.
+    - 2. 스탠다드 판타지(D&D형): 최대 50렙, 렙당 스탯 2~3개, 상한 50~100.
+    - 3. 하이퍼 인플레(메이플형): 최대 300렙, 렙당 스탯 5개, 스탯 수천, 대미지 수만~수억.
+    - 4. 선협/무협(경지 돌파형): 평소 렙업 없음, 경지 돌파 시 스탯 10배 폭증.
+- [x] **2. 🔥 [완료] 몬스터 부위 파괴 & 특수 소재 채집 엔진 (`AnatomyHarvestEngine`) & 장비 세트 효과 시스템**:
+  - **구현 대상**: [엔진: 신규] `src/world/harvest_engine.py`, [엔진: 확장] `src/world/equipment.py`, `src/world/state.py`
+  - **구현 완료 기능**:
+    - [x] 1. 몬스터 부위 모델(`MonsterPart`): 참격/타격/사격 육질 배율(Hitzone), 절단 가능(severable), 파괴 임계치.
+    - [x] 2. 부위 조준 타격(`attack_targeted_part`): 부위 파괴 시 경직(Stagger) 유발 및 특수 기믹 무력화.
+    - [x] 3. 꼬리 참격 절단(`severable + slash`): 절단 시 바닥에 신체 잔해 아이템 직접 드랍 및 필드 즉시 갈무리 지원.
+    - [x] 4. [유저 피드백] 모바일 가챠 확률표/3회 제한 전면 제거 -> 현실적 해부학 도축/갈무리.
+    - [x] 5. [유저 피드백] 부위 파괴 손상 페널티: 전투 중 박살 난 부위 갈무리 시 50% 확률로 짓이겨져 저급 파편으로 열화, 온전하게 약점 찔러 처치 시 100% 최상급 완제품 수확.
+    - [x] 6. [유저 피드백] 일반 희귀 장비 세트 효과 확장:
+      - 왕실 근위대 세트(2세트: 방어+6/체력+2/경직저항, 4세트: 방어+16/근력+3/체력+5/넉백완전면역).
+      - 그림자 암살자 세트(2세트: 민첩+3/치명+5%/발소리-10dB, 4세트: 민첩+7/치명피해+25%/기습추가타).
+      - 고대 비전 학자 세트(2세트: 지능+4/마나+30/마력회복, 4세트: 지능+10/지혜+5/영창-30%/마나-20%).
+      - 강철벽 검투사 세트, 엘프 순찰대 세트.
+    - [x] 7. 몬스터 소재 장비 세트 효과 (뇌격 흑액 메기 세트, 공포의 비룡 세트, 심해 갑각수 세트).
+    - [x] 8. 도축 단검 내구도 소모 및 세이브/로드 100% 하위 호환성 검증 (338/338 테스트 패스).
 - [ ] **3. 함정 해체 & 공학 퍼즐 물리 엔진 (`TrapEngineeringEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/trap_engine.py`
   - **기능**: 낙하 분쇄석, 독가스 분출구, 와이어 격발기, 도적 도구 세트 소모 및 덱스/지능 기반 단계별 기믹 해체.
@@ -203,43 +245,55 @@
 
 ---
 
-## 📅 [2026-09-05] 현재 세션 개발 현황
+## 📅 [2026-09-06] 현재 세션 개발 현황
 
 ### 1. 이번 세션 구현 완료 핵심 시스템
-1. **총 120종 대륙 템플릿 신규 구축 및 대륙 최강자/최강 몬스터 스케치 전면 완비 (`data/templates/continent_templates.json`)**:
-   - 1차 20종 + 2차 30종 + 3차 40종 + 4차 30종 = 총 120종의 고밀도 대륙 템플릿 JSON 완성.
-   - 대륙 최강자 스케치(`continental_apex_champion_sketch`) 및 최강 몬스터 스케치(`continental_apex_monster_sketch`) 전 120개 대륙 100% 완비.
-2. **총 215종 4계층 정주지/마을 템플릿 전격 구축 및 무결성 검증 (`data/templates/settlement_templates.json`)**:
-   - 215종 전 템플릿 완비 및 `traits >= 1`, 좌표, 치안도, 성벽, 특산품, 중앙 광장, 금기, 원한, 스캔들 100% 무결점 탑재.
-3. **총 134종 Level 3 국가/영지 템플릿 완비 및 데이터 클래스 확장 (`data/templates/nation_templates.json`)**:
-   - `Nation` 클래스에 `dominant_species: List[str] = field(default_factory=list)`(국가 주요 구성 종족 목록) 신설하여 대륙(`mortal_species`) - 국가(`dominant_species`) - 마을(`racial_demographics`)로 이어지는 3단 종족 계층 체계 완성.
-   - 1차 29종 + 2차 26종 + 3차 7종 + 4차 15종 + 5차 16종 + 6차 10종 + 7차 31종 = 총 134종 국가 템플릿 100% 무결점 완비.
-4. **총 284종 Level 2 권역(Region) 템플릿 대폭 보강 및 적응 로더 완비 (`data/templates/region_templates.json`)**:
-   - 기존 41종 + 1차 20종 + 2차 21종 + 3차 15종 + 4차 15종 + 5차 12종 + 6차 12종 + 7차 13종 + 8차 16종 + 9차 35종 + 10차 16종 + 11차 16종 + 12차 29종 + 13차 23종 = 총 284종 고밀도 권역 전격 병합.
-   - 13차 23종 추가 탑재: 거미줄로 직조된 공중 대성당, 하늘에 박힌 거대 유골 모놀리스, 수천 개의 핏빛 간헐천 지대, 노래하는 프리즘 모래평원, 얼어붙은 거인의 눈물 빙하, 별빛 실크 과수원 원시림, 파도가 연주하는 해식 동굴, 유리 제련 태엽 공장 폐허, 발광 균사 원시림, 번개가 조각한 파쇄의 암봉, 꿈을 짜는 환상 늪지대, 수정이 부서진 크리스탈 피오르, 황금빛 호박 수지 고원, 별빛이 바스라진 파쇄 암봉, 몽환의 꿈실 숲 원시림, 얼어붙은 크리스탈 미로 빙하, 조수가 조각한 거대 유골 아치 해안, 증기를 내뿜는 태엽 협곡, 영롱한 거대 크리스탈 정동 공동, 거미줄로 직조된 공중 대성당 제2구역, 하늘에 박힌 거대 유골 모놀리스 제2구역, 수천 개의 핏빛 간헐천 지대 제2구역, 노래하는 프리즘 모래평원 제2구역.
-   - 모든 신규 템플릿에 `category` 및 `traits >= 4`, 10대 표준 지형 물가 매트릭스 100% 연동 무결성 확보.
-5. **`InfrastructureTemplateLoader` 전 계층 로더 라인업 완성**:
-   - `load_settlement_templates()`, `load_nation_templates()`, `load_region_templates()`, `load_continent_templates()` 전 계층 로더 완비.
+1. **5계층 세분화 복식 시각화 구조체 (`ClothingLayer`) 및 TRPG 장비 역학 엔진 (`OutfitMechanicsEngine`) 전격 완공**:
+   - 1. 신체 특정 부위 장식: 팔/손목(팔찌/시계/뱅글/완갑), 발목/다리(발찌/가터벨트/각반), 얼굴/눈(안경/단안경/안대/서클릿), 목(목걸이/초커/부적).
+   - 2. 레이어드 및 기능성 의류: 이너웨어(속옷/보디수트/은신타이즈/갬비슨), 기본 상·하의(셔츠/바지), 조끼/코르셋/하네스/탄띠, 겉옷(코트/로브/흉갑).
+   - 3. 등 및 어깨 장식: 견갑/털 숄, 숏망토/롱망토/판초/머플러.
+   - 4. 풋웨어 및 보조: 가죽 부츠/군화, 니삭스/오버니삭스/가터스타킹/망사스타킹.
+   - 5. 수납 및 거치 장비: 모험가 백팩/크로스백/허벅지 파우치, 칼집/홀스터/화살통.
+   - 6. TRPG 현실 장비 역학: 백팩 적재 한중 확장, 퀵슬롯 활성화, 화살통 즉시 장전, 칼집 발도술 크리티컬, 갬비슨 갑옷 마찰 방호, 은신 타이즈 발소리 감쇠(-6dB), 단안경 감정 보너스(+25%), 안면 피격 렌즈 파손 위험(35%).
+2. **무기·의복·신체 정밀 조형 및 AI 이미지 일관성 앵커 시스템 & 속옷 비침 디테일 전격 완공**:
+   - **안면 이목구비 정밀 모델 (`FacialDetails`)**: 눈꺼풀(무쌍/속쌍/인아웃/아웃라인), 속눈썹, 눈썹, 콧대(오똑/버선/복코/매부리), 입술(앵두/도톰/얇은), 볼살/턱선(젖살/V라인/사각턱), 귀 모양(엘프귀), traits.
+   - **신체 치수 및 골격 모델 (`BodyMeasurements`)**: 등신비(6.5~8.5등신), 어깨 너비(직각/좁은), 흉부 볼륨(슬렌더/A~E컵/대흉근), 허리-골반 S라인(WHR 0.68), 다리 길이 비율(4:6 롱다리), 근육 데피니션, traits.
+   - **복식 텍스처 & 속옷 비침 (`ClothingLayer` 확장)**: 원단 재질(`fabric_materials`), 색상 팔레트(`color_palette`), 핏 실루엣(`fit_silhouette`: 슬림핏/스킨타이트), 속옷 실루엣 비침(`inner_silhouette_reveal`: none, faint_underwear_line, subtle_bra_contour, visible_panty_line, corset_ribs_ridge).
+   - **무기 조형 프로필 모델 (`ItemVisualProfile`)**: 날/타격부 형상, 가드/손잡이, 다마스쿠스 강철 무늬 마감, 마력 오라, 칼집 외형, 마모 상태, traits.
+   - **통합 프롬프트 빌더 (`OutfitMechanicsEngine.build_consistent_character_prompt`)**: 신체 치수 + 안면 이목구비 + 5계층 복식(속옷 비침 포함) + 장착 무기 조형을 단일 앵커 프롬프트로 융합.
+3. **🔥 [완료] 세계관 마법·이능 4대 범주(22대 계통) 전면 개편 및 서클별 N단 영창 & 언령(Logos) 진명/광역 시스템 완비**:
+   - **4대 범주 22대 술식 계통 정립**:
+     - 1. 일반 마법: 원소마법(`elemental_magic`, 마법사의 70% 점유).
+     - 2. 희귀/금기 마법: 혈마법(`blood_magic`), 흑마법(`dark_magic`), 대가마법(`sacrifice_toll`: 신체/수명/기억 제물), 사령술, 연금술, 예언마법, 소환마법, 룬마법, 계약마법, 꿈마법, 기억마법.
+     - 3. 초월/규칙 파괴 마법: 시공간마법(`spatiotemporal`: 공간 단절, 방어 100% 무시, 1턴 정지), 개념마법(`conceptual`: 영거리 0m 고정, 0dB 소리 봉인, 상처 말소), 성좌마법(`celestial`), 인과마법(`causality`), 언령마법(`logos_word`).
+     - 4. 비-마법 이능: 신성술(`divine_arts`: 사제/성기사 신앙·서약 기반, "신성술은 마법이 아니다"), 주술(`shamanic_curse`: 부두술 + 토템 + 혼령/자연령 빙의 폼체인지), 무협기공, 순수무예, 암습.
+   - **서클별 N단 영창 및 과부하 메커니즘**:
+     - `Player.mage_circle` (1~10클래스) 및 `max_incantation_words` (`1서클=2단어`, `2서클=3단어` ... `10서클=10단어`).
+     - 서클 초과 영창 시 `circle_overflow` 감지 및 마나 역류(Backfire) DC 페널티 부과.
+     - 과부하 수식어(`막시마`, `세쿠엔스`, `에룹티오`) 조합 시 위력 1.5배 증폭.
+   - **언령 마법 (Logos) 이원화**:
+     - 진명 모드 (`true_name_single`): 대상 진명 호명 시 단일 타겟 100% 억제, 아군 오폭 0.
+     - 무차별 광역 모드 (`indiscriminate_aoe`): 진명 없이 원초어 단독 포효 시 반경 내 적군·아군·구경꾼 전원 무차별 피격/기절.
+     - 위계 충돌 반작용 (`logos_backlash`): 시전자 vs 대상 의지 비교 실패 시 성대 파열(침묵 2턴) 및 2배 자해 피해.
+   - **데이터 및 템플릿 완비**:
+     - `data/templates/skill_templates.json` 총 69종 스킬 템플릿 완비.
+     - `SkillSystem.get_category_display_name()`으로 22개 전 계통 100% 한글 UI 명칭 보장.
 
 ### 2. 테스트 및 평가 검증 상태
-- **인프라 계층 단위 테스트 50개 및 프로젝트 전체 299개 테스트 100% 무결점 통과**:
-  - `tests/test_infrastructure_hierarchy.py`: 총 50개 테스트 전체 통과.
-    - `test_region_templates_json_integrity`: 284개 권역 템플릿 고유 ID, `traits >= 1`, 지형, 바닥 표면, 희귀 광맥, 몬스터 및 복식/식문화/신앙 프로필 전수 무결성 검증 (13차 `region_woven_silk_abyss`, `region_floating_bone_monoliths`, `region_shimmering_geode_chambers` 포함).
-    - `test_infrastructure_template_loader_regions`: 284개 권역 데이터 클래스 로딩 및 terrain/price multiplier 매핑 검증.
-    - `test_nation_templates_json_integrity` (134개) & `test_infrastructure_template_loader_nations` (134개) 검증.
-  - 전체 회귀 결함 0건, 299 passed in 4.37s.
+- **프로젝트 전체 368개 단위 테스트 100% 무결점 통과 (회귀 결함 0건)**:
+  - `tests/test_magic_schools.py`: 11개 신규 테스트 통과 (서클 단어수, 초과 페널티, 과부하 증폭, 진명 단일, 무차별 광역, 언령 반작용, 개념마법 3종, 시공간 절단, 22계통 UI 매핑).
+  - `pytest tests/`: **368 passed in 4.93s**.
+- **DoD Gate Eval Runner 검증**:
+  - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
-  - Level 0 우주론/세계관 57종 (`cosmology_templates.json`)
-  - Level 1 대륙 120종 + 최강자/최강 몬스터 (`continent_templates.json`)
-  - Level 2 권역 284종 (`region_templates.json`) [목표 300개 중 284개 달성 (94.7%)]
-  - Level 3 국가 134종 (`nation_templates.json`)
-  - Level 4 정주지/마을 215종 (`settlement_templates.json`)
-- **다음 세션 즉시 착수 작업**:
-  - 권역 템플릿 추가 투입 시 이어서 병합 (잔여 16개 추가하여 300개 목표치 달성),
-  - 또는 [4단계 하위 레이어] Level 5 마을 내 세부 시설(`Facility`) 슬롯화 및 기능 연동 진행.
-
-
-
-
+  - 마법·주술·언령 4대 범주 22대 계통 및 N단 영창/언령 이원화 시스템 100% 완공.
+- **다음 착수 작업 (Task 2)**:
+  - **🔥 [유저 요청 2번] 물리 스킬용 스태미너(기력) 시스템 실체화 및 물리 액션/전투 연동**:
+    - 1. `Player` 및 `NPC`에 `stamina: int = 100`, `max_stamina: int = 100` 공식 탑재 및 스탯(CON, AGI) 연동.
+    - 2. 물리/무술 스킬(`resource_type == "stamina"`) 시전 시 기력 차감 및 잔여 기력 부족 시 시전 불가 판정.
+    - 3. 기력 고갈(0) 시 탈진(`exhaustion`) 상태이상(방어력 급감, 행동 제약) 유발.
+    - 4. 턴 종료 시 스태미너 자연 회복(체력/민첩 스탯 비례) 및 탈진 시 회복 페널티.
+    - 5. NPC 스태미너 소모 및 AI 판단 연동.
+    - 6. 단위 테스트 `tests/test_stamina_combat.py` 작성 및 전체 회귀 검증.

@@ -527,6 +527,26 @@ class TwoPassEngine:
             if sk_id in state.skills_db:
                 state.skills_db[sk_id].current_cooldown = sk_cd
 
+            # Conceptual Magic: Rule modifications
+            if fact_sheet.extra_flags.get("conceptual_distance_zero"):
+                if hasattr(state, "combat_distances"):
+                    target_id = target_npc.id if target_npc else ""
+                    state.combat_distances.set_distance("player", target_id, 0.0)
+                fact_sheet.status_tick_logs.append("🌌 [개념마법] 「거리」라는 개념을 소멸시켜 적과 칼끝을 영거리(0m)로 겹쳤습니다!")
+
+            if fact_sheet.extra_flags.get("conceptual_sound_seal"):
+                fact_sheet.extra_flags["noise_level"] = "silent"
+                fact_sheet.status_tick_logs.append("🌌 [개념마법] 「소리」라는 개념을 봉인하여 절대 무음 상태를 전개했습니다.")
+
+            if fact_sheet.extra_flags.get("conceptual_wound_erase"):
+                state.player.injuries.clear()
+                fact_sheet.status_tick_logs.append("🌌 [개념마법] 「상처」라는 개념을 제거하여 모든 골절과 외상을 말소했습니다.")
+
+            # Spatiotemporal Magic: Space severance / time lag
+            if fact_sheet.extra_flags.get("spatiotemporal_space_severance") and target_npc and target_npc.alive:
+                StatusEffectEngine.apply_status(target_npc, "stun", duration=1, potency=1)
+                fact_sheet.status_tick_logs.append(f"⏳ [시공간마법] 대상 [{target_npc.name}]의 시공간 좌표를 절단하여 방어력을 100% 무시하고 1턴간 시공간 정지(기절) 부여!")
+
             # If attack hit living target, apply inflicted status effects
             if dice_res and dice_res.is_success and target_npc and target_npc.alive:
                 inflicted = skill_info.get("inflicted_status", [])
@@ -554,16 +574,29 @@ class TwoPassEngine:
                 if target_npc:
                     target_npc.gold = getattr(target_npc, "gold", 0) + paid_amount
 
-        # 7.6 Backfire Damage on Failed Magic with Unknown Words
+        # 7.6 Logos Indiscriminate Friendly Fire AoE
+        if fact_sheet.extra_flags.get("is_friendly_fire_aoe") and dice_res and dice_res.is_success:
+            loc_id = state.player.location
+            for n_id, n_obj in state.npcs.items():
+                if n_obj.location == loc_id and n_obj.alive and n_id != (target_npc.id if target_npc else ""):
+                    StatusEffectEngine.apply_status(n_obj, "stun", duration=1, potency=1)
+                    n_obj.health = max(1, n_obj.health - 10)
+                    fact_sheet.status_tick_logs.append(f"💥 [언령 무차별 광역] 진명 없는 원초 포효가 주변의 [{n_obj.name}]에게도 작렬하여 10 피해 및 기절(1턴)을 입혔습니다!")
+
+        # 7.7 Backfire Damage on Failed Magic / Logos Backlash
         if dice_res and not dice_res.is_success and fact_sheet.extra_flags.get("backfire_risk"):
             unk_cnt = fact_sheet.extra_flags.get("unknown_count", 1)
             backfire_dmg = max(5, unk_cnt * 4)
+            if fact_sheet.extra_flags.get("logos_backlash"):
+                backfire_dmg = max(15, backfire_dmg * 2)
+                StatusEffectEngine.apply_status(state.player, "silence", duration=2, potency=1)
+                fact_sheet.status_tick_logs.append("⚠️ [언령 반작용] 대상의 영혼 격에 언령이 튕겨 나와 시전자의 성대가 파열되고 침묵(2턴) 상태가 되었습니다!")
             state.player.health = max(1, state.player.health - backfire_dmg)
             if "player" not in state_delta:
                 state_delta["player"] = {}
             state_delta["player"]["health"] = state.player.health
             fact_sheet.quest_progress_logs.append(
-                f"⚡ [마나 역류 자해!] 미학습 고대어 {unk_cnt}개 강행 실패로 마력이 시전자에게 역류하여 {backfire_dmg} 자해 피해를 입었습니다! (현재 체력: {state.player.health}/{state.player.max_health})"
+                f"⚡ [마나 역류 자해!] 고대어/언령 반작용으로 마력이 시전자에게 역류하여 {backfire_dmg} 자해 피해를 입었습니다! (현재 체력: {state.player.health}/{state.player.max_health})"
             )
 
         # 8. Party & Companion Autonomous Turns

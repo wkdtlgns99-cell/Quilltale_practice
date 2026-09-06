@@ -4112,7 +4112,7 @@
     "id": "skill_divine_bastion_of_dawn_01",
     "name": "서광의 보루 (루멘 바스티온)",
     "1_기본식별_계통": {
-      "category": "divine",
+      "category": "divine_arts",
       "skill_type": "active",
       "role_type": "buff",
       "tier": "uncommon",
@@ -4232,7 +4232,7 @@
     "id": "skill_divine_judgement_hammer_01",
     "name": "천벌의 망치 (말레우스 이우디키움)",
     "1_기본식별_계통": {
-      "category": "divine",
+      "category": "divine_arts",
       "skill_type": "active",
       "role_type": "single_attack",
       "tier": "uncommon",
@@ -4352,7 +4352,7 @@
     "id": "skill_divine_zone_of_silence_01",
     "name": "성역의 침묵 (사일렌티움 산크투스)",
     "1_기본식별_계통": {
-      "category": "divine",
+      "category": "divine_arts",
       "skill_type": "active",
       "role_type": "cc",
       "tier": "rare",
@@ -4700,7 +4700,7 @@
     "id": "skill_blood_sanguine_pact_01",
     "name": "진홍의 서약 (흡혈 혈도술 / 吸血血道)",
     "1_기본식별_계통": {
-      "category": "curse_voodoo",
+      "category": "blood_magic",
       "skill_type": "active",
       "role_type": "single_attack",
       "tier": "uncommon",
@@ -5276,7 +5276,7 @@
     "id": "skill_blood_sanguine_bulwark_01",
     "name": "혈액 경화 결계 (혈벽응고술 / 血壁凝固)",
     "1_기본식별_계통": {
-      "category": "curse_voodoo",
+      "category": "blood_magic",
       "skill_type": "active",
       "role_type": "buff",
       "tier": "uncommon",
@@ -5498,6 +5498,2104 @@
       "description": "유골을 끌어모아 살갗 위에 뼈 흉갑을 엮어내는 사령 방어기.",
       "incantation_or_formula": "사령 구결: [백골응결 / 화위로리카]",
       "visual_fx_description": "하얀 뼛조각들이 솟구쳐 가슴과 양팔을 감싸 뼈 갑옷을 이룬다."
+    }
+  },
+  {
+    "id": "skill_elemental_ember_dart_01",
+    "name": "불씨 투척 (이그니스 볼란스)",
+    "1_기본식별_계통": {
+      "category": "elemental_magic",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "common",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 8,
+      "catalyst_required": "맨손 또는 지팡이",
+      "recoil_or_side_effect": "",
+      "backfire_risk": 0.0,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 0,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "short",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 15,
+      "scaling_stat": "int",
+      "scaling_factor": 1.1,
+      "element": "화염",
+      "armor_penetration": 0.1
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "burning",
+          "duration_turns": 2,
+          "dot_damage_per_turn": 4
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "oil_ignite"
+      ],
+      "environmental_gimmick": "마른 풀밭 점화",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.2,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {
+        "2_성": "사거리 중거리로 확장"
+      }
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "normal",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "1클래스 입문용 2단어 고대어 원소 주문. 손바닥에 작은 불씨를 피워 던진다.",
+      "incantation_or_formula": "[원소: 이그니스] + [기동: 볼란스]",
+      "visual_fx_description": "주먹 크기의 붉은 불씨가 포물선을 그리며 적의 흉부에 작열한다."
+    }
+  },
+  {
+    "id": "skill_elemental_overcharged_inferno_01",
+    "name": "작열 폭염쇄 (이그니스 사기타 볼란스 막시마)",
+    "1_기본식별_계통": {
+      "category": "elemental_magic",
+      "skill_type": "active",
+      "role_type": "aoe_attack",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 45,
+      "catalyst_required": "마법 지팡이 또는 붉은 마노",
+      "recoil_or_side_effect": "1턴간 시전자 양손 과열",
+      "backfire_risk": 0.08,
+      "backfire_description": "폭염 역류로 시전자 15 화염 피해"
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "지팡이_오브_맨손",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "ground_area",
+      "range": "medium",
+      "area_shape": "circle",
+      "area_radius_meters": 6.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 55,
+      "scaling_stat": "int",
+      "scaling_factor": 1.8,
+      "element": "화염",
+      "armor_penetration": 0.35
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {
+        "target_status_trigger": "oil_coated",
+        "bonus_multiplier": 2.2
+      }
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {
+        "type": "knockback",
+        "distance_meters": 3.0
+      },
+      "inflicted_status": [
+        {
+          "status": "burning",
+          "duration_turns": 4,
+          "dot_damage_per_turn": 12
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "oil_ignite",
+        "wood_burn"
+      ],
+      "environmental_gimmick": "반경 6m 지면 초토화",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.6,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {
+        "4_성_오의": "착탄 지점 2턴간 용암 지대"
+      }
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "loud",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "3클래스 이상 정예 마도사 전용 4단어 과부하 고위 화염 술식.",
+      "incantation_or_formula": "[원소: 이그니스] + [형태: 사기타] + [기동: 볼란스] + [과부하: 막시마]",
+      "visual_fx_description": "극대화된 백열의 불화살이 지면에 꽂히며 굉음과 함께 반경 6m를 뒤덮는 불기둥을 뿜어낸다."
+    }
+  },
+  {
+    "id": "skill_logos_statio_freeze_01",
+    "name": "원초 언령: 정지 (스타티오)",
+    "1_기본식별_계통": {
+      "category": "logos_word",
+      "skill_type": "active",
+      "role_type": "debuff_curse",
+      "tier": "epic",
+      "is_unique": true,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "ultimate",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 25,
+      "catalyst_required": "시전자의 목소리 (성대)",
+      "recoil_or_side_effect": "성대 출혈 및 이성 마모",
+      "backfire_risk": 0.25,
+      "backfire_description": "언령 반작용으로 성대 파열(침묵 2턴) 및 25 반동 피해"
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 4,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "all_enemies",
+      "range": "medium",
+      "area_shape": "circle",
+      "area_radius_meters": 15.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 30,
+      "scaling_stat": "wis",
+      "scaling_factor": 2.2,
+      "element": "영혼",
+      "armor_penetration": 1.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "stun",
+          "duration_turns": 2,
+          "chance": 1.0
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "absolute_command"
+      ],
+      "environmental_gimmick": "반경 내 모든 운동 에너지 동결",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "lower_willpower_target",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 2,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "loud",
+      "is_forbidden": true,
+      "taboo_reason": "세계 창조 원초어를 사적으로 남용한 중죄"
+    },
+    "14_서사_연출": {
+      "description": "원초의 단어 한마디로 세계의 운동을 멈춘다. 진명 지정 시 단일 집중, 단독 외침 시 피아불문 무차별 광역.",
+      "incantation_or_formula": "[원초 언령: 스타티오]",
+      "visual_fx_description": "공간의 소음과 공기의 흐름이 뚝 끊기며, 목소리가 닿은 자들의 사지가 굳어버린다."
+    }
+  },
+  {
+    "id": "skill_logos_fractura_shatter_01",
+    "name": "원초 언령: 분쇄 (프락투라)",
+    "1_기본식별_계통": {
+      "category": "logos_word",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "epic",
+      "is_unique": true,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "ultimate",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 20,
+      "catalyst_required": "시전자의 목소리",
+      "recoil_or_side_effect": "목구멍 통증",
+      "backfire_risk": 0.2,
+      "backfire_description": "자신의 치아 균열 15 피해"
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "short",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 45,
+      "scaling_stat": "wis",
+      "scaling_factor": 2.0,
+      "element": "물리",
+      "armor_penetration": 0.8
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {
+        "type": "knockback",
+        "distance_meters": 4.0
+      },
+      "inflicted_status": [
+        {
+          "status": "vulnerable",
+          "duration_turns": 3
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "armor_destroy"
+      ],
+      "environmental_gimmick": "바위와 철제 문을 산산조각 냄",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.5,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "loud",
+      "is_forbidden": true,
+      "taboo_reason": "법칙 강제 파괴"
+    },
+    "14_서사_연출": {
+      "description": "존재의 결합을 끊어내는 원초 언령. 갑옷과 방패가 충격파에 산산조각 난다.",
+      "incantation_or_formula": "[원초 언령: 프락투라]",
+      "visual_fx_description": "허공이 벼락 맞듯 쩍 갈라지며 대상의 단단한 외피가 부스러져 흩날린다."
+    }
+  },
+  {
+    "id": "skill_spatiotemporal_thought_lag_01",
+    "name": "시간 지연 (사고 지체)",
+    "1_기본식별_계통": {
+      "category": "spatiotemporal",
+      "skill_type": "active",
+      "role_type": "debuff_curse",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 35,
+      "catalyst_required": "회중시계 또는 수정 펜듈럼",
+      "recoil_or_side_effect": "1턴간 어지럼증",
+      "backfire_risk": 0.05,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "medium",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 20,
+      "scaling_stat": "int",
+      "scaling_factor": 1.5,
+      "element": "비전",
+      "armor_penetration": 0.5
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "stun",
+          "duration_turns": 1,
+          "chance": 0.9
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "chrono_dilation"
+      ],
+      "environmental_gimmick": "",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 1,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "적의 국소 생체 시간축을 1/10로 지연시켜 사고와 반응을 1턴간 완전히 정지시킨다.",
+      "incantation_or_formula": "시간의 흐름이여, 그대의 맥박을 늦추라.",
+      "visual_fx_description": "적의 주변 공기가 청람빛 젤리처럼 일그러지며 모든 동작이 정지 영상처럼 멈춘다."
+    }
+  },
+  {
+    "id": "skill_spatiotemporal_space_cleave_01",
+    "name": "공간 단절 (차원 참격)",
+    "1_기본식별_계통": {
+      "category": "spatiotemporal",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "epic",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 40,
+      "catalyst_required": "예리한 도검류 또는 에테르 칼날",
+      "recoil_or_side_effect": "손목 관절 비틀림",
+      "backfire_risk": 0.08,
+      "backfire_description": "공간 왜곡 파편에 12 피해"
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 2,
+      "current_cooldown": 0,
+      "required_weapon": "도검류_또는_맨손",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "medium",
+      "area_shape": "line",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 50,
+      "scaling_stat": "int",
+      "scaling_factor": 1.9,
+      "element": "비전",
+      "armor_penetration": 1.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "bleeding",
+          "duration_turns": 3,
+          "dot_damage_per_turn": 10
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "spatial_tear"
+      ],
+      "environmental_gimmick": "물리적 장애물 투과",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.7,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "normal",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "물리 방어력과 갑옷을 100% 무시하고 적의 공간 좌표 자체를 예리하게 잘라낸다.",
+      "incantation_or_formula": "좌표를 분할하여 실재를 끊노라.",
+      "visual_fx_description": "검을 휘두른 자리에 검은 실선이 그어지며, 공간이 어긋나 적의 방어구가 종이처럼 갈라진다."
+    }
+  },
+  {
+    "id": "skill_conceptual_distance_null_01",
+    "name": "개념마법: 거리 소멸 (영거리 참)",
+    "1_기본식별_계통": {
+      "category": "conceptual",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "legendary",
+      "is_unique": true,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "ultimate",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 20,
+      "catalyst_required": "손에 쥔 근접 무기",
+      "recoil_or_side_effect": "거리 감각 혼란",
+      "backfire_risk": 0.1,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 4,
+      "current_cooldown": 0,
+      "required_weapon": "근접무기",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "single_enemy",
+      "range": "global",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 60,
+      "scaling_stat": "str",
+      "scaling_factor": 2.0,
+      "element": "물리",
+      "armor_penetration": 0.6
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "distance_null"
+      ],
+      "environmental_gimmick": "사거리 제약 완전 소멸",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.8,
+      "guaranteed_crit_condition": "always",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "silent",
+      "is_forbidden": true,
+      "taboo_reason": "세계의 거리 개념을 오려낸 신성모독"
+    },
+    "14_서사_연출": {
+      "description": "「거리」라는 개념을 세계에서 오려내어 수십 미터 밖 적의 심장에 칼끝을 그대로 겹친다.",
+      "incantation_or_formula": "너와 나 사이에 떨어진 것은 아무것도 없다.",
+      "visual_fx_description": "칼을 제자리에서 찔렀을 뿐인데, 멀리 서 있던 적의 가슴에서 칼날이 솟구쳐 나온다."
+    }
+  },
+  {
+    "id": "skill_conceptual_sound_vacuum_01",
+    "name": "개념마법: 소리 봉인 (진공 침묵)",
+    "1_기본식별_계통": {
+      "category": "conceptual",
+      "skill_type": "active",
+      "role_type": "buff",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 25,
+      "catalyst_required": "침묵의 납 조각",
+      "recoil_or_side_effect": "일시적 이명",
+      "backfire_risk": 0.0,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "ground_area",
+      "range": "short",
+      "area_shape": "circle",
+      "area_radius_meters": 15.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "int",
+      "scaling_factor": 0.0,
+      "element": "암흑",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "silence",
+          "duration_turns": 3
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "absolute_stealth"
+      ],
+      "environmental_gimmick": "0dB 완전 무음 지대 형성",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 3,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "silent",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "반경 15m 내의 「소리」라는 개념 자체를 3턴간 봉인하여 발소리와 비명을 완벽하게 지운다.",
+      "incantation_or_formula": "세상의 모든 진동을 이 잔에 가두노라.",
+      "visual_fx_description": "소음이 빨려 들어가듯 귓가가 먹먹해지며, 쇠가 부딪치는 소리조차 나지 않는 암흑 정적이 내린다."
+    }
+  },
+  {
+    "id": "skill_causality_reversal_guard_01",
+    "name": "인과마법: 인과 역전 (피격 무효)",
+    "1_기본식별_계통": {
+      "category": "causality",
+      "skill_type": "reaction",
+      "role_type": "defense_guard",
+      "tier": "legendary",
+      "is_unique": true,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "ultimate",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 15,
+      "catalyst_required": "뫼비우스의 은고리",
+      "recoil_or_side_effect": "인과 피로도 누적",
+      "backfire_risk": 0.15,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 5,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "self",
+      "range": "melee",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "wis",
+      "scaling_factor": 0.0,
+      "element": "비전",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "causality_rewrite"
+      ],
+      "environmental_gimmick": "피격 결과를 원인 무효화로 치환",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 1,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": true,
+      "taboo_reason": "운명과 인과율 위조"
+    },
+    "14_서사_연출": {
+      "description": "「칼에 맞았다 → 하지만 칼에 맞을 이유가 없었다」로 인과를 뒤집어 직전 피격을 없던 일로 만든다.",
+      "incantation_or_formula": "원인이 없었으니, 결과 또한 존재치 아니한다.",
+      "visual_fx_description": "베였던 상처가 과거의 시간대로 감겨들며 봉합되고, 적은 칼을 헛손질한 채 비틀거린다."
+    }
+  },
+  {
+    "id": "skill_celestial_polaris_lance_01",
+    "name": "성좌마법: 북극성 섬광창",
+    "1_기본식별_계통": {
+      "category": "celestial",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 30,
+      "catalyst_required": "별빛 투영 프리즘",
+      "recoil_or_side_effect": "시력 일시 저하",
+      "backfire_risk": 0.03,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 2,
+      "current_cooldown": 0,
+      "required_weapon": "지팡이_오브_맨손",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "long",
+      "area_shape": "line",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 42,
+      "scaling_stat": "int",
+      "scaling_factor": 1.7,
+      "element": "신성",
+      "armor_penetration": 0.4
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {
+        "target_status_trigger": "night_time",
+        "bonus_multiplier": 1.5
+      }
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "blind",
+          "duration_turns": 2
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "starlight_resonance"
+      ],
+      "environmental_gimmick": "밤하늘 별자리 관측 시 위력 50% 증폭",
+      "weather_terrain_synergy": {
+        "clear_night": {
+          "power_mult": 1.5
+        }
+      }
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.4,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "normal",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "천체의 북극성과 공명하여 순수한 별빛의 투창을 낙하시킨다. 밤하늘일 때 위력 증폭.",
+      "incantation_or_formula": "요동치지 않는 극성의 빛이여, 길 잃은 자를 꿰뚫으라.",
+      "visual_fx_description": "밤하늘에서 한 줄기 눈부신 백청색 별빛이 수직으로 떨어져 적의 흉부를 관통한다."
+    }
+  },
+  {
+    "id": "skill_sacrifice_finger_tribute_01",
+    "name": "대가마법: 손가락 공물의 흑염",
+    "1_기본식별_계통": {
+      "category": "sacrifice_toll",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "epic",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 30,
+      "catalyst_required": "시전자의 신체 일부 (손가락 관절 또는 혈액)",
+      "recoil_or_side_effect": "극심한 고통과 신체 결손 위험",
+      "backfire_risk": 0.05,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "단검_또는_맨손",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "short",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 70,
+      "scaling_stat": "con",
+      "scaling_factor": 2.2,
+      "element": "암흑",
+      "armor_penetration": 0.7
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "burning",
+          "duration_turns": 3,
+          "dot_damage_per_turn": 15
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "forbidden_sacrifice"
+      ],
+      "environmental_gimmick": "지워지지 않는 저주받은 불길",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.8,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "loud",
+      "is_forbidden": true,
+      "taboo_reason": "육신을 바쳐 악마적 화력을 부르는 금기"
+    },
+    "14_서사_연출": {
+      "description": "자신의 손가락이나 살점을 제물로 불태워 즉사급의 검은 불길을 토해낸다.",
+      "incantation_or_formula": "이 살점을 살라, 그대의 뼈를 사루리라.",
+      "visual_fx_description": "시전자의 손끝에서 뼈가 타들어 가는 소리와 함께 검붉은 저주의 화염구가 적을 집어삼킨다."
+    }
+  },
+  {
+    "id": "skill_shamanic_voodoo_pin_01",
+    "name": "주술: 짚인형의 저주 못",
+    "1_기본식별_계통": {
+      "category": "shamanic_curse",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "uncommon",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 18,
+      "catalyst_required": "짚인형과 녹슨 대못",
+      "recoil_or_side_effect": "손끝 찔림 통증",
+      "backfire_risk": 0.04,
+      "backfire_description": "못이 튕겨 자신의 허벅지 관통"
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 2,
+      "current_cooldown": 0,
+      "required_weapon": "짚인형_도구",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "medium",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 28,
+      "scaling_stat": "wis",
+      "scaling_factor": 1.4,
+      "element": "독",
+      "armor_penetration": 0.5
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "bleeding",
+          "duration_turns": 3,
+          "dot_damage_per_turn": 8
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "voodoo_link"
+      ],
+      "environmental_gimmick": "원격 부위 파괴",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.4,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": true,
+      "taboo_reason": "원격 저주 살해 주술"
+    },
+    "14_서사_연출": {
+      "description": "적의 모발이나 피를 묻힌 짚인형에 대못을 박아 원격으로 장기와 관절을 파쇄한다.",
+      "incantation_or_formula": "너의 피가 깃든 인형이니, 못이 박히는 곳마다 살이 썩으리라.",
+      "visual_fx_description": "인형의 가슴에 둔탁하게 못이 박히자, 멀리 떨어진 적이 비명을 지르며 가슴을 쥐어뜯는다."
+    }
+  },
+  {
+    "id": "skill_shamanic_bear_totem_aspect_01",
+    "name": "주술: 웅령의 빙의 (자연령 폼)",
+    "1_기본식별_계통": {
+      "category": "shamanic_curse",
+      "skill_type": "toggle",
+      "role_type": "buff",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 22,
+      "catalyst_required": "곰의 송곳니 토템",
+      "recoil_or_side_effect": "야성 폭주로 지능 판정 -2",
+      "backfire_risk": 0.0,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "맨손_또는_둔기",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "self",
+      "range": "melee",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "str",
+      "scaling_factor": 0.0,
+      "element": "물리",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "beast_form"
+      ],
+      "environmental_gimmick": "근력 +5, 강인도(Poise) 대폭 상승",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.3,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 3,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "loud",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "고대 거대 곰의 영혼을 육체에 빙의시켜 육중한 체구와 괴력을 얻는다 (우디르 폼체인지).",
+      "incantation_or_formula": "태고의 숲을 지키던 웅령이여, 내 혈관에 깃들라.",
+      "visual_fx_description": "시전자의 등 뒤로 거대한 에테르 곰의 환영이 포효하며, 양팔의 근육이 터질 듯 부풀어 오른다."
+    }
+  },
+  {
+    "id": "skill_divine_sacred_sanctuary_01",
+    "name": "신성술: 성역의 가호",
+    "1_기본식별_계통": {
+      "category": "divine_arts",
+      "skill_type": "active",
+      "role_type": "buff",
+      "tier": "uncommon",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "faith",
+      "resource_cost": 20,
+      "catalyst_required": "교단 성인(聖印) 또는 성수",
+      "recoil_or_side_effect": "",
+      "backfire_risk": 0.0,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 2,
+      "current_cooldown": 0,
+      "required_weapon": "성물_또는_방패",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "all_allies",
+      "range": "short",
+      "area_shape": "circle",
+      "area_radius_meters": 5.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 25,
+      "scaling_stat": "wis",
+      "scaling_factor": 1.2,
+      "element": "신성",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "holy_sanctuary"
+      ],
+      "environmental_gimmick": "언데드/악마 진입 차단",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 2,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "normal",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "사제나 성기사가 교단의 성스러운 신앙으로 펼치는 기적. 언데드와 악마의 침입을 막는 황금빛 결계.",
+      "incantation_or_formula": "거룩하신 빛이여, 길 잃은 어린 양들을 품으소서.",
+      "visual_fx_description": "바닥에 황금빛 문양이 새겨지며 은은한 성스러운 빛이 파티원들을 감싼다."
+    }
+  },
+  {
+    "id": "skill_divination_future_sight_01",
+    "name": "예언마법: 미래시 (운명 관측)",
+    "1_기본식별_계통": {
+      "category": "divination",
+      "skill_type": "active",
+      "role_type": "buff",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 25,
+      "catalyst_required": "점성술 수정구 또는 은제 주사위",
+      "recoil_or_side_effect": "편두통",
+      "backfire_risk": 0.0,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "self",
+      "range": "melee",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "wis",
+      "scaling_factor": 0.0,
+      "element": "비전",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "dice_foresight"
+      ],
+      "environmental_gimmick": "다음 판정 주사위 보정",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 1,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "다음 수 초의 미래를 미리 엿보아 다음 행동 주사위 눈을 최소 12 이상으로 확정한다.",
+      "incantation_or_formula": "운명의 실타래가 다음 획을 그리기 전에.",
+      "visual_fx_description": "시전자의 동공이 은색으로 물들며 상대의 공격 궤적이 잔상으로 미리 보인다."
+    }
+  },
+  {
+    "id": "skill_runic_crag_burst_trap_01",
+    "name": "룬마법: 암석 폭쇄 룬 함정",
+    "1_기본식별_계통": {
+      "category": "runic",
+      "skill_type": "active",
+      "role_type": "aoe_attack",
+      "tier": "uncommon",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 20,
+      "catalyst_required": "흑요석 룬석 1개",
+      "recoil_or_side_effect": "",
+      "backfire_risk": 0.02,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 2,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "ground_area",
+      "range": "short",
+      "area_shape": "circle",
+      "area_radius_meters": 3.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 35,
+      "scaling_stat": "int",
+      "scaling_factor": 1.3,
+      "element": "물리",
+      "armor_penetration": 0.3
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {
+        "type": "knockback",
+        "distance_meters": 2.0
+      },
+      "inflicted_status": [
+        {
+          "status": "stun",
+          "duration_turns": 1,
+          "chance": 0.6
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "rune_trap"
+      ],
+      "environmental_gimmick": "지면 밟을 시 자동 폭발",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.3,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 5,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "loud",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "대지 위에 고대 룬을 새겨둔다. 적이 밟거나 접근하면 암석 파편과 함께 폭쇄한다.",
+      "incantation_or_formula": "대지의 뼈대여, 밟힌 순간 파쇄하라.",
+      "visual_fx_description": "바닥에 은은하게 숨겨져 있던 청회색 룬 문자가 번쩍이며 날카로운 바위 파편들이 솟구친다."
+    }
+  },
+  {
+    "id": "skill_blood_sanguine_lance_01",
+    "name": "혈마법: 응혈의 쐐기창",
+    "1_기본식별_계통": {
+      "category": "blood_magic",
+      "skill_type": "active",
+      "role_type": "single_attack",
+      "tier": "uncommon",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 15,
+      "catalyst_required": "자신의 혈액 3방울",
+      "recoil_or_side_effect": "빈혈 현기증",
+      "backfire_risk": 0.03,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 1,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "medium",
+      "area_shape": "line",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 32,
+      "scaling_stat": "con",
+      "scaling_factor": 1.5,
+      "element": "독",
+      "armor_penetration": 0.3
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {
+        "target_status_trigger": "bleeding",
+        "bonus_multiplier": 1.6
+      }
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "bleeding",
+          "duration_turns": 3,
+          "dot_damage_per_turn": 6
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "blood_spike"
+      ],
+      "environmental_gimmick": "출혈 대상 타격 시 추가 흡혈",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.4,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.25,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 0,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": true,
+      "taboo_reason": "피를 매개로 한 흑주술"
+    },
+    "14_서사_연출": {
+      "description": "자신의 피를 허공에서 결정화하여 날카로운 혈창을 발사한다. 명중 시 체력을 일부 흡수한다.",
+      "incantation_or_formula": "혈관의 고동이여, 붉은 가시가 되어 날아가라.",
+      "visual_fx_description": "손바닥에서 뿜어진 선혈이 시퍼렇게 굳어지며 쐐기창 형태로 적을 관통한다."
+    }
+  },
+  {
+    "id": "skill_dark_abyssal_rot_01",
+    "name": "흑마법: 심연의 부식 안개",
+    "1_기본식별_계통": {
+      "category": "dark_magic",
+      "skill_type": "active",
+      "role_type": "aoe_attack",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 28,
+      "catalyst_required": "심연의 재 또는 까마귀 깃털",
+      "recoil_or_side_effect": "체온 1도 저하",
+      "backfire_risk": 0.04,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "지팡이_오브_맨손",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "ground_area",
+      "range": "medium",
+      "area_shape": "circle",
+      "area_radius_meters": 4.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 1,
+      "base_value": 25,
+      "scaling_stat": "int",
+      "scaling_factor": 1.4,
+      "element": "암흑",
+      "armor_penetration": 0.4
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "vulnerable",
+          "duration_turns": 3
+        },
+        {
+          "status": "poison",
+          "duration_turns": 3,
+          "dot_damage_per_turn": 8
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "armor_corrosion"
+      ],
+      "environmental_gimmick": "금속 갑옷 내구도 및 방어력 급속 부식",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.3,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 3,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": true,
+      "taboo_reason": "교단 공인 사악한 암흑 주술"
+    },
+    "14_서사_연출": {
+      "description": "심연의 썩은 안개를 소환하여 적들의 방어구를 녹이고 폐를 썩어들어가게 한다.",
+      "incantation_or_formula": "빛이 닿지 않는 바닥의 숨결을 토해내노라.",
+      "visual_fx_description": "바닥에서 끈적한 검은 안개가 피어오르며 적들의 갑옷 표면이 녹아내린다."
+    }
+  },
+  {
+    "id": "skill_summoning_dust_golem_01",
+    "name": "소환마법: 대지의 흙먼지 골렘",
+    "1_기본식별_계통": {
+      "category": "summoning",
+      "skill_type": "active",
+      "role_type": "summon",
+      "tier": "uncommon",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 30,
+      "catalyst_required": "진흙 덩어리와 고대 룬 문자",
+      "recoil_or_side_effect": "",
+      "backfire_risk": 0.02,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 4,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "summon_slot",
+      "range": "short",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "int",
+      "scaling_factor": 0.0,
+      "element": "물리",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "minion_summon"
+      ],
+      "environmental_gimmick": "전방에 아군 방패 골렘 소환",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 4,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "normal",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "대지의 토사를 뭉쳐 4턴간 적의 공격을 대신 맞아주는 단단한 흙먼지 골렘을 소환한다.",
+      "incantation_or_formula": "대지의 침묵이여, 형태를 취해 기립하라.",
+      "visual_fx_description": "바닥의 흙과 돌이 소용돌이치며 2미터 높이의 묵직한 토사 골렘이 솟구친다."
+    }
+  },
+  {
+    "id": "skill_pact_binding_blood_oath_01",
+    "name": "계약마법: 피의 맹약 (생명 결속)",
+    "1_기본식별_계통": {
+      "category": "pact_binding",
+      "skill_type": "active",
+      "role_type": "buff",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "hp",
+      "resource_cost": 10,
+      "catalyst_required": "피의 서약서 또는 맞잡은 손",
+      "recoil_or_side_effect": "",
+      "backfire_risk": 0.0,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 4,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "guaranteed_hit",
+      "target_type": "single_ally",
+      "range": "short",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "wis",
+      "scaling_factor": 0.0,
+      "element": "영혼",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": []
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "damage_share"
+      ],
+      "environmental_gimmick": "아군이 받는 피해의 50%를 시전자가 대신 흡수",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 3,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "동료와 피를 섞어 생명을 결속한다. 동료가 입는 치명상의 절반을 나누어 받는다.",
+      "incantation_or_formula": "그대의 피가 곧 나의 피니, 상처 또한 함께하리라.",
+      "visual_fx_description": "두 사람의 손목 사이에 붉은 에테르 사슬이 이어지며 고동친다."
+    }
+  },
+  {
+    "id": "skill_oneiric_deep_slumber_01",
+    "name": "꿈마법: 영면의 안개 (수면 유도)",
+    "1_기본식별_계통": {
+      "category": "oneiric",
+      "skill_type": "active",
+      "role_type": "debuff_curse",
+      "tier": "uncommon",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "normal",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 22,
+      "catalyst_required": "잠자는 꽃가루 1꼬집",
+      "recoil_or_side_effect": "하품 및 졸음",
+      "backfire_risk": 0.02,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "medium",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "wis",
+      "scaling_factor": 0.0,
+      "element": "비전",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "sleep",
+          "duration_turns": 2,
+          "chance": 0.85
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "sleep_induce"
+      ],
+      "environmental_gimmick": "피격 전까지 완전 행동 불능",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 2,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": false,
+      "taboo_reason": ""
+    },
+    "14_서사_연출": {
+      "description": "적의 의식 깊은 곳에 달콤한 잠을 불어넣어 무기를 떨어뜨리고 깊은 수면에 빠뜨린다.",
+      "incantation_or_formula": "눈꺼풀을 닫고 요람의 품으로 돌아가라.",
+      "visual_fx_description": "연보랏빛 나비 환영들이 적의 머리 주위를 맴돌며, 적의 눈이 서서히 감긴다."
+    }
+  },
+  {
+    "id": "skill_mnemonic_fog_amnesia_01",
+    "name": "기억마법: 망각의 안개 (스킬 봉인)",
+    "1_기본식별_계통": {
+      "category": "mnemonic",
+      "skill_type": "active",
+      "role_type": "debuff_curse",
+      "tier": "rare",
+      "is_unique": false,
+      "owner_npc_id": ""
+    },
+    "2_기술위계_합체기": {
+      "rank_type": "special",
+      "joint_partner_id": "",
+      "joint_requirements": {}
+    },
+    "3_소모자원_대가": {
+      "resource_type": "mana",
+      "resource_cost": 26,
+      "catalyst_required": "은빛 실타래 또는 거울 조각",
+      "recoil_or_side_effect": "사소한 기억 깜빡임",
+      "backfire_risk": 0.03,
+      "backfire_description": ""
+    },
+    "4_시전방식_쿨다운": {
+      "cast_behavior": "instant",
+      "cast_time_turns": 0,
+      "cooldown_turns": 3,
+      "current_cooldown": 0,
+      "required_weapon": "무관",
+      "required_stance": ""
+    },
+    "5_명중_사거리_범위": {
+      "hit_type": "dice_roll",
+      "target_type": "single_enemy",
+      "range": "medium",
+      "area_shape": "single",
+      "area_radius_meters": 0.0
+    },
+    "6_피해수치_물리연산": {
+      "damage_delivery": "single_burst",
+      "hit_count": 0,
+      "base_value": 0,
+      "scaling_stat": "int",
+      "scaling_factor": 0.0,
+      "element": "비전",
+      "armor_penetration": 0.0
+    },
+    "7_처형_조건부폭딜": {
+      "execution_condition": {}
+    },
+    "8_위치이동_군중제어": {
+      "displacement": {},
+      "inflicted_status": [
+        {
+          "status": "silence",
+          "duration_turns": 2,
+          "chance": 0.8
+        }
+      ]
+    },
+    "9_원소_환경_날씨연계": {
+      "synergy_tags": [
+        "memory_erase"
+      ],
+      "environmental_gimmick": "적의 최강 스킬 기억 일시 삭제",
+      "weather_terrain_synergy": {}
+    },
+    "10_치명타_자원흡수": {
+      "crit_multiplier_bonus": 0.0,
+      "guaranteed_crit_condition": "",
+      "lifesteal_pct": 0.0,
+      "mana_drain_pct": 0.0
+    },
+    "11_지속시간_스택중첩": {
+      "duration_turns": 2,
+      "max_stacks": 1,
+      "current_stacks": 0
+    },
+    "12_숙련도_경지": {
+      "mastery_level": 1,
+      "mastery_exp": 0,
+      "max_mastery_level": 4,
+      "mastery_perks": {}
+    },
+    "13_소음도_사회적금기": {
+      "noise_level": "quiet",
+      "is_forbidden": true,
+      "taboo_reason": "타인의 영혼 기억 조작 금지법"
+    },
+    "14_서사_연출": {
+      "description": "적의 뇌리에서 필살기나 마법 영창의 기억을 일시적으로 지워 기술 사용을 봉인한다.",
+      "incantation_or_formula": "그대가 익힌 그 기술의 이름을 잊으라.",
+      "visual_fx_description": "적의 관자놀이에서 한 가닥 은빛 기억의 실타래가 뽑혀 나오며, 적이 당황한 채 무기를 더듬거린다."
     }
   }
 ]

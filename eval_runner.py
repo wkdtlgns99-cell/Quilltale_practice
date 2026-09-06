@@ -16,10 +16,14 @@ Outputs:
 
 import json
 import os
+import sys
 import logging
 from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass, field
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 from src.world.state import WorldState
 from src.agents.game_master import GameMasterAgent
@@ -235,8 +239,8 @@ def run_evaluation(
         run_judge:  Whether to run LLM judge calls for memory and consistency.
                     Set False to only measure invalid transition rate (cheaper).
     """
-    print(f"Running evaluation: {len(scenario)} turns, judge={'on' if run_judge else 'off'}")
-    print("-" * 60)
+    print(f"Running evaluation: {len(scenario)} turns, judge={'on' if run_judge else 'off'}", flush=True)
+    print("-" * 60, flush=True)
 
     with open(world_path, encoding="utf-8") as f:
         state = WorldState.from_json(f.read())
@@ -252,11 +256,11 @@ def run_evaluation(
 
     ### Generate opening (not counted in metrics — no action to evaluate)
     opening = gm.generate_opening(state)
-    print(f"Opening: {opening['narration'][:80]}...")
-    print()
+    print(f"Opening: {opening['narration'][:80]}...", flush=True)
+    print(flush=True)
 
     for i, action in enumerate(scenario):
-        print(f"Turn {i+1:02d}: {action}")
+        print(f"Turn {i+1:02d}: {action}", flush=True)
 
         world_context_before = state.to_context_summary()
         npcs_present = state.npcs_in_location(state.player.location)
