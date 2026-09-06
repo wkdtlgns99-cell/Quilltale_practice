@@ -305,30 +305,39 @@
     - 6. 규칙 6 준수: `CircadianClock`, `StimulantSpec`, `BeddingQualitySpec`에 `traits` 의무 탑재.
 - [x] **31. 🔥 [완료] 전장 시체 부패 & 청소 야수/사령 유인 생태계 (`CorpseEcologyEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/corpse_ecology_engine.py`, [엔진: 확장] `src/world/two_pass_engine.py`, `src/world/state.py`
+  - **검증 증명**: 구현 파일 `src/world/corpse_ecology_engine.py`, 통과 테스트 `tests/test_corpse_ecology_engine.py` (5 passed).
   - **기능**: 전투 승리 후 방치된 시체 부패 4단계(fresh 0~60m ➔ bloated 61~180m ➔ rotting 181~360m ➔ skeleton 361m+). 유저 결정 Q1에 따라 3단계 부패 시 유기물/식량 썩음(A안) + 45% 확률 스캐벤저(늑대/까마귀/구울) 유인 스폰으로 잔여 전리품 및 골드 훼손/손실(B안) 하이브리드 결합, 시체열병 전염 오염원 경고, 시신 소각(역병 차단) 및 가매장(위생/신앙) 완비.
 - [x] **32. 🔥 [완료] 포션 약물 남용 간 독성 & 내성 축적 엔진 (`ToxicologyToleranceEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/toxicology_engine.py`, [엔진: 확장] `src/world/two_pass_engine.py`, `src/world/campsite_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/toxicology_engine.py`, 통과 테스트 `tests/test_toxicology_engine.py` (5 passed).
   - **기능**: 회복 물약 연속 음용 시 약물 내성(최대 50% 힐량 감쇄) 및 체내 간 독성 누적(100 도달 시 급성 구토/스태미나 고갈). 유저 결정 Q1에 따라 현실 월드 타임 시간제(30분당 -5) 독성 대사 및 숙영지(Campsite) 8시간 수면 시 간 대사 완료 100% 완전 리셋.
 - [x] **33. 🔥 [완료] 급격한 명암 변화 안구 암적응/명적응 물리 엔진 (`PupilAdaptationEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/pupil_adaptation_engine.py`, [엔진: 확장] `src/world/two_pass_engine.py`, `src/world/state.py`
+  - **검증 증명**: 구현 파일 `src/world/pupil_adaptation_engine.py`, 통과 테스트 `tests/test_pupil_adaptation_engine.py` (5 passed).
   - **기능**: 조도(lx) 매트릭스 기반 망막 로돕신 적응 역학. 유저 결정 Q2에 따라 완전 시간제(초 단위) 구현: 대낮/밝음 ➔ 칠흑 암흑 진입 시 20.0초 암적응 지연(명중 DC+6, 이동속도 50% 감쇄). 해적 애꾸눈 안대(Eye Patch) 전술로 안대 반대편 전환 시 0.0초 즉각 암적응 패스. 암흑 ➔ 순간 섬광(Flash) 노출 시 2.0초 섬광 실명(행동 불가), 차광 고글(Shaded Goggles) 착용 시 섬광 100% 차단. 비전투 시 20초간 대기/적응 전용 행동(`adapt_eyes_action`) 지원.
 - [x] **34. 🔥 [완료] 알코올 취기 & 숙취 중독 물리 엔진 (`AlcoholIntoxicationEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/alcohol_engine.py`, [엔진: 확장] `src/world/campsite_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/alcohol_engine.py`, 통과 테스트 `tests/test_alcohol_engine.py` (5 passed).
   - **기능**: 주점 맥주/와인/독주 섭취 시 혈중 알코올 농도(BAC), 1단계(알딸딸: 기분 고양, 스트레스 완화, 명중 -1), 2단계(만취: 비틀거림, 민첩 -3, 고통 둔화), 3단계(블랙아웃). 유저 결정 Q3에 따라 동료 동행 시 안전 호송 귀가 vs 동료 부재 시 60% 확률 노상 소매치기(30% 골드 도난) 및 뒷골목 저체온증/젖음 발생, 익일 기상 시 숙취 두통/탈수.
 - [x] **35. 🔥 [완료] 야영 모닥불 & 침낭/숙영지 방어 엔진 (`CampsiteRestEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/campsite_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/campsite_engine.py`, 통과 테스트 `tests/test_campsite_engine.py` (6 passed).
   - **기능**: 모닥불 점화 시 건조/보온 유지 vs 야수/도적 유인 어그로 배율, 방어 목책/경보 덫 설치(침입자 지각 vs 덫 DC 주사위 대항 판정), 파티원 불침번 3교대 경계 근무 및 수면/피로도 회복.
 - [x] **36. 🔥 [완료] 독초 감별 & 약초 채집 야생 식물학 엔진 (`HerbalismBotanyEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/botany_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/botany_engine.py`, 통과 테스트 `tests/test_botany_engine.py` (5 passed).
   - **기능**: 숲/산악/늪지 식물 채집 시 지능/지혜 식물학 판정, 맹독 유사종 오인 채집(식용 버섯 vs 맹독 광대버섯), 채집 도구 내구도 및 신선도 유지 채집통.
 - [x] **37. 🔥 [완료] 마나 회로 손상 수술 & 에테르 정화 치료 엔진 (`ManaVeinRestorationEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/vein_restoration_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/vein_restoration_engine.py`, 통과 테스트 `tests/test_vein_restoration_engine.py` (6 passed).
   - **기능**: 마나 폭주로 파열된 회로(Vein Scarring)를 은침 소통술, 채집 약초 탕약 복용, 전문 비전 의사 에테르 투석 수술로 복구(영구 흉터 제거 및 최대 MP 복원). 유저 결정 Q2에 따라 수술 실패 시 마나 역류 충격파(-15 HP 및 마나 발작).
 - [x] **38. 🔥 [완료] 기상 제어 마법 & 시공간 환경 재해 시뮬레이션 엔진 (`WeatherMagicSimulationEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/weather_magic_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/weather_magic_engine.py`, 통과 테스트 `tests/test_weather_magic_engine.py` (5 passed).
   - **기능**: 고드름 비/폭풍우/태양빛 소환 등 환경 제어 마법(최소 4서클+ 요구, 기본 30분 + 서클당 15분 추가), 전투 중 라운드 종료 틱 피해 vs 탐험 이동 중 10분 환경 틱 누적 피해 및 저체온/피로 정산, 마법 기상 지속시간 감쇄.
 - [x] **39. 🔥 [완료] 자세/체간 충격량 & 가드 브레이크 물리 엔진 (`PosturePoiseEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/poise_engine.py`, [엔진: 확장] `src/world/two_pass_engine.py`, `src/world/state.py`
+  - **검증 증명**: 구현 파일 `src/world/poise_engine.py`, 통과 테스트 `tests/test_poise_engine.py` (5 passed).
   - **기능**: 세키로형 체간(Posture) 및 강인도 역학. 유저 결정 Q3 및 지침 반영:
     - 1) 다중 충격량 누적: 가드 방어 성공 시 HP 대신 체간 충격 대량 흡수(1.6배), 피격 직격 시 둔기/강타 고유 체간 피해, 마법 원소 폭압(땅/바람/중력) 중심 붕괴, 정신적 공포/스트레스 충격 체간 누적(신경 불안정 자세 붕괴).
     - 2) 세키로형 기력 연동 자연 회복: 스태미나 잔여율 비례 회복, 가드 태세 시 2.0배 가속 회복, 스태미나 0 고갈(탈진) 시 체간 회복 완전 정지.

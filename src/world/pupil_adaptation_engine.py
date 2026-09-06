@@ -7,7 +7,7 @@ Models human retinal rhodopsin adaptation across sudden lux transitions:
 - Non-combat eye adaptation action ('adapt_eyes_action') to safely adjust vision in seconds.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Any, Tuple
 import logging
 
 logger = logging.getLogger(__name__)

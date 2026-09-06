@@ -8,12 +8,14 @@
 2. RUN eval: If modifying `state.py` or `src/world/*_engine.py`, execute `eval_runner.py --no-judge` & report `invalid_transition_rate`.
 3. TEST req: Write >=1 pytest case for any new feature.
 4. NO test-gaming: Do not edit test assertions/skip tests just to pass. Fix logic instead.
+5. NO REGRESSION: Record pytest pass/fail count before starting (BASELINE). If fail count increases after changes, the commit is invalid — fix root cause and retry. Never proceed with a regression.
 </DoD_Gate>
 
 <Prompt_Rules>
 1. NO regex/patch/temp scripts in `scratch/` for `src/agents/prompts.py` or any module.
 2. USE file edit tools directly. Do not omit code (no `...` or `/* same */`). Show full diff.
 3. REPO hygiene: `scratch/` is local-only and must NEVER be tracked in git. Unit tests must use `tmp_path` and never leak dummy JSON into production directories (`data/legacy/`, `data/saves/`).
+4. NO ARTIFACT COMMIT: __pycache__, *.pyc, and 0-byte files must not be committed. Check `git status` before commit.
 </Prompt_Rules>
 
 <No_Dup_Compatibility>
@@ -22,6 +24,7 @@
 3. SAVE_LOAD: Ensure `WorldState` modifications include defaults/optional fields to prevent deserialization break with old JSON saves.
 4. ENCODING: Always read/write Korean text files as UTF-8 explicit. No implicit encoding.
 5. UNIQUE naming: Do not reuse identical module/file names across different packages (e.g. `profiler.py`). Use descriptive, disambiguated filenames (`combat_profiler.py` vs `engine/profiler.py`).
+6. CALLER CHECK: Before changing any function/class signature, grep all callers first. Confirm no breakage before editing.
 </No_Dup_Compatibility>
 
 <Two_Pass_Resource>
@@ -46,6 +49,19 @@
 1. 100% natural, idiomatic Korean for all user-facing text (narration, NPC dialogue, options).
 2. ISOLATE system/debug text (snake_case, variables) from user view.
 </UI_Localization>
+
+<Static_Analysis_Gate>
+1. Before commit, run ruff (or pyflakes) on src/. Zero syntax errors, unused vars, or undefined names allowed.
+</Static_Analysis_Gate>
+
+<Handoff_Truth_Gate>
+1. When marking a backlog item [x], record the actual file path and passing test name in SESSION_HANDOFF.md as proof. No unverified completions.
+2. At session start, do not trust handoff [ ]/[x] marks as-is — verify via ls/grep against actual files before scoping work.
+</Handoff_Truth_Gate>
+
+<Unverifiable_Scope_Gate>
+1. If a change touches Qdrant/Docker/external APIs untestable in the current session, mark it "⚪ UNVERIFIED — needs real-env check" in the report. Never claim verification without running it.
+</Unverifiable_Scope_Gate>
 
 <Report_Format>
 Return exact markdown format at session end:
