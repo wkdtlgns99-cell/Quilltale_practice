@@ -175,14 +175,73 @@ class Skill:
     color: str = "#94a3b8"                              # 스킬 고유 테마 색상 (HEX 코드, UI/스킬북 배지/효과 연출용)
     traits: list[str] = field(default_factory=list)     # 스킬 요약 특성 태그 목록 (예: ["광역 결빙", "즉발 반격", "비기"])
 
-    def get_visual_description(self, caster: Any = None) -> str:
-        """Returns narrative visual description blending skill's element/effect with caster's personal mana aura."""
+    def get_visual_description(self, caster: Any = None, infused_with_mana: bool = False) -> str:
+        """
+        Returns narrative visual description and color/form aesthetics based on category and mana:
+        - Dark Magic (흑마법): strictly black (칠흑빛/흑색).
+        - Blood Magic (혈마법): strictly red (선홍빛/적색).
+        - Physical Skills (물리 스킬): base grey/silver/white (회색/은색/백색). If mana-infused: caster's personal mana color.
+        - Mana/Elemental Skills (마나/원소 스킬): elemental theme color + caster's personal mana color aura.
+        - Others: default category/element aesthetic.
+        """
         if not caster:
             return self.visual_fx_description or f"[{self.name}]의 {self.element} 기운이 뿜어져 나옵니다."
+
         caster_name = getattr(caster, "name", "시전자")
-        caster_mana = getattr(caster, "mana_color", "에테르")
+        caster_mana = getattr(caster, "mana_color", "푸른빛 에테르")
+        caster_hex = getattr(caster, "mana_color_hex", "#38bdf8")
+
+        cat = (getattr(self, "category", "") or "").lower()
+        elem = (getattr(self, "element", "") or "").lower()
+        name_l = (self.name or "").lower()
         base_desc = self.visual_fx_description or f"{self.element} 마력"
-        return f"{caster_name}의 내면에서 솟구치는 '{caster_mana}' 기운이 {self.name}에 깃들어, {base_desc}이(가) 특유의 질감과 변색된 색조로 강렬하게 발현됩니다."
+
+        # 1. 흑마법 (Dark/Necromancy/Shadow): 무조건 흑색
+        if any(kw in cat or kw in elem or kw in name_l for kw in ["dark", "abyss", "shadow", "necromancy", "흑마법", "암흑", "사령", "칠흑", "저주"]):
+            self.color = "#0f172a"
+            return f"{caster_name}의 손끝에서 모든 빛을 집어삼키는 칠흑빛(흑색)의 불길한 마력이 소용돌이치며, [{self.name}]의 {base_desc}이(가) 어둠의 형상으로 발현됩니다."
+
+        # 2. 혈마법 (Blood/Hemomancy): 무조건 빨간색
+        if any(kw in cat or kw in elem or kw in name_l for kw in ["blood", "hemomancy", "혈마법", "혈액", "흡혈", "핏빛"]):
+            self.color = "#dc2626"
+            return f"{caster_name}의 혈관에서 뿜어져 나오는 짙은 선홍빛(빨간색) 피의 마력이 응결되어, [{self.name}]의 {base_desc}이(가) 잔혹한 핏빛 궤적으로 작렬합니다."
+
+        # 3. 물리 스킬 (Physical Skills)
+        element_colors = {
+            "fire": ("주황빛과 진홍빛 불꽃", "#f97316"),
+            "화염": ("주황빛과 진홍빛 불꽃", "#f97316"),
+            "ice": ("서늘한 빙백빛 한기", "#38bdf8"),
+            "빙결": ("서늘한 빙백빛 한기", "#38bdf8"),
+            "water": ("깊고 푸른 수류", "#0284c7"),
+            "수류": ("깊고 푸른 수류", "#0284c7"),
+            "lightning": ("눈부신 황금빛 뇌격과 청자색 스파크", "#eab308"),
+            "뇌격": ("눈부신 황금빛 뇌격과 청자색 스파크", "#eab308"),
+            "wind": ("투명하게 일렁이는 비취빛 풍압", "#10b981"),
+            "바람": ("투명하게 일렁이는 비취빛 풍압", "#10b981"),
+            "earth": ("묵직하고 단단한 황갈색 암석 기운", "#a16207"),
+            "대지": ("묵직하고 단단한 황갈색 암석 기운", "#a16207"),
+            "light": ("눈부시게 순결한 황금빛 성광", "#fef08a"),
+            "신성": ("눈부시게 순결한 황금빛 성광", "#fef08a"),
+        }
+        is_elemental = elem in element_colors or cat in ["elemental_magic", "arcane_magic", "원소마법"]
+        is_physical = (
+            (cat in ["physical", "martial_arts", "subterfuge", "순수무예", "격투무술", "암습/은밀"] and not is_elemental) or
+            elem in ["physical", "none", "물리", "타격", "참격", "관통", "체술"] or
+            (getattr(self, "resource_type", "") == "stamina" and not is_elemental)
+        )
+        if is_physical and not (getattr(self, "mana_cost", 0) > 0 or infused_with_mana):
+            # 순수 물리: 기본 회색, 은색, 백색
+            self.color = "#e2e8f0"
+            return f"{caster_name}의 날카로운 기합과 함께 서늘한 은백색(회색·은색·백색) 칼바람 궤적이 대기를 가르며, [{self.name}]의 {base_desc}이(가) 묵직한 물리적 파괴력으로 내리꽂힙니다."
+        elif is_physical and (getattr(self, "mana_cost", 0) > 0 or infused_with_mana):
+            # 물리 + 마나 부여: 시전자 고유 마나 색상
+            self.color = caster_hex
+            return f"{caster_name}의 무구에 본인의 고유한 '{caster_mana}' 기운이 휘감기며, [{self.name}]의 {base_desc} 위로 화려한 마나의 잔상이 뿜어져 나옵니다."
+
+        # 4. 마나/원소 스킬: 속성 색깔 + 본인 마나 색깔 혼합
+        elem_name, elem_hex = element_colors.get(elem, ("찬란한 원소 마력", "#a855f7"))
+        self.color = elem_hex
+        return f"{caster_name}의 고유한 '{caster_mana}' 기운이 {elem_name}과(와) 한데 뒤섞여, [{self.name}]의 {base_desc}이(가) 시전자만의 독특한 색조와 소용돌이치는 마력의 형상으로 격발됩니다."
 
 
 @dataclass
@@ -1001,6 +1060,7 @@ class NPC:
     traumas: list[str] = field(default_factory=list)              # 심리적 트라우마/PTSD
     power_dynamic_state: str = "normal"                           # 권력 공백 반응: "normal" | "subservient"(복종/우상화) | "usurper"(찬탈) | "mutiny"(내분)
     morale: int = 100                                             # 전투 사기 (0~100, 30 이하 시 패주/항복 자백 협상)
+    active_infections: dict = field(default_factory=dict)         # disease_id -> ActiveInfection
     status_effects: dict = field(default_factory=dict)            # status_id -> StatusEffect
     visual: NPCVisualDetails = field(default_factory=NPCVisualDetails) # 고유 외형 해부학적 데이터
     blackmail_secret: str = ""                                    # 숨겨진 치부/약점/비리
@@ -1384,6 +1444,7 @@ class Player:
     body_temperature: float = 36.5      # 심부 체온 (34도 이하 저체온증, 39도 이상 열사병)
     wetness: float = 0.0                # 젖음 수치 (0.0: 완전 건조 ~ 100.0: 완전 침수)
     thermal_status: str = "normal"      # 체온 상태 ("normal", "mild_hypothermia", "moderate_hypothermia", "severe_hypothermia", "fatal_hypothermia", "heat_exhaustion", "heat_cramps", "heat_stroke", "multi_organ_failure")
+    active_infections: dict = field(default_factory=dict) # disease_id -> ActiveInfection
     status_effects: dict = field(default_factory=dict) # status_id -> StatusEffect
     
     # Bounty & Disguise

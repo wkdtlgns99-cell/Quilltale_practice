@@ -26,7 +26,8 @@ from .stealth_engine import StealthInfiltrationEngine, StealthAttemptResult, Eav
 from .equipment import EquipmentEngine, EquipmentSet, EquipmentSetBonus
 from .harvest_engine import AnatomyHarvestEngine, MonsterPart, PartAttackResult, HarvestOutcome
 from .outfit_engine import (
-    OutfitMechanicsEngine, EncumbranceStatus, ArmorChafingResult, QuickDrawResult, EyewearHazardResult
+    OutfitMechanicsEngine, EncumbranceStatus, ArmorChafingResult, QuickDrawResult, EyewearHazardResult,
+    BackpackSpec, BackpackStorageStatus, BACKPACK_SPECS
 )
 from .stamina_engine import StaminaEngine
 from .trap_engine import TrapEngine, TrapSpec, TrapInstance
@@ -39,6 +40,10 @@ from .cave_in_engine import (
 from .thermal_engine import (
     ThermalSurvivalEngine, THERMAL_SURVIVAL_SYSTEM, ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS,
     ThermalClothingSpec, HypothermiaStageSpec, HyperthermiaStageSpec
+)
+from .disease_engine import (
+    EpidemicEngine, EPIDEMIC_SYSTEM, DISEASE_REGISTRY,
+    DiseaseSpec, DiseaseStageSpec, ActiveInfection, InfectionAttemptResult
 )
 
 __all__ = [
@@ -120,6 +125,16 @@ __all__ = [
     "ThermalClothingSpec",
     "HypothermiaStageSpec",
     "HyperthermiaStageSpec",
+    "EpidemicEngine",
+    "EPIDEMIC_SYSTEM",
+    "DISEASE_REGISTRY",
+    "DiseaseSpec",
+    "DiseaseStageSpec",
+    "ActiveInfection",
+    "InfectionAttemptResult",
+    "BackpackSpec",
+    "BackpackStorageStatus",
+    "BACKPACK_SPECS",
 ]
 
 

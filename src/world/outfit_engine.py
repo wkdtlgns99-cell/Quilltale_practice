@@ -63,6 +63,69 @@ class EyewearHazardResult:
 
 
 @dataclass
+class BackpackSpec:
+    backpack_id: str
+    name_ko: str
+    description: str
+    volume_liters: float                    # 가방 내부 용적 (L)
+    safe_weight_limit_kg: float             # 안전 적재 하중 (kg)
+    tear_weight_limit_kg: float             # 파손/찢어짐 한계 하중 (kg)
+    max_item_size: str = "small"            # "small", "medium", "heavy"
+    traits: List[str] = field(default_factory=list)
+
+
+@dataclass
+class BackpackStorageStatus:
+    backpack_name: str
+    current_volume_liters: float
+    max_volume_liters: float
+    current_stored_weight_kg: float
+    safe_weight_limit_kg: float
+    tear_weight_limit_kg: float
+    is_overfilled_volume: bool
+    is_overweight: bool
+    tear_risk_pct: float
+    is_torn: bool
+    spilled_item_names: List[str] = field(default_factory=list)
+    summary_ko: str = ""
+    traits: List[str] = field(default_factory=lambda: ["가방 규격", "용량 한계", "찢어짐 물리"])
+
+
+BACKPACK_SPECS: Dict[str, BackpackSpec] = {
+    "small_daypack": BackpackSpec(
+        backpack_id="small_daypack",
+        name_ko="소형 전술 배낭",
+        description="가벼운 슬링백 또는 소형 데이팩. 작은 생존 도구와 소품만 수납 가능.",
+        volume_liters=18.0,
+        safe_weight_limit_kg=12.0,
+        tear_weight_limit_kg=18.0,
+        max_item_size="small",
+        traits=["small_bag", "daypack", "tactical", "light"]
+    ),
+    "medium_traveler_pack": BackpackSpec(
+        backpack_id="medium_traveler_pack",
+        name_ko="중형 여행자 배낭",
+        description="모험가들이 널리 애용하는 표준 가죽 배낭. 중형 장비와 식량 수납 가능.",
+        volume_liters=40.0,
+        safe_weight_limit_kg=25.0,
+        tear_weight_limit_kg=35.0,
+        max_item_size="medium",
+        traits=["medium_bag", "traveler_pack", "standard"]
+    ),
+    "military_full_rucksack": BackpackSpec(
+        backpack_id="military_full_rucksack",
+        name_ko="대형 군장 배낭 (완전군장)",
+        description="육군 완전군장 규격의 대용량 군용 배낭. 침낭, 텐트, 중화기 결속 가능.",
+        volume_liters=75.0,
+        safe_weight_limit_kg=45.0,
+        tear_weight_limit_kg=60.0,
+        max_item_size="heavy",
+        traits=["large_bag", "military_rucksack", "full_kit", "heavy_duty"]
+    ),
+}
+
+
+@dataclass
 class OutfitMechanicsEngine:
     TRAITS: List[str] = field(default_factory=lambda: [
         "5레이어 복식 의장",
@@ -194,6 +257,135 @@ class OutfitMechanicsEngine:
             speed_penalty_mps=speed_penalty,
             fatigue_multiplier=fatigue_mult,
             can_sprint=can_sprint,
+            summary_ko=summary
+        )
+
+    @classmethod
+    def get_backpack_spec(cls, storage_name: str) -> BackpackSpec:
+        """Resolves storage gear name to BackpackSpec."""
+        s_lower = storage_name.lower()
+        if any(kw in s_lower for kw in ["군장", "완전군장", "rucksack", "military", "대형 군장", "대형 배낭"]):
+            return BACKPACK_SPECS["military_full_rucksack"]
+        elif any(kw in s_lower for kw in ["소형", "슬링백", "작은", "daypack", "pouch", "전술 배낭", "소형 배낭"]):
+            return BACKPACK_SPECS["small_daypack"]
+        else:
+            return BACKPACK_SPECS["medium_traveler_pack"]
+
+    @classmethod
+    def estimate_item_volume_liters(cls, item: Item) -> float:
+        """Estimates volume in liters based on properties or physical item size."""
+        props = getattr(item, "properties", {}) or {}
+        if "volume_liters" in props:
+            return float(props["volume_liters"])
+
+        size = getattr(item, "size", "small")
+        if size == "small":
+            return 1.5
+        elif size == "medium":
+            return 6.0
+        elif size == "heavy":
+            return 20.0
+        else:
+            return 60.0
+
+    @classmethod
+    def evaluate_backpack_storage(
+        cls,
+        entity: Any,
+        state: WorldState,
+        trigger_action: str = "normal",
+        force_tear: Optional[bool] = None
+    ) -> BackpackStorageStatus:
+        """
+        Evaluates backpack storage volume (L), stored weight (kg),
+        size fitness, and tear/rupture risk on overload.
+        """
+        # Find equipped backpack name
+        storage_name = "여행자 배낭"
+        eq = getattr(entity, "equipment", None)
+        if eq and getattr(eq, "storage", None):
+            s_id = eq.storage
+            if s_id in state.items:
+                storage_name = state.items[s_id].name
+        elif hasattr(entity, "visual") and entity.visual and entity.visual.outfit:
+            if entity.visual.outfit.bags_storage:
+                storage_name = entity.visual.outfit.bags_storage[0]
+
+        spec = cls.get_backpack_spec(storage_name)
+
+        # Sum stored unequipped items
+        inv_ids = getattr(entity, "inventory", [])
+        stored_vol = 0.0
+        stored_weight = 0.0
+        oversized_items: List[str] = []
+
+        for i_id in inv_ids:
+            if i_id in state.items:
+                it = state.items[i_id]
+                it_vol = cls.estimate_item_volume_liters(it)
+                it_wt = getattr(it, "weight", 1.0)
+                stored_vol += it_vol
+                stored_weight += it_wt
+
+                # Check item size vs backpack max allowed size
+                it_size = getattr(it, "size", "small")
+                if spec.max_item_size == "small" and it_size in ["medium", "heavy", "massive"]:
+                    oversized_items.append(it.name)
+                elif spec.max_item_size == "medium" and it_size in ["heavy", "massive"]:
+                    oversized_items.append(it.name)
+
+        stored_vol = round(stored_vol, 1)
+        stored_weight = round(stored_weight, 1)
+
+        is_overfilled_vol = stored_vol > spec.volume_liters
+        is_overweight = stored_weight > spec.safe_weight_limit_kg
+
+        tear_risk = 0.0
+        is_torn = False
+        spilled_items: List[str] = []
+
+        if stored_weight > spec.tear_weight_limit_kg:
+            excess = stored_weight - spec.tear_weight_limit_kg
+            base_risk = excess * 6.0
+            if trigger_action in ["sprint", "combat", "dodge", "fall", "jump"]:
+                base_risk += 35.0
+            else:
+                base_risk += 10.0
+            tear_risk = min(100.0, round(base_risk, 1))
+
+            should_tear = force_tear if force_tear is not None else (tear_risk >= 50.0 and random.random() < (tear_risk / 100.0))
+            if should_tear:
+                is_torn = True
+                # Spill item
+                if inv_ids:
+                    spill_id = inv_ids[-1]
+                    if spill_id in state.items:
+                        spilled_items.append(state.items[spill_id].name)
+                        loc_id = getattr(entity, "location", "")
+                        if loc_id in state.locations:
+                            state.locations[loc_id].items.append(spill_id)
+                        inv_ids.remove(spill_id)
+
+        summary = f"[{spec.name_ko}] 용적: {stored_vol}/{spec.volume_liters}L, 적재: {stored_weight}/{spec.safe_weight_limit_kg}kg (파손한계: {spec.tear_weight_limit_kg}kg)"
+        if is_torn:
+            summary += f" ⚠️ 과적으로 가방이 찢어져 바닥에 물품({', '.join(spilled_items)})이 쏟아졌습니다!"
+        elif is_overweight:
+            summary += f" ⚠️ 하중 초과로 가방 찢어짐 위험 ({tear_risk}%)!"
+        elif is_overfilled_vol:
+            summary += f" ⚠️ 용적 초과! 가방 지퍼와 끈이 터질 듯 팽창했습니다."
+
+        return BackpackStorageStatus(
+            backpack_name=spec.name_ko,
+            current_volume_liters=stored_vol,
+            max_volume_liters=spec.volume_liters,
+            current_stored_weight_kg=stored_weight,
+            safe_weight_limit_kg=spec.safe_weight_limit_kg,
+            tear_weight_limit_kg=spec.tear_weight_limit_kg,
+            is_overfilled_volume=is_overfilled_vol,
+            is_overweight=is_overweight,
+            tear_risk_pct=tear_risk,
+            is_torn=is_torn,
+            spilled_item_names=spilled_items,
             summary_ko=summary
         )
 

@@ -190,6 +190,11 @@ class TwoPassEngine:
         fact_sheet.weather_logs = weather_ticks
         fact_sheet.status_tick_logs.extend(weather_ticks)
 
+        # Epidemic & Disease progression ticks
+        from src.world.disease_engine import EpidemicEngine
+        disease_ticks = EpidemicEngine.process_turn_infections(state)
+        fact_sheet.status_tick_logs.extend(disease_ticks)
+
         # Celestial & Festival cycle turns
         celestial_logs = CelestialEngine.advance_celestial_turn(state)
         fact_sheet.celestial_logs = celestial_logs
