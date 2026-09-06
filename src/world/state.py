@@ -1382,6 +1382,8 @@ class Player:
     traumas: list[str] = field(default_factory=list)  # 심리적 트라우마 (예: ["화염 공포증"])
     hygiene_level: int = 100            # 위생도 (0~100, 30 이하 시 체취 누출로 야수 기습 유발)
     body_temperature: float = 36.5      # 심부 체온 (34도 이하 저체온증, 39도 이상 열사병)
+    wetness: float = 0.0                # 젖음 수치 (0.0: 완전 건조 ~ 100.0: 완전 침수)
+    thermal_status: str = "normal"      # 체온 상태 ("normal", "mild_hypothermia", "moderate_hypothermia", "severe_hypothermia", "fatal_hypothermia", "heat_exhaustion", "heat_cramps", "heat_stroke", "multi_organ_failure")
     status_effects: dict = field(default_factory=dict) # status_id -> StatusEffect
     
     # Bounty & Disguise

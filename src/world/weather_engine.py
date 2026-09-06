@@ -44,35 +44,14 @@ class WeatherEngine:
     @classmethod
     def process_turn_survival_ticks(cls, state: WorldState) -> List[str]:
         """
-        Processes physiological body temperature and weather hazards per turn.
+        Processes physiological body temperature, wetness, and weather hazards per turn.
+        Delegates to ThermalSurvivalEngine for deep deterministic thermal dynamics.
         """
-        logs = []
-        weather = state.environment.weather
-        temp = state.environment.temperature_celsius
-        player = state.player
-
-        # Hypothermia (Cold/Blizzard)
-        if "폭설" in weather or "한파" in weather or temp <= 0:
-            has_warm_clothing = bool(player.equipment.cape or player.equipment.chest)
-            if not has_warm_clothing:
-                player.body_temperature = max(30.0, player.body_temperature - 0.5)
-                if player.body_temperature <= 34.0:
-                    damage = 6
-                    player.health = max(1, player.health - damage)
-                    logs.append(f"🥶 [한파 저체온증] 살을 에는 추위로 체온이 {player.body_temperature:.1f}℃로 떨어져 지속 피해 {damage}를 입었습니다.")
-            else:
-                player.body_temperature = min(36.5, player.body_temperature + 0.2)
-
-        # Heatstroke (Desert / Heatwave)
-        elif "폭염" in weather or "열풍" in weather or temp >= 38:
-            player.body_temperature = min(41.0, player.body_temperature + 0.4)
-            if player.body_temperature >= 39.0:
-                damage = 5
-                player.fatigue = min(100, player.fatigue + 10)
-                player.health = max(1, player.health - damage)
-                logs.append(f"☀️ [폭염 열사병] 살인적인 더위로 체온이 {player.body_temperature:.1f}℃로 치솟아 피로도가 급증하고 피해 {damage}를 입었습니다.")
+        from src.world.thermal_engine import ThermalSurvivalEngine
+        logs = ThermalSurvivalEngine.process_turn_thermal_survival(state)
 
         # Heavy Fog (Visibility / Ambush)
+        weather = state.environment.weather
         if "농무" in weather or "짙은 안개" in weather:
             logs.append("🌫️ [농무 시야 제한] 짙은 안개로 인해 5m 앞이 보이지 않아 원거리 명중 난이도(DC)가 +4 증가합니다.")
 

@@ -36,6 +36,10 @@ from .cave_in_engine import (
     CaveCollapseEngine, CAVE_COLLAPSE_SYSTEM, DUNGEON_ENVIRONMENT_SYSTEMS,
     RockStrataSpec, VibrationSourceSpec, CollapseStageSpec
 )
+from .thermal_engine import (
+    ThermalSurvivalEngine, THERMAL_SURVIVAL_SYSTEM, ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS,
+    ThermalClothingSpec, HypothermiaStageSpec, HyperthermiaStageSpec
+)
 
 __all__ = [
     "WorldState",
@@ -110,6 +114,12 @@ __all__ = [
     "RockStrataSpec",
     "VibrationSourceSpec",
     "CollapseStageSpec",
+    "ThermalSurvivalEngine",
+    "THERMAL_SURVIVAL_SYSTEM",
+    "ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS",
+    "ThermalClothingSpec",
+    "HypothermiaStageSpec",
+    "HyperthermiaStageSpec",
 ]
 
 
