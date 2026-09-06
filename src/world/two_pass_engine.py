@@ -614,6 +614,44 @@ class TwoPassEngine:
                 f"⚡ [마나 역류 자해!] 고대어/언령 반작용으로 마력이 시전자에게 역류하여 {backfire_dmg} 자해 피해를 입었습니다! (현재 체력: {state.player.health}/{state.player.max_health})"
             )
 
+        # 7.8 Trap Search & Disarm Handling
+        action_lower_act = action.lower()
+        if fact_sheet.extra_flags.get("is_trap_search"):
+            from src.world.trap_engine import TrapEngine
+            detected = TrapEngine.detect_traps_in_location(
+                state.player, state.player.location, state, is_active_search=True
+            )
+            if detected:
+                for d in detected:
+                    fact_sheet.status_tick_logs.append(d["message_ko"])
+            else:
+                fact_sheet.status_tick_logs.append("🔍 주변 바닥과 벽면을 세심히 수색했으나 드러난 함정은 발견되지 않았습니다.")
+
+        elif fact_sheet.extra_flags.get("is_trap_disarm"):
+            from src.world.trap_engine import TrapEngine
+            curr_loc = state.locations.get(state.player.location)
+            traps = getattr(curr_loc, "traps", [])
+            active_traps = getattr(state, "active_traps", {})
+            disarmed_any = False
+            for t_id in traps:
+                t_inst = active_traps.get(t_id)
+                if t_inst and t_inst.status == "revealed":
+                    res = TrapEngine.disarm_trap(state.player, t_id, state)
+                    fact_sheet.status_tick_logs.append(res["message_ko"])
+                    disarmed_any = True
+                    break
+            if not disarmed_any:
+                fact_sheet.status_tick_logs.append("⚠️ 해체할 수 있는 발견된 함정(Revealed)이 시야에 없습니다. 먼저 함정을 수색하여 발견하십시오.")
+
+        # 7.9 Dungeon Navigation (Descend / Ascend)
+        if fact_sheet.extra_flags.get("is_dungeon_nav"):
+            from src.world.dungeon_engine import DungeonEngine
+            if any(k in action_lower_act for k in ["지하로", "아래층", "다음 층", "하강"]):
+                ok, nav_msg = DungeonEngine.descend_floor(state)
+            else:
+                ok, nav_msg = DungeonEngine.ascend_floor(state)
+            fact_sheet.status_tick_logs.append(nav_msg)
+
         # 8. Party & Companion Autonomous Turns
         is_combat = (dice_res is not None and any(k in getattr(dice_res, "action_type", "") for k in ["combat", "magic", "공격", "전투", "스킬"]))
         if is_combat and target_npc:

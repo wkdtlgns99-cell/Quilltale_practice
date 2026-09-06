@@ -155,6 +155,19 @@ class ActionValidator:
         if any(v in action_lower for v in recruitment_verbs):
             extra_flags['is_recruitment_attempt'] = True
 
+        # 1.9 Trap & Dungeon Exploration Intent Detection
+        trap_search_verbs = ["함정 수색", "함정 탐색", "함정을 찾", "발밑을 살", "주변 함정", "트랩 수색", "search traps"]
+        if any(v in action_lower for v in trap_search_verbs):
+            extra_flags['is_trap_search'] = True
+
+        trap_disarm_verbs = ["함정 해체", "덫 해체", "함정을 해체", "트랩 해체", "덫을 푼다", "disarm trap"]
+        if any(v in action_lower for v in trap_disarm_verbs):
+            extra_flags['is_trap_disarm'] = True
+
+        dungeon_nav_verbs = ["지하로 내려", "아래층으로 내려", "다음 층으로", "하강 계단", "위층으로 올라", "지상으로 올라", "던전 탈출"]
+        if any(v in action_lower for v in dungeon_nav_verbs):
+            extra_flags['is_dungeon_nav'] = True
+
         # 2. Inventory check: Cannot use or drop items not owned
         accessible_item_ids = set(state.player.inventory) | (set(curr_loc.items) if curr_loc else set())
         accessible_item_names = {state.items[i].name.lower() for i in accessible_item_ids if i in state.items}

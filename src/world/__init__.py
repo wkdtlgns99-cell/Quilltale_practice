@@ -29,6 +29,8 @@ from .outfit_engine import (
     OutfitMechanicsEngine, EncumbranceStatus, ArmorChafingResult, QuickDrawResult, EyewearHazardResult
 )
 from .stamina_engine import StaminaEngine
+from .trap_engine import TrapEngine, TrapSpec, TrapInstance
+from .dungeon_engine import DungeonEngine, DungeonInstance, DungeonFloor, DungeonRoom
 
 __all__ = [
     "WorldState",
@@ -87,6 +89,13 @@ __all__ = [
     "QuickDrawResult",
     "EyewearHazardResult",
     "StaminaEngine",
+    "TrapEngine",
+    "TrapSpec",
+    "TrapInstance",
+    "DungeonEngine",
+    "DungeonInstance",
+    "DungeonFloor",
+    "DungeonRoom",
 ]
 
 

@@ -1254,6 +1254,13 @@ class Location:
     terrain: str = "plains"                        # "plains", "mountains", "forest", "swamp", "urban", "desert"
     security_level: int = 50                       # 치안도 (0~100)
     roads: dict = field(default_factory=dict)      # destination_id -> RoadConnection
+    location_category: str = "surface"             # "surface", "dungeon", "hidden_realm"
+    dungeon_id: Optional[str] = None               # 귀속된 던전 인스턴스 ID (있는 경우)
+    floor_depth: int = 0                           # 층수 심도 (0: 지상, 1~N: 지하 층수)
+    monster_density: int = 20                      # 몬스터 출현 밀집도 (0~100)
+    npc_density: int = 50                          # 일반 주민/NPC 밀집도 (0~100)
+    danger_level: int = 20                         # 위험도 등급 (0~100)
+    traps: list[str] = field(default_factory=list) # 해당 구역에 설치/잠복된 함정 인스턴스 ID 목록
     traits: list[str] = field(default_factory=list) # 장소 요약 특성 태그 (예: ["어둠", "피비린내", "엄폐물 풍부"])
 
 
@@ -3953,7 +3960,9 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             state.locations[k] = safe_init(
                 Location, v,
                 id=k, name=k, description="", exits={}, visited=False,
-                items=[], npcs=[], environmental_hazards=[]
+                items=[], npcs=[], environmental_hazards=[],
+                location_category="surface", dungeon_id=None, floor_depth=0,
+                monster_density=20, npc_density=50, danger_level=20, traps=[]
             )
 
         # NPCs
