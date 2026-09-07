@@ -514,8 +514,11 @@
   - 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine` / 백로그 9번) 완공.
   - NPC 인지 추론 & 행동 예측 엔진 (`NPCCognitiveDeductionEngine` / 백로그 40번) 완공.
   - 현상금 수배자 & 추적자 AI 엔진 (`BountyHunterEngine` / 백로그 11번) 단일 뇌 아키텍처 흡수 통합 완공.
+  - **NPC 심리·인지 엔진 고도화 외부 AI 설계 프롬프트 2종 완성**:
+    * GPT 설계용 프롬프트: 심리학 기반 시스템 아키텍트 역할, 16-Phase 설계 순서, 2축 Tiered Lazy Evaluation, Decision Cache, 12단계 파이프라인, 24개 검증 항목 포함.
+    * Claude 구현용 프롬프트: 기존 코드베이스 전체 인벤토리(`NPCPersonality` 12축, `NPC` 10인자 태도 매트릭스, `MemoryEntry` 5단계 의미도, `NPCNeeds`, BDI, `MemoryManager`/Qdrant) 명시, 18-Phase 구현 순서, 금지 목록(중복 클래스 신설 차단), 24개 완료 조건 탑재.
+    * 파일 위치: 로컬 아티팩트 디렉터리 (`gpt_prompt_npc_psychology_engine.md`, `claude_prompt_npc_psychology_engine.md`) — 코드베이스 미포함.
 - **다음 작업 (유저 결정에 따른 후속 진행)**:
   - **가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / 백로그 10번 - legacy.py 확장)**
     * 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
-
 
