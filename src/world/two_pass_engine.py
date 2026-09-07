@@ -762,12 +762,13 @@ class TwoPassEngine:
                                 state_delta["player"] = {}
                             state_delta["player"]["health"] = state.player.health
 
-        # 8.6 Opportunistic / Desire-driven Non-Combat NPC Actions
+        # 8.6 Unified Autonomous Cognitive & Opportunistic NPC Actions
         elif curr_loc:
+            from src.world.cognitive_engine import NPCCognitiveDeductionEngine
             loc_npcs = state.npcs_in_location(curr_loc.id)
             for o_npc in loc_npcs:
                 if o_npc.alive and o_npc.disposition != "hostile":
-                    opp_outcome = NPCSkillEngine.process_npc_opportunistic_turn(o_npc, state, action)
+                    opp_outcome = NPCCognitiveDeductionEngine.process_npc_cognitive_turn(o_npc, state, action)
                     if opp_outcome:
                         fact_sheet.npc_skill_logs.append(opp_outcome["summary_ko"])
                         if opp_outcome.get("gm_directive"):

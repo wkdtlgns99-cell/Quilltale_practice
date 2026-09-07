@@ -67,12 +67,23 @@ class CombatProfile:
 
 @dataclass
 class NPCPersonality:
+    # 6 Core Personality Metrics
     altruism: int = 50      # 이타심
     greed: int = 50         # 탐욕  
     courage: int = 50       # 용기
     suspicion: int = 50     # 의심도
     loyalty: int = 50       # 충성도
     aggression: int = 50    # 공격성
+
+    # 6 Extended Psychological Axes
+    patience: int = 50      # 인내심 (vs 충동성)
+    cunning: int = 50       # 교활함 (vs 우직함)
+    pride: int = 50         # 자존심/오만 (vs 겸양/굴신)
+    rationality: int = 50   # 이성/논리 (vs 감정/격정)
+    neuroticism: int = 50   # 신경증/불안 (vs 정서안정)
+    deceit: int = 50        # 기만/위선 (vs 솔직함)
+
+    traits: list[str] = field(default_factory=list) # 요약 특성 태그 목록
 
 
 @dataclass
@@ -409,6 +420,13 @@ class Item:
     rune_slots: int = 0             # 룬 소켓 구멍 개수 (0~3)
     socketed_runes: list[str] = field(default_factory=list) # 각인된 룬 ID 목록
     traits: list[str] = field(default_factory=list) # 아이템 요약 특성 태그 목록 (예: ["명품 장인의 각인", "고대 유물", "밀수품"])
+
+    # Material Physics & Universal Object Durability
+    material: str = "wood"          # "wood" | "stone" | "paper" | "glass" | "cloth" | "leather" | "metal" | "precious_metal" | "clay" | "flesh" | "structure_wood" | "structure_stone"
+    hardness: float = 0.0           # 0.0이면 재질 기본값 상속 (피해 감쇠치)
+    flammability: float = 1.0       # 인화율 배율 (1.0 = 표준, 3.0 = 종이/초인화, 0.0 = 불연성)
+    is_destroyed: bool = False      # 내구도 0 도달 시 파괴 여부
+    stored_items: list[str] = field(default_factory=list) # 상자/가구/보관함 내부 수납 아이템 ID 목록
 
     # Physical Combat Mechanics
     draw_weight_lbs: float = 0.0          # 활/쇠뇌 장력 (lbs, 예: 40~150 lbs)
@@ -1034,6 +1052,16 @@ class NPC:
     education_level: str = ""                                   # 교육 수준/문맹 여부/은어
     financial_state: str = ""                                   # 소비 성향/당장의 부채
 
+    # Extended 20-Factor Deep Human Persona System
+    life_defining_moment: str = ""                                # 생애 결정적 분기점 (과거 결정적 사건)
+    value_hierarchy: list[str] = field(default_factory=lambda: ["survival", "wealth", "honor", "family", "faith"]) # 가치관 우선순위
+    coping_mechanism: str = ""                                    # 한계 상황 스트레스 대처 기제
+    public_mask: str = ""                                         # 사회적 가면 (겉으로 연기하는 가짜 인격)
+    moral_justification: str = ""                                 # 악행/선택 시 자기합리화 논리
+    micro_leakage_traits: list[str] = field(default_factory=list) # 무의식적 거짓말/속내 누출 복선 버릇
+    risk_tolerance: int = 50                                      # 위험 감수성 (0: 극안전 ~ 100: 도박성)
+    bdi_state: dict = field(default_factory=dict)                 # 고도화 BDI 세부 계획 및 신념 메타데이터
+
 
     alive: bool = True
     level: int = 1
@@ -1089,10 +1117,17 @@ class NPC:
     # BDI (Belief-Desire-Intention) Cognitive Architecture
     beliefs: list[str] = field(default_factory=list)              # 알고 있다고 믿는 사실/오해/풍문
     intention: str = ""                                           # 이번 턴에 취할 구체적 행동 의도
-    # 3-Factor Attitude Matrix (Symmetric Cognitive Model)
+    # 10-Factor Attitude Matrix (Symmetric Cognitive Model)
     affinity: int = 50                                            # 친밀도 (0~100)
     fear: int = 0                                                 # 공포/위압감 (0~100)
     debt: int = 0                                                 # 부채감/은혜의 빚 (-100: 원한 ~ +100: 은혜)
+    trust: int = 50                                               # 신뢰도 (0~100)
+    respect: int = 50                                             # 존경 vs 경멸 (0~100)
+    envy: int = 0                                                 # 질투/시기 (0~100)
+    pity: int = 0                                                 # 동정/연민 (0~100)
+    dominance: int = 50                                           # 지배욕 vs 복종심 (0~100)
+    curiosity: int = 50                                           # 호기심/탐구욕 (0~100)
+    disgust: int = 0                                              # 도덕적/생리적 혐오감 (0~100)
     injuries: list[str] = field(default_factory=list)             # 신체 부위별 부상/장애
     traumas: list[str] = field(default_factory=list)              # 심리적 트라우마/PTSD
     power_dynamic_state: str = "normal"                           # 권력 공백 반응: "normal" | "subservient"(복종/우상화) | "usurper"(찬탈) | "mutiny"(내분)
@@ -1883,6 +1918,7 @@ class WorldState:
     active_campsite: Any = None                         # 활성화된 야영지 상태 (CampsiteState)
     active_weather_anomalies: dict = field(default_factory=dict) # 활성화된 기상 이변 딕셔너리 {anomaly_id: ActiveWeatherAnomaly}
     active_corpses: dict = field(default_factory=dict)           # 활성화된 전장 시체 DB {corpse_id: CorpseInstance or dict}
+    active_sieges: dict = field(default_factory=dict)            # 활성화된 공성전 DB {siege_id: SiegeBattleState or dict}
 
 
 
@@ -4134,7 +4170,11 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 interests=[], current_activity="", schedule=[], off_screen_logs=[],
                 last_seen_turn=0, physical_traces=[], fatigue=0, reputation=0, goal="",
                 blackmail_secret="", faction_id="", faction_role="", traits=[],
-                anatomy_parts={}, harvested_parts=[]
+                anatomy_parts={}, harvested_parts=[],
+                life_defining_moment="", value_hierarchy=["survival", "wealth", "honor", "family", "faith"],
+                coping_mechanism="", public_mask="", moral_justification="",
+                micro_leakage_traits=[], risk_tolerance=50, bdi_state={},
+                trust=50, respect=50, envy=0, pity=0, dominance=50, curiosity=50, disgust=0
             )
             npc.memories = [safe_init(MemoryEntry, m) for m in raw_memories if isinstance(m, dict)]
             n_status_dict = {}
@@ -4196,7 +4236,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 can_store_in_bag=True, can_wield_as_weapon=True,
                 improvised_damage=2, document_text="", utility_function="", puzzle_hint="",
                 draw_weight_lbs=0.0, windup_seconds=0.0, stagger_power=0.0, physics_tags=[],
-                traits=[]
+                traits=[], material="wood", hardness=0.0, flammability=1.0, is_destroyed=False,
+                stored_items=[]
             )
             if isinstance(getattr(item_obj, "visual", None), dict):
                 item_obj.visual = safe_init(ItemVisualProfile, item_obj.visual)
@@ -4281,6 +4322,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
 
         # Battlefield Active Corpses DB
         state.active_corpses = raw.get("active_corpses", {})
+        # Active Siege Battles DB
+        state.active_sieges = raw.get("active_sieges", {})
 
         return state
 

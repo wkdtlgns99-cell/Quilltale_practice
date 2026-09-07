@@ -82,6 +82,18 @@ from .pupil_adaptation_engine import (
 from .poise_engine import (
     PosturePoiseEngine, PosturePoiseState
 )
+from .cognitive_engine import (
+    NPCCognitiveDeductionEngine, HypothesisEvidence, HypothesisValidationResult,
+    PredictedNPCAction, MicroLeakageObservation
+)
+from .siege_engine import (
+    SiegeWarfareEngine, SiegeBattleState, FortressDefenseState,
+    SiegeEngineInstance, TroopCorps, ArmyMoraleState,
+    SIEGE_WEAPON_CATALOG, FORMATION_TACTICS_REGISTRY
+)
+from .object_physics_engine import (
+    UniversalObjectPhysicsEngine, MaterialSpec, ObjectInteractionResult, MATERIAL_REGISTRY
+)
 
 __all__ = [
     "WorldState",
@@ -213,6 +225,23 @@ __all__ = [
     "PupilAdaptationState",
     "PosturePoiseEngine",
     "PosturePoiseState",
+    "NPCCognitiveDeductionEngine",
+    "HypothesisEvidence",
+    "HypothesisValidationResult",
+    "PredictedNPCAction",
+    "MicroLeakageObservation",
+    "SiegeWarfareEngine",
+    "SiegeBattleState",
+    "FortressDefenseState",
+    "SiegeEngineInstance",
+    "TroopCorps",
+    "ArmyMoraleState",
+    "SIEGE_WEAPON_CATALOG",
+    "FORMATION_TACTICS_REGISTRY",
+    "UniversalObjectPhysicsEngine",
+    "MaterialSpec",
+    "ObjectInteractionResult",
+    "MATERIAL_REGISTRY",
 ]
 
 

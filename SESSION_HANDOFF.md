@@ -225,15 +225,29 @@
     - 4. 8대 에테르 변이 스펙(`ETHER_MUTATIONS_REGISTRY`): 이중성(혜택과 페널티 공존) 완비 (수정질 외피, 마력 누출 오라, 비전 갈증, 성간 열화, 유리 골격, 에테르 동공 개안, 혈맥 마나 도관, 반투명 영체 팔).
     - 5. 회로 복원 및 정화(`repair_circuit`): 마나 안정제, 은침 회로 소통술, 성수 정화.
     - 6. 규칙 6 준수: `ManaCircuitState`, `EtherMutationSpec`에 `traits` 의무 탑재.
-- [ ] **9. 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine`)**:
-  - **구현 대상**: [엔진: 신규] `src/world/siege_engine.py`
-  - **기능**: 투석기/공성추 내구도, 성문 돌파율, 병력 사기(Morale) 붕괴 시 패주, 3군 전열 진형 상성.
+- [x] **9. 🔥 [완료] 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine`)**:
+  - **구현 대상**: [엔진: 신규] `src/world/siege_engine.py`, [엔진: 확장] `src/world/state.py`, `src/world/__init__.py`
+  - **검증 증명**: 구현 파일 `src/world/siege_engine.py`, 통과 테스트 `tests/test_siege_engine.py` (12 passed), 전체 `pytest tests/` (497 passed).
+  - **기능**:
+    - 1) 다층 방어 구조물 물리 내구도 원칙: 성벽(`wall_durability`), 성문(`gate_durability`), 해자 방호도(`moat_durability`), 흉벽 엄폐 내구도(`battlement_durability`), 방어탑, 마도 결계 내구도 완전 구현.
+    - 2) 5대 공성 병기 내구도 및 운용: 충차(Battering Ram), 평형추 트레뷰셋, 망고넬 투석기, 철갑 공성탑, 발리스타 노포, 공병 지하 갱도 내구도/조작원/화공 취약성/수리 로직 탑재.
+    - 3) 해자 메우기(Moat filling) 역학: 해자 완파(평토화) 전 충차 및 공성탑 성벽/성문 접안 엄격 차단.
+    - 4) 3군 전열 진형 상성 매트릭스: 방패벽 장창(기병 돌격 반사 2.0x, 화살 70% 차단), 쐐기 기병 돌격(비방진 보병 돌파 1.8x, 방패벽 충돌 시 자멸), 일제 사격(고도/흉벽 보정), 위장 후퇴, 산개 교란.
+    - 5) 군대 사기(Morale) & 패주(Rout) 카스케이드: 지휘관 부상/외벽 완파/식량 고갈/사상자 50% 초과 시 사기 폭락 및 전면 패주 판정.
+    - 6) 특공대 야간 침투 공작(`execute_commando_action`): 투석기 방화, 성문 빗장 개방, 군량고 방화, 지휘관 저격.
+    - 7) 규칙 6 준수: 전 데이터클래스에 `traits` 기본 탑재.
+    - 8) 규칙 8 준수: 외부 대형 LLM(GPT/Claude) 처절한 전장 문학 묘사 프롬프트 생성기(`generate_external_llm_prompt`) 탑재.
 - [ ] **10. 가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/lineage_engine.py`
   - **기능**: 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
-- [ ] **11. 현상금 수배자 & 추적자 용병 AI 엔진 (`BountyHunterEngine`)**:
-  - **구현 대상**: [엔진: 신규] `src/world/bounty_engine.py`
-  - **기능**: 범죄/밀수 누적 시 현상금 수배령, 마을 휴식/이동 중 실시간 현상금 사냥꾼 파티 기습.
+- [x] **11. 🔥 [완료] 현상금 수배자 & 추적자 용병 AI 엔진 (`BountyHunterEngine` ➔ `NPCCognitiveDeductionEngine` 통합 완공)**:
+  - **구현 대상**: [엔진: 통합] `src/world/cognitive_engine.py`, `src/world/two_pass_engine.py`, `src/world/bounty_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/cognitive_engine.py`, 통과 테스트 `tests/test_cognitive_engine.py` (11 passed), `tests/test_bounty_engine.py` (3 passed).
+  - **기능**:
+    - 1) 단일 뇌 아키텍처 통합: 현상금 사냥꾼만을 위한 별도 AI를 신설하지 않고, `NPCCognitiveDeductionEngine`의 마스터 인지 파이프라인(`process_npc_cognitive_turn`)으로 완벽 흡수 통합하여 코드 중복 및 뇌 파편화 방지.
+    - 2) 성향 기반 추적 3대 분기: 탐욕+용기형 사냥꾼(기습 결행), 비겁+실리형 부랑배(관청 밀고), 충직+신뢰형 동료(은밀한 도주로 경고).
+    - 3) 경비병 검문 체포 연동: 수배자 몽타주 식별 시 즉시 무력 체포 모드 전환.
+    - 4) `two_pass_engine.py` 통합 연동: 매 턴 비전투 NPC 행동 틱을 단일 인지 파이프라인 호출로 완벽 일원화.
 - [ ] **12. 종교 신앙도 & 신성 기적 축복/파문 엔진 (`DeityFaithEngine`)**:
   - **구현 대상**: [엔진: 신규] `src/world/faith_engine.py`
   - **기능**: 신전 기도/규율 준수 시 신앙도 상승 및 기적 발동, 금기 위반 시 파문 및 성벌(신성 마법 봉인).
@@ -351,6 +365,18 @@
 - [ ] **🔥 [템플릿 확충 13] 수면 방해 요인 및 악몽 템플릿 확충 (현재 4종 ➔ 목표 15종)**:
   - **필요 사유**: 야생/동굴/던전 야영 시 생존 압박 및 심리적 공포 다양화.
   - **확충 대상(11종)**: 야수 울음소리, 습기 찬 침구 불쾌감, 모기/진드기 가려움, 살인마 추적 공포 악몽, 동사 공포 한기, 눅눅한 곰팡이 냄새, 전우 사망 죄책감 악몽, 지하 낙반 공포, 코골이 소음 불침번 분쟁, 모닥불 연기 질식 기침, 고열 헛소리 등.
+- [x] **40. 🔥 [1차 완공 / 향후 Claude/GPT 세분화 대조 예정] NPC 인지 추론 & 행동 예측 엔진 (`NPCCognitiveDeductionEngine`)**:
+  - **구현 대상**: [엔진: 신규] `src/world/cognitive_engine.py`, [엔진: 확장] `src/world/state.py`
+  - **검증 증명**: 구현 파일 `src/world/cognitive_engine.py`, 통과 테스트 `tests/test_cognitive_engine.py` (11 passed).
+  - **기능**:
+    - 1) 10대 대인 태도 매트릭스 확장: 기존 3대(affinity, fear, debt) + trust(신뢰), respect(존경), envy(질투), pity(연민), dominance(지배욕), curiosity(호기심), disgust(혐오).
+    - 2) 12대 심리 성향 축 확장: 기존 6대(altruism, greed, courage, suspicion, loyalty, aggression) + patience(인내), cunning(교활), pride(자존심), rationality(이성), neuroticism(신경증), deceit(기만).
+    - 3) 20대 심층 페르소나 시스템: life_defining_moment(생애 분기점), value_hierarchy(가치관 위계), coping_mechanism(스트레스 대처), public_mask(사회적 가면), moral_justification(자기합리화), micro_leakage_traits(미세 신체 언어 복선), risk_tolerance(위험 감수성), bdi_state(세부 계획).
+    - 4) 안티 예스맨 가설 검증 (`evaluate_player_hypothesis`): 플레이어의 주관적 의심/가설("저 놈이 독살하려 한다" 등)을 성향, 금기, 인벤토리, 태도와 전수 대조하여 6단계 판정(IMPOSSIBLE ~ CONFIRMED) 및 반박/수긍 증거 도출, GM 서사용 팩트 지침문 생성.
+    - 5) 자율 행동 예측 (`predict_autonomous_next_intent`): 결핍/욕망/공포/원한 우선순위에 따라 12대 행동 범주 중 최적의 계획을 도출하고 `npc.intention` 및 `npc.goal` 자동 갱신.
+    - 6) 미세 신체 언어 간파 (`check_micro_leakage`): 플레이어 감각 vs NPC 기만 대항 판정으로 속내 복선 노출.
+    - 7) 외부 LLM 프롬프트 생성 (`generate_external_llm_prompt`): GPT-4o/Claude 3.5 연동용 고밀도 심리 프로필 생성 (규칙 8 준수).
+    - 8) 향후 계획: 나중에 Claude나 GPT와 대조하여 행동 범주 및 심리 알고리즘을 한층 더 정밀하게 세분화 예정.
 
 ### [인프라, UI 및 플랫폼 시스템 (공통/플랫폼)]
 > ⚠️ **[유저 절대 규칙] 찐찐 마지막 최종 업데이트 지정**: UI 연동, TTS 음성, 이미지 AI(SD LoRA) 연동 등은 전반적인 게임플레이, 전투, 생존 물리 시스템 및 밸런싱 작업이 100% 완료된 이후에 진행할 '찐찐 마지막 최종 업데이트'로 동결한다.
@@ -379,171 +405,117 @@
   - 인물 A 생성 시 기본 그림 1~2초 즉시 출력 후, 백그라운드(ADetailer 얼굴 인페인팅)로 7대 표정(기본, 놀람, 분노, 웃음, 패닉, 공포, 각성) 무지연 순차 생성(총 15초 내외).
 - [ ] **TTS 한국어 음성 엔진 탑재 (Edge-TTS / Kokoro) [찐찐 마지막 업데이트]**:
   - NPC 성별/나이/톤별 보이스 매핑 및 자연스러운 한국어 음성 출력.
-- [ ] **Sound AI 효과음 & 환경 앰비언스 BGM 파이프라인 [찐찐 마지막 업데이트]**:
-  - 전투 타격음, 마법 영창음, 비/바람 날씨 소리, 던전/주점 앰비언스 사운드 생성 및 재생.
+- [x] **🔥 [완료] 만물 사물 내구도 & 물리 파괴 엔진 (`UniversalObjectPhysicsEngine`)**:
+  - **구현 대상**: [엔진: 신규] `src/world/object_physics_engine.py`, [엔진: 확장] `src/world/state.py`, `src/world/__init__.py`
+  - **검증 증명**: 구현 파일 `src/world/object_physics_engine.py`, 통과 테스트 `tests/test_object_physics_engine.py` (11 passed), 전체 `pytest tests/` (508 passed).
+  - **기능**:
+    - 1) 12대 만물 물리 재질 매트릭스(종이/유리/천/가죽/목재/흙/석재/철재/귀금속/유기물/목조건물/석조건물) 완전 구축.
+    - 2) 의자, 책상, 침대, 책, 종이, 돌, 나무, 집, 유리병 등 세상의 모든 사물에 내구도, 경도(Hardness), 인화성, 취성 부여.
+    - 3) 사물 파괴 시 재질 태그에 따른 결정론적 잔해 분해 스폰 (의자 ➔ 각목 즉석 무기 & 장작, 유리병 ➔ 날카로운 유리 파편 & 65dB 소음, 종이/책 ➔ 잿더미 & 텍스트 소멸, 바위 ➔ 돌멩이 & 자갈, 냄비/철창 ➔ 고철).
+    - 4) 보관함(상자, 서랍장, 옷장) 파괴 시 수납 아이템 바닥 유출(Spill) 루팅 연동.
+    - 5) 즉석 무기화(`improvise_weapon_stats`) 및 사물 수리(`repair_object`) 로직 완비.
+    - 6) 규칙 6 준수 `traits` 탑재 및 규칙 8 준수 외부 대형 LLM(GPT/Claude) 파괴 서사 묘사 프롬프트 생성기 탑재.
 
 ---
 
-## 📅 [2026-09-06] 현재 세션 개발 현황
+## 📅 [2026-09-07] 현재 세션 개발 현황
 
 ### 1. 이번 세션 구현 완료 핵심 시스템
-1. **리포지토리 위생 및 구조적 결함 정비 (Claude 지적 3대 결함 완벽 해결)**:
-   - `scratch/` 내 임시 스크립트 전면 제거 및 `.gitignore` 등록 격리.
-   - `data/legacy/` 내 164개 더미 JSON 깃 추적 해제 및 디스크 파일 정리, `tests/test_legacy.py` `monkeypatch` + `tmp_path` 격리 (영구 파일 누적 방지).
-   - `src/agents/profiler.py` ➔ `src/agents/combat_profiler.py` 리네이밍 (명칭 중복 해소).
-   - `AGENTS.md` 및 `SESSION_HANDOFF.md`에 [고정 규칙 9] 리포지토리 청결 및 모듈 네이밍 중복 방지 규칙 탑재.
-2. **Claude 백로그 4건 사전 분석 및 중복 방지 검토 (규칙 5 준수)**:
-   - 1) `bounty_engine.py`: 이미 완전 구현 및 단위 테스트 완료 상태 확인.
-   - 2) `legacy.py`: 캐릭터 아카이빙/스폰 기구현 완료. 가문 혈통(`lineage`)은 신설 대신 `legacy.py` 확장 대상.
-   - 3) `weather_engine.py`: 심부 체온(`body_temperature`), 저체온증(34도 이하 데미지), 열사병(39도 이상) 기구현 완료. `thermal_engine` 신설 불필요, `weather_engine` 확장 대상.
-   - 4) `puzzle_engine.py`: 유적/던전 기믹 해체 기구현 완료. `trap_engine` 신설 대신 `puzzle_engine`에 함정 기믹 통합 대상.
-3. **스태미너(기력) 시스템 및 물리 전투 자원 엔진 전격 완공 (`StaminaEngine`)**:
-   - **`src/world/stamina_engine.py`**:
-     - CON/AGI 비례 상한(`calculate_max_stamina`) 및 턴당 자연 회복량(`calculate_regen_rate`) 계산.
-     - 사전 검증(`can_afford`): 기력 부족 시 거부 + 탈진 상태 시 고비용(>20) 신체 행동 봉인.
-     - 기력 소모(`consume`): 기력 차감 및 0 도달 시 `status_engine.py`의 기존 `exhaustion`(탈진) 상태이상 자동 격발.
-     - 턴 자연 회복(`recover_turn`): 상한까지 자연 회복, 탈진 상태 시 50% 페널티 적용.
-     - 수치 제약: 밸런싱 세션 분리를 위해 확정 수치 대신 `TODO` 주석 및 플레이스홀더 유지.
-   - **`src/world/state.py`**:
-     - `Player` 및 `NPC`에 `stamina: int = 100`, `max_stamina: int = 100` 필드 탑재.
-     - `max_stamina_effective`, `stamina_regen_effective`, `stamina_status_ko` 프로퍼티 탑재.
-     - `WorldState.from_dict`에서 구버전 세이브(기력 필드 없는 구형 JSON) 로드 시 기본값 100 자동 주입 (100% 하위 호환 보장).
-   - **`src/world/validator.py`**:
-     - `ActionValidator`에서 `resource_type == "stamina"` 스킬 시전 시 `StaminaEngine.can_afford` 사전 검증 연동.
-   - **`src/world/two_pass_engine.py`**:
-     - 패스 1 스킬 실행 시 실시간 기력 차감 및 `triggered_exhaustion` 시 탈진 상태이상 및 안내 로그 출력.
-     - 턴 경과 시 플레이어 및 인근 NPC 턴당 자연 회복 연동.
-   - **`src/world/npc_skill_engine.py`**:
-     - `get_available_npc_skills`: 기력 부족한 스킬 필터링 제외.
-     - NPC AI: 저기력(stamina < 25) 시 스킬 아끼고 기본 공격으로 기력 보존하는 판단 로직 탑재.
-     - 전투 실행 시 NPC 기력 정상 차감.
-4. **던전 탐험 시스템 (`DungeonEngine`) & 3대 권역(지상/던전/히든) 컨셉 함정 엔진 (`TrapEngine`) 전격 완공**:
-   - **`src/world/trap_engine.py`**:
-     - 3대 맵 카테고리(`surface`, `dungeon`, `hidden_realm`) 및 지형 컨셉형 함정 12종 완비.
-     - 지상: 사냥꾼 강철 덫(숲/출혈), 낙하 통나무(산림/둔기), 방울 경보 와이어(가도/고소음 65dB), 빙판 크레바스(설산/저체온), 늪지 유사(수렁/독).
-     - 던전: 천장 압축 슬래브(파쇄 35/기절/체간붕괴), 독가스 분출구(신경독/산소급감), 벽면 연발 석궁(관통 24), 마력 지뢰 룬(화염 28/마나 20 차감).
-     - 히든 맵: 공간 왜곡 강제 전이(입구 강제 송환), 심연 착란 안개(공황/혼란/탈진), 생명 갈취 인장(최대 체력 25 흡수).
-     - 지각(Perception) 패시브/액티브 수색 탐지, 민첩/지능 및 도적 도구(`thieves_tools`) 소모 해체, 실패 시 즉시 격발, 회피 세이빙 스로우(반감).
-     - 규칙 6 준수: `TrapSpec` 및 `TrapInstance`에 `traits` 기본 탑재.
-   - **`src/world/dungeon_engine.py`**:
-     - 지하 다층 던전 인스턴스(B1F~B5F) 심도 스케일링(위험도 25~90, 몬스터 밀집도 40~95%, NPC 밀집도 0 수렴, 산소 농도 저하, 칠흑 어둠).
-     - 방 유형별(입구 홀, 복도, 납골당 석실, 무기고, 보스 성소) 선형/분기 연결 및 던전 함정 자동 배치.
-     - 층간 이동 (`descend_floor`, `ascend_floor`) 및 지상 탈출/귀환 연동.
-   - **`src/world/state.py`**:
-     - `Location`에 `location_category`, `dungeon_id`, `floor_depth`, `monster_density`, `npc_density`, `danger_level`, `traps` 필드 추가 및 `from_dict` 역직렬화 100% 하위 호환 보장.
-   - **`src/world/validator.py` & `src/world/two_pass_engine.py`**:
-     - 함정 탐색, 함정 해체, 던전 층간 이동 인텐트 검증 및 패스 1 결정론적 실행 연동.
+1. **깃허브 최신 리포지토리 동기화 및 전체 아키텍처 점검 완료**:
+   - `git pull`을 통해 물리/생존 엔진 및 대규모 템플릿(대륙 120종, 권역 304종 등) 무결점 수신.
+   - 워킹 트리 클린 상태 및 474개 기존 테스트 100% 정상 작동 확인.
+2. **NPC 10대 대인 태도 매트릭스 (`10-Factor Attitude Matrix`) 전격 구축**:
+   - 기존 3대(affinity, fear, debt) 한계를 탈피하여 인간 관계의 복합 다면성을 완벽 수치화:
+     - `trust`(신뢰도, 0~100): 상대의 약속/정보를 믿는 정도.
+     - `respect`(존경 vs 경멸, 0~100): 실력과 도덕성에 대한 평가.
+     - `envy`(질투/시기, 0~100): 상대의 부/재능에 대한 시기심.
+     - `pity`(동정/연민, 0~100): 상대의 불행에 대한 마음의 흔들림.
+     - `dominance`(지배욕 vs 복종심, 0~100): 상대를 통제하고 부리려는 욕구.
+     - `curiosity`(호기심/탐구욕, 0~100): 상대의 내력/비밀을 캐내려는 집착.
+     - `disgust`(도덕적/생리적 혐오, 0~100): 존재나 행태에 느끼는 거부감.
+   - `src/world/state.py` 내 `NPC` 클래스 및 `from_dict` 역직렬화 100% 하위 호환 탑재.
+3. **NPC 12대 심리 성향 축 (`12-Axis Personality`) 확장**:
+   - `NPCPersonality`에 기존 6대(altruism, greed, courage, suspicion, loyalty, aggression) 외 6개 본성 축 추가:
+     - `patience`(인내심 vs 충동성), `cunning`(교활함 vs 우직함), `pride`(자존심/오만 vs 굴신), `rationality`(이성/논리 vs 감정/격정), `neuroticism`(신경증/불안 vs 정서안정), `deceit`(기만/위선 vs 솔직함).
+     - 규칙 6 준수: `traits: list[str] = field(default_factory=list)` 기본 탑재.
+4. **NPC 20대 심층 페르소나 시스템 (`20-Factor Deep Persona`) 구축**:
+   - `life_defining_moment`(생애 결정적 분기점): 성격을 결정지은 과거 사건.
+   - `value_hierarchy`(가치관 우선순위): 한계 상황에서 포기하지 못하는 가치 순서(`[survival, wealth, honor, family, faith]`).
+   - `coping_mechanism`(스트레스 대처 기제): 한계 도달 시 보이는 신체/행동 반응.
+   - `public_mask`(사회적 가면): 겉으로 연기하는 가짜 인격.
+   - `moral_justification`(자기합리화 논리): 악행 시 스스로를 정당화하는 논리.
+   - `micro_leakage_traits`(무의식적 속내 복선): 거짓말이나 살의가 샐 때 나오는 신체 언어 버릇.
+   - `risk_tolerance`(위험 감수성, 0~100): 도박적 성향 vs 안전제일.
+   - `bdi_state`(고도화 BDI 세부 계획 및 신념 메타데이터).
+5. **NPC 인지 추론 & 행동 예측 엔진 (`NPCCognitiveDeductionEngine`) 1차 완공 (`src/world/cognitive_engine.py`)**:
+   - **안티 예스맨 가설 검증 (`evaluate_player_hypothesis`)**:
+     - 플레이어가 "저 녀석이 날 독살하려 한다" 같은 주관적 의심을 표출했을 때, NPC의 12대 성향, 20대 페르소나, 도덕적 금기(`taboo`), 실제 소지품(인벤토리), 10대 태도를 전수 대조.
+     - `contradicting_evidence` vs `supporting_evidence`를 가중치로 집계하여 6단계 판정(`IMPOSSIBLE` ~ `CONFIRMED`) 및 타당도 점수(0~100%) 산출.
+     - GM용 서사 지침문(`gm_anti_yesman_verdict`)을 생성하여 LLM이 플레이어의 착각에 영합하지 않고 팩트로 반박하거나 정당한 복선을 제공하도록 제어.
+   - **자율 다음 행동 예측 (`predict_autonomous_next_intent`)**:
+     - 결핍/욕망/공포/원한 우선순위(생존 위협 ➔ 도주, 재정 압박/탐욕 ➔ 절도, 원한/공격성 ➔ 암살, 치부 은폐 ➔ 매수/밀고, 호감/신뢰 ➔ 조력)에 따라 구체적 다음 계획(`concrete_plan`), 인과 사슬(`motive_chain`), 필요 도구, 복선 단서를 결정론적으로 도출.
+     - 도출된 계획을 `npc.intention` 및 `npc.goal`에 자동 동기화.
+   - **미세 신체 언어 간파 (`check_micro_leakage`)**:
+     - 플레이어 감각(Perception) vs NPC 기만/교활 주사위 대항 판정으로 거짓말 복선 노출.
+   - **10대 태도 동적 갱신 (`update_attitude`)**:
+     - 이벤트 및 플레이어 행동에 따른 태도 수치 증감 및 0~100(-100~+100) 안전 클램핑.
+   - **외부 AI(GPT-4o/Claude 3.5) 연동 프롬프트 생성 (`generate_external_llm_prompt`)**:
+     - 규칙 8 준수: 외부 대규모 LLM에 복사하여 심층 심리 연기 및 복선 세분화를 즉시 수행할 수 있는 실행 프롬프트 생성 함수 탑재.
+   - **향후 계획 명시**:
+     - 나중에 Claude나 GPT와 대조하여 행동 범주, 감정 모델, 심리 알고리즘을 한층 더 정밀하게 세분화 예정.
+6. **백로그 11번 (현상금 사냥꾼 & 추적자 AI) 단일 뇌 아키텍처 완전 흡수 통합**:
+   - `BountyEngine`의 수배 장부 및 검문 로직을 `NPCCognitiveDeductionEngine.process_npc_cognitive_turn`과 직결.
+   - 탐욕 사냥꾼의 기습(`bounty_hunter_ambush`), 비겁한 부랑자의 밀고(`bounty_snitch`), 충직한 동료의 도주로 경고(`friendly_warning`), 경비병의 체포(`guard_arrest`)를 성격·태도 가중치에 따라 결정론적 연산.
+   - `src/world/two_pass_engine.py`의 매 턴 비전투 NPC 행동 루프를 `NPCCognitiveDeductionEngine`으로 일원화 연동 완료.
 
-5. **파티원 멘탈 붕괴 & 스트레스 엔진 (`PartySanityEngine`) 전격 완공**:
-   - **`src/world/party_sanity_engine.py`**:
-     - 15종 멘탈 붕괴/각성 스펙(`MentalBreakdownSpec`): 공황(Panic), 편집증(Paranoia), 이기주의(Selfishness), 절망(Hopelessness), 각성(Awakening), 해리(Dissociation), 광폭화(Rage), 얼어붙음(Freeze), 강박(Obsession), 퇴행(Regression), 도주 본능(Flight Instinct), 생존자 죄책감(Survivor's Guilt), 파괴 충동(Destructive Impulse), 감정 폐쇄(Emotional Shutdown), 허세(False Confidence).
-     - 5대 스트레스 트리거: 칠흑 어둠 장기 체류(+2/턴), 동료/플레이어 빈사 목격(+15), 혐오체/미지의 존재 조우(+10), 함정 및 치명타 피격(+8/+12), 식량/식수 고갈.
-     - 8대 성향별 가중치 테이블(`PERSONALITY_BREAKDOWN_WEIGHTS`): brave, cowardly, loyal, selfish, suspicious, idealistic, survivalist, stoic.
-     - 턴 틱 스트레스 검사(`process_turn_sanity`), 붕괴 시 전투 행동 거부/아군 공격/자해/방어 태세/패닉 도주 연동(`filter_companion_combat_intent`).
-     - 규칙 6 준수: `MentalBreakdownSpec`에 `traits` 기본 탑재.
-   - **`src/world/party_engine.py`**:
-     - `Companion`에 `stress`, `max_stress`, `mental_status`, `breakdown_turns_remaining`, `personality_type`, `traits` 탑재.
-     - `from_dict` 역직렬화 시 `stress=0`, `mental_status='normal'` 기본값 주입으로 100% 하위 호환 보장.
-     - `process_companion_combat_turns`에 `PartySanityEngine.filter_companion_combat_intent` 연동하여 붕괴 상태에 따른 행동 거부/도주 적용.
-   - **`src/world/two_pass_engine.py`**:
-     - 턴 틱(`process_turn`) 시 파티원 멘탈 스트레스 자연 증가/체류 판정(`PartySanityEngine.process_turn_sanity`) 연동.
+7. **백로그 9번 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine`) 완공 (`src/world/siege_engine.py`)**:
+   - **다층 방어 구조물 물리 내구도 원칙 탑재**:
+     - 성벽(`wall_durability`), 성문(`gate_durability`), 해자 방호도(`moat_durability`), 흉벽 엄폐도(`battlement_durability`), 방어탑, 마도 결계 내구도 완전 구현.
+     - 정주지(`Settlement`) 인프라 스탯(`wall_defense_tier`, `gate_type`, `moat_type`, `battlement_type`, `elevation_meters`, `siege_supplies_days`)을 읽어 자동 조립.
+   - **5대 공성 병기 내구도 및 운용**:
+     - 충차(Battering Ram), 평형추 트레뷰셋, 망고넬 투석기, 철갑 공성탑, 발리스타 노포, 공병 지하 갱도 인스턴스화.
+     - 물리/화공 피해 감쇠(hardness), 파괴 판정, 화공 취약성, 수리 메커니즘 탑재.
+   - **해자 메우기(Moat filling) 역학**:
+     - 해자 내구도가 0(평토화)이 되기 전까지 충차 및 공성탑의 성벽/성문 접안을 엄격히 차단.
+   - **3군 전열 진형 상성 매트릭스**:
+     - 장창 방패벽(기병 돌격 반사 2.0x, 화살비 70% 차단), 쐐기 기병 돌격(비방진 보병 1.8x 돌파 학살, 방패벽 충돌 시 자멸), 일제 사격선(고도/흉벽 보정), 위장 후퇴, 산개 교란.
+   - **군대 사기(Morale) & 패주(Rout) 카스케이드**:
+     - 지휘관 부상/외벽 완파/식량 고갈/사상자 50% 초과 시 사기 폭락 및 전면 패주 판정.
+   - **특공대 야간 침투 공작 (`execute_commando_action`)**:
+     - 투석기 방화, 성문 빗장 개방, 군량고 방화, 지휘관 저격.
+   - **규칙 8 준수 외부 대형 LLM(GPT/Claude) 프롬프트 생성기 (`generate_external_llm_prompt`)**:
+     - 결정론적 수치(내구도 잔여량, 사상자, 사기, 진형) 기반 처절한 전장 문학 생성 프롬프트 탑재.
 
-6. **던전 구조적 붕괴 & 산소 고갈 질식 엔진 (`CaveCollapseEngine`) 전격 완공**:
-   - **`src/world/cave_in_engine.py`**:
-     - 5대 암반 지질(`rock_strata`): 석회암, 화강암, 사암, 현무암, 흑요석(마력 취약 2.0x).
-     - 충격 진동원(`vibration_sources`): 화염구 폭발(서클별 10~50), 대형 둔기 강타, 굴착 곡괭이, 대형 함정 격발.
-     - 낙반 붕괴 4단계(`collapse_stages`): 안정, 천장 균열(40~69, 흙먼지/조도저하/1d4 피해), 부분 낙반(15~39, 낙석/민첩 DC 15 회피 세이빙), 전면 대붕괴(15 미만, 40 매몰 피해/통로 차단).
-     - 밀폐 석실 산소 농도 역학(`oxygen_dynamics`): 성인 호흡(-0.2/턴), 횃불 연소(-1.0/턴), 화염 마법(-5.0/시전), 환기구 개방(+2.0/턴), 4단계 저산소증(경도 70~80, 중등도 50~69, 중증 30~49, 질식 0~29).
-     - 5대 던전 환경 물리 시스템 결합: 독성 가스(`TOXIC_GAS_SYSTEM` 4종), 지하수 수질(`UNDERGROUND_WATER_SYSTEM` 5종 및 3대 정화법), 가시거리 광원(`DUNGEON_VISIBILITY_SYSTEM`), 소음 메아리(`DUNGEON_SOUND_SYSTEM`), 지면 붕괴 위험(`FLOOR_HAZARD_SYSTEM` 5종).
-     - 규칙 6 준수: 모든 스펙 데이터클래스에 `traits` 필드 의무 탑재.
-   - **`src/world/state.py`**:
-     - `Location`에 `rock_strata`, `structural_integrity`, `collapse_stage`, `floor_type`, `floor_durability`, `floor_collapse_stage`, `ventilation_open`, `active_toxic_gas`, `water_quality` 탑재 및 구버전 역직렬화 100% 하위 호환 보장.
-   - **`src/world/dungeon_engine.py`**:
-     - 던전 방 생성 시 심도별 암반 지질(`assigned_strata`) 및 바닥 지면 유형(`assigned_floor`) 자동 매핑.
-   - **`src/world/two_pass_engine.py`**:
-     - 턴 틱 시 `CaveCollapseEngine.process_turn_environment` 연동(산소 소모, 독성 가스 내성 판정, 바닥 균열).
-     - 지하 화염/둔기 스킬 사용 시 충격 진동 계산 및 산소 소모 연동.
-    - 환기구 개방 행동 연동.
-
-7. **날씨·체온 저체온증/열사병 생존 물리 엔진 (`ThermalSurvivalEngine`) 전격 완공**:
-   - **`src/world/thermal_engine.py`**:
-     - 100% 결정론적 인체 열평형 심부 체온(36.5℃) 및 젖음 수치(`wetness`, 0~100%) 물리 역학.
-     - 방한/방열 장비 보온 지수 4종(`fur_coat` +8.0/30%방수, `oilskin_cloak` +3.0/100%방수, `heavy_plate` -3.0/냉기전도/폭염열축적 1.5배, `linen_tunic` 통기/방열 10).
-     - 젖음 수치별 열손실 배율(50% 이상 3배, 75% 이상 5배) 및 강풍 체감온도 배율(산들바람 1.2배, 강풍 1.8배, 폭풍 3.0배).
-     - 저체온증 4단계: 경도(35.0~35.9℃, 민첩 -2, 조준 -3), 중등도(33.0~34.9℃, 지속피해 4, 영창실패 25%), 중증(30.0~32.9℃, 지속피해 8, 이동속도 50%), 치명(30.0℃ 미만, 지속피해 20, 심정지/행동불가).
-     - 열사병 4단계: 열탈진(37.5~38.4℃, 갈증, 기력소모 1.5배), 열경련(38.5~39.4℃, 근력/민첩 -3), 열사병(39.5~40.4℃, 지속피해 6, 피로도 +10, 발한정지), 다발성 장기부전(40.5℃ 이상, 뇌손상, 지속피해 15, 피로도 +15).
-     - 생존 모닥불(`light_campfire`): 점화 즉시 건조 15%, 턴당 건조 10%, 체온 정상화 회복(+0.5℃/턴).
-     - 규칙 6 준수: `ThermalClothingSpec`, `HypothermiaStageSpec`, `HyperthermiaStageSpec`에 `traits` 의무 탑재.
-   - **`src/world/state.py`**:
-     - `Player`에 `wetness: float = 0.0`, `thermal_status: str = "normal"` 필드 추가 및 `from_dict` 역직렬화 100% 하위 호환 보장.
-   - **`src/world/weather_engine.py`**:
-     - `WeatherEngine.process_turn_survival_ticks`를 `ThermalSurvivalEngine.process_turn_thermal_survival(state)`로 위임 연동.
-   - **`src/world/__init__.py`**:
-     - `ThermalSurvivalEngine`, `THERMAL_SURVIVAL_SYSTEM`, `ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS`, 스펙 3종 모듈 export 등록.
-
-8. **전염병·역병·기생충 감염 생체 엔진 (`EpidemicEngine`) & 현실적 가방 용량/찢어짐 및 스킬 외형 연출 전격 완공**:
-   - **`src/world/disease_engine.py`**:
-     - 6대 역병/기생충 스펙(`EPIDEMIC_SYSTEM`): 흑사병(`black_plague`), 오염수 이질(`dysentery`), 시체독 부패열(`corpse_decay_fever`), 지하 진균 포자증(`cave_spore_mycosis`), 흡혈 거머리 기생충(`blood_leech_parasite`), 광견병·마수 광란증(`rabies_madness`).
-     - 체질(CON) 세이빙 스로우(d20+CON vs DC), 대성공(완전 면역), 대실패(즉시 1단계 발병), 다중 노출(DC+2), 면역 저하(DC+2), 침구 공유(DC+4).
-     - 잠복기 카운트다운 및 3단계 발병 진행: 지속 피해, 기력 상한 감소, 진균 기침 발작 은신 해제(소음 45dB 방출), 광견병 신경 발작 아군 난투.
-     - 4대 치료 요법: 약초 달인물/연고(단계 완화), 알코올 소독(초기/외상 사멸), 신성 정화(완치), 환부 소작(잠복기 3턴 이내 화염/달군 칼 절제, 피해 8, 스트레스 +20).
-     - 격리 및 방역: 방역 마스크(비말 50% 차단), 격리실(80% 차단), 시체 소각(시체 매개 전파 영구 차단).
-     - 규칙 6 준수: `DiseaseSpec`, `DiseaseStageSpec`, `ActiveInfection`, `InfectionAttemptResult` 전원 `traits` 탑재.
-   - **`src/world/outfit_engine.py`**:
-     - 현실적 가방 3종 규격(`BackpackSpec`): 소형 전술 배낭(18L, 12kg 안전, 18kg 파손한계), 중형 여행자 배낭(40L, 25kg 안전, 35kg 파손한계), 육군 완전군장 대형 배낭(75L, 45kg 안전, 60kg 파손한계).
-     - 가방 용적(L) 초과 팽창 및 파손한계 초과 시 격렬한 행동(전력질주, 회피, 피격) 중 가방 찢어짐(`evaluate_backpack_storage`, 바닥에 소지품 드랍).
-   - **`src/world/state.py`**:
-     - `Player` 및 `NPC`에 `active_infections: dict` 필드 추가 및 `from_dict` 역직렬화 100% 하위 호환 보장.
-     - `Skill.get_visual_description`: 물리(회색·은색·백색 궤적 + 마나 주입 시 시전자 마나색), 마나/원소(속성색 + 시전자 고유 마나 혼합), 흑마법(무조건 칠흑빛/흑색), 혈마법(무조건 선홍빛/빨간색) 시각 연출 엔진 구현.
-   - **`src/world/two_pass_engine.py`**:
-     - 턴 틱 시 `EpidemicEngine.process_turn_infections(state)` 호출 연동.
-   - **`src/world/__init__.py`**:
-     - `EpidemicEngine`, `EPIDEMIC_SYSTEM`, `DISEASE_REGISTRY`, `BackpackSpec`, `BackpackStorageStatus`, `BACKPACK_SPECS` 등 심볼 모듈 export 등록.
-
-9. **전장 시체 부패 & 청소 야수 유인 생태계 (`CorpseEcologyEngine`) 전격 완공**:
-   - **`src/world/corpse_ecology_engine.py`**:
-     - 시체 인스턴스 모델(`CorpseInstance`): 4단계 부패(fresh ➔ bloated ➔ rotting ➔ skeleton).
-     - 유저 결정 Q1 하이브리드 결합: 3단계(181~360분) 부패 시 유기물/식품 썩음(A안) + 45% 확률 지상 스캐벤저(늑대 무리, 구울) 유인 스폰으로 잔여 전리품/골드 훼손(B안) 결합.
-     - 시체열병(`corpse_decay_fever`) 역병 오염원 경고, 전리품 루팅, 소각(화장/역병 박멸) 및 가매장(흙무덤/위생) 완비.
-   - **`src/world/two_pass_engine.py`**:
-     - 적 처치(`if killed:`) 시 현장 시체 자동 등록 및 30분 턴 경과 시 부패 틱 연동.
-
-10. **급격한 명암 변화 안구 암적응/명적응 물리 엔진 (`PupilAdaptationEngine`) 전격 완공**:
-    - **`src/world/pupil_adaptation_engine.py`**:
-      - 조도(lx) 매트릭스 기반 망막 로돕신 적응 역학. 유저 결정 Q2에 따라 완전 시간제(초 단위) 구현.
-      - 대낮/밝음(800+ lx) ➔ 칠흑 암흑(15- lx) 진입 시 20.0초 암적응 지연(명중 DC+6, 이동속도 -50%).
-      - 해적 애꾸눈 안대(Eye Patch) 전술: 미리 어둠에 적응시켜 둔 눈으로 안대를 넘길 시 0.0초 즉각 암적응 패스.
-      - 암흑 ➔ 순간 섬광(Flash) 노출 시 2.0초 섬광 실명, 차광 고글(Shaded Goggles) 착용 시 섬광 100% 차단.
-      - 비전투 대기 행동(`adapt_eyes_action`)으로 20초간 안전 시야 적응 지원.
-
-11. **자세/체간 충격량 & 가드 브레이크 물리 엔진 (`PosturePoiseEngine`) 전격 완공**:
-    - **`src/world/poise_engine.py`**:
-      - 세키로형 체간(Posture) 및 강인도 역학. 유저 결정 Q3 및 지침 반영:
-      - 1) 다중 충격량 누적: 가드 방어 성공 시 HP 대신 체간 충격 대량 흡수(1.6배), 피격 직격 시 둔기/강타 고유 체간 피해, 마법 원소 폭압(땅/바람/중력) 중심 붕괴, 정신적 공포/스트레스 충격 체간 누적(신경 불안정 자세 붕괴).
-      - 2) 세키로형 기력 연동 자연 회복: 스태미나 잔여율 비례 회복, 가드 태세 시 2.0배 가속 회복, 스태미나 0 고갈(탈진) 시 체간 회복 완전 정지.
-      - 3) 시간제 가드 브레이크 스턴: 체간 100 도달 시 가드 붕괴, 기본 1.0초 무방비 경직에서 장기전 지속시간(+0.5s/분) 및 기력 소진율(+1.5s)에 비례하여 스턴 시간 증가, 가드 브레이크 중 다음 피격 시 확정 치명타(+50% 추가 피해).
-    - **`src/world/state.py`**:
-      - `Player` 및 `NPC`에 `posture_state: dict`, `pupil_state: dict` 필드 탑재.
-      - `WorldState`에 `active_corpses: dict` 탑재 및 `from_dict` 역직렬화 100% 하위 호환 보장.
-    - **`src/world/two_pass_engine.py`**:
-      - 턴 틱 시 플레이어 및 로컬 NPC 체간 자연 회복 및 동공 적응 틱 연동.
+8. **만물 사물 내구도 & 물리 파괴 엔진 (`UniversalObjectPhysicsEngine`) 완공 (`src/world/object_physics_engine.py`)**:
+   - **12대 전천후 물리 재질 분류 체계 구축**:
+     - `paper`(종이), `glass`(유리), `cloth`(천), `leather`(가죽), `wood`(목재), `stone`(석재), `metal`(철재), `precious_metal`(귀금속), `clay`(점토), `flesh`(유기물), `structure_wood`(목조건물), `structure_stone`(석조건물).
+   - **사물 재질 태그 및 지능형 키워드 휴리스틱 매핑 (`resolve_material`)**:
+     - 명시적 `material` 및 `mat:` 태그 외에도 '낡은 참나무 의자' ➔ `wood`, '비밀 지령 양피지 서한' ➔ `paper` 등 한국어 조사/어미 오인식 완벽 차단.
+   - **타격·방화·부식 물리 역학 (`damage_object`, `ignite_object`)**:
+     - 재질 경도(Hardness) 피해 감쇠, 인화율 배율, 취성 분쇄, 산성 부식 가속.
+   - **사물 파괴 시 결정론적 잔해 분해 스폰**:
+     - 의자 ➔ 각목(즉석 둔기 무기) & 장작 / 유리병 ➔ 날카로운 유리 파편 & 65dB 소음 / 책 ➔ 잿더미 & 텍스트 소멸 / 바위 ➔ 돌멩이 & 자갈 / 냄비 ➔ 고철.
+   - **보관함(상자, 서랍, 궤짝) 파괴 시 수납 아이템 바닥 유출 루팅 연동**.
+   - **즉석 무기화 스탯 산출(`improvise_weapon_stats`) 및 사물 수리(`repair_object`) 로직 완비**.
+   - **규칙 8 준수 외부 대형 LLM 파괴 연출 프롬프트 생성기(`generate_external_llm_prompt`) 탑재**.
 
 ### 2. 테스트 및 평가 검증 상태
-- **프로젝트 전체 474개 단위 테스트 100% 무결점 통과 (회귀 결함 0건)**:
-  - `tests/test_corpse_ecology_engine.py`: 5개 신규 테스트 통과 (시체 등록, 부패 단계 전이, 유기물 부패 및 청소 야수 스폰 훼손, 루팅, 소각/매장).
-  - `tests/test_pupil_adaptation_engine.py`: 5개 신규 테스트 통과 (명암 적응 20초 지연, 안대 전술 0초 패스, 안대 수동 전환, 섬광 실명 및 차광 고글, 비전투 적응 행동).
-  - `tests/test_poise_engine.py`: 5개 신규 테스트 통과 (체간 초기화/상한, 가드 충격 흡수 vs 직격, 마법/정신 공포 충격 누적, 세키로 기력 회복, 시간제 가드 브레이크 스케일링 스턴 및 확정 치명타).
-  - `pytest tests/`: **474 passed in 5.63s**.
+- **프로젝트 전체 508개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 대비 +23 신규 통과)**:
+  - `tests/test_object_physics_engine.py`: 11개 테스트 전원 통과 (12대 재질 판별, 목재 의자 각목/장작 파편 분해, 종이 문서 전소/텍스트 소멸, 유리병 파쇄/65dB 소음, 산성 부식, 상자 파괴 시 수납 아이템 유출, 즉석 무기화, 사물 수리, 벌목/채석, 세이브/로드 호환성, LLM 프롬프트).
+  - `tests/test_siege_engine.py`: 12개 테스트 전원 통과.
+  - `pytest tests/`: **508 passed in 211.89s**.
 - **DoD Gate Eval Runner 검증**:
   - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
+- **Static Analysis**: `py_compile` 문법 오류 0건 검증 완료.
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
-  - 시체 부패 생태계(`CorpseEcologyEngine`) + 동공 암적응 물리(`PupilAdaptationEngine`) + 체간 가드 브레이크(`PosturePoiseEngine`) + 독성 내성(`ToxicologyToleranceEngine`) + 알코올 숙취(`AlcoholIntoxicationEngine`) + 마나 회로 수술(`ManaVeinRestorationEngine`) 등 현실 물리 엔진 전격 완비.
-- **다음 작업 후보**:
-  - 후보 1: **성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine` / 백로그 9번)**
-  - 후보 2: **식량 부패·수질 오염 & 보존식 염장 가공 엔진 (`RationSpoilageEngine` / 백로그 16번 확장)**
-  - 후보 3: **수면 방해 악몽 & 지질 템플릿 대규모 확충 (백로그 템플릿 확충 1~13)**
-  - 후보 4: **유저 피드백 및 다음 백로그 우선순위 지정**
+  - 만물 사물 내구도 & 물리 파괴 엔진 (`UniversalObjectPhysicsEngine`) 완공.
+  - 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine` / 백로그 9번) 완공.
+  - NPC 인지 추론 & 행동 예측 엔진 (`NPCCognitiveDeductionEngine` / 백로그 40번) 완공.
+  - 현상금 수배자 & 추적자 AI 엔진 (`BountyHunterEngine` / 백로그 11번) 단일 뇌 아키텍처 흡수 통합 완공.
+- **다음 작업 (유저 결정에 따른 후속 진행)**:
+  - **가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / 백로그 10번 - legacy.py 확장)**
+    * 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
 
 
