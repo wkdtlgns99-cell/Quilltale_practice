@@ -23,14 +23,15 @@ Features:
 4. External AI (GPT/Claude) Prompt Generation:
    - Formats complete psychological persona into a structured prompt for deep external simulation.
 """
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
 import logging
 import random
+from dataclasses import dataclass, field
+from typing import Any, ClassVar
 
-from src.world.state import WorldState, NPC, Player
+from src.world.state import NPC, WorldState
 
 logger = logging.getLogger(__name__)
+
 
 
 @dataclass
@@ -40,9 +41,9 @@ class HypothesisEvidence:
     evidence_text: str      # 구체적 사실 서술
     weight: float           # 영향력 가중치 (1.0 ~ 5.0)
     is_supporting: bool     # True: 가설 지지, False: 가설 반박
-    traits: List[str] = field(default_factory=lambda: ["hypothesis_evidence", "cognitive_clue"])
+    traits: list[str] = field(default_factory=lambda: ["hypothesis_evidence", "cognitive_clue"])
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "category": self.category,
             "evidence_text": self.evidence_text,
@@ -61,12 +62,12 @@ class HypothesisValidationResult:
     hypothesis_category: str  # "poison", "theft", "assassination", "betrayal", "escape", "bribe", "fraud", "cooperation", "ambush", "surveillance", "general"
     verdict: str              # "IMPOSSIBLE" | "CONTRADICTED" | "UNLIKELY" | "PLAUSIBLE" | "HIGHLY_LIKELY" | "CONFIRMED"
     plausibility_score: int   # 0 ~ 100
-    supporting_evidence: List[HypothesisEvidence] = field(default_factory=list)
-    contradicting_evidence: List[HypothesisEvidence] = field(default_factory=list)
+    supporting_evidence: list[HypothesisEvidence] = field(default_factory=list)
+    contradicting_evidence: list[HypothesisEvidence] = field(default_factory=list)
     gm_anti_yesman_verdict: str = ""
-    traits: List[str] = field(default_factory=lambda: ["anti_yes_man", "hypothesis_validation", "reality_check"])
+    traits: list[str] = field(default_factory=lambda: ["anti_yes_man", "hypothesis_validation", "reality_check"])
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "target_npc_id": self.target_npc_id,
             "target_npc_name": self.target_npc_name,
@@ -89,14 +90,14 @@ class PredictedNPCAction:
     action_type: str        # "escape", "poison", "bribe", "theft", "betray", "cooperate", "assassinate", "hide", "surveillance", "idle_observe", "solicit_help", "confront"
     concrete_plan: str      # 언제, 어디서, 무엇으로, 누구에게 실행할지 구체적 계획
     motive_chain: str       # 욕망 -> 신념 -> 태도 -> 의도 인과 사슬
-    required_items: List[str] = field(default_factory=list)
+    required_items: list[str] = field(default_factory=list)
     has_required_items: bool = True
     execution_risk: int = 50 # 0~100 (위험도)
     stealth_level: str = "covert" # "overt" | "covert" | "imperceptible"
-    leaked_clues: List[str] = field(default_factory=list) # 관찰력 높은 플레이어가 간파할 수 있는 복선
-    traits: List[str] = field(default_factory=lambda: ["predicted_action", "autonomous_intent"])
+    leaked_clues: list[str] = field(default_factory=list) # 관찰력 높은 플레이어가 간파할 수 있는 복선
+    traits: list[str] = field(default_factory=lambda: ["predicted_action", "autonomous_intent"])
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "npc_id": self.npc_id,
             "npc_name": self.npc_name,
@@ -119,9 +120,9 @@ class MicroLeakageObservation:
     detected: bool
     leakage_clue: str
     underlying_emotion: str # "fear", "guilt", "greed", "anxiety", "malice", "calm"
-    traits: List[str] = field(default_factory=lambda: ["micro_leakage", "body_language_tell"])
+    traits: list[str] = field(default_factory=lambda: ["micro_leakage", "body_language_tell"])
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "npc_id": self.npc_id,
             "detected": self.detected,
@@ -138,7 +139,7 @@ class NPCCognitiveDeductionEngine:
     """
 
     # Category classification keywords
-    HYPOTHESIS_KEYWORDS: Dict[str, List[str]] = {
+    HYPOTHESIS_KEYWORDS: ClassVar[dict[str, list[str]]] = {
         "poison": ["독", "독살", "독약", "비상", "마비독", "약물", "poison", "toxic"],
         "theft": ["훔치", "털", "소매치기", "절도", "도둑", "갈취", "steal", "theft", "loot"],
         "assassination": ["살해", "암살", "기습", "목을", "찌르", "죽이", "암습", "assassinate", "murder"],
@@ -168,18 +169,14 @@ class NPCCognitiveDeductionEngine:
         Returns a rich HypothesisValidationResult with supporting & contradicting evidence.
         """
         category = cls.classify_hypothesis(hypothesis_text)
-        supporting: List[HypothesisEvidence] = []
-        contradicting: List[HypothesisEvidence] = []
+        supporting: list[HypothesisEvidence] = []
+        contradicting: list[HypothesisEvidence] = []
 
         p = npc.personality
-        v_hier = getattr(npc, "value_hierarchy", ["survival", "wealth", "honor", "family", "faith"])
         taboo = getattr(npc, "taboo", "")
         desire = getattr(npc, "desire", "")
-        weakness = getattr(npc, "weakness", "")
         fin_state = getattr(npc, "financial_state", "")
         beliefs = getattr(npc, "beliefs", [])
-        mask = getattr(npc, "public_mask", "")
-        secret = getattr(npc, "blackmail_secret", "")
 
         # 1. Personality Metric Analysis
         if category in ["poison", "assassination"]:
@@ -461,17 +458,14 @@ class NPCCognitiveDeductionEngine:
         Synchronizes the outcome into npc.intention and npc.goal.
         """
         p = npc.personality
-        desire = getattr(npc, "desire", "생존과 안위")
-        weakness = getattr(npc, "weakness", "")
         secret = getattr(npc, "blackmail_secret", "")
         fin_state = getattr(npc, "financial_state", "")
         taboo = getattr(npc, "taboo", "")
-        inv_names = [state.items[i].name for i in npc.inventory if i in state.items]
 
         # Determine Primary Urgency
         if (npc.health <= 15 and npc.alive) or npc.fear >= 75:
             action_type = "escape"
-            plan = f"생명의 위협을 느껴 인근 안전 구역이나 성문 밖으로 전력 도주를 준비함"
+            plan = "생명의 위협을 느껴 인근 안전 구역이나 성문 밖으로 전력 도주를 준비함"
             motive = f"현재 체력({npc.health}) 위기 및 극심한 공포({npc.fear}/100)로 인한 생존 본능 발동"
             risk = 40
             stealth = "covert"
@@ -479,7 +473,7 @@ class NPCCognitiveDeductionEngine:
 
         elif (p.greed >= 75 or "빚" in fin_state) and (state.player.gold >= 25 or len(state.player.inventory) > 0):
             action_type = "theft"
-            plan = f"플레이어가 주위를 둘러보거나 대화하는 틈을 타 주머니의 금화나 소지품 소매치기 시도"
+            plan = "플레이어가 주위를 둘러보거나 대화하는 틈을 타 주머니의 금화나 소지품 소매치기 시도"
             motive = f"탐욕({p.greed}) 및 재정 압박([{fin_state or '부채'}]) 해소를 위해 손쉬운 재물 강탈 결심"
             risk = 65
             stealth = "imperceptible" if p.cunning >= 65 else "covert"
@@ -487,7 +481,7 @@ class NPCCognitiveDeductionEngine:
 
         elif npc.debt <= -60 and p.aggression >= 65 and "살인" not in taboo:
             action_type = "assassinate"
-            plan = f"플레이어가 방심하고 등을 돌리거나 취침할 때 치명적인 급습 또는 비수 공격 준비"
+            plan = "플레이어가 방심하고 등을 돌리거나 취침할 때 치명적인 급습 또는 비수 공격 준비"
             motive = f"깊은 원한(부채감 {npc.debt}) 및 높은 공격성({p.aggression})으로 인한 원한 청산 결의"
             risk = 85
             stealth = "covert"
@@ -503,15 +497,15 @@ class NPCCognitiveDeductionEngine:
                 clues = ["말을 더듬음", "주머니 속 금전을 매만지며 눈치를 살핌", "주변에 엿듣는 자가 없는지 두리번거림"]
             else:
                 action_type = "betray"
-                plan = f"치부를 덮기 위해 배후 세력이나 경비병에게 밀고하여 위험 인물을 제거하려 획책"
-                motive = f"비밀을 은폐하기 위한 선제적 숙청"
+                plan = "치부를 덮기 위해 배후 세력이나 경비병에게 밀고하여 위험 인물을 제거하려 획책"
+                motive = "비밀을 은폐하기 위한 선제적 숙청"
                 risk = 70
                 stealth = "covert"
                 clues = ["시선을 피하며 딴청을 피움", "발걸음이 은밀히 관청 방향으로 향함"]
 
         elif npc.affinity >= 65 and npc.trust >= 60:
             action_type = "cooperate"
-            plan = f"플레이어에게 유용한 지역 정보, 상점 할인, 혹은 동행 지원을 적극 제안"
+            plan = "플레이어에게 유용한 지역 정보, 상점 할인, 혹은 동행 지원을 적극 제안"
             motive = f"두터운 호감({npc.affinity})과 신뢰({npc.trust})에 기반한 호의"
             risk = 10
             stealth = "overt"
@@ -611,7 +605,7 @@ class NPCCognitiveDeductionEngine:
         npc: NPC,
         state: WorldState,
         player_action: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Master deterministic turn execution for non-combat NPCs.
         Unified Cognitive Action Pipeline:
@@ -654,25 +648,28 @@ class NPCCognitiveDeductionEngine:
             any(k in job_lower for k in ["사냥꾼", "용병", "살수", "추적자", "hunter", "mercenary"]) or
             (p.greed >= 70 and p.courage >= 60 and p.aggression >= 55)
         )
-        if total_bounty >= 200 and not is_disguised and is_hunter_profile:
-            # Chance to strike if player shows vulnerability or moves
-            if any(k in p_action_lower for k in ["이동", "떠난", "골목", "등을", "휴식", "잠", "살핀", "뒤적"]):
-                npc.disposition = "hostile"
-                plan = f"플레이어의 목에 걸린 거액의 현상금 {total_bounty}G를 독식하기 위해 기습 공격 개시"
-                npc.intention = plan
-                return {
-                    "npc_id": npc.id,
-                    "npc_name": npc.name,
-                    "action_type": "bounty_hunter_ambush",
-                    "total_bounty": total_bounty,
-                    "summary_ko": f"⚔️ [현상금 사냥꾼 기습] [{npc.name}]이(가) 당신의 목에 걸린 현상금 {total_bounty}G를 노리고 무기를 빼 들며 길목을 막아섰습니다! (태도: 적대적으로 전환)",
-                    "gm_directive": f"{npc.name}이(가) 수배령을 확인하고 막대한 현상금을 차지하기 위해 플레이어의 퇴로를 차단하고 흉기를 휘두르는 긴박한 기습을 묘사하십시오.",
-                    "disposition_changed": "hostile"
-                }
+        if (
+            total_bounty >= 200 and not is_disguised and is_hunter_profile
+            and any(k in p_action_lower for k in ["이동", "떠난", "골목", "등을", "휴식", "잠", "살핀", "뒤적"])
+        ):
+            npc.disposition = "hostile"
+            plan = f"플레이어의 목에 걸린 거액의 현상금 {total_bounty}G를 독식하기 위해 기습 공격 개시"
+            npc.intention = plan
+            return {
+                "npc_id": npc.id,
+                "npc_name": npc.name,
+                "action_type": "bounty_hunter_ambush",
+                "total_bounty": total_bounty,
+                "summary_ko": f"⚔️ [현상금 사냥꾼 기습] [{npc.name}]이(가) 당신의 목에 걸린 현상금 {total_bounty}G를 노리고 무기를 빼 들며 길목을 막아섰습니다! (태도: 적대적으로 전환)",
+                "gm_directive": f"{npc.name}이(가) 수배령을 확인하고 막대한 현상금을 차지하기 위해 플레이어의 퇴로를 차단하고 흉기를 휘두르는 긴박한 기습을 묘사하십시오.",
+                "disposition_changed": "hostile"
+            }
 
         # 3. Secret Snitching / Informing Authorities (Cowardly Greedy NPCs)
-        if total_bounty >= 300 and not is_disguised and p.greed >= 65 and p.courage <= 40:
-            if npc.trust < 50 and npc.affinity < 50:
+        if (
+            total_bounty >= 300 and not is_disguised and p.greed >= 65 and p.courage <= 40
+            and npc.trust < 50 and npc.affinity < 50
+        ):
                 snitch_log = f"🚨 [밀고 발생] [{npc.name}]이(가) 수배자 [{state.player.name}]의 은신처를 관청 경비대에 은밀히 밀고했습니다!"
                 if snitch_log not in state.pending_breaking_news:
                     state.pending_breaking_news.append(snitch_log)
@@ -704,7 +701,19 @@ class NPCCognitiveDeductionEngine:
                 "disposition_changed": "hostile"
             }
 
-        # 5. Opportunistic Pickpocketing / Theft (High Greed + Distraction)
+        # 5. Cunning Indirect Scheming (High Cunning >= 70: Indirect Action instead of Direct Theft)
+        if getattr(p, "cunning", 50) >= 70 and (p.greed >= 50 or "골드" in getattr(npc, "desire", "")):
+            plan = "직접 나서는 위험을 피해 거짓 소문을 퍼뜨리고 은밀한 함정으로 유인"
+            npc.intention = plan
+            return {
+                "npc_id": npc.id,
+                "npc_name": npc.name,
+                "action_type": "cunning_scheme",
+                "summary_ko": f"🕸️ [{npc.name}]이(가) 서늘한 미소를 머금고 배후에서 플레이어를 옭아맬 간접 공작(함정 설계 및 거짓 소문 유출)을 꾸미기 시작했습니다.",
+                "gm_directive": f"{npc.name}은(는) 교활함({p.cunning})이 높아 직접 충돌하거나 소매치기하지 않고 제3자를 이용하거나 함정으로 유인하는 간접 모략의 복선을 은밀히 드러내십시오."
+            }
+
+        # 6. Opportunistic Pickpocketing / Theft (High Greed + Distraction, Lower Cunning)
         desire_lower = getattr(npc, "desire", "").lower()
         is_thief_profile = (
             p.greed >= 60 or
@@ -799,11 +808,61 @@ class NPCCognitiveDeductionEngine:
                 "gm_directive": f"{npc.name}이(가) 플레이어에 대한 깊은 호감과 신뢰로 인해 체포 위험을 무릅쓰고 비밀 조언을 건네는 따뜻한 연출을 하십시오."
             }
 
+        # 7. Deceitful Misdirection (High Deceit >= 70: False Information)
+        if getattr(p, "deceit", 50) >= 70 and any(k in p_action_lower for k in ["질문", "묻", "대화", "정보", "길", "소문", "물어", "ask", "talk"]):
+            plan = "천연덕스럽게 거짓 정보와 왜곡된 단서를 제공하여 플레이어를 혼선에 빠뜨림"
+            npc.intention = plan
+            return {
+                "npc_id": npc.id,
+                "npc_name": npc.name,
+                "action_type": "deceitful_misdirection",
+                "summary_ko": f"🎭 [{npc.name}]이(가) 눈 하나 깜빡이지 않고 완벽한 거짓 정보와 거짓된 길안내를 천연덕스럽게 건넸습니다.",
+                "gm_directive": f"{npc.name}의 기만성({p.deceit})이 극에 달해 있으므로, 완벽한 진실인 양 속이는 능청스러운 거짓말과 미세한 모순을 묘사하십시오."
+            }
+
+        # 9. Impulsive Aggressive Flare-up (Low Patience <= 35: Rapid Hostility)
+        is_tense_action = any(k in p_action_lower for k in ["의심", "노려", "따지", "추궁", "가로막", "위협", "검을", "무기", "지체"])
+        if getattr(p, "patience", 50) <= 35 and (p.aggression >= 50 or is_tense_action):
+            npc.disposition = "hostile"
+            plan = "인내심의 한계에 도달하여 즉각적인 무력 충돌 결행"
+            npc.intention = plan
+            return {
+                "npc_id": npc.id,
+                "npc_name": npc.name,
+                "action_type": "impulsive_hostility",
+                "summary_ko": f"💢 [{npc.name}]이(가) 더 이상 참지 못하고 신경질적으로 고함을 지르며 무기를 뽑아 들었습니다! (태도: 적대적으로 전환)",
+                "gm_directive": f"{npc.name}의 낮은 인내심({p.patience})으로 인해 일촉즉발의 긴장을 견디지 못하고 성급히 폭발하여 적대적으로 돌변하는 장면을 서술하십시오.",
+                "disposition_changed": "hostile"
+            }
+
+        # 10. Fallback to Master 12-Stage Psychology Decision Pipeline (Master Brief Spec)
+        from src.world.psychology_engine import PsychologyDecisionPipeline, WorldEvent
+        world_event = WorldEvent(
+            id=f"turn_{state.turn}_{npc.id}",
+            event_type="dialogue" if any(k in p_action_lower for k in ["말", "대화", "talk", "ask", "say", "질문", "묻"]) else "ambient_observation",
+            severity=3 if is_tense_action else 1,
+            location_id=npc.location,
+            source_id="player",
+            target_ids=[npc.id],
+            description=player_action,
+            turn=state.turn
+        )
+        dec_res = PsychologyDecisionPipeline.route_and_process(npc, world_event, state)
+        if dec_res and dec_res.tier == 3 and dec_res.selected_action not in ("idle_observe", "surveillance"):
+            return {
+                "npc_id": npc.id,
+                "npc_name": npc.name,
+                "action_type": f"psychology_{dec_res.selected_action}",
+                "summary_ko": f"[{npc.name}]이(가) 심리 판단에 따라 행동합니다: {dec_res.concrete_plan}",
+                "gm_directive": f"{npc.name}의 심리 결정({dec_res.selected_action})에 맞춰 내러티브를 전개하십시오.",
+                "decision_result": dec_res.to_dict()
+            }
+
         return None
 
     @classmethod
     def generate_external_llm_prompt(
-        cls, npc: NPC, hypothesis_text: Optional[str] = None
+        cls, npc: NPC, hypothesis_text: str | None = None
     ) -> str:
         """
         Formats complete psychological profile into a structured prompt for external LLMs (Claude/GPT-4o).
@@ -840,6 +899,7 @@ Strict Anti-Yes-Man reality check applies: NEVER blindly agree with the player's
 [4. Deep Persona & Psychological Anchors]
 - Life-defining Moment: {getattr(npc, 'life_defining_moment', '알려지지 않음')}
 - Value Hierarchy: [{v_hier}]
+- Tastes: Likes: [{likes}] | Dislikes: [{dislikes}]
 - Taboo (Moral Red Line): {getattr(npc, 'taboo', '없음')}
 - Desperate Desire: {getattr(npc, 'desire', '생존')}
 - Critical Weakness: {getattr(npc, 'weakness', '없음')}
@@ -852,11 +912,24 @@ Strict Anti-Yes-Man reality check applies: NEVER blindly agree with the player's
 [5. BDI Cognitive Architecture]
 - Ground Beliefs: {npc.beliefs or ['특이 오해 없음']}
 - Current Intention: {npc.intention or '현장 주시 및 관찰'}
+
+[6. Real-time Emotional State & Psychological Stress (Master Psychology Layer)]
+- Active Emotions: {', '.join([f'{k}({v.get("intensity", 0)})' for k, v in getattr(npc, 'emotion_state', {}).items()]) or '안정'}
+- Psychological Stress: {getattr(npc, 'stress', 0)}/100 (Stage: {'붕괴(Breakdown)' if getattr(npc, 'stress', 0) >= 90 else '심각(Severe)' if getattr(npc, 'stress', 0) >= 75 else '손상(Impaired)' if getattr(npc, 'stress', 0) >= 50 else '반응(Reactive)' if getattr(npc, 'stress', 0) >= 25 else '정상(Normal)'})
+- Active Trauma Triggers: {', '.join([k for k, v in getattr(npc, 'trauma_runtime', {}).items() if v.get('intensity', 0) > 0]) or '없음'}
+- Multi-Entity Relations: {len(getattr(npc, 'relationship_map', {}))} known entities recorded
 """
         if hypothesis_text:
             prompt += f"""
-[6. Player's Suspicion / Accusation to Evaluate]
+[7. Player's Suspicion / Accusation to Evaluate]
 - Player Hypothesis: "{hypothesis_text}"
 - Mission: Analyze the Ground Truth above. State clearly whether this hypothesis is TRUE, PLAUSIBLE, or FALSE. Provide concrete evidence from the NPC's taboos, personality, and physical belongings to refute or confirm it.
 """
+        prompt += """
+[Strict Narrative Expression Boundary]
+- You are ONLY rendering the natural dialogue, tone of voice, subtle body language, and immediate behavioral reactions of this NPC.
+- You CANNOT invent hidden world facts, rewrite the NPC's past or inventory, or contradict the deterministic decisions calculated above.
+"""
         return prompt
+
+

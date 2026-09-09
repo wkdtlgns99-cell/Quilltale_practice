@@ -1,247 +1,360 @@
 """
 World module for Quilltale TRPG Engine.
 """
-from .state import (
-    WorldState, Location, NPC, Item, Player, MemoryEntry, DISPOSITION_KO_MAP,
-    Skill, Title, EquipmentSlots, NPCPersonality, EnvironmentalMetrics, PendingInformation,
-    ClothingLayer, NPCVisualDetails, FacialDetails, BodyMeasurements, ItemVisualProfile
-)
-from .dice import DiceEngine, DiceCheckResult
-from .validator import ActionValidator
-from .persistence import PersistenceManager
-from .legacy import LegacyManager
-from .generator import WorldGenerator
-from .skills import SkillSystem
-from .incantation import IncantationSystem
-from .chronicle import ChronicleManager
-from .graph_engine import (
-    LivingWorldGraph, PhysicsChemistryMatrix, EcologicalFeedbackLoop, EcologicalVacuumCollapse
-)
-
-from .stat_engine import StatEngine
-from .attack_physics_engine import AttackPhysicsEngine, AttackPhysicsResult
-from .combat_time_track_engine import CombatDistanceManager, ActionTimeTrackEngine, CombatAction, InterruptEvent
-from .time_calendar_engine import TimeCalendarEngine, DAILY_ACTION_DURATIONS
-from .stealth_engine import StealthInfiltrationEngine, StealthAttemptResult, EavesdropAttemptResult
-from .equipment import EquipmentEngine, EquipmentSet, EquipmentSetBonus
-from .harvest_engine import AnatomyHarvestEngine, MonsterPart, PartAttackResult, HarvestOutcome
-from .outfit_engine import (
-    OutfitMechanicsEngine, EncumbranceStatus, ArmorChafingResult, QuickDrawResult, EyewearHazardResult,
-    BackpackSpec, BackpackStorageStatus, BACKPACK_SPECS
-)
-from .stamina_engine import StaminaEngine
-from .trap_engine import TrapEngine, TrapSpec, TrapInstance
-from .dungeon_engine import DungeonEngine, DungeonInstance, DungeonFloor, DungeonRoom
-from .party_sanity_engine import PartySanityEngine, MentalBreakdownSpec, MENTAL_BREAKDOWN_REGISTRY
-from .cave_in_engine import (
-    CaveCollapseEngine, CAVE_COLLAPSE_SYSTEM, DUNGEON_ENVIRONMENT_SYSTEMS,
-    RockStrataSpec, VibrationSourceSpec, CollapseStageSpec
-)
-from .thermal_engine import (
-    ThermalSurvivalEngine, THERMAL_SURVIVAL_SYSTEM, ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS,
-    ThermalClothingSpec, HypothermiaStageSpec, HyperthermiaStageSpec
-)
-from .disease_engine import (
-    EpidemicEngine, EPIDEMIC_SYSTEM, DISEASE_REGISTRY,
-    DiseaseSpec, DiseaseStageSpec, ActiveInfection, InfectionAttemptResult
-)
-from .mana_burn_engine import (
-    ManaBurnEngine, EtherMutationSpec, ManaCircuitState, ETHER_MUTATIONS_REGISTRY
-)
-from .ration_engine import (
-    RationSpoilageEngine, FoodItemStatus, PreservationMethodSpec, PRESERVATION_METHODS
-)
-from .sleep_engine import (
-    SleepDeprivationEngine, CircadianClock, StimulantSpec, BeddingQualitySpec,
-    STIMULANTS_REGISTRY, BEDDING_REGISTRY
-)
-from .campsite_engine import (
-    CampsiteRestEngine, CampsiteState, SentryShift, NightAmbushSpec, NIGHT_AMBUSH_REGISTRY
-)
-from .botany_engine import (
-    HerbalismBotanyEngine, PlantSpec, PLANT_REGISTRY
-)
-from .weather_magic_engine import (
-    WeatherMagicSimulationEngine, WeatherMagicSpec, ActiveWeatherAnomaly, WEATHER_MAGIC_REGISTRY
-)
-from .vein_restoration_engine import (
-    ManaVeinRestorationEngine, VeinSurgerySpec, VEIN_SURGERY_REGISTRY
-)
-from .toxicology_engine import (
-    ToxicologyToleranceEngine, PotionToxicityState
-)
 from .alcohol_engine import (
-    AlcoholIntoxicationEngine, AlcoholDrinkSpec, AlcoholMetabolismState, ALCOHOL_DRINK_REGISTRY
+    ALCOHOL_DRINK_REGISTRY,
+    AlcoholDrinkSpec,
+    AlcoholIntoxicationEngine,
+    AlcoholMetabolismState,
 )
-from .corpse_ecology_engine import (
-    CorpseEcologyEngine, CorpseInstance
+from .attack_physics_engine import AttackPhysicsEngine, AttackPhysicsResult
+from .botany_engine import PLANT_REGISTRY, HerbalismBotanyEngine, PlantSpec
+from .campsite_engine import (
+    NIGHT_AMBUSH_REGISTRY,
+    CampsiteRestEngine,
+    CampsiteState,
+    NightAmbushSpec,
+    SentryShift,
 )
-from .pupil_adaptation_engine import (
-    PupilAdaptationEngine, PupilAdaptationState
+from .cave_in_engine import (
+    CAVE_COLLAPSE_SYSTEM,
+    DUNGEON_ENVIRONMENT_SYSTEMS,
+    CaveCollapseEngine,
+    CollapseStageSpec,
+    RockStrataSpec,
+    VibrationSourceSpec,
 )
-from .poise_engine import (
-    PosturePoiseEngine, PosturePoiseState
-)
+from .chronicle import ChronicleManager
 from .cognitive_engine import (
-    NPCCognitiveDeductionEngine, HypothesisEvidence, HypothesisValidationResult,
-    PredictedNPCAction, MicroLeakageObservation
+    HypothesisEvidence,
+    HypothesisValidationResult,
+    MicroLeakageObservation,
+    NPCCognitiveDeductionEngine,
+    PredictedNPCAction,
 )
-from .siege_engine import (
-    SiegeWarfareEngine, SiegeBattleState, FortressDefenseState,
-    SiegeEngineInstance, TroopCorps, ArmyMoraleState,
-    SIEGE_WEAPON_CATALOG, FORMATION_TACTICS_REGISTRY
+from .combat_time_track_engine import (
+    ActionTimeTrackEngine,
+    CombatAction,
+    CombatDistanceManager,
+    InterruptEvent,
+)
+from .corpse_ecology_engine import CorpseEcologyEngine, CorpseInstance
+from .dice import DiceCheckResult, DiceEngine
+from .disease_engine import (
+    DISEASE_REGISTRY,
+    EPIDEMIC_SYSTEM,
+    ActiveInfection,
+    DiseaseSpec,
+    DiseaseStageSpec,
+    EpidemicEngine,
+    InfectionAttemptResult,
+)
+from .dungeon_engine import DungeonEngine, DungeonFloor, DungeonInstance, DungeonRoom
+from .equipment import EquipmentEngine, EquipmentSet, EquipmentSetBonus
+from .generator import WorldGenerator
+from .graph_engine import (
+    EcologicalFeedbackLoop,
+    EcologicalVacuumCollapse,
+    LivingWorldGraph,
+    PhysicsChemistryMatrix,
+)
+from .harvest_engine import (
+    AnatomyHarvestEngine,
+    HarvestOutcome,
+    MonsterPart,
+    PartAttackResult,
+)
+from .incantation import IncantationSystem
+from .legacy import LegacyManager
+from .mana_burn_engine import (
+    ETHER_MUTATIONS_REGISTRY,
+    EtherMutationSpec,
+    ManaBurnEngine,
+    ManaCircuitState,
 )
 from .object_physics_engine import (
-    UniversalObjectPhysicsEngine, MaterialSpec, ObjectInteractionResult, MATERIAL_REGISTRY
+    MATERIAL_REGISTRY,
+    MaterialSpec,
+    ObjectInteractionResult,
+    UniversalObjectPhysicsEngine,
+)
+from .outfit_engine import (
+    BACKPACK_SPECS,
+    ArmorChafingResult,
+    BackpackSpec,
+    BackpackStorageStatus,
+    EncumbranceStatus,
+    EyewearHazardResult,
+    OutfitMechanicsEngine,
+    QuickDrawResult,
+)
+from .party_sanity_engine import (
+    MENTAL_BREAKDOWN_REGISTRY,
+    MentalBreakdownSpec,
+    PartySanityEngine,
+)
+from .persistence import PersistenceManager
+from .poise_engine import PosturePoiseEngine, PosturePoiseState
+from .psychology_engine import (
+    CANONICAL_RELATIONSHIP_AXES,
+    PERSONALITY_TEMPLATES,
+    STANDARD_TRAUMA_REGISTRY,
+    VALID_EMOTIONS,
+    ActionCandidate,
+    DecisionCacheManager,
+    DecisionResult,
+    EmotionEngine,
+    MemoryPsychologyBridge,
+    PersonalityTemplate,
+    PsychologyDecisionPipeline,
+    RelationshipEngine,
+    StressEngine,
+    TraumaEngine,
+    TraumaSpec,
+    WorldEvent,
+    apply_personality_template,
+)
+from .pupil_adaptation_engine import PupilAdaptationEngine, PupilAdaptationState
+from .ration_engine import (
+    PRESERVATION_METHODS,
+    FoodItemStatus,
+    PreservationMethodSpec,
+    RationSpoilageEngine,
+)
+from .siege_engine import (
+    FORMATION_TACTICS_REGISTRY,
+    SIEGE_WEAPON_CATALOG,
+    ArmyMoraleState,
+    FortressDefenseState,
+    SiegeBattleState,
+    SiegeEngineInstance,
+    SiegeWarfareEngine,
+    TroopCorps,
+)
+from .skills import SkillSystem
+from .sleep_engine import (
+    BEDDING_REGISTRY,
+    STIMULANTS_REGISTRY,
+    BeddingQualitySpec,
+    CircadianClock,
+    SleepDeprivationEngine,
+    StimulantSpec,
+)
+from .stamina_engine import StaminaEngine
+from .stat_engine import StatEngine
+from .state import (
+    DISPOSITION_KO_MAP,
+    NPC,
+    BodyMeasurements,
+    ClothingLayer,
+    EnvironmentalMetrics,
+    EquipmentSlots,
+    FacialDetails,
+    Item,
+    ItemVisualProfile,
+    Location,
+    MemoryEntry,
+    NPCPersonality,
+    NPCVisualDetails,
+    PendingInformation,
+    Player,
+    Skill,
+    Title,
+    WorldState,
+)
+from .stealth_engine import (
+    EavesdropAttemptResult,
+    StealthAttemptResult,
+    StealthInfiltrationEngine,
+)
+from .thermal_engine import (
+    ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS,
+    THERMAL_SURVIVAL_SYSTEM,
+    HyperthermiaStageSpec,
+    HypothermiaStageSpec,
+    ThermalClothingSpec,
+    ThermalSurvivalEngine,
+)
+from .time_calendar_engine import DAILY_ACTION_DURATIONS, TimeCalendarEngine
+from .toxicology_engine import PotionToxicityState, ToxicologyToleranceEngine
+from .trap_engine import TrapEngine, TrapInstance, TrapSpec
+from .validator import ActionValidator
+from .vein_restoration_engine import (
+    VEIN_SURGERY_REGISTRY,
+    ManaVeinRestorationEngine,
+    VeinSurgerySpec,
+)
+from .weather_magic_engine import (
+    WEATHER_MAGIC_REGISTRY,
+    ActiveWeatherAnomaly,
+    WeatherMagicSimulationEngine,
+    WeatherMagicSpec,
 )
 
 __all__ = [
-    "WorldState",
-    "Location",
-    "NPC",
-    "Item",
-    "Player",
-    "MemoryEntry",
+    "ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS",
+    "ALCOHOL_DRINK_REGISTRY",
+    "BACKPACK_SPECS",
+    "BEDDING_REGISTRY",
+    "CANONICAL_RELATIONSHIP_AXES",
+    "CAVE_COLLAPSE_SYSTEM",
+    "DAILY_ACTION_DURATIONS",
+    "DISEASE_REGISTRY",
     "DISPOSITION_KO_MAP",
-    "Skill",
-    "Title",
-    "EquipmentSlots",
-    "NPCPersonality",
-    "EnvironmentalMetrics",
-    "PendingInformation",
-    "DiceEngine",
-    "DiceCheckResult",
+    "DUNGEON_ENVIRONMENT_SYSTEMS",
+    "EPIDEMIC_SYSTEM",
+    "ETHER_MUTATIONS_REGISTRY",
+    "FORMATION_TACTICS_REGISTRY",
+    "MATERIAL_REGISTRY",
+    "MENTAL_BREAKDOWN_REGISTRY",
+    "NIGHT_AMBUSH_REGISTRY",
+    "NPC",
+    "PERSONALITY_TEMPLATES",
+    "PLANT_REGISTRY",
+    "PRESERVATION_METHODS",
+    "SIEGE_WEAPON_CATALOG",
+    "STANDARD_TRAUMA_REGISTRY",
+    "STIMULANTS_REGISTRY",
+    "THERMAL_SURVIVAL_SYSTEM",
+    "VALID_EMOTIONS",
+    "VEIN_SURGERY_REGISTRY",
+    "WEATHER_MAGIC_REGISTRY",
+    "ActionCandidate",
+    "ActionTimeTrackEngine",
     "ActionValidator",
-    "PersistenceManager",
-    "LegacyManager",
-    "WorldGenerator",
-    "SkillSystem",
-    "IncantationSystem",
-    "ChronicleManager",
-    "LivingWorldGraph",
-    "PhysicsChemistryMatrix",
-    "EcologicalFeedbackLoop",
-    "EcologicalVacuumCollapse",
-    "StatEngine",
+    "ActiveInfection",
+    "ActiveWeatherAnomaly",
+    "AlcoholDrinkSpec",
+    "AlcoholIntoxicationEngine",
+    "AlcoholMetabolismState",
+    "AnatomyHarvestEngine",
+    "ArmorChafingResult",
+    "ArmyMoraleState",
     "AttackPhysicsEngine",
     "AttackPhysicsResult",
-    "CombatDistanceManager",
-    "ActionTimeTrackEngine",
+    "BackpackSpec",
+    "BackpackStorageStatus",
+    "BeddingQualitySpec",
+    "BodyMeasurements",
+    "CampsiteRestEngine",
+    "CampsiteState",
+    "CaveCollapseEngine",
+    "ChronicleManager",
+    "CircadianClock",
+    "ClothingLayer",
+    "CollapseStageSpec",
     "CombatAction",
-    "InterruptEvent",
-    "TimeCalendarEngine",
-    "DAILY_ACTION_DURATIONS",
-    "StealthInfiltrationEngine",
-    "StealthAttemptResult",
+    "CombatDistanceManager",
+    "CorpseEcologyEngine",
+    "CorpseInstance",
+    "DecisionCacheManager",
+    "DecisionResult",
+    "DiceCheckResult",
+    "DiceEngine",
+    "DiseaseSpec",
+    "DiseaseStageSpec",
+    "DungeonEngine",
+    "DungeonFloor",
+    "DungeonInstance",
+    "DungeonRoom",
     "EavesdropAttemptResult",
+    "EcologicalFeedbackLoop",
+    "EcologicalVacuumCollapse",
+    "EmotionEngine",
+    "EncumbranceStatus",
+    "EnvironmentalMetrics",
+    "EpidemicEngine",
     "EquipmentEngine",
     "EquipmentSet",
     "EquipmentSetBonus",
-    "AnatomyHarvestEngine",
-    "MonsterPart",
-    "PartAttackResult",
-    "HarvestOutcome",
-    "ClothingLayer",
-    "NPCVisualDetails",
-    "FacialDetails",
-    "BodyMeasurements",
-    "ItemVisualProfile",
-    "OutfitMechanicsEngine",
-    "EncumbranceStatus",
-    "ArmorChafingResult",
-    "QuickDrawResult",
-    "EyewearHazardResult",
-    "StaminaEngine",
-    "TrapEngine",
-    "TrapSpec",
-    "TrapInstance",
-    "DungeonEngine",
-    "DungeonInstance",
-    "DungeonFloor",
-    "DungeonRoom",
-    "PartySanityEngine",
-    "MentalBreakdownSpec",
-    "MENTAL_BREAKDOWN_REGISTRY",
-    "CaveCollapseEngine",
-    "CAVE_COLLAPSE_SYSTEM",
-    "DUNGEON_ENVIRONMENT_SYSTEMS",
-    "RockStrataSpec",
-    "VibrationSourceSpec",
-    "CollapseStageSpec",
-    "ThermalSurvivalEngine",
-    "THERMAL_SURVIVAL_SYSTEM",
-    "ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS",
-    "ThermalClothingSpec",
-    "HypothermiaStageSpec",
-    "HyperthermiaStageSpec",
-    "EpidemicEngine",
-    "EPIDEMIC_SYSTEM",
-    "DISEASE_REGISTRY",
-    "DiseaseSpec",
-    "DiseaseStageSpec",
-    "ActiveInfection",
-    "InfectionAttemptResult",
-    "BackpackSpec",
-    "BackpackStorageStatus",
-    "BACKPACK_SPECS",
-    "ManaBurnEngine",
+    "EquipmentSlots",
     "EtherMutationSpec",
-    "ManaCircuitState",
-    "ETHER_MUTATIONS_REGISTRY",
-    "RationSpoilageEngine",
+    "EyewearHazardResult",
+    "FacialDetails",
     "FoodItemStatus",
-    "PreservationMethodSpec",
-    "PRESERVATION_METHODS",
-    "SleepDeprivationEngine",
-    "CircadianClock",
-    "StimulantSpec",
-    "BeddingQualitySpec",
-    "STIMULANTS_REGISTRY",
-    "BEDDING_REGISTRY",
-    "CampsiteRestEngine",
-    "CampsiteState",
-    "SentryShift",
-    "NightAmbushSpec",
-    "NIGHT_AMBUSH_REGISTRY",
+    "FortressDefenseState",
+    "HarvestOutcome",
     "HerbalismBotanyEngine",
-    "PlantSpec",
-    "PLANT_REGISTRY",
-    "WeatherMagicSimulationEngine",
-    "WeatherMagicSpec",
-    "ActiveWeatherAnomaly",
-    "WEATHER_MAGIC_REGISTRY",
-    "ManaVeinRestorationEngine",
-    "VeinSurgerySpec",
-    "VEIN_SURGERY_REGISTRY",
-    "ToxicologyToleranceEngine",
-    "PotionToxicityState",
-    "AlcoholIntoxicationEngine",
-    "AlcoholDrinkSpec",
-    "AlcoholMetabolismState",
-    "ALCOHOL_DRINK_REGISTRY",
-    "CorpseEcologyEngine",
-    "CorpseInstance",
-    "PupilAdaptationEngine",
-    "PupilAdaptationState",
-    "PosturePoiseEngine",
-    "PosturePoiseState",
-    "NPCCognitiveDeductionEngine",
+    "HyperthermiaStageSpec",
+    "HypothermiaStageSpec",
     "HypothesisEvidence",
     "HypothesisValidationResult",
-    "PredictedNPCAction",
-    "MicroLeakageObservation",
-    "SiegeWarfareEngine",
-    "SiegeBattleState",
-    "FortressDefenseState",
-    "SiegeEngineInstance",
-    "TroopCorps",
-    "ArmyMoraleState",
-    "SIEGE_WEAPON_CATALOG",
-    "FORMATION_TACTICS_REGISTRY",
-    "UniversalObjectPhysicsEngine",
+    "IncantationSystem",
+    "InfectionAttemptResult",
+    "InterruptEvent",
+    "Item",
+    "ItemVisualProfile",
+    "LegacyManager",
+    "LivingWorldGraph",
+    "Location",
+    "ManaBurnEngine",
+    "ManaCircuitState",
+    "ManaVeinRestorationEngine",
     "MaterialSpec",
+    "MemoryEntry",
+    "MemoryPsychologyBridge",
+    "MentalBreakdownSpec",
+    "MicroLeakageObservation",
+    "MonsterPart",
+    "NPCCognitiveDeductionEngine",
+    "NPCPersonality",
+    "NPCVisualDetails",
+    "NightAmbushSpec",
     "ObjectInteractionResult",
-    "MATERIAL_REGISTRY",
+    "OutfitMechanicsEngine",
+    "PartAttackResult",
+    "PartySanityEngine",
+    "PendingInformation",
+    "PersistenceManager",
+    "PersonalityTemplate",
+    "PhysicsChemistryMatrix",
+    "PlantSpec",
+    "Player",
+    "PosturePoiseEngine",
+    "PosturePoiseState",
+    "PotionToxicityState",
+    "PredictedNPCAction",
+    "PreservationMethodSpec",
+    "PsychologyDecisionPipeline",
+    "PupilAdaptationEngine",
+    "PupilAdaptationState",
+    "QuickDrawResult",
+    "RationSpoilageEngine",
+    "RelationshipEngine",
+    "RockStrataSpec",
+    "SentryShift",
+    "SiegeBattleState",
+    "SiegeEngineInstance",
+    "SiegeWarfareEngine",
+    "Skill",
+    "SkillSystem",
+    "SleepDeprivationEngine",
+    "StaminaEngine",
+    "StatEngine",
+    "StealthAttemptResult",
+    "StealthInfiltrationEngine",
+    "StimulantSpec",
+    "StressEngine",
+    "ThermalClothingSpec",
+    "ThermalSurvivalEngine",
+    "TimeCalendarEngine",
+    "Title",
+    "ToxicologyToleranceEngine",
+    "TrapEngine",
+    "TrapInstance",
+    "TrapSpec",
+    "TraumaEngine",
+    "TraumaSpec",
+    "TroopCorps",
+    "UniversalObjectPhysicsEngine",
+    "VeinSurgerySpec",
+    "VibrationSourceSpec",
+    "WeatherMagicSimulationEngine",
+    "WeatherMagicSpec",
+    "WorldEvent",
+    "WorldGenerator",
+    "WorldState",
+    "apply_personality_template",
 ]
 
 

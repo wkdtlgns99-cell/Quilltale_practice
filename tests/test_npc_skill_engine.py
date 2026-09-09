@@ -212,3 +212,50 @@ def test_two_pass_engine_integration_with_npc_skills(test_world):
     assert len(fact_sheet.npc_skill_logs) > 0
     prompt_context = fact_sheet.to_prompt_context()
     assert "현장 NPC 자율 스킬 및 기회주의적 행동 확정 연산" in prompt_context
+
+
+def test_npc_bow_attack_physics_integration(test_world):
+    """Verify AttackPhysicsEngine integration for NPC ranged bow attacks."""
+    archer = NPC(
+        id="orc_archer",
+        name="오크 궁수",
+        description="강궁을 든 오크 궁수",
+        location="town_square",
+        disposition="hostile",
+        health=40,
+        max_health=40,
+        strength=14,
+        agility=16,
+        skills=[]
+    )
+    test_world.npcs["orc_archer"] = archer
+    test_world.locations["town_square"].npcs.append("orc_archer")
+
+    # Give archer a bow weapon
+    bow = Item(
+        id="orc_composite_bow",
+        name="합성궁",
+        description="질긴 동물의 힘줄로 감은 합성 활",
+        location="orc_archer",
+        item_type="weapon",
+        damage=8,
+        draw_weight_lbs=50.0,
+        physics_tags=["projectile"],
+        traits=["bow"]
+    )
+    test_world.items["orc_composite_bow"] = bow
+    archer.equipment.weapon = "orc_composite_bow"
+
+    import random
+    orig_randint = random.randint
+    random.randint = lambda a, b: 15
+    try:
+        outcome = NPCSkillEngine.process_npc_combat_turn(archer, test_world, player_ac=10)
+        assert outcome is not None
+        assert outcome["is_success"] is True
+        assert "물리 역학" in outcome["summary_ko"]
+        assert "탄속" in outcome["summary_ko"]
+        assert "관통" in outcome["summary_ko"]
+    finally:
+        random.randint = orig_randint
+

@@ -7,8 +7,8 @@ Deterministic resolution of:
 """
 import random
 import logging
-from typing import Optional, Dict, Any, List, Tuple
-from src.world.state import WorldState, NPC, Player, Skill
+from typing import Optional, Dict, Any, List
+from src.world.state import WorldState, NPC, Skill
 from src.world.dice import DiceEngine
 from src.world.status_engine import StatusEffectEngine
 
@@ -158,6 +158,24 @@ class NPCSkillEngine:
         if d20 == 20:
             calculated_dmg = int(calculated_dmg * 1.5)
 
+        # Wire attack_physics_engine into ranged/bow attacks only (Phase D1)
+        physics_summary_extra = ""
+        eq_wep = state.items.get(getattr(npc.equipment, "weapon", "")) if hasattr(npc, "equipment") else None
+        is_ranged = (chosen_skill and any(k in chosen_skill.name.lower() or k in getattr(chosen_skill, "role_type", "").lower() for k in ["bow", "arrow", "ranged", "활", "사격", "화살", "궁술", "원거리"])) or (eq_wep and ("bow" in eq_wep.name.lower() or "bow" in getattr(eq_wep, "traits", []) or "활" in eq_wep.name or "projectile" in getattr(eq_wep, "physics_tags", [])))
+        if is_ranged:
+            from src.world.attack_physics_engine import AttackPhysicsEngine
+            d_weight = getattr(eq_wep, "draw_weight_lbs", 70.0) if eq_wep and getattr(eq_wep, "draw_weight_lbs", 0) > 0 else 70.0
+            can_draw, draw_ratio, draw_msg = AttackPhysicsEngine.can_draw_bow(npc.strength, draw_weight_lbs=d_weight)
+            flight_s = AttackPhysicsEngine.calculate_flight_time(distance_m=15.0, projectile_speed_mps=60.0)
+            phys_res = AttackPhysicsEngine.evaluate_attack_physics(
+                attacker=npc,
+                defender=state.player,
+                weapon=eq_wep,
+                attack_tags=["projectile"]
+            )
+            calculated_dmg = max(1, int(phys_res.total_damage * draw_ratio))
+            physics_summary_extra = f" (물리 역학: {draw_msg}, 탄속 {flight_s:.2f}초, 관통 {phys_res.armor_penetration_pct:.0%})"
+
         # Apply armor durability and damage mitigation
         from src.world.equipment import EquipmentEngine
         mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
@@ -195,7 +213,7 @@ class NPCSkillEngine:
             "player_hp_before": hp_before,
             "player_hp_after": hp_after,
             "applied_statuses": applied_statuses,
-            "summary_ko": f"[{npc.name}]이(가) [{skill_name}] 시전! 플레이어에게 {calculated_dmg} 피해 적중 (체력: {hp_before} → {hp_after}/{state.player.max_health}){status_text}"
+            "summary_ko": f"[{npc.name}]이(가) [{skill_name}] 시전! 플레이어에게 {calculated_dmg} 피해 적중 (체력: {hp_before} → {hp_after}/{state.player.max_health}){status_text}{physics_summary_extra}"
         }
 
     @classmethod

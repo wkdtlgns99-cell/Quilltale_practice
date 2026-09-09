@@ -371,18 +371,20 @@
 - [ ] **🔥 [템플릿 확충 13] 수면 방해 요인 및 악몽 템플릿 확충 (현재 4종 ➔ 목표 15종)**:
   - **필요 사유**: 야생/동굴/던전 야영 시 생존 압박 및 심리적 공포 다양화.
   - **확충 대상(11종)**: 야수 울음소리, 습기 찬 침구 불쾌감, 모기/진드기 가려움, 살인마 추적 공포 악몽, 동사 공포 한기, 눅눅한 곰팡이 냄새, 전우 사망 죄책감 악몽, 지하 낙반 공포, 코골이 소음 불침번 분쟁, 모닥불 연기 질식 기침, 고열 헛소리 등.
-- [x] **40. 🔥 [1차 완공 / 향후 Claude/GPT 세분화 대조 예정] NPC 인지 추론 & 행동 예측 엔진 (`NPCCognitiveDeductionEngine`)**:
-  - **구현 대상**: [엔진: 신규] `src/world/cognitive_engine.py`, [엔진: 확장] `src/world/state.py`
-  - **검증 증명**: 구현 파일 `src/world/cognitive_engine.py`, 통과 테스트 `tests/test_cognitive_engine.py` (11 passed).
+- [x] **40. 🔥 [완료] NPC 심리·성격·인지 추론 & 12단계 행동 예측 엔진 (`NPCCognitiveDeductionEngine` & `PsychologyDecisionPipeline`)**:
+  - **구현 대상**: [엔진: 신규] `src/world/psychology_engine.py`, [엔진: 확장] `src/world/cognitive_engine.py`, `src/world/state.py`, `src/world/two_pass_engine.py`
+  - **검증 증명**: 구현 파일 `src/world/psychology_engine.py`, `src/world/cognitive_engine.py`, 통과 테스트 `tests/test_npc_psychology_state.py` (4 passed), `tests/test_npc_psychology_engine.py` (5 passed), `tests/test_npc_psychology_pipeline.py` (6 passed), 기존 `tests/test_cognitive_engine.py` (14 passed), 전체 `pytest tests/` (530 passed).
   - **기능**:
-    - 1) 10대 대인 태도 매트릭스 확장: 기존 3대(affinity, fear, debt) + trust(신뢰), respect(존경), envy(질투), pity(연민), dominance(지배욕), curiosity(호기심), disgust(혐오).
-    - 2) 12대 심리 성향 축 확장: 기존 6대(altruism, greed, courage, suspicion, loyalty, aggression) + patience(인내), cunning(교활), pride(자존심), rationality(이성), neuroticism(신경증), deceit(기만).
-    - 3) 20대 심층 페르소나 시스템: life_defining_moment(생애 분기점), value_hierarchy(가치관 위계), coping_mechanism(스트레스 대처), public_mask(사회적 가면), moral_justification(자기합리화), micro_leakage_traits(미세 신체 언어 복선), risk_tolerance(위험 감수성), bdi_state(세부 계획).
-    - 4) 안티 예스맨 가설 검증 (`evaluate_player_hypothesis`): 플레이어의 주관적 의심/가설("저 놈이 독살하려 한다" 등)을 성향, 금기, 인벤토리, 태도와 전수 대조하여 6단계 판정(IMPOSSIBLE ~ CONFIRMED) 및 반박/수긍 증거 도출, GM 서사용 팩트 지침문 생성.
-    - 5) 자율 행동 예측 (`predict_autonomous_next_intent`): 결핍/욕망/공포/원한 우선순위에 따라 12대 행동 범주 중 최적의 계획을 도출하고 `npc.intention` 및 `npc.goal` 자동 갱신.
-    - 6) 미세 신체 언어 간파 (`check_micro_leakage`): 플레이어 감각 vs NPC 기만 대항 판정으로 속내 복선 노출.
-    - 7) 외부 LLM 프롬프트 생성 (`generate_external_llm_prompt`): GPT-4o/Claude 3.5 연동용 고밀도 심리 프로필 생성 (규칙 8 준수).
-    - 8) 향후 계획: 나중에 Claude나 GPT와 대조하여 행동 범주 및 심리 알고리즘을 한층 더 정밀하게 세분화 예정.
+    - 1) 8대 성격 템플릿 아키타입 (`PERSONALITY_TEMPLATES`): 신중한 학자, 무모한 모험가, 헌신적인 기사, 냉소적인 용병, 야심찬 귀족, 다정한 치유사, 편집증 생존자, 광신적 이단심문관 (SHA256 결정론적 인스턴스 분산 탑재).
+    - 2) 14종 복합 감정 시뮬레이션 (`EmotionEngine`): fear, anger, joy, grief, disgust, curiosity, pride, shame, guilt, hope, contempt, affection, anxiety, excitement 동시 활성화, 성향별 감수성 보정, 턴당 감쇠, 지배적 감정 산출 및 행동 점수 모디파이어.
+    - 3) 독립 심리 스트레스 5단계 & 페르소나 붕괴 (`StressEngine`): 피로/사기와 분리된 0~100 스트레스, 90+ 붕괴 시 단순 패닉이 아닌 성격/가치관/대처기제에 따른 붕괴 행동(광기 난투, 비정한 배신 도주, 맹목적 공황, 종교적 마비 등) 직결.
+    - 4) 인과 트라우마 활성화 체인 (`TraumaEngine`): 사건 키워드 매칭 ➔ 스트레스 증폭 ➔ 공포/불안 감정 유발 ➔ 회피/공격 편향 반환 및 안전 환경 노출 시 완화.
+    - 5) 다자간 9축 관계 매트릭스 (`RelationshipEngine`): trust, affection, respect, fear, resentment, dependence, loyalty, suspicion, familiarity 다자간 맵 관리, 델타 5 이상 시 캐시 무효화 버전 증가, 플레이어 대상 시 레거시 필드(trust, affinity, respect, fear) 양방향 동기화.
+    - 6) 메모리 심리 브릿지 (`MemoryPsychologyBridge`): 4+ 영구 앵커 우선 순위 인출, 5턴 윈도우 중복 기억 차단 및 기존 기억 강화.
+    - 7) 3-Tier 평가 라우터 (`PsychologyDecisionPipeline`): Tier 1(일상/원거리 O(1) 감정 감쇠/스트레스 회복), Tier 2(동일 위치 국소 소란 < 5ms 경량 감지), Tier 3(직접 상호작용/대화/전투/트라우마 12단계 전체 파이프라인 및 trace 방출).
+    - 8) 결정 캐시 (`DecisionCacheManager`): 상황 해시 + 상태 버전 + 스트레스 구간 기반 결정 캐싱 및 무효화.
+    - 9) Two-Pass 및 인지 엔진 결합: `NPCCognitiveDeductionEngine.process_npc_cognitive_turn`과 직결되어 일반 턴에서도 12단계 심리 판단에 따라 `npc.intention` 및 `npc.goal` 자동 동기화.
+    - 10) 외부 LLM 프롬프트 고도화 (`generate_external_llm_prompt`): 실시간 감정, 스트레스, 트라우마 상태 및 서술 경계 지침문(Strict Narrative Expression Boundary) 완전 탑재 (규칙 8 준수).
 
 ### [🔧 기존 엔진 배선(Wiring) & 통합 정비 — 클로드 코드리뷰 검증 기반]
 > ⚠️ **[발견 경위]**: 2026-09-09 외부 Claude 정적 분석 피드백 → Antigravity(Gemini) 3개 서브에이전트 코드베이스 전수 교차 검증 완료. 설계/스키마 완성도는 높으나, 전체 모듈의 약 25%(16/64개)가 계단식 통합 2단계(팩트시트 슬롯 연결) 미진행 상태로 확인됨.
@@ -526,32 +528,47 @@
    - **즉석 무기화 스탯 산출(`improvise_weapon_stats`) 및 사물 수리(`repair_object`) 로직 완비**.
    - **규칙 8 준수 외부 대형 LLM 파괴 연출 프롬프트 생성기(`generate_external_llm_prompt`) 탑재**.
 
+9. **NPC 심리·성격·인지 추론 & 12단계 행동 예측 엔진 완공 (`src/world/psychology_engine.py`, `src/world/cognitive_engine.py`, 백로그 40번)**:
+   - **8대 성격 템플릿 아키타입 (`PERSONALITY_TEMPLATES`) & SHA256 인스턴스 분산**:
+     - 신중한 학자, 무모한 모험가, 헌신적인 기사, 냉소적인 용병, 야심찬 귀족, 다정한 치유사, 편집증 생존자, 광신적 이단심문관.
+   - **14종 복합 감정 시뮬레이션 (`EmotionEngine`)**:
+     - 14종 감정 다중 공존, 감수성 보정, 턴당 감쇠, 지배적 감정 및 행동 모디파이어 산출.
+   - **독립 심리 스트레스 5단계 & 페르소나 붕괴 (`StressEngine`)**:
+     - 0~100 스케일, 90+ 붕괴 시 성향/가치관/대처기제에 따른 차별화 붕괴 행동 도출.
+   - **인과 트라우마 활성화 체인 (`TraumaEngine`)**:
+     - 사건 키워드 매칭, 스트레스/공포/불안 증폭, 안전 환경 노출 시 완화.
+   - **다자간 9축 관계 매트릭스 (`RelationshipEngine`)**:
+     - trust, affection, respect, fear, resentment, dependence, loyalty, suspicion, familiarity, 델타 5 이상 시 캐시 무효화 버전 증가, 플레이어 대상 시 레거시 4대 태도 필드 양방향 동기화.
+   - **메모리 심리 브릿지 (`MemoryPsychologyBridge`)**:
+     - 4+ 영구 앵커 랭킹 인출, 5턴 윈도우 중복 기억 강화.
+   - **3-Tier 평가 라우터 (`PsychologyDecisionPipeline`) & 버전 캐시 (`DecisionCacheManager`)**:
+     - Tier 1 O(1), Tier 2 < 5ms, Tier 3 12단계 풀 파이프라인 및 decision_trace 방출, 상황 해시 + 상태 버전 캐싱.
+   - **Two-Pass & 코그너티브 턴 실전 배선**:
+     - `NPCCognitiveDeductionEngine.process_npc_cognitive_turn` 직결, 플레이어 델타 오버라이트 버그 가드 격리.
+   - **외부 LLM 프롬프트 고도화 (`generate_external_llm_prompt`)**:
+     - 실시간 감정/스트레스/트라우마 상태 및 Strict Narrative Expression Boundary 탑재.
+
 ### 2. 테스트 및 평가 검증 상태
-- **프로젝트 전체 508개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 대비 +23 신규 통과)**:
-  - `tests/test_object_physics_engine.py`: 11개 테스트 전원 통과 (12대 재질 판별, 목재 의자 각목/장작 파편 분해, 종이 문서 전소/텍스트 소멸, 유리병 파쇄/65dB 소음, 산성 부식, 상자 파괴 시 수납 아이템 유출, 즉석 무기화, 사물 수리, 벌목/채석, 세이브/로드 호환성, LLM 프롬프트).
-  - `tests/test_siege_engine.py`: 12개 테스트 전원 통과.
-  - `pytest tests/`: **508 passed in 211.89s**.
+- **프로젝트 전체 530개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 508 대비 +22 신규 통과)**:
+  - `tests/test_npc_psychology_state.py`: 4 passed (세이브/로드 라운드트립, 레거시 호환, MemoryEntry 및 NPC 확장 필드 직렬화 검증).
+  - `tests/test_npc_psychology_engine.py`: 5 passed (템플릿 결정론적 분산, 14종 감정 감쇠, 스트레스 5단계 붕괴, 트라우마 키워드 유발, 관계 9축 델타 및 레거시 동기화).
+  - `tests/test_npc_psychology_pipeline.py`: 6 passed (3-Tier 라우팅, 결정 캐시 적중/무효화, 메모리 앵커 브릿지, 코그너티브 엔진 직결, LLM 프롬프트 생성, 3-Tier 성능 프로파일링).
+  - `pytest tests/`: **530 passed in 6.02s**.
 - **DoD Gate Eval Runner 검증**:
   - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
-- **Static Analysis**: `py_compile` 문법 오류 0건 검증 완료.
+- **Static Analysis Gate**:
+  - `ruff check src/world/psychology_engine.py src/world/cognitive_engine.py`: **All checks passed!**
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
   - 만물 사물 내구도 & 물리 파괴 엔진 (`UniversalObjectPhysicsEngine`) 완공.
   - 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine` / 백로그 9번) 완공.
-  - NPC 인지 추론 & 행동 예측 엔진 (`NPCCognitiveDeductionEngine` / 백로그 40번) 완공.
-  - 현상금 수배자 & 추적자 AI 엔진 (`BountyHunterEngine` / 백로그 11번) 단일 뇌 아키텍처 흡수 통합 완공.
-  - **NPC 심리·인지 엔진 고도화 외부 AI 설계 프롬프트 2종 완성**:
-    * GPT 설계용 프롬프트: 심리학 기반 시스템 아키텍트 역할, 16-Phase 설계 순서, 2축 Tiered Lazy Evaluation, Decision Cache, 12단계 파이프라인, 24개 검증 항목 포함.
-    * Claude 구현용 프롬프트: 기존 코드베이스 전체 인벤토리(`NPCPersonality` 12축, `NPC` 10인자 태도 매트릭스, `MemoryEntry` 5단계 의미도, `NPCNeeds`, BDI, `MemoryManager`/Qdrant) 명시, 18-Phase 구현 순서, 금지 목록(중복 클래스 신설 차단), 24개 완료 조건 탑재.
-    * 파일 위치: 로컬 아티팩트 디렉터리 (`gpt_prompt_npc_psychology_engine.md`, `claude_prompt_npc_psychology_engine.md`) — 코드베이스 미포함.
-  - **절차적 생성 HD-2D RPG 마스터 아키텍처 명세서 완공 (`MASTER_GAME_ARCHITECTURE.md`)**:
-    * 옥토패스 + 쓰레드 오브 타임 + 데드 셀 비주얼 파이프라인 (360도 카메라 회전 3D-to-도트, Draw Call Bake, Point Filter, 1px 외곽선).
-    * 유저 구글 Gemini 무료 API 연동(BYOK) 서버비 0원 모델.
-    * SD 1.5 + ADetailer 2D 일러스트, 유니티 런타임 피치 변조 의성어 배리에이션 스펙 확정.
-  - **[고정 규칙 10] 계단식 점진 통합 원칙 (Incremental Integration Gate) 신설 완료**:
-    * 1단계 독립 완성/단위테스트 ➔ 2단계 팩트시트 슬롯 연결 ➔ 3단계 508개 회귀 검증 의무화.
+  - NPC 심리·성격·인지 추론 & 12단계 행동 예측 엔진 (`NPCCognitiveDeductionEngine` & `PsychologyDecisionPipeline` / 백로그 40번) 완공.
+  - 현상금 수배자 & 추적자 AI 엔진 (`BountyHunterEngine` / 백로그 11번) 완공.
 - **다음 작업 (유저 결정에 따른 후속 진행)**:
-  - **가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / 백로그 10번 - legacy.py 확장)**
+  - **옵션 1: [🔧 배선 B/C/D] NPC 심리 인지 엔진 미배선 메서드 및 기억 가지치기 정비**
+    * `process_npc_cognitive_turn` 내부 `evaluate_player_hypothesis`, `predict_autonomous_next_intent`, `check_micro_leakage` 호출 연결.
+    * `npc.memories` 가지치기/망각(`MemoryDecayPruner`) 규칙 3 준수.
+  - **옵션 2: 가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / 백로그 10번 - legacy.py 확장)**
     * 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
 

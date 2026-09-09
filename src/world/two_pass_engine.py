@@ -7,16 +7,16 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 import logging
 import re
+import random
 
-from src.world.state import WorldState
+from src.world.state import WorldState, Item
 from src.world.validator import ActionValidator
 from src.world.skills import SkillSystem
-from src.world.incantation import IncantationSystem
 from src.world.status_engine import StatusEffectEngine
 from src.world.physics_matrix import PhysicsMatrixEngine
+from src.world.object_physics_engine import UniversalObjectPhysicsEngine
 from src.world.quest_engine import QuestEngine
 from src.world.economy_engine import EconomyEngine
-from src.world.crafting_engine import CraftingEngine
 from src.world.party_engine import PartyEngine
 from src.world.graph_engine import EcologicalFeedbackLoop
 from src.world.weather_engine import WeatherEngine
@@ -67,6 +67,7 @@ class DeterministicFactSheet:
     pre_computed_state_delta: Dict[str, Any] = field(default_factory=dict)
     dropped_skill_name: Optional[str] = None
     npc_skill_logs: List[str] = field(default_factory=list)
+    anti_yesman_verdict: Optional[Dict[str, Any]] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -86,6 +87,11 @@ class DeterministicFactSheet:
             "팩트를 왜곡, 번복, 날조(사망하지 않은 적을 사망 처리, 실패를 성공으로 변경 등)하는 것은 엄격히 금지됩니다.",
             "=================================================================",
         ]
+
+        if self.anti_yesman_verdict:
+            lines.append("🛡️ [안티 예스맨 현실성 검증 및 서사 지침 (Anti-Yes-Man Reality Check)]")
+            lines.append(f"- 대상: {self.anti_yesman_verdict.get('target_npc_name')} | 판정: {self.anti_yesman_verdict.get('verdict')} (타당도 {self.anti_yesman_verdict.get('plausibility_score')}%)")
+            lines.append(f"- GM 지침: {self.anti_yesman_verdict.get('gm_anti_yesman_verdict')}")
 
         if self.celestial_logs:
             lines.append("🌌 [천문 이변 및 대륙 축제 이벤트]")
@@ -292,6 +298,53 @@ class TwoPassEngine:
                 if d_info.get("gm_directive"):
                     fact_sheet.npc_skill_logs.append(f"   * [도난 발각 서사 지침]: {d_info['gm_directive']}")
 
+        # 2.3 Anti-Yes-Man Hypothesis Validation (NPCCognitiveDeductionEngine)
+        hypothesis_patterns = [
+            "인 것 같", "인 거 같", "하려는 거 아니", "하려는 거 아닌", "일지도 몰",
+            "독살", "배신", "훔치", "거짓말", "의심", "수상", "흉계", "음모", "속이", "함정"
+        ]
+        if any(p in action for p in hypothesis_patterns):
+            from src.world.cognitive_engine import NPCCognitiveDeductionEngine
+            curr_loc = state.current_location()
+            target_cand = None
+            if curr_loc:
+                loc_npcs = state.npcs_in_location(curr_loc.id)
+                for n in loc_npcs:
+                    if n.name in action or n.id in action:
+                        target_cand = n
+                        break
+                if not target_cand and loc_npcs:
+                    target_cand = loc_npcs[0]
+            if not target_cand:
+                for n in state.npcs.values():
+                    if n.name in action:
+                        target_cand = n
+                        break
+            if target_cand:
+                hypo_res = NPCCognitiveDeductionEngine.evaluate_player_hypothesis(target_cand, action, state)
+                fact_sheet.anti_yesman_verdict = hypo_res.to_dict()
+                fact_sheet.npc_skill_logs.append(f"🔍 [안티 예스맨 가설 검증]: {target_cand.name} - {hypo_res.verdict} ({hypo_res.plausibility_score}%)")
+                fact_sheet.npc_skill_logs.append(f"   * [GM 서사 지침]: {hypo_res.gm_anti_yesman_verdict}")
+
+        # 2.4 Micro-Leakage & NPC Observation (PerceptionEngine + NPCCognitiveDeductionEngine)
+        observe_keywords = ["관찰", "살펴", "눈여겨", "주시", "표정", "기색", "속내", "눈빛", "observe", "study"]
+        if any(k in action for k in observe_keywords):
+            curr_loc = state.current_location()
+            if curr_loc:
+                loc_npcs = state.npcs_in_location(curr_loc.id)
+                obs_target = None
+                for n in loc_npcs:
+                    if n.name in action or n.id in action:
+                        obs_target = n
+                        break
+                if not obs_target and loc_npcs:
+                    obs_target = loc_npcs[0]
+                if obs_target:
+                    obs_res = PerceptionEngine.observe_npc_micro_leakage(state.player, obs_target, state)
+                    fact_sheet.npc_skill_logs.append(f"👁️ [인물 관찰 및 속내 간파]: {obs_target.name}")
+                    fact_sheet.npc_skill_logs.append(f"   * [신체 언어 복선]: {obs_res['leakage_clue']}")
+                    fact_sheet.npc_skill_logs.append(f"   * [GM 서사 지침]: {obs_res['gm_directive']}")
+
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         curr_loc = state.current_location()
         if curr_loc and curr_loc.exits:
@@ -435,6 +488,86 @@ class TwoPassEngine:
                 target_obj = state.npcs[dice_res.target_npc_id] if (dice_res and dice_res.target_npc_id and dice_res.target_npc_id in state.npcs) else state.player
                 StatusEffectEngine.apply_status(target_obj, rx.status_to_apply, duration=rx.status_duration, potency=rx.status_potency)
 
+        # 5.1 Universal Object Physics & Durability Engine (Destruction / Burning)
+        burn_keywords = ["태운다", "불태", "소각", "burn", "화염으로", "불지른", "불을 지른"]
+        smash_keywords = ["부순다", "박살", "파괴", "smash", "destroy", "부수", "깨뜨", "깨부", "망가뜨", "후려쳐"]
+        
+        is_burn_act = any(k in action for k in burn_keywords)
+        is_smash_act = any(k in action for k in smash_keywords)
+
+        if is_burn_act or is_smash_act:
+            cand_items = []
+            if curr_loc:
+                for it_id in getattr(curr_loc, "items", []):
+                    if it_id in state.items and state.items[it_id] not in cand_items:
+                        cand_items.append(state.items[it_id])
+                for it in state.items.values():
+                    if getattr(it, "location", "") == curr_loc.id and it not in cand_items:
+                        cand_items.append(it)
+            for it_id in state.player.inventory:
+                if it_id in state.items and state.items[it_id] not in cand_items:
+                    cand_items.append(state.items[it_id])
+
+            target_obj_item = None
+            sorted_cand = sorted(cand_items, key=lambda x: len(x.name), reverse=True)
+            for c_item in sorted_cand:
+                if c_item.name and (c_item.name in action or c_item.id in action):
+                    target_obj_item = c_item
+                    break
+                for w in c_item.name.split():
+                    if len(w) >= 2 and w in action:
+                        target_obj_item = c_item
+                        break
+                if target_obj_item:
+                    break
+
+            if not target_obj_item and curr_loc:
+                ambient_keywords = ["의자", "탁자", "책상", "상자", "궤짝", "문짝", "술통", "나무통", "유리병", "횃불", "창문"]
+                for kw in ambient_keywords:
+                    if kw in action:
+                        ambient_id = f"env_{kw}_{state.turn}_{random.randint(100, 999)}"
+                        ambient_item = Item(
+                            id=ambient_id,
+                            name=f"{curr_loc.name} {kw}",
+                            description=f"{curr_loc.name}에 놓여 있던 {kw}.",
+                            location=curr_loc.id,
+                            durability=50,
+                            max_durability=50
+                        )
+                        state.items[ambient_id] = ambient_item
+                        if ambient_id not in curr_loc.items:
+                            curr_loc.items.append(ambient_id)
+                        target_obj_item = ambient_item
+                        break
+
+            if target_obj_item:
+                if is_burn_act:
+                    obj_res = UniversalObjectPhysicsEngine.ignite_object(state, target_obj_item)
+                else:
+                    raw_dmg = 50.0
+                    eq_wep = state.get_equipped_weapon_item()
+                    if eq_wep and getattr(eq_wep, "damage", 0) > 0:
+                        raw_dmg = max(30.0, float(eq_wep.damage * 3.0))
+                    obj_res = UniversalObjectPhysicsEngine.damage_object(
+                        state=state,
+                        item_or_id=target_obj_item,
+                        raw_damage=raw_dmg,
+                        damage_type="blunt",
+                        attacker_name=state.player.name
+                    )
+
+                if obj_res.narrative_log:
+                    fact_sheet.physics_reactions.append(obj_res.narrative_log)
+
+                if obj_res.is_destroyed:
+                    if "destroyed_items" not in state_delta:
+                        state_delta["destroyed_items"] = []
+                    state_delta["destroyed_items"].append(target_obj_item.id)
+                if obj_res.debris_spawned:
+                    if "spawned_debris" not in state_delta:
+                        state_delta["spawned_debris"] = []
+                    state_delta["spawned_debris"].extend([d.id for d in obj_res.debris_spawned])
+
         # 6. Dice & Combat Mechanics
         target_npc = None
         if dice_res:
@@ -556,7 +689,7 @@ class TwoPassEngine:
                         from src.world.rumor_diffusion_engine import RumorDiffusionEngine
                         sig = 3 if getattr(target_npc, "tier", "commoner") in ["elite", "boss", "noble", "legendary"] else 2
                         rep_delta = 15 if target_npc.disposition == "hostile" else -20
-                        r_wave = RumorDiffusionEngine.dispatch_event_rumor(
+                        RumorDiffusionEngine.dispatch_event_rumor(
                             state=state,
                             origin_loc=state.player.location,
                             event_text=f"플레이어가 [{target_npc.name}]을(를) 치명적 결투 끝에 처치함",
@@ -773,17 +906,22 @@ class TwoPassEngine:
                         fact_sheet.npc_skill_logs.append(opp_outcome["summary_ko"])
                         if opp_outcome.get("gm_directive"):
                             fact_sheet.npc_skill_logs.append(f"   * [서사 지침]: {opp_outcome['gm_directive']}")
-                        if "player" not in state_delta:
-                            state_delta["player"] = {}
-                        state_delta["player"]["gold"] = state.player.gold
-                        state_delta["player"]["inventory"] = list(state.player.inventory)
-                        if "npc_state" not in state_delta:
-                            state_delta["npc_state"] = {}
-                        state_delta["npc_state"][o_npc.id] = {
-                            "gold": o_npc.gold,
-                            "inventory": list(o_npc.inventory),
-                            "disposition": o_npc.disposition
-                        }
+                        if opp_outcome.get("action_type", "").startswith("opportunistic_theft"):
+                            if "player" not in state_delta:
+                                state_delta["player"] = {}
+                            state_delta["player"]["gold"] = state.player.gold
+                            state_delta["player"]["inventory"] = list(state.player.inventory)
+                            if "npc_state" not in state_delta:
+                                state_delta["npc_state"] = {}
+                            state_delta["npc_state"][o_npc.id] = {
+                                "gold": o_npc.gold,
+                                "inventory": list(o_npc.inventory),
+                                "disposition": o_npc.disposition
+                            }
+                        elif opp_outcome.get("disposition_changed"):
+                            if "npc_state" not in state_delta:
+                                state_delta["npc_state"] = {}
+                            state_delta["npc_state"].setdefault(o_npc.id, {})["disposition"] = o_npc.disposition
                         break  # Limit to 1 opportunistic action per turn
 
         # 8.7 Deterministic Hidden Boss / Elite Monster Encounter Check
@@ -795,6 +933,18 @@ class TwoPassEngine:
             fact_sheet.npc_skill_logs.append(f"   * [보스 약점 공략 힌트]: {hidden_enc['weakness']}")
             if hidden_enc.get("extractable_skill"):
                 fact_sheet.npc_skill_logs.append(f"   * [처치 시 획득 가능 비기]: {hidden_enc['extractable_skill']}")
+
+        # 8.8 Autonomous Next Intent Prediction for Off-Screen NPCs
+        from src.world.cognitive_engine import NPCCognitiveDeductionEngine
+        p_loc = state.player.location
+        for off_npc in state.npcs.values():
+            if off_npc.alive and off_npc.location != p_loc:
+                pred_action = NPCCognitiveDeductionEngine.predict_autonomous_next_intent(off_npc, state)
+                log_entry = f"[Turn {state.turn}] {pred_action.concrete_plan} (위험도: {pred_action.execution_risk})"
+                off_npc.off_screen_logs.append(log_entry)
+                # Cap logs to prevent unbounded growth (Rule 6)
+                if len(off_npc.off_screen_logs) > 30:
+                    off_npc.off_screen_logs = off_npc.off_screen_logs[-30:]
 
         # 9. Ecological Feedback
         loc_name = curr_loc.name if curr_loc else "미지의 지대"

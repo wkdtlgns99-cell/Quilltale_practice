@@ -3,26 +3,28 @@ WorldState is the ground truth of the Quilltale game world.
 Contains full character stats, 5-scale NPC memory, Fog of War for NPC stats,
 Korean localization mappings, and deterministic delta state transitions.
 """
-from dataclasses import dataclass, field, fields
-from typing import Optional, Dict, List, Any
 import json
+import logging
+from dataclasses import dataclass, field, fields
+from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from src.core.config import (
-    MAX_STAT_VALUE,
-    MIN_STAT_VALUE,
-    MIN_REPUTATION_DELTA,
-    MAX_REPUTATION_DELTA,
-    MIN_REPUTATION_TOTAL,
-    MAX_REPUTATION_TOTAL,
-    MAX_LEVELUP_STAT_GAIN,
-    MAX_RINGS,
-    MAX_EARRINGS,
-    MAX_BRACELETS,
+    BASE_CRIT_DAMAGE,
     BASE_CRIT_RATE,
+    CRIT_DMG_PER_POINT,
     CRIT_RATE_PER_POINT,
     LUCK_CRIT_BONUS,
-    BASE_CRIT_DAMAGE,
-    CRIT_DMG_PER_POINT
+    MAX_BRACELETS,
+    MAX_EARRINGS,
+    MAX_LEVELUP_STAT_GAIN,
+    MAX_REPUTATION_DELTA,
+    MAX_REPUTATION_TOTAL,
+    MAX_RINGS,
+    MAX_STAT_VALUE,
+    MIN_REPUTATION_DELTA,
+    MIN_REPUTATION_TOTAL,
 )
 
 DISPOSITION_KO_MAP = {
@@ -36,19 +38,19 @@ DISPOSITION_KO_MAP = {
 
 @dataclass
 class EquipmentSlots:
-    weapon: Optional[str] = None
-    head: Optional[str] = None
-    face: Optional[str] = None
-    chest: Optional[str] = None
-    legs: Optional[str] = None
-    boots: Optional[str] = None
-    gloves: Optional[str] = None
-    cape: Optional[str] = None
-    neck: Optional[str] = None                        # 목걸이/초커/부적/펜던트
-    belt: Optional[str] = None                        # 허리띠/전술 벨트/탄띠/하네스
-    shoulders: Optional[str] = None                   # 견갑/어깨 장식/털 숄
-    storage: Optional[str] = None                     # 백팩/수납 가방/파우치
-    innerwear: Optional[str] = None                   # 갬비슨/속옷/은신 타이즈
+    weapon: str | None = None
+    head: str | None = None
+    face: str | None = None
+    chest: str | None = None
+    legs: str | None = None
+    boots: str | None = None
+    gloves: str | None = None
+    cape: str | None = None
+    neck: str | None = None                        # 목걸이/초커/부적/펜던트
+    belt: str | None = None                        # 허리띠/전술 벨트/탄띠/하네스
+    shoulders: str | None = None                   # 견갑/어깨 장식/털 숄
+    storage: str | None = None                     # 백팩/수납 가방/파우치
+    innerwear: str | None = None                   # 갬비슨/속옷/은신 타이즈
     rings: list[str] = field(default_factory=list)      # max 20
     earrings: list[str] = field(default_factory=list)   # max 8
     bracelets: list[str] = field(default_factory=list)  # max 4 (팔찌/시계/아대)
@@ -433,7 +435,7 @@ class Item:
     windup_seconds: float = 0.0           # 공격 준비 선딜레이 초 (0.0이면 무기 종류별 기본값)
     stagger_power: float = 0.0            # 피격 저지력/경직 유발 수치
     physics_tags: list[str] = field(default_factory=list) # 물리 태그 (예: ["thrust", "slash", "blunt", "jab", "straight", "projectile"])
-    visual: Optional[ItemVisualProfile] = None # 무기/장비 조형 및 마감 프로필
+    visual: ItemVisualProfile | None = None # 무기/장비 조형 및 마감 프로필
 
     @property
     def display_weight(self) -> str:
@@ -580,6 +582,15 @@ class MemoryEntry:
     emotional_tone: str             # "suspicious" | "grateful" | "fearful" | "angry" | "wary" | "neutral"
     significance: int = 1           # 1-5 scale
     is_anchor: bool = False
+    participants: list[str] = field(default_factory=list)          # 관련 인물 ID 목록 (플레이어, 타 NPC)
+    location_id: str = ""                                          # 기억 발생 장소 ID
+    tags: list[str] = field(default_factory=list)                 # 심리/사건 분류 태그 (combat, betrayal, gift 등)
+    relationship_deltas: dict[str, dict[str, int]] = field(default_factory=dict) # 타겟 ID -> 태도 변화 내역
+    confidence: float = 1.0                                        # 기억 신뢰도/확신 (0.0~1.0)
+    source: str = "direct_observation"                             # 기억 출처 (direct_observation, rumor, deduction, lie)
+    decay_rate: float = 1.0                                        # 망각 감쇠율 배율
+    traits: list[str] = field(default_factory=lambda: ["episodic_memory", "psychological_trace"]) # 요약 특성 태그
+
 
 
 @dataclass
@@ -1098,7 +1109,7 @@ class NPC:
     name_revealed: bool = False     # Fog of War: Hidden until player asks/learns name
     alias_ko: str = ""              # Unidentified title (e.g. "선술집 주인", "과묵한 검사")
     is_legacy: bool = False         # True if this NPC is an archived past player
-    legacy_id: Optional[str] = None
+    legacy_id: str | None = None
     age_delta: int = 0              # In-world years passed since original archiving
     personality: NPCPersonality = field(default_factory=NPCPersonality)
     needs: NPCNeeds = field(default_factory=NPCNeeds)
@@ -1149,6 +1160,18 @@ class NPC:
     alcohol_state: dict = field(default_factory=dict)             # 혈중 알코올 및 취기/숙취 상태
     posture_state: dict = field(default_factory=dict)             # 체간/강인도 및 가드 브레이크 상태
     pupil_state: dict = field(default_factory=dict)               # 동공 조도 암적응/명적응 상태
+    # NPC Psychology Architecture (Master Brief Spec)
+    emotion_state: dict = field(default_factory=dict)             # 활성 복합 감정 인스턴스 {emotion_name: {intensity, source, duration, decay}}
+    stress: int = 0                                               # 심리적 스트레스 (0~100, 피로도/사기와 독립)
+    relationship_map: dict[str, dict] = field(default_factory=dict) # 다자간 9축 관계 맵 {entity_id: {trust, affection, respect, fear, resentment, dependence, loyalty, suspicion, familiarity}}
+    archetype_template: str = ""                                  # 성격 템플릿 아키타입 참조 ID (디버그/초기화 전용)
+    eval_tier: int = 1                                            # 3-Tier 평가 라우팅 상태 (1: 루틴, 2: 국소 감지, 3: 직접 상호작용)
+    last_eval_tick: int = 0                                       # 마지막 평가 틱/턴
+    decision_cache_key: str = ""                                  # 결정 캐시 검증 키
+    decision_cache_result: dict = field(default_factory=dict)     # 결정 캐시된 최근 판단 결과
+    state_version: int = 0                                        # 심리 상태 변경 버전 카운터 (캐시 무효화용)
+    trauma_runtime: dict = field(default_factory=dict)            # 런타임 트라우마 활성화 상태 {trauma_tag: {active, intensity, ...}}
+
 
     def to_image_prompt_keywords(self) -> str:
         """Generates rich, consistent English keywords for AI image generation (Flux, Stable Diffusion, etc.)."""
@@ -1352,6 +1375,26 @@ class NPC:
             
         return "와(과) ".join(impressions)
 
+    def prune_memories(self, current_turn: int, decay_turns: int = 20) -> list[MemoryEntry]:
+        """
+        Prunes insignificant memories (significance 1-2) after decay_turns of no interaction.
+        Significance >= 3 or is_anchor=True are kept indefinitely.
+        Returns list of removed memories.
+        """
+        kept: list[MemoryEntry] = []
+        removed: list[MemoryEntry] = []
+        for m in self.memories:
+            if m.is_anchor or m.significance >= 3 or (current_turn - m.turn) <= decay_turns:
+                kept.append(m)
+            else:
+                removed.append(m)
+        self.memories = kept
+        return removed
+
+    def get_recent_off_screen_logs(self, max_logs: int = 5) -> list[str]:
+        """Deterministic reader for off-screen activity logs."""
+        return self.off_screen_logs[-max_logs:] if self.off_screen_logs else []
+
     def relevant_memories(self, max_memories: int = 5) -> list[MemoryEntry]:
         """
         Return the most impactful memories for prompt synthesis.
@@ -1393,7 +1436,7 @@ class Location:
     security_level: int = 50                       # 치안도 (0~100)
     roads: dict = field(default_factory=dict)      # destination_id -> RoadConnection
     location_category: str = "surface"             # "surface", "dungeon", "hidden_realm"
-    dungeon_id: Optional[str] = None               # 귀속된 던전 인스턴스 ID (있는 경우)
+    dungeon_id: str | None = None               # 귀속된 던전 인스턴스 ID (있는 경우)
     floor_depth: int = 0                           # 층수 심도 (0: 지상, 1~N: 지하 층수)
     monster_density: int = 20                      # 몬스터 출현 밀집도 (0~100)
     npc_density: int = 50                          # 일반 주민/NPC 밀집도 (0~100)
@@ -1407,7 +1450,7 @@ class Location:
     floor_durability: float = 100.0                 # 지면 내구도
     floor_collapse_stage: str = "stable"            # 지면 균열/붕괴 상태 ("stable", "crack", "partial_break", "full_break")
     ventilation_open: bool = False                  # 환기구 개방 여부
-    active_toxic_gas: Optional[str] = None          # 활성 유독 가스 ("carbon_dioxide", "sulfur_gas", "corpse_gas", "spore_cloud")
+    active_toxic_gas: str | None = None          # 활성 유독 가스 ("carbon_dioxide", "sulfur_gas", "corpse_gas", "spore_cloud")
     water_quality: str = "clean"                    # 지하수 수질 ("clean", "stagnant", "sewage", "corpse_contaminated", "mineral_toxic")
 
 
@@ -1438,7 +1481,7 @@ class EnvironmentalMetrics:
         if self.noise:
             parts.append(f"소음: {self.noise}")
         parts.append(f"산소 농도: {self.oxygen_level}%")
-        return f"[🌿 현재 환경 앵커링] " + " | ".join(parts)
+        return "[🌿 현재 환경 앵커링] " + " | ".join(parts)
 
 
 @dataclass
@@ -1504,7 +1547,7 @@ class Player:
     # Skills and titles
     skills: list[str] = field(default_factory=list)   # skill ids
     titles: list[str] = field(default_factory=list)   # title ids
-    active_title: Optional[str] = None
+    active_title: str | None = None
     
     # Known magic language vocabulary
     known_magic_words: list[str] = field(default_factory=list)
@@ -1527,8 +1570,8 @@ class Player:
     
     # Bounty & Disguise
     bounties: dict[str, int] = field(default_factory=dict) # 세력별 수배 현상금 {"faction_lumen": 1500}
-    disguise: Optional[str] = None                         # 착용 중인 변장 도구 (예: "까마귀 가면과 검은 로브")
-    active_alias: Optional[str] = None                     # 통성명용 가명 (예: "외눈의 방랑자 잭")
+    disguise: str | None = None                         # 착용 중인 변장 도구 (예: "까마귀 가면과 검은 로브")
+    active_alias: str | None = None                     # 통성명용 가명 (예: "외눈의 방랑자 잭")
     mana_color: str = "푸른빛 에테르"                            # 개인 마나/오라 고유 색상 및 성질
     mana_color_hex: str = "#38bdf8"
     traits: list[str] = field(default_factory=list)        # 플레이어 요약 특성 태그 목록 (예: ["불사의 각인", "고대어 해독가"])
@@ -1707,13 +1750,13 @@ class Player:
         return local_rep + int(self.reputation * 0.75)
 
     @property
-    def equipped_weapon(self) -> Optional[str]: return self.equipment.weapon
+    def equipped_weapon(self) -> str | None: return self.equipment.weapon
     @equipped_weapon.setter
-    def equipped_weapon(self, value: Optional[str]): self.equipment.weapon = value
+    def equipped_weapon(self, value: str | None): self.equipment.weapon = value
     @property
-    def equipped_armor(self) -> Optional[str]: return self.equipment.chest
+    def equipped_armor(self) -> str | None: return self.equipment.chest
     @equipped_armor.setter
-    def equipped_armor(self, value: Optional[str]): self.equipment.chest = value
+    def equipped_armor(self, value: str | None): self.equipment.chest = value
 
     @property
     def str_mod(self) -> int: return (self.effective_strength - 10) // 2
@@ -1871,15 +1914,15 @@ class WorldState:
     world_chronicle: str = ""
     active_world_ended: bool = False
     history: list[dict] = field(default_factory=list)
-    last_dice_result: Optional[dict] = None
-    last_npc_action: Optional[dict] = None
+    last_dice_result: dict | None = None
+    last_npc_action: dict | None = None
     
     # Scenario Tracking
-    current_scenario_id: Optional[str] = None
+    current_scenario_id: str | None = None
     current_scenario_act: str = "act_1_hook_and_misdirection"
 
     # Macro World Architecture & Factions
-    infrastructure: Optional[Any] = None                                # Level 1~5 Macro-to-Micro hierarchy registry
+    infrastructure: Any | None = None                                # Level 1~5 Macro-to-Micro hierarchy registry
     factions: dict[str, Faction] = field(default_factory=dict)         # 국가 및 주요 세력 DB
     cosmology_template: dict[str, Any] = field(default_factory=dict)   # 활성화된 세계관 템플릿 풀 스펙
     world_lore: dict[str, Any] = field(default_factory=dict)           # 세계관 세부 설정 (cosmology_template 동기화)
@@ -1901,7 +1944,7 @@ class WorldState:
     # Celestial & Festival Cycles
     celestial_phase: str = "normal"              # "normal", "celestial_blood_moon", "celestial_solar_eclipse", "celestial_meteor_shower"
     celestial_phase_turns: int = 0               # 남은 지속 턴 수
-    active_festival: Optional[str] = None        # "festival_harvest_bounty", "festival_night_of_dead"
+    active_festival: str | None = None        # "festival_harvest_bounty", "festival_night_of_dead"
     active_festival_turns: int = 0               # 남은 축제 지속 턴 수
 
     # In-Game Time & Periodical Publishing System
@@ -2023,7 +2066,7 @@ class WorldState:
             self.total_population = totals.get("total_population", 0)
             self.total_area_sq_km = totals.get("total_area_sq_km", 0.0)
 
-    def current_location(self) -> Optional[Location]:
+    def current_location(self) -> Location | None:
         return self.locations.get(self.player.location)
 
     def items_in_location(self, location_id: str) -> list[Item]:
@@ -2044,7 +2087,7 @@ class WorldState:
     def player_inventory_items(self) -> list[Item]:
         return [self.items[i] for i in self.player.inventory if i in self.items]
 
-    def get_equipped_weapon_item(self) -> Optional[Item]:
+    def get_equipped_weapon_item(self) -> Item | None:
         wep_id = self.player.equipment.weapon
         if wep_id and wep_id in self.items:
             return self.items[wep_id]
@@ -2216,7 +2259,7 @@ class WorldState:
                 weekly_item = Item(
                     id=f"weekly_gazette_week_{week}",
                     name=f"【{self.world_name} 주간 연대보 (제{week}주차)】",
-                    description=f"매주 월요일 아침에만 발행되는 두툼한 주간 연대보 양장본이다.",
+                    description="매주 월요일 아침에만 발행되는 두툼한 주간 연대보 양장본이다.",
                     location=target_loc_id or "inventory",
                     item_type="document",
                     weight=0.3,
@@ -2639,9 +2682,6 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             for i in player_items
         ) or "없음"
 
-        eq_wep = self.get_equipped_weapon_item()
-        wep_str = f"{eq_wep.name} (공격력 +{eq_wep.damage})" if eq_wep else "맨손 (공격력 1)"
-
         dice_log = ""
         if self.last_dice_result:
             dice_log = f"\n\n🎲 **최근 판정:** {self.last_dice_result.get('summary_ko', '')}"
@@ -2926,7 +2966,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         from src.world.quest_engine import QuestEngine
         return QuestEngine.format_journal_html(self)
 
-    def to_shop_html(self, shop_id: Optional[str] = None) -> str:
+    def to_shop_html(self, shop_id: str | None = None) -> str:
         from src.world.economy_engine import EconomyEngine
         return EconomyEngine.format_shop_html(self, shop_id=shop_id)
 
@@ -3446,6 +3486,22 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     changes.append("Unequipped bracelet")
             self.recalculate_equipment_stats(self.player)
 
+        # 4.5 Destroyed items handling (UniversalObjectPhysicsEngine)
+        if "destroyed_items" in update and isinstance(update["destroyed_items"], list):
+            for d_id in update["destroyed_items"]:
+                if d_id in self.items:
+                    it = self.items[d_id]
+                    it.is_destroyed = True
+                    it.durability = 0
+                    if "destroyed_object" not in it.traits:
+                        it.traits.append("destroyed_object")
+                    loc = self.locations.get(it.location)
+                    if loc and d_id in loc.items:
+                        loc.items.remove(d_id)
+                    if d_id in self.player.inventory:
+                        self.player.inventory.remove(d_id)
+                    changes.append(f"Item {it.name} destroyed")
+
         # 5. NPC state updates (alive, disposition, health, stats_revealed)
         if "npc_state" in update:
             for npc_id, new_state in update["npc_state"].items():
@@ -3537,6 +3593,9 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                         is_anchor=is_anchor,
                     )
                     npc.memories.append(entry)
+                    pruned = npc.prune_memories(self.turn, decay_turns=20)
+                    if pruned:
+                        changes.append(f"{npc.name} forgot {len(pruned)} minor episodic memories after 20 turns of decay.")
                     changes.append(
                         f"{npc.name} remembers (Lv.{entry.significance}/5): '{entry.description}'"
                     )
@@ -4174,7 +4233,10 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 life_defining_moment="", value_hierarchy=["survival", "wealth", "honor", "family", "faith"],
                 coping_mechanism="", public_mask="", moral_justification="",
                 micro_leakage_traits=[], risk_tolerance=50, bdi_state={},
-                trust=50, respect=50, envy=0, pity=0, dominance=50, curiosity=50, disgust=0
+                trust=50, respect=50, envy=0, pity=0, dominance=50, curiosity=50, disgust=0,
+                emotion_state={}, stress=0, relationship_map={}, archetype_template="",
+                eval_tier=1, last_eval_tick=0, decision_cache_key="", decision_cache_result={},
+                state_version=0, trauma_runtime={}
             )
             npc.memories = [safe_init(MemoryEntry, m) for m in raw_memories if isinstance(m, dict)]
             n_status_dict = {}
@@ -4190,7 +4252,6 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         # Clean up any legacy duplicates in loaded state
         legacy_npcs = [nid for nid, n in state.npcs.items() if getattr(n, "is_legacy", False)]
         if len(legacy_npcs) > 1:
-            keep_id = legacy_npcs[-1]
             for remove_id in legacy_npcs[:-1]:
                 state.npcs.pop(remove_id, None)
                 for loc in state.locations.values():
@@ -4211,7 +4272,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.dilemmas_faced = raw.get("dilemmas_faced", [])
 
         # 6-Tier Infrastructure Registry (Level 1~5)
-        if "infrastructure" in raw and raw["infrastructure"]:
+        if raw.get("infrastructure"):
             try:
                 from src.world.infrastructure import InfrastructureRegistry
                 if isinstance(raw["infrastructure"], dict):

@@ -235,3 +235,87 @@ def test_gm_prompts_xml_structure_and_formatting():
     assert "<Generation_Instructions>" in formatted
     assert "narration" in formatted
 
+
+def test_two_pass_engine_anti_yes_man_hypothesis_and_leakage():
+    state = create_test_state()
+    # Add an off-screen NPC
+    off_npc = NPC(
+        id="npc_alchemist",
+        name="연금술사 카인",
+        description="약초를 달이는 은둔 연금술사",
+        location="loc_other_lab",
+        health=40,
+        max_health=40,
+        alive=True
+    )
+    state.npcs["npc_alchemist"] = off_npc
+
+    # 1. Test Hypothesis Validation (C1)
+    action_hypo = "검투사 바르카가 날 독살하려는 거 아니야? 수상한 기색이 있는 것 같다"
+    fact_sheet_hypo = TwoPassEngine.compute_pass1(action_hypo, state)
+
+    assert fact_sheet_hypo.anti_yesman_verdict is not None
+    assert fact_sheet_hypo.anti_yesman_verdict["target_npc_name"] == "검투사 바르카"
+    assert "안티 예스맨" in fact_sheet_hypo.to_prompt_context()
+
+    # 2. Test Off-screen NPC autonomous next intent prediction (C2)
+    assert len(off_npc.off_screen_logs) > 0
+    assert len(off_npc.get_recent_off_screen_logs()) > 0
+    assert off_npc.intention != ""
+
+    # 3. Test Micro-leakage & NPC observation (C3)
+    action_obs = "검투사 바르카의 굳은 표정과 속내를 날카롭게 관찰한다"
+    fact_sheet_obs = TwoPassEngine.compute_pass1(action_obs, state)
+    logs_str = " ".join(fact_sheet_obs.npc_skill_logs)
+    assert "인물 관찰 및 속내 간파" in logs_str
+
+
+def test_two_pass_engine_object_physics_destruction_and_burning():
+    """Verify UniversalObjectPhysicsEngine integration in TwoPassEngine live Pass 1 loop."""
+    state = create_test_state()
+    # Add a wooden chair to current location
+    chair = Item(
+        id="item_wooden_chair",
+        name="낡은 참나무 의자",
+        description="투박하지만 튼튼한 참나무 의자",
+        location="loc_arena",
+        durability=40,
+        max_durability=40,
+    )
+    state.items["item_wooden_chair"] = chair
+    state.locations["loc_arena"].items.append("item_wooden_chair")
+
+    # Smash chair action
+    action = "낡은 참나무 의자를 힘껏 내리쳐 박살낸다"
+    fact_sheet = TwoPassEngine.compute_pass1(action, state)
+
+    # Verify physics reaction logged and item destroyed / debris spawned
+    assert any("박살" in pr or "파괴" in pr for pr in fact_sheet.physics_reactions)
+    assert chair.is_destroyed is True
+    assert chair.durability == 0
+    assert "destroyed_items" in fact_sheet.pre_computed_state_delta
+    assert "item_wooden_chair" in fact_sheet.pre_computed_state_delta["destroyed_items"]
+
+    # Verify debris spawned into location
+    loc = state.locations["loc_arena"]
+    debris_in_loc = [it_id for it_id in loc.items if it_id.startswith("debris_")]
+    assert len(debris_in_loc) > 0
+
+    # Test burning paper scroll
+    scroll = Item(
+        id="item_parchment_letter",
+        name="비밀 지령 양피지 서한",
+        description="비밀 지령이 적힌 종이",
+        location="loc_arena",
+        durability=10,
+        max_durability=10,
+    )
+    state.items["item_parchment_letter"] = scroll
+    state.locations["loc_arena"].items.append("item_parchment_letter")
+
+    burn_action = "비밀 지령 양피지 서한을 횃불로 불태운다"
+    fact_sheet_burn = TwoPassEngine.compute_pass1(burn_action, state)
+    assert any("잿더미" in pr or "소멸" in pr or "불길" in pr for pr in fact_sheet_burn.physics_reactions)
+    assert scroll.is_destroyed is True
+
+

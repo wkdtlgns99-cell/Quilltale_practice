@@ -119,3 +119,16 @@ Return exact markdown format at session end:
   2. 2단계 (팩트시트 슬롯 연결): `TwoPassEngine`(Pass 1) 또는 `GameMasterAgent`에 해당 엔진의 결과를 수신할 슬롯(메서드/필드)을 1:1로 안전하게 연결한다.
   3. 3단계 (전체 회귀 검증): 기존 전체 테스트(BASELINE 508개 이상)를 실행하여 단 1건의 결함/회귀도 발생하지 않음을 검증한 후 다음 백로그로 전진한다.
 
+## 7. Wiring & Integration Rules
+1. No feature is "done" until called from the live turn path (`TwoPassEngine.compute_pass1`/`sanitize_pass2_result` or `GameMasterAgent.process_turn`), same session it's written. A public method called only from its own test file = incomplete.
+2. Reachability check is part of Definition of Done. Before marking done: confirm the new code is statically reachable from `app.py` and `src/agents/game_master.py`. Quick check: `grep -rn "<fn>" --include=*.py . | grep -v tests/` — no hits outside its own file = unwired.
+3. No write-only fields. Any new field on NPC/Player must have >=1 deterministic reader. If no reader yet, defer the field or mark `# TODO: unconsumed field`.
+4. Search before creating a new engine file. If an existing module covers the same responsibility, extend it — don't duplicate (e.g. check `save_load_manager.py` vs `persistence.py` pattern).
+5. Every new engine needs >=1 integration test through `GameMasterAgent.process_turn()` or `TwoPassEngine.compute_pass1()`, not just isolated unit tests.
+6. Any list that only grows (`npc.memories`, `off_screen_logs`, `physical_traces`) needs an explicit cap/decay/pruning policy, or a comment justifying unbounded growth.
+7. Docs follow code, not vice versa. Before writing "implemented" in SESSION_HANDOFF.md / MASTER_GAME_ARCHITECTURE.md, grep-verify the named class/function/constant exists. If not: label "designed, not implemented."
+8. Freeze new engine-file creation until the reachability audit (see Phase A) is clean.
+
+## 8. Explicit Scope Gate
+- TTS, 3D modeling, sound/BGM production, and character illustration/image generation are deliberately deferred to the final project phase. Until core simulation logic (NPC cognition, physics, quests) is wired and content-stable, do not scaffold code or asset pipelines in this area — even if it seems like a natural next suggestion mid-task.
+

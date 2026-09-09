@@ -358,3 +358,58 @@ def test_process_npc_cognitive_turn_friendly_warning(base_world):
     assert "사냥꾼" in outcome["summary_ko"]
     assert loyal_friend.disposition != "hostile"
 
+
+def test_process_npc_cognitive_turn_cunning_scheme(base_world):
+    """Verifies that high cunning NPC schemes indirectly rather than brute forcing."""
+    cunning_npc = NPC(
+        id="cunning_schemer",
+        name="책사 레이븐",
+        description="교활한 정보상",
+        location="inn_room",
+        job="정보상",
+        personality=NPCPersonality(cunning=85, greed=60, altruism=30)
+    )
+    outcome = NPCCognitiveDeductionEngine.process_npc_cognitive_turn(
+        cunning_npc, base_world, player_action="지도를 유심히 살핀다"
+    )
+    assert outcome is not None
+    assert outcome["action_type"] == "cunning_scheme"
+    assert "간접 공작" in outcome["summary_ko"]
+
+
+def test_process_npc_cognitive_turn_deceitful_misdirection(base_world):
+    """Verifies that high deceit NPC feeds the player false information."""
+    deceitful_npc = NPC(
+        id="deceitful_liar",
+        name="사기꾼 잭",
+        description="능청스러운 협잡꾼",
+        location="inn_room",
+        job="사기꾼",
+        personality=NPCPersonality(deceit=90, greed=40, altruism=20)
+    )
+    outcome = NPCCognitiveDeductionEngine.process_npc_cognitive_turn(
+        deceitful_npc, base_world, player_action="남쪽 던전으로 가는 길을 묻는다"
+    )
+    assert outcome is not None
+    assert outcome["action_type"] == "deceitful_misdirection"
+    assert "거짓 정보" in outcome["summary_ko"]
+
+
+def test_process_npc_cognitive_turn_impulsive_hostility(base_world):
+    """Verifies that low patience NPC quickly turns hostile under tension."""
+    impatient_npc = NPC(
+        id="impatient_brute",
+        name="다혈질 보그",
+        description="성미 급한 용병",
+        location="inn_room",
+        job="용병",
+        personality=NPCPersonality(patience=20, aggression=65)
+    )
+    outcome = NPCCognitiveDeductionEngine.process_npc_cognitive_turn(
+        impatient_npc, base_world, player_action="검을 어루만지며 노려본다"
+    )
+    assert outcome is not None
+    assert outcome["action_type"] == "impulsive_hostility"
+    assert outcome["disposition_changed"] == "hostile"
+    assert impatient_npc.disposition == "hostile"
+

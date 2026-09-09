@@ -1,0 +1,463 @@
+# QUILLTALE NPC PSYCHOLOGY ENGINE
+
+## AI-Ready Master Implementation Brief
+
+Use this document as the implementation prompt. It merges the 16-phase architecture specification and the Claude implementation brief into one concise, conflict-resolved contract.
+
+Do not create a second cognitive engine, a second memory store, a second event bus, or duplicate mutable psychological truth. Extend the existing Quilltale systems only after auditing the real codebase.
+
+---
+
+## 1. Mission and Hard Rules
+
+Build a deterministic NPC psychology layer for Quilltale. NPCs must behave differently and persistently because of state, perception, memory, values, relationships, stress, trauma, and beliefs—not because an LLM improvises a personality.
+
+Hard rules:
+
+1. Audit the existing code before writing implementation code.
+2. Python owns psychological truth, persistent mutation, save/load, and final decisions.
+3. `NPCCognitiveDeductionEngine` is extended and consumed as the cognitive core; never replaced or shadowed.
+4. RAG retrieves candidates. It never becomes authoritative NPC memory.
+5. The LLM expresses validated decisions and may advise; it never directly changes persistent state or world truth.
+6. `WorldState` truth is distinct from an NPC's perceived facts and beliefs.
+7. Same input plus same state must produce the same decision. Human-like error must have a causal source; never use uncontrolled randomness for decisions.
+8. Do not delete tests, weaken assertions, rename legacy fields, or add required non-default fields to existing dataclasses.
+9. Preserve old saves. All new persistent state belongs in the existing `WorldState` save structure.
+10. Do not create a separate save file, a new RAG collection, a new `PersonalityEngine`, a new `CognitiveEngine`, or a replacement affinity score.
+11. Do not commit or open a PR unless explicitly requested.
+
+Target performance: cost is proportional to active events, not total NPC count multiplied by ticks.
+
+---
+
+## 2. Mandatory Phase 0: Codebase Audit
+
+Before modifying code, inspect and report the actual codebase. Do not rely only on this document's inventory.
+
+Required audit output:
+
+| Requirement | Report |
+|---|---|
+| Existing asset inventory | exact file, symbol, line, behavior, and callers |
+| Requirement mapping | already implemented / partial / missing, with concrete gap |
+| Dependency graph | all callers of `NPC`, `NPCPersonality`, `NPCNeeds`, `MemoryEntry`, serialization methods, event hooks, and Cognitive Engine APIs |
+| Compatibility risks | dataclass defaults, save/load, tests, public APIs, circular imports, performance |
+| Integration decision | legacy field-to-new-state mapping and one source of truth for every domain |
+
+Search all Python callers before changing any existing type. Verify the expected assets below; if names or behavior differ, adapt to the real source rather than inventing parallel systems.
+
+Expected existing assets to audit:
+
+- `src/world/state.py`: `NPCPersonality` (12 axes), `NPCNeeds` (five axes), `MemoryEntry`, `NPC`, `WorldState`, serialization.
+- `src/world/cognitive_engine.py`: `NPCCognitiveDeductionEngine` and its hypothesis, intent, motive, persona, BDI, and micro-leakage APIs.
+- `src/memory/memory_manager.py`: Qdrant-backed `MemoryManager`, episodic-memory collection, metadata filtering, significance scale.
+- `src/world/perception_engine.py`, `event_perspective.py`, `rumor_diffusion_engine.py`, `bounty_engine.py`, `party_sanity_engine.py`, and existing event infrastructure.
+
+Stop after the audit report if the project is unavailable or a source-of-truth conflict cannot be resolved safely. Do not fabricate line references or implement a shadow codebase.
+
+---
+
+## 3. Target Architecture and Ownership
+
+```text
+WorldState (objective truth and persistence)
+  → existing event hook / event perspective
+  → Tier Router
+  → Perception and knowledge gate
+  → Appraisal
+  → Emotion / Stress / Trauma
+  → Needs / Goals / Memory / Relationship / Values
+  → NPCCognitiveDeductionEngine (cognitive inference)
+  → Candidate generation, feasibility, scoring, decision
+  → causal state update, versions, cache invalidation, trace
+  → LLM expression projection
+  → dialogue / narration
+```
+
+| Layer | Owns | Must not own |
+|---|---|---|
+| `WorldState` | objective facts, persistent save container, world version | NPC knowledge/belief |
+| Psychology Layer | current psychology, appraisal, state transitions, memory selection | replacement cognitive inference |
+| `NPCCognitiveDeductionEngine` | hypothesis validation, intent prediction, BDI reasoning, motive chain, micro-leakage | independent mutable psychology data |
+| `MemoryManager` / RAG | semantic candidate retrieval | authoritative memory or final decision |
+| Decision Pipeline | deterministic decision orchestration | direct LLM authority |
+| LLM | language, subtext, optional candidate/interpretation proposal | permanent writes or unverified facts |
+| Decision Cache | reusable decision results | source-of-truth state |
+
+---
+
+## 4. Conflict-Resolution and Compatibility Policy
+
+The architecture specification requires rich psychological state; the legacy code already has fields with overlapping meanings. Use these rules to avoid duplication.
+
+### 4.1 Personality
+
+- Preserve the public `NPCPersonality` 12-axis API unchanged: altruism, greed, courage, suspicion, loyalty, aggression, patience, cunning, pride, rationality, neuroticism, deceit.
+- The conceptual model is Big Five plus Honesty-Humility, with aggression/impulsivity/empathy as game abstractions.
+- Preferred migration: one canonical `PersonalityProfile` produces the legacy 12-axis projection deterministically.
+- If caller migration makes that unsafe initially, use one explicit conversion/adapter boundary; do not persist two independently mutable profiles or permit two direct writers.
+- Personality affects appraisal and scoring weights. It never directly sets current emotion or action.
+
+### 4.2 Needs, Goals, Values, and Preferences
+
+- Keep existing `NPCNeeds` axes authoritative where they already exist: hunger, wealth, safety, social, ambition.
+- Add only need dimensions with no legacy analog; do not duplicate `safety` under a new name.
+- Keep existing `NPC.goal`, BDI state, desire, value hierarchy, coping mechanism, risk tolerance, tastes, taboo, weakness, and persona fields as their compatible sources or derived views.
+- Motivation is long-term desire; need is current deficit; goal is concrete current objective. Keep them separate.
+
+### 4.3 Trauma
+
+- Keep existing `NPC.trauma` and `NPC.traumas` as legacy trauma definitions/tags.
+- Add structured runtime trauma metadata only where needed for trigger matching, activation intensity, recovery, avoidance, emotional association, and coping. Key it to legacy trauma IDs/tags; do not create a competing list of raw trauma facts.
+- Trauma is trigger → contextual match → stress/emotion/memory/action effect, never a flat penalty.
+
+### 4.4 Relationships
+
+- Preserve legacy player-facing fields (`affinity`, `trust`, `respect`, `fear`, and related attitude fields) and their public API.
+- Add a multi-entity `relationship_map` only because legacy attitude fields are player-facing and incomplete.
+- Migration rule: old player fields initialize the player relationship on old saves. After migration, the canonical multi-axis relationship state is updated through one relationship commit path; legacy player fields are synchronized compatibility projections, not independently mutable truth.
+- Required canonical axes: trust, affection, respect, fear, resentment, dependence, loyalty, suspicion, familiarity. Compound states must remain valid.
+
+### 4.5 Memory
+
+- Extend existing `MemoryEntry` so it is the authoritative psychological memory record. Do not introduce a parallel `MemoryRecord` store.
+- Preserve its existing turn, description, emotional tone, significance, and anchor behavior.
+- Use RAG only to retrieve candidates from the existing memory system.
+
+---
+
+## 5. Data and Persistence Contract
+
+All new fields on existing dataclasses require safe defaults. Unknown saved fields are ignored; missing fields receive defaults. Old `NPC.from_dict` and related loaders must never raise `KeyError` because a new field is absent.
+
+### 5.1 Required Safe Extensions
+
+Add only after the audit confirms no equivalent exists:
+
+| Owner | Extension | Purpose |
+|---|---|---|
+| `NPC` | `emotion_state` | active emotion instances: intensity, source, duration, decay, trigger/modifiers as needed |
+| `NPC` | `stress` | 0–100 state, distinct from fatigue and morale |
+| `NPC` | `relationship_map` | target ID → nine canonical relationship axes |
+| `NPC` | `archetype_template` | debug/initialization reference only |
+| `NPC` | `eval_tier`, `last_eval_tick` | current evaluation routing state |
+| `NPC` | cache key/result and granular version counters | cache safety, never state authority |
+| `NPC` | structured trauma runtime state, if needed | activation and recovery keyed to existing trauma tags |
+| `MemoryEntry` | participants, location ID, tags, relationship deltas, confidence, source, decay rate | psychological retrieval, reliability, and decay |
+
+New persistent objects need `schema_version`, safe serialize/deserialize behavior, and diagnostic `traits` where they are persistent domain models. Ephemeral objects such as a candidate action or situation context do not need persistent traits.
+
+### 5.2 State Lifetime
+
+| Lifetime | Examples |
+|---|---|
+| Stable | identity, personality, temperament, values, preferences |
+| Semi-stable | motivations, goals, relationships, trauma profile |
+| Volatile | needs, active emotions, stress, trauma activation |
+| Ephemeral | situation, perceived event, appraisal, temporary scores, decision context |
+| Derived/cache | behavioral patterns, legacy projections, cache entries |
+
+Stable does not mean immutable; it means a single event cannot radically rewrite the state.
+
+### 5.3 Required New Standalone Types Only When No Existing Analog Exists
+
+- `PersonalityTemplate`: immutable archetype distribution; deep-copy before NPC initialization.
+- `WorldEvent`: normalized event payload only if the existing event system lacks an equivalent adapter. It has deterministic ID, priority, severity, scope, sensory channel/range, source location, affected IDs, trigger type, effects, relevance, tick, and traits.
+- `ActionCandidate`: ephemeral action ID, intent, target, utility/risk, emotion/value/goal fit, relationship effect, personality bias, expected consequence.
+- `DecisionResult`: NPC ID, tick, selected and runner-up candidates, trace, tier, cache-hit flag, traits.
+
+Do not create standalone models merely to duplicate `NPC`, `NPCNeeds`, `MemoryEntry`, relationships, values, or the existing Cognitive Engine.
+
+---
+
+## 6. Personality Templates
+
+Provide at least these eight distribution-based templates. Store a template reference for debugging only; template instances must never share mutable state with NPCs.
+
+| ID | Bias | Value tendency | Risk | Dominant motivation |
+|---|---|---|---|---|
+| `cautious_scholar` | analytical, high rationality, low aggression | knowledge > safety > autonomy/honor | low | curiosity/safety |
+| `reckless_adventurer` | low patience, high courage, novelty seeking | freedom > adventure/glory > achievement/wealth | high | achievement/autonomy |
+| `devoted_knight` | high loyalty and altruism, disciplined | duty/honor > loyalty/family > protection | controlled | loyalty/meaning |
+| `cynical_mercenary` | high cunning, low altruism, guarded | survival/wealth > autonomy/power | calculated | survival/wealth |
+| `ambitious_noble` | high pride and cunning | status > power > achievement/wealth | calculated-high | status/power |
+| `gentle_healer` | high altruism and patience | compassion/life > family/belonging/community | low | belonging/affection |
+| `paranoid_survivor` | high suspicion and neuroticism | survival > safety > autonomy/self | very low | survival/safety |
+| `zealous_inquisitor` | high aggression/rationality, conviction-driven | faith > order > justice | context-dependent | meaning |
+
+Each template specifies personality distributions, value default order, motivation, risk range, temperament baseline, trauma-susceptibility tags, and traits. Use deterministic seeded sampling for initialization; clamp values to valid ranges. Do not use random selection during decision-making. Same-template NPCs must diverge through variation, background, memories, trauma, relationships, preferences, values, knowledge, and goals.
+
+---
+
+## 7. Psychology Engines
+
+Keep business logic out of `state.py`. Implement focused modules or equivalent existing-extension points with non-overlapping responsibility.
+
+### 7.1 Emotion
+
+Emotion state supports multiple simultaneous emotions: fear, anger, joy, grief, disgust, curiosity, pride, shame, guilt, hope, contempt, affection, anxiety, and excitement. Quilltale-specific compounds such as protective urgency are fictional derived states and must be labeled as such.
+
+Required behavior:
+
+- trigger or strengthen emotion with source, duration, decay, trigger attribution, and modifiers;
+- deterministic per-tick decay; expired emotions are removed;
+- determine dominant emotion without collapsing all active emotion;
+- return emotion-based action-scoring modifiers;
+- translate personality to emotion sensitivity, never direct emotion assignment;
+- apply regulation through temperament, coping, stress, goals, values, and social context.
+
+### 7.2 Stress
+
+Stress is independent of emotion, fatigue, and morale. Clamp 0–100. It accumulates from event load, unresolved pressure, fatigue, lack of control, social pressure, trauma amplification, goal failure, and resource loss. It recovers through rest, safety, social support, successful progress, coping, and time.
+
+Thresholds are NPC-specific and produce normal, reactive, impaired, severe-distortion, or breakdown behavior. A breakdown must match personality, values, and coping; it is not a generic panic fallback.
+
+### 7.3 Trauma
+
+Use the chain below, with no flat penalty.
+
+```text
+perceived event → trigger/context match → match confidence → activation
+→ stress amplification → emotion request → memory bias → action-specific modifier
+```
+
+Matching uses more than string equality: event features, contextual similarity, relationship/location/control, trauma-specific conditions, and perception certainty. Responses may include fight, flight, freeze, fawn, avoidance, hypervigilance, control-seeking, denial, protection, or revenge. Repeated danger may strengthen activation; safe repetition and successful coping may lower it.
+
+### 7.4 Relationships
+
+Update relationship only through a causally justified event delta. A delta includes source, target, event, per-axis changes, reason, timestamp, and confidence. Final delta incorporates the event baseline, personality, prior relationship, information confidence, and context.
+
+All axes clamp to 0–100. A relationship delta of at least 5 invalidates cache by default. Major events—betrayal, death, rescue, oath, faction betrayal, major threat, confession—may force invalidation at smaller deltas. Relationship is current state; memory is past-event evidence; keep both.
+
+---
+
+## 8. Memory and RAG Psychology Bridge
+
+Do not create a new memory store or collection. Use existing `MemoryManager` and extended `MemoryEntry`.
+
+```text
+current situation + goals + emotion + stress + relationships + trauma + known facts
+→ targeted psychological retrieval query
+→ existing RAG candidate search
+→ psychological rank/filter
+→ selected memories influence candidate scores and beliefs
+```
+
+Rules:
+
+1. Never use raw player text as the RAG query.
+2. RAG is allowed only in Tier 3 or explicitly memory-dependent events: dialogue, betrayal, trauma trigger, goal-critical event, important social decision, major threat.
+3. Rank semantic candidates by importance/significance, absolute emotional salience, recency, current-goal relevance, relationship relevance, trauma relevance, and confidence.
+4. A low-confidence memory has limited weight but may still matter if the NPC believes it.
+5. Importance/significance 4+ is anchored against normal decay.
+6. Deduplicate by tags, overlapping participants, event identity/semantic similarity, and nearby turn/tick range. Reinforce an existing duplicate instead of inserting another record.
+7. Prefer reducing retrieval salience before deleting a memory. If pruning is needed for JSON size, only prune non-anchored low-significance records under the policy: significance 1 after 50 ticks, 2 after 200 ticks, 3 after 1000 ticks; never prune 4+ anchors. Preserve any required summary/insight provenance.
+8. RAG failure must fall back to current state, active memories, and known facts; it must never block a decision.
+9. Reflection is event/rest/accumulation-triggered only, not per tick. It synthesizes a small set of episodic memories into a validated BDI/attitude proposal with source-memory references. It cannot replace raw memory or directly rewrite stable personality.
+
+---
+
+## 9. Perception, Appraisal, and Decision Pipeline
+
+### 9.1 Perception and Appraisal
+
+`WorldState` truth passes through a sensory/knowledge gate before NPC use. Perceived information depends on location, distance, sensory channel, visibility, noise, known facts, relationship/faction knowledge, experience, attention, stress, and trauma sensitivity.
+
+`PerceivedEvent` carries source, intensity, certainty, channel, distance, novelty, threat signal, goal relevance, relationship relevance, and traits. Facts not perceived must not influence that NPC’s decision.
+
+Appraisal evaluates at least threat, opportunity, goal obstruction/facilitation, control, responsibility/blame, fairness, value compatibility, relationship context, trauma match, and confidence. It produces requests for emotion/stress/trauma processing, not direct behavior.
+
+Support second-order belief hypotheses when appropriate: what the target believes the NPC knows or intends. These are inferred and uncertain, never objective truth.
+
+### 9.2 Fixed 12-Stage Pipeline
+
+1. Situation analysis
+2. Perception
+3. Emotional appraisal
+4. Need evaluation
+5. Goal evaluation
+6. Memory retrieval (Tier 3 only)
+7. Relationship evaluation
+8. Value conflict
+9. Candidate generation
+10. Action scoring
+11. Decision
+12. State update
+
+Use the existing Cognitive Engine as the cognitive core, without reimplementing its hypothesis validation or intent prediction. Do not create same-tick emotion ↔ stress infinite loops. Baseline order is perception → appraisal → emotion requests → stress update → needs/goals → decision.
+
+Daily routine remains a lightweight Tier 1 operation. Crisis events interrupt routine; deterministic scheduling reorders or cancels remaining tasks and returns to baseline on the next morning cycle. No LLM is required.
+
+### 9.3 Candidates, Feasibility, and Scoring
+
+Candidates may come from rules, world-allowed actions, capability/permission/resource constraints, goals, needs, relationships, trauma responses, and validated LLM advice. Filter infeasible candidates before scoring.
+
+Minimum scoring factors: survival, safety, goal progress, need satisfaction, relationship preservation, value alignment, emotion fit, risk, resource/time/social cost, reputation, information confidence, trauma avoidance, opportunity, and capability.
+
+Use this order:
+
+```text
+hard feasibility
+→ goal/need/value baseline utility
+→ personality/temperament weighting
+→ emotion/stress/trauma/relationship context modifiers
+→ causal imperfections: information gaps, false belief, emotion, bias, social pressure, value conflict, self-deception
+→ top-candidate comparison and deterministic selection
+```
+
+Do not reduce the whole system to a simple weighted sum. If top-N probabilistic selection is used, derive it from deterministic state/input context and trace the distribution and reason. No uncontrolled `random.random()` in decisions.
+
+After selection, mutate only states causally affected by the event. A value-violating action may produce traceable cognitive dissonance and moral justification in the existing Deep Persona/BDI domain; this must not create a duplicate personality/value source.
+
+---
+
+## 10. Tier Router, Event Routing, and Cache
+
+### 10.1 Tiers
+
+| Tier | Conditions | Allowed work | Budget |
+|---|---|---|---|
+| 1 | no direct interaction, perceivable event, critical deadline, or trauma context | schedule, routine, location/time, passive emotion decay/stress recovery | O(1) |
+| 2 | perceivable local event: noise, fire, combat, theft, death, anomaly | detection, minimal threat/interest appraisal, minimal emotion/stress update | under 5 ms; no RAG/LLM/full pipeline |
+| 3 | direct dialogue/negotiation/threat/betrayal/trauma/goal-critical/major-resource/combat decision | full 12 stages, RAG, optional LLM, trace | under 200 ms excluding async external work |
+
+Use the existing event hook. Route as affected-NPC filter → distance/sensory gate → tier classification → tier handler. Perceived intensity accounts for severity, distance attenuation, sensory range, channel, and NPC sensitivity. Coalesce same trigger type and source location within three ticks, then fan out the result. Never perform synchronous RAG or LLM work in the game tick loop.
+
+### 10.2 Decision Cache
+
+Cache only decision results, never truth. Use NPC-local keys based on NPC ID, situation/event hash, relevant world state version, memory version, relationship version, and optionally goal/emotion/trauma versions.
+
+Invalidate on emotion delta at least 10, relationship delta at least 5, new memory, world version change, goal change, trauma activation, material need change, critical event, or capability/resource change. Cache hits never bypass current version validation or authoritative state updates.
+
+---
+
+## 11. LLM Boundary and Context Projection
+
+Python supplies an expression-oriented, validated projection: selected action, dialogue intent, emotional expression, relevant relationship context, a few summarized relevant memories, known situation facts, allowed knowledge scope, speech style, value/coping constraints.
+
+Do not dump full internal state, hidden world facts, raw complete personality/truama memory values, arbitrary future events, or direct mutation instructions into the LLM prompt.
+
+LLM output may contain dialogue, narration, tone, subtext, emotional expression, action candidates, social-interpretation proposals, or query-expansion proposals. Every state-bearing implication follows:
+
+```text
+LLM proposal → Python parse → schema/world/capability/knowledge validation
+→ event or delta → authoritative commit
+```
+
+LLM hallucinations cannot change world facts, NPC memories, beliefs, relationships, goals, or decisions. If the LLM fails, decision processing continues and uses deterministic/template text output.
+
+---
+
+## 12. Tier 3 Debug Trace
+
+Every Tier 3 decision emits a structured `DecisionResult.decision_trace` containing at minimum:
+
+- NPC ID/name, tick, tier, cache hit;
+- situation and perceived facts;
+- active and dominant emotions, stress, trauma matches;
+- relevant memories with significance/source/confidence;
+- active goals and need pressure;
+- relevant relationship snapshot;
+- value conflict and its resolution;
+- candidates, scores, infeasibility blocks, and modifiers;
+- selected action and runner-up actions;
+- selection reason and deterministic decision distribution when used;
+- causal imperfection source and magnitude;
+- state versions and cache invalidation/commit effects.
+
+The trace must explain why a decision happened without becoming a second mutable state store.
+
+---
+
+## 13. Tests, Invariants, and Acceptance
+
+Do not reduce the pre-existing pytest pass count. Add focused tests for every new engine and behavior.
+
+Required coverage:
+
+- template deep-copy and individual variation;
+- personality tendency is not direct emotion;
+- emotion trigger/decay/interactions/regulation;
+- stress accumulation/recovery and independence from emotion/fatigue;
+- trauma trigger → stress → emotion → decision-bias chain and recovery;
+- multi-axis compound relationship states and event deltas;
+- memory ranking, deduplication, anchored behavior, pruning, namespace isolation, RAG fallback;
+- deterministic non-random action scoring;
+- cache hit and all invalidation paths;
+- Tier 1 has no RAG/LLM/full pipeline; Tier 2 stays minimal; Tier 3 runs complete pipeline and trace;
+- player betrayal cascade, repeated help trust growth, fire trauma, survival-versus-loyalty conflict, cold-NPC high-stress breakdown;
+- save/load round trip and mock old-save compatibility;
+- LLM cannot mutate state, invent facts, or approve impossible actions;
+- existing `NPCPersonality`, `NPCCognitiveDeductionEngine`, `MemoryManager` APIs and collections remain compatible.
+
+Completion criteria:
+
+1. NPC psychological state is per-instance and non-duplicated.
+2. Same template can yield measurably different decisions.
+3. Values, needs, tastes, memory, relationships, trauma, knowledge, and stress influence decisions as designed.
+4. Emotion is independent of personality; stress is independent of fatigue/emotion.
+5. Trauma is trigger-based, not a flat debuff.
+6. RAG and LLM are optional helpers, never decision authorities.
+7. Tier budgets and no-RAG/no-LLM constraints are test-proven.
+8. Tier 3 has an explainable trace.
+9. Cache safely reduces duplicate computation without serving stale decisions.
+10. Save/load is backward compatible and existing features have zero regressions.
+
+---
+
+## 14. Execution Order and Per-Phase Report
+
+Execute in this order:
+
+1. audit and dependency map;
+2. integration/source-of-truth architecture;
+3. safe data/serialization extensions and old-save tests;
+4. templates and eight archetypes;
+5. emotion;
+6. stress;
+7. trauma;
+8. multi-entity relationship;
+9. memory psychology bridge, deduplication, decay/pruning;
+10. event/candidate/result data types;
+11. twelve-stage decision pipeline wrapping the existing Cognitive Engine;
+12. tier router and event-hook integration;
+13. decision cache and invalidation;
+14. LLM projection/boundary enforcement;
+15. integration and behavioral tests;
+16. tier performance profiling;
+17. final backward-compatibility verification;
+18. static analysis, refactoring, and documentation.
+
+After each phase, report:
+
+```text
+Phase N complete
+- Modified files:
+- New files:
+- Tests: passed / total
+- Existing-test delta:
+- Risks found:
+- Next phase:
+```
+
+Do not claim completion until the acceptance criteria and protected invariants pass.
+
+---
+
+## Final Principle
+
+An NPC is not alive because an LLM sounds convincing. It is alive because a deterministic, persistent, explainable system connects:
+
+```text
+personality + temperament + values
+→ motivation + need + goal
+→ memory + trauma
+→ emotion + stress
+→ relationship + perception + beliefs
+→ appraisal + cognitive inference
+→ candidate scoring + decision
+→ causal state update
+→ language realization
+```
+
+The Psychology Layer creates current psychological state, the existing Cognitive Engine reasons over it, and the LLM expresses the validated result.

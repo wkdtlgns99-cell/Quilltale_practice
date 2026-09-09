@@ -127,3 +127,33 @@ def test_memory_summary_format():
     assert "마르타" in summary
     assert "Gave player information" in summary
     assert "neutral" in summary
+
+
+def test_memory_decay_prunes_minor_memories_after_20_turns():
+    state = load_test_state()
+    barkeep = state.npcs["barkeep"]
+
+    # Turn 1: Add a minor memory (sig 1) and an anchor memory (sig 4)
+    state.turn = 1
+    state.apply_update({"npc_memory": {
+        "barkeep": {"description": "주문한 맥주를 흘림", "emotional_tone": "neutral", "significance": 1}
+    }})
+    state.apply_update({"npc_memory": {
+        "barkeep": {"description": "도적 떼로부터 여관을 구해줌", "emotional_tone": "grateful", "significance": 4, "is_anchor": True}
+    }})
+    assert len(barkeep.memories) == 2
+
+    # Advance 21 turns without interaction (turn = 22)
+    state.turn = 22
+    state.apply_update({"npc_memory": {
+        "barkeep": {"description": "오랜만에 방문함", "emotional_tone": "neutral", "significance": 2}
+    }})
+
+    # Minor memory from turn 1 (> 20 turns ago) should be pruned
+    # Significant anchor memory from turn 1 should be kept
+    # New memory from turn 22 should be present
+    descs = [m.description for m in barkeep.memories]
+    assert "주문한 맥주를 흘림" not in descs
+    assert "도적 떼로부터 여관을 구해줌" in descs
+    assert "오랜만에 방문함" in descs
+    assert len(barkeep.memories) == 2

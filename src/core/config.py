@@ -84,3 +84,15 @@ TIME_SEARCH_MINUTES = 20
 TIME_COMBAT_BASE_MINUTES = 30
 TIME_TRAVEL_MINUTES = 120
 
+# 8-Personality Archetype Mental Breakdown & Decision Weights
+PERSONALITY_BREAKDOWN_WEIGHTS = {
+    "brave": {"panic": 0.3, "rage": 1.5, "awakening": 2.0, "freeze": 0.2, "flight": 0.1},
+    "cowardly": {"panic": 2.5, "rage": 0.2, "freeze": 2.0, "flight": 3.0, "awakening": 0.2},
+    "loyal": {"survivor_guilt": 2.5, "emotional_shutdown": 1.2, "selfishness": 0.1, "awakening": 1.5},
+    "selfish": {"selfishness": 3.0, "flight": 2.0, "betrayal": 2.5, "survivor_guilt": 0.1},
+    "suspicious": {"paranoia": 3.0, "dissociation": 1.5, "selfishness": 1.8, "freeze": 1.0},
+    "idealistic": {"hopelessness": 2.5, "regression": 1.8, "awakening": 1.5, "rage": 1.2},
+    "survivalist": {"flight": 2.0, "selfishness": 2.0, "panic": 0.5, "destructive_impulse": 0.8},
+    "stoic": {"emotional_shutdown": 3.0, "dissociation": 2.0, "panic": 0.2, "freeze": 0.4},
+}
+

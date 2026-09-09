@@ -10,8 +10,7 @@ Delayed Discovery:
 Unnoticed thefts are only discovered through physical, causal triggers (e.g. opening bags, paying merchants,
 adjusting belts, or physical jolts), never through arbitrary turn timers.
 """
-from typing import Dict, Any, List, Optional
-import random
+from typing import Dict, Any, List
 from src.world.dice import DiceEngine
 from src.world.state import WorldState, Player, NPC
 
@@ -306,4 +305,29 @@ class PerceptionEngine:
             "time_remaining_seconds": remaining,
             "distance_at_perception_m": dist_at_perc,
             "narrative_ko": f"예리한 감각으로 {dist_at_perc:.1f}m 전방에서 닥쳐오는 [{threat_name}]을 인지했습니다! (남은 대응 시간: {remaining:.2f}초)",
+        }
+
+    @classmethod
+    def observe_npc_micro_leakage(
+        cls,
+        observer: Player,
+        target_npc: NPC,
+        state: WorldState
+    ) -> Dict[str, Any]:
+        """
+        Contests observer's Perception against NPC's Cunning & Deceit to reveal subtle bodily clues/micro-expressions.
+        """
+        from src.world.cognitive_engine import NPCCognitiveDeductionEngine
+        p_stat = getattr(observer, "perception_stat", getattr(observer, "perception", 10))
+        res = NPCCognitiveDeductionEngine.check_micro_leakage(target_npc, p_stat, state)
+        if res.detected:
+            gm_directive = f"플레이어의 예리한 관찰(감각 {p_stat})이 [{target_npc.name}]의 미세 신체 언어('{res.leakage_clue}')를 포착했습니다. 이를 은밀한 복선으로 묘사하십시오."
+        else:
+            gm_directive = f"[{target_npc.name}]의 완벽한 표정 관리에 가로막혀 별다른 속내를 읽어낼 수 없었습니다."
+
+        return {
+            "detected": res.detected,
+            "leakage_clue": res.leakage_clue,
+            "underlying_emotion": res.underlying_emotion,
+            "gm_directive": gm_directive,
         }
