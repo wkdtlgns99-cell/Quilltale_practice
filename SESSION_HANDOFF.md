@@ -384,6 +384,27 @@
     - 7) 외부 LLM 프롬프트 생성 (`generate_external_llm_prompt`): GPT-4o/Claude 3.5 연동용 고밀도 심리 프로필 생성 (규칙 8 준수).
     - 8) 향후 계획: 나중에 Claude나 GPT와 대조하여 행동 범주 및 심리 알고리즘을 한층 더 정밀하게 세분화 예정.
 
+### [🔧 기존 엔진 배선(Wiring) & 통합 정비 — 클로드 코드리뷰 검증 기반]
+> ⚠️ **[발견 경위]**: 2026-09-09 외부 Claude 정적 분석 피드백 → Antigravity(Gemini) 3개 서브에이전트 코드베이스 전수 교차 검증 완료. 설계/스키마 완성도는 높으나, 전체 모듈의 약 25%(16/64개)가 계단식 통합 2단계(팩트시트 슬롯 연결) 미진행 상태로 확인됨.
+
+- [ ] **🔧 [배선 A] 16대 고립 엔진 → `TwoPassEngine` 팩트시트 슬롯 연결 (계단식 통합 2단계)**:
+  - **필요 사유**: 아래 16개 엔진이 1단계(독립 모듈 + 단위 테스트 통과)까지만 완료되고, 실제 게임 턴 루프(`two_pass_engine.py compute_pass1`)에서 한 번도 호출되지 않는 "고립(Island)" 상태로 방치. 즉 게임을 실행해도 해당 코드가 절대 실행 불가.
+  - **대상 16개 모듈**: `alcohol_engine`(⚠️campsite 경유 부분호출), `attack_physics_engine`, `botany_engine`(⚠️vein_restoration 경유 딕셔너리 참조만), `campsite_engine`, `combat_time_track_engine`, `harvest_engine`, `mana_burn_engine`, `merchant_barter_engine`(⚠️`__init__.py`에도 미등록, 완전 고아), `object_physics_engine`, `outfit_engine`, `save_load_manager`(⚠️`__init__.py`에도 미등록, `persistence.py`와 완전 중복 고아), `siege_engine`, `stat_engine`(⚠️attack_physics 내부에서만 참조), `stealth_engine`, `time_calendar_engine`, `vein_restoration_engine`.
+  - **작업 방식**: 엔진별로 `DeterministicFactSheet`에 슬롯 추가 → `compute_pass1` 적절 순서에 호출 삽입 → 3단계 전체 회귀 검증. 한 번에 1~2개씩 점진 통합 (빅뱅 통합 금지).
+  - **우선 트리아지**: `save_load_manager.py`는 `persistence.py`와 중복이므로 삭제 후보. `merchant_barter_engine.py`는 백로그 21번(`UnifiedCommerceEngine`) 통합 대상. 나머지 14개는 기능 필요성 확인 후 순차 연결.
+- [ ] **🔧 [배선 B] NPC 인지 엔진 4대 핵심 메서드 → 게임 루프 연결**:
+  - **필요 사유**: `cognitive_engine.py`의 핵심 4대 메서드(`evaluate_player_hypothesis`, `predict_autonomous_next_intent`, `check_micro_leakage`, `generate_external_llm_prompt`)가 테스트에서만 호출되고, 유일하게 런타임 연결된 `process_npc_cognitive_turn` 내부에서도 호출하지 않음. "12단계 NPC 심리 인지 예측"이라는 마스터 문서 서술이 실제 돌아가는 게임 기준으로는 미달성 상태.
+  - **작업 방식**: `process_npc_cognitive_turn` 내부에서 적절한 트리거 조건(플레이어 대화 중 가설 표출 → `evaluate_player_hypothesis`, 비전투 턴 종료 → `predict_autonomous_next_intent`, 대면 대화 시 → `check_micro_leakage`)에 따라 호출 분기 삽입.
+- [ ] **🔧 [배선 C] NPC 심리 확장 필드 Write-Only 해소 → 결정론적 로직 소비**:
+  - **필요 사유**: `NPCPersonality` 확장 6축(`patience`, `cunning`, `pride`, `rationality`, `neuroticism`, `deceit`) 및 심층 페르소나 필드(`life_defining_moment`, `value_hierarchy`, `coping_mechanism`, `public_mask`, `moral_justification`, `micro_leakage_traits`, `risk_tolerance`, `bdi_state`) 대부분이 생성/저장만 되고 어떤 결정론적 코드에서도 읽히지 않는 write-only 상태. 특히 `bdi_state`, `risk_tolerance`는 전 코드베이스에서 100% 미사용.
+  - **작업 방식**: `process_npc_cognitive_turn`의 행동 분기 가중치에 확장 축 반영(예: `patience` 높으면 즉각 공격 억제, `pride` 높으면 굴복/항복 거부, `rationality` 높으면 감정적 폭주 억제). `predict_autonomous_next_intent`에서 `value_hierarchy`, `risk_tolerance`, `bdi_state` 소비.
+- [ ] **🔧 [배선 D] NPC 에피소딕 기억 망각/가지치기 로직 구현 (`MemoryDecayPruner`)**:
+  - **필요 사유**: `npc.memories`가 세션 내내 append만 되고 삭제/요약/트림 로직이 전무. AGENTS.md `<Two_Pass_Resource>` 규칙 3 "MEMORY limit: NPCs episodic memory must have truncation/summarization to avoid token overflow" 위반 상태. 장기 세션 시 세이브 파일 무한 증가 및 LLM 프롬프트 토큰 폭발 위험.
+  - **작업 방식**: `state.py`의 `memory_decay_turn_interval`(현재 50턴) 활용하여 significance 1~2급 기억의 주기적 망각/요약. 백로그 25번(`MemoryDecayBiasEngine`)과 통합 설계. 기존 `relevant_memories(max_memories=5)` 슬라이싱은 프롬프트용 뷰만 제공하므로 실제 데이터 가지치기 별도 필요.
+- [ ] **🔧 [정비 E] 죽은 모듈 정리 및 문서-코드 네이밍 불일치 수정**:
+  - **필요 사유**: (1) `save_load_manager.py`는 `persistence.py`와 기능 완전 중복, `__init__.py`에도 미등록된 고아 파일. (2) `merchant_barter_engine.py`도 `__init__.py` 미등록 고아. (3) SESSION_HANDOFF.md L160의 `PERSONALITY_BREAKDOWN_WEIGHTS` 명칭이 실제 코드(`party_sanity_engine.py`)에서는 `PERSONALITY_BREAKDOWN_TABLES`로 구현됨 — 문서-코드 네이밍 불일치.
+  - **작업 방식**: `save_load_manager.py` 삭제 여부 유저 확인 후 처리. `merchant_barter_engine.py`는 백로그 21번 통합 시 흡수. SESSION_HANDOFF.md 네이밍 수정.
+
 ### [인프라, UI 및 플랫폼 시스템 (공통/플랫폼)]
 > ⚠️ **[유저 절대 규칙] 찐찐 마지막 최종 업데이트 지정**: UI 연동, TTS 음성, 이미지 AI(SD LoRA) 연동 등은 전반적인 게임플레이, 전투, 생존 물리 시스템 및 밸런싱 작업이 100% 완료된 이후에 진행할 '찐찐 마지막 최종 업데이트'로 동결한다.
 
