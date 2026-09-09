@@ -32,6 +32,12 @@
 >    - 1) scratch/ 폴더에 임시 패치/정규식 스크립트를 생성하거나 git에 커밋하지 않는다 (.gitignore 격리 및 즉시 삭제).
 >    - 2) 단위 테스트 실행 시 `data/legacy/`나 `data/saves/` 등 실제 데이터 디렉터리에 더미 JSON 파일을 영구 누적하지 않도록 `tmp_path` 격리 또는 teardown 정리를 필수 적용한다.
 >    - 3) 모듈 파일명 중복 금지: 서로 다른 디렉터리라도 동일한 파일명(`profiler.py` 등) 사용을 금지하며, 역할이 드러나는 고유 명칭(`combat_profiler.py` vs `engine/profiler.py`)을 부여한다.
+>
+> **[고정 규칙 10] 계단식 점진 통합 원칙 (Incremental Integration Gate / 절대 수정/삭제 불가):**
+> 10. 신규 엔진 및 시스템 개발 시 일괄 결합(빅뱅 통합)으로 인한 의존성 폭발을 방지하기 위해 다음 3단계를 의무 준수한다:
+>    - 1단계 (독립 완성 & 단위 테스트): 신규 엔진을 독립 모듈로 구현하고, 해당 엔진의 전용 단위 테스트(pytest >= 1개 이상)를 100% 통과시킨다.
+>    - 2단계 (팩트시트 슬롯 연결): TwoPassEngine(Pass 1) 또는 GameMasterAgent에 해당 엔진의 결과를 수신할 슬롯(메서드/필드)을 1:1로 안전하게 연결한다.
+>    - 3단계 (전체 회귀 검증): 기존 전체 테스트(BASELINE 이상)를 실행하여 단 1건의 결함/회귀도 발생하지 않음을 검증한 후 다음 백로그로 전진한다.
 
 ---
 
@@ -518,6 +524,12 @@
     * GPT 설계용 프롬프트: 심리학 기반 시스템 아키텍트 역할, 16-Phase 설계 순서, 2축 Tiered Lazy Evaluation, Decision Cache, 12단계 파이프라인, 24개 검증 항목 포함.
     * Claude 구현용 프롬프트: 기존 코드베이스 전체 인벤토리(`NPCPersonality` 12축, `NPC` 10인자 태도 매트릭스, `MemoryEntry` 5단계 의미도, `NPCNeeds`, BDI, `MemoryManager`/Qdrant) 명시, 18-Phase 구현 순서, 금지 목록(중복 클래스 신설 차단), 24개 완료 조건 탑재.
     * 파일 위치: 로컬 아티팩트 디렉터리 (`gpt_prompt_npc_psychology_engine.md`, `claude_prompt_npc_psychology_engine.md`) — 코드베이스 미포함.
+  - **절차적 생성 HD-2D RPG 마스터 아키텍처 명세서 완공 (`MASTER_GAME_ARCHITECTURE.md`)**:
+    * 옥토패스 + 쓰레드 오브 타임 + 데드 셀 비주얼 파이프라인 (360도 카메라 회전 3D-to-도트, Draw Call Bake, Point Filter, 1px 외곽선).
+    * 유저 구글 Gemini 무료 API 연동(BYOK) 서버비 0원 모델.
+    * SD 1.5 + ADetailer 2D 일러스트, 유니티 런타임 피치 변조 의성어 배리에이션 스펙 확정.
+  - **[고정 규칙 10] 계단식 점진 통합 원칙 (Incremental Integration Gate) 신설 완료**:
+    * 1단계 독립 완성/단위테스트 ➔ 2단계 팩트시트 슬롯 연결 ➔ 3단계 508개 회귀 검증 의무화.
 - **다음 작업 (유저 결정에 따른 후속 진행)**:
   - **가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / 백로그 10번 - legacy.py 확장)**
     * 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
