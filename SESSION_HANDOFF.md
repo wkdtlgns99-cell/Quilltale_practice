@@ -545,30 +545,53 @@
      - Tier 1 O(1), Tier 2 < 5ms, Tier 3 12단계 풀 파이프라인 및 decision_trace 방출, 상황 해시 + 상태 버전 캐싱.
    - **Two-Pass & 코그너티브 턴 실전 배선**:
      - `NPCCognitiveDeductionEngine.process_npc_cognitive_turn` 직결, 플레이어 델타 오버라이트 버그 가드 격리.
-   - **외부 LLM 프롬프트 고도화 (`generate_external_llm_prompt`)**:
-     - 실시간 감정/스트레스/트라우마 상태 및 Strict Narrative Expression Boundary 탑재.
+    - **외부 LLM 프롬프트 고도화 (`generate_external_llm_prompt`)**:
+      - 실시간 감정/스트레스/트라우마 상태 및 Strict Narrative Expression Boundary 탑재.
+
+10. **클로드 지시 배선 잇기 (Claude Remediation A~E) & 물리/인지 실전 전면 통합 완공**:
+    - **A & B단계 (정적 도달 감사 & 트리아지)**:
+      - `scripts/reachability_audit.py` 작성 및 `CHANGES_AUDIT.md`, `TRIAGE.md` 생성으로 `src/world/` 64개 모듈 도달성 전수 분석 (미도달 16개 분석 후 13개로 감축).
+    - **C단계 (NPC 심리/인지 엔진 실전 배선 C1~C6)**:
+      - **C1 (안티 예스맨 가설 검증)**: `evaluate_player_hypothesis`를 `TwoPassEngine.compute_pass1` 의심/모함 행동에 직결, `anti_yesman_verdict` 팩트시트 탑재.
+      - **C2 (오프스크린 자율 의도 예측)**: `predict_autonomous_next_intent`를 오프스크린 NPC에 직결, 최대 30개 링버퍼(`off_screen_logs`) 보존 정책 적용 (규칙 6 준수).
+      - **C3 (신체 언어 미세 누출 관찰)**: `PerceptionEngine.observe_npc_micro_leakage` 및 `check_micro_leakage`를 관찰/탐색 행동에 직결.
+      - **C4 (성격 축 확장 분기)**: `process_npc_cognitive_turn`에 교활한 흉계(`cunning_scheme`), 기만적 연막(`deceitful_misdirection`), 충동적 적대(`impulsive_hostility`) 3대 분기 우선 탑재.
+      - **C5 (기억 감쇠 & 가지치기)**: `NPC.prune_memories` 탑재, 20턴 경과 시 Lv.1~2 사소한 기억 망각 및 Lv.3+ 영구 앵커 보존, `apply_update` 실시간 연동.
+      - **C6 (문서/코드 일치화)**: `src/core/config.py`에 `PERSONALITY_BREAKDOWN_WEIGHTS` (8대 아키타입 매트릭스) 탑재 완료.
+    - **D단계 (물리 엔진 실전 배선 D1~D4)**:
+      - **D1/D3 (활/사격 물리 역학)**: NPC 원거리 공격 시 `AttackPhysicsEngine` (`can_draw_bow`, `calculate_flight_time`, `evaluate_attack_physics`) 및 `StatEngine`의 장력(draw_weight_lbs)/탄속 비행시간/관통력 실시간 연동 (`src/world/npc_skill_engine.py`).
+      - **D2 (만물 사물 파괴 & 방화)**: 플레이어의 파괴/방화 행동 시 `UniversalObjectPhysicsEngine` (`damage_object`, `ignite_object`)을 `TwoPassEngine.compute_pass1`에 직결 (의자 완파 시 각목/장작 드랍, 양피지 문서 소각 시 내용물 영구 소멸).
+      - **D4 (통합 테스트)**: `tests/test_two_pass_engine.py`, `tests/test_npc_skill_engine.py`, `tests/test_npc_memory.py` 실전 배선 검증 테스트 추가.
+    - **E단계 (규칙 및 정적 검증 완료)**:
+      - `AGENTS.md`에 배선 및 통합 규칙 8종 + 스코프 게이트 탑재, ruff 구문/미사용 변수/미정의 이름 0건 전원 통과 (`All checks passed!`).
 
 ### 2. 테스트 및 평가 검증 상태
 - **프로젝트 전체 530개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 508 대비 +22 신규 통과)**:
   - `tests/test_npc_psychology_state.py`: 4 passed (세이브/로드 라운드트립, 레거시 호환, MemoryEntry 및 NPC 확장 필드 직렬화 검증).
   - `tests/test_npc_psychology_engine.py`: 5 passed (템플릿 결정론적 분산, 14종 감정 감쇠, 스트레스 5단계 붕괴, 트라우마 키워드 유발, 관계 9축 델타 및 레거시 동기화).
   - `tests/test_npc_psychology_pipeline.py`: 6 passed (3-Tier 라우팅, 결정 캐시 적중/무효화, 메모리 앵커 브릿지, 코그너티브 엔진 직결, LLM 프롬프트 생성, 3-Tier 성능 프로파일링).
-  - `pytest tests/`: **530 passed in 6.02s**.
+  - `tests/test_npc_memory.py`: 8 passed (기억 감쇠 20턴 가지치기, 오프스크린 로그 30개 제한 검증).
+  - `tests/test_npc_skill_engine.py`: 8 passed (활 사격 장력/탄속 물리 역학 검증).
+  - `tests/test_two_pass_engine.py`: 7 passed (안티 예스맨 가설 검증, 사물 파괴/소각 물리 검증).
+  - `pytest tests/`: **530 passed in 6.07s**.
 - **DoD Gate Eval Runner 검증**:
   - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
 - **Static Analysis Gate**:
-  - `ruff check src/world/psychology_engine.py src/world/cognitive_engine.py`: **All checks passed!**
+  - `ruff check src/world/psychology_engine.py src/world/cognitive_engine.py src/world/two_pass_engine.py src/world/npc_skill_engine.py src/world/state.py src/world/perception_engine.py --select E9,F821,F841,F401`: **All checks passed!**
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
+  - 클로드 지시 배선 잇기 (A~E 전 단계: 안티예스맨, 인지 관찰, 오프스크린 예측, 활 물리, 사물 파괴, 기억 감쇠) 완공.
+  - NPC 심리·성격·인지 추론 & 12단계 행동 예측 엔진 (`NPCCognitiveDeductionEngine` & `PsychologyDecisionPipeline` / 백로그 40번) 완공.
   - 만물 사물 내구도 & 물리 파괴 엔진 (`UniversalObjectPhysicsEngine`) 완공.
   - 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine` / 백로그 9번) 완공.
-  - NPC 심리·성격·인지 추론 & 12단계 행동 예측 엔진 (`NPCCognitiveDeductionEngine` & `PsychologyDecisionPipeline` / 백로그 40번) 완공.
   - 현상금 수배자 & 추적자 AI 엔진 (`BountyHunterEngine` / 백로그 11번) 완공.
 - **다음 작업 (유저 결정에 따른 후속 진행)**:
-  - **옵션 1: [🔧 배선 B/C/D] NPC 심리 인지 엔진 미배선 메서드 및 기억 가지치기 정비**
-    * `process_npc_cognitive_turn` 내부 `evaluate_player_hypothesis`, `predict_autonomous_next_intent`, `check_micro_leakage` 호출 연결.
-    * `npc.memories` 가지치기/망각(`MemoryDecayPruner`) 규칙 3 준수.
-  - **옵션 2: 가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / 백로그 10번 - legacy.py 확장)**
+  - **옵션 1: [🔥 신규 백로그] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`)**:
+    * `src/world/stat_engine.py`, `src/world/state.py`, `cosmology_templates.json` 연동.
+    * 4대 성장 스케일(로우 판타지 12~20렙, D&D형 50렙, 메이플형 300렙, 선협/무협 경지 돌파형) 프리셋 구축.
+  - **옵션 2: [백로그 10번] 가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / legacy.py 확장)**:
     * 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
+  - **옵션 3: [TRIAGE.md] 남은 13개 고립 모듈 순차 배선 또는 정리**:
+    * `stealth_engine.py`, `harvest_engine.py`, `campsite_engine.py` 등 실전 턴 루프 순차 연결.
 
