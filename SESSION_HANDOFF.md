@@ -407,6 +407,33 @@
   - **필요 사유**: (1) `save_load_manager.py`는 `persistence.py`와 기능 완전 중복, `__init__.py`에도 미등록된 고아 파일. (2) `merchant_barter_engine.py`도 `__init__.py` 미등록 고아. (3) SESSION_HANDOFF.md L160의 `PERSONALITY_BREAKDOWN_WEIGHTS` 명칭이 실제 코드(`party_sanity_engine.py`)에서는 `PERSONALITY_BREAKDOWN_TABLES`로 구현됨 — 문서-코드 네이밍 불일치.
   - **작업 방식**: `save_load_manager.py` 삭제 여부 유저 확인 후 처리. `merchant_barter_engine.py`는 백로그 21번 통합 시 흡수. SESSION_HANDOFF.md 네이밍 수정.
 
+### [🐛 구조적 버그 & 리포 위생 수정 — 클로드 2차 코드리뷰 검증 기반]
+> ⚠️ **[발견 경위]**: 2026-09-10 외부 Claude 2차 정밀 코드리뷰 → Antigravity(Gemini) 3개 서브에이전트 전수 교차 검증 완료. 구조적 디싱크(시간/서사/인벤토리/소문) 및 리포 위생 문제 확인됨. 아래 항목은 작업량 기준 한 세션에 1~2개씩 수정 가능한 단위로 분리.
+
+- [ ] **🐛 [수정 F] `README.md` 죽은 문서 전면 교체 [5분 단독 작업]**:
+  - **증상**: README.md가 초기 5개 룸 Gradio 데모(WorldState 4~5클래스)를 설명. 실제 코드는 state.py 4396행/20개 클래스, 64개 엔진, 530+ 테스트의 완전히 다른 프로젝트. 누가 봐도 혼란 유발.
+  - **처방**: README.md를 현행 MASTER_GAME_ARCHITECTURE.md + AGENTS.md 기반으로 전면 재작성. 기존 README는 `docs/legacy_readme_prototype.md`로 보관.
+- [ ] **🐛 [수정 G] `__pycache__/*.pyc` Git 추적 제거 [5분 단독 작업]**:
+  - **증상**: `.gitignore`에 `__pycache__/`가 있지만, 이미 커밋된 3개 pyc 파일이 git 추적 상태로 남아있음: `src/__pycache__/__init__.cpython-314.pyc`, `src/image/__pycache__/__init__.cpython-314.pyc`, `src/image/__pycache__/flux.cpython-314.pyc`. AGENTS.md `<Prompt_Rules>` 4번 "NO ARTIFACT COMMIT" 규칙 위반.
+  - **처방**: `git rm --cached src/__pycache__/__init__.cpython-314.pyc src/image/__pycache__/__init__.cpython-314.pyc src/image/__pycache__/flux.cpython-314.pyc` 실행 후 커밋. `.gitignore`는 이미 정상.
+- [ ] **🐛 [수정 H] `sanitize_pass2_result` 서사-판정 모순 검증 로직 부재 [중간 작업]**:
+  - **증상**: `two_pass_engine.py:976` — LLM이 반환한 `narration` 텍스트를 `.strip()` 후 무검증 통과. 주사위 판정이 실패(FAILURE)인데 서술에 "성공/돌파/격파" 키워드가 포함되어도 그대로 플레이어에게 출력됨. 즉 Pass 1 결정론적 진실과 Pass 2 서술이 모순되는 "문학적 날조 탈옥" 구멍.
+  - **처방**: `sanitize_pass2_result`에 판정-서사 일관성 검증 레이어 추가. (1) `fact_sheet.dice_result.is_success == False`일 때 narration에 성공 키워드(`["성공", "돌파", "격파", "관통", "제압", "처치"]`) 포함 시 `[⚠️ 서사-판정 모순 감지]` 경고 로그 + LLM 재시도 또는 강제 실패 서사 대체. (2) `killed == True`인데 narration에 대상 생존 묘사 시 동일 처리.
+- [ ] **🐛 [수정 I] 장거리 이동 시 생존 틱 시간 비례 미적용 — "30분 하드코딩" 문제 [중간 작업]**:
+  - **증상**: `two_pass_engine.py`에서 이동 시 실제 소요시간을 `GeographyEngine.calculate_segment_travel_hours` → `mins = max(15, int(hours * 60))`로 정확히 계산하지만(L398-399), 이 `mins` 값을 생존 틱 함수들에 전달하지 않음. 아래 4개 엔진이 하드코딩 `delta_minutes=30`으로 호출: `WeatherMagicSimulationEngine.tick_anomalies`(L216), `ToxicologyToleranceEngine.process_time_metabolism`(L223), `QuestEngine.check_turn_time_limits`(L232), `CorpseEcologyEngine.process_turn_corpse_decay`(L257). 또한 `process_turn_survival_ticks`, `process_turn_spoilage`, `process_turn_circadian`, `process_turn_sanity`는 분 단위 인자 자체를 받지 않고 "턴 1회"로만 동작.
+  - **결과**: 50km 도보(12시간=720분) 이동해도 날씨 이변/퀘스트 타이머/시체 부패/약물 대사는 30분치만, 굶주림/체온/수면/멘탈은 턴 1회치만 진행. 장거리 이동 중 생존계가 통째로 씹힘.
+  - **처방**: (1) 이동 액션일 때 계산된 `mins`를 `compute_pass1` 상단 틱 영역으로 전달하는 2패스 구조 (먼저 이동 의도 파싱 → 시간 계산 → 그 시간만큼 틱 반복). (2) 생존 틱 함수 시그니처에 `delta_minutes` 파라미터 추가 및 내부 로직 비례 스케일링. (3) 비이동 액션은 기존 30분/턴1회 유지.
+  - **아키텍처 주의**: 현재 `compute_pass1`에서 틱이 Step 1(L187~270)에, 이동 판정이 Step 2(L350~410)에 위치. 이동 시간을 틱에 반영하려면 순서 재배치 또는 이동 시간 사전계산 분리 필요.
+- [ ] **🐛 [수정 J] `dijkstra_shortest_travel` 다중 구간 경로탐색 미연결 [중간 작업]**:
+  - **증상**: `geography.py:269-336`에 다익스트라 최단 경로 탐색 구현 완료. 그러나 실제 플레이어 이동(`two_pass_engine.py:366-406`)은 현재 위치의 직접 연결된 `curr_loc.exits`만 검색. 여러 구간을 거치는 장거리 이동("늪지대까지 가라")은 매칭 불가. `dijkstra_shortest_travel`은 테스트에서만 호출됨(소문 확산 엔진도 별도 함수 `get_all_reachable_locations_with_distances` 사용).
+  - **처방**: 이동 액션에서 직접 exit에 없는 목적지 요청 시, `dijkstra_shortest_travel`로 다중 구간 경로 계산 → 첫 구간만 즉시 이동 + 나머지 경유지를 `state`에 `pending_travel_waypoints`로 저장 → 다음 턴마다 자동 1구간 진행.
+- [ ] **🐛 [수정 K] 인벤토리 무제한 append — 기존 `outfit_engine.py` 가방 용량 엔진 배선 [중간 작업]**:
+  - **증상**: `state.py:3407` — `self.player.inventory.append(item_id)` 시 무게/부피 체크 전무. 무제한 아이템 소지 가능. `outfit_engine.py`에 `BackpackSpec`(가방 3종 L/kg 규격), `calculate_carry_capacity`, `evaluate_backpack_storage` 이미 구현되어 있으나 `src/` 내 어디에서도 호출 안 됨 (고립 코드). 또한 `EquipmentSlots`에 `main_hand`/`off_hand` 슬롯 부재 — 무기 양손/한손 점유 개념 없음. `cave_in_engine.py:763-764`에서 `main_hand`/`off_hand`를 `getattr` 조회하는 유령 코드 발견.
+  - **처방**: (1) `state.py`의 `apply_state_delta` pickup 분기에 `OutfitMechanicsEngine.evaluate_backpack_storage` 호출 삽입 → 초과 시 거부. (2) 백로그 27번(`EncumbranceEngine`)과 연계. (3) `EquipmentSlots`에 `main_hand`/`off_hand` 분리는 별도 작업으로 분리(양손 무기 제약 시스템).
+- [ ] **🐛 [수정 L] NPC 처치 소문 무조건 발동 — 목격자 게이트(Witness Gate) 부재 [쉬운 작업]**:
+  - **증상**: `two_pass_engine.py:689-699` — NPC 사망 시 같은 위치에 살아있는 목격자(다른 NPC/동료) 존재 여부를 검사하지 않고 무조건 `RumorDiffusionEngine.dispatch_event_rumor` 발동. 아무도 없는 던전 밀실에서 암살해도 `carrier="merchant"`로 소문 자동 발사.
+  - **처방**: dispatch 호출 전에 `witnesses = [n for n in state.npcs.values() if n.location == state.player.location and n.id != target_npc.id and n.health > 0]` 체크 추가. `len(witnesses) == 0`이면 소문 미발동 (완전 범죄 성공). 동료 NPC만 있으면 동료 신뢰도에 따라 누설 확률 분기.
+
 ### [인프라, UI 및 플랫폼 시스템 (공통/플랫폼)]
 > ⚠️ **[유저 절대 규칙] 찐찐 마지막 최종 업데이트 지정**: UI 연동, TTS 음성, 이미지 AI(SD LoRA) 연동 등은 전반적인 게임플레이, 전투, 생존 물리 시스템 및 밸런싱 작업이 100% 완료된 이후에 진행할 '찐찐 마지막 최종 업데이트'로 동결한다.
 
