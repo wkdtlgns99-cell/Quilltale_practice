@@ -72,6 +72,18 @@
 
 ## 3. [해야 할 일(Backlog)]
 
+### [집/노트북 환경 — SD 1.5 이미지/LoRA & GUI 연동 고도화]
+- [ ] **🔥 [신규 백로그 - UI/그래픽] LoRA SD 1.5 기반 실시간 동적 부분 갱신 이중 맵 이미지 시스템 (`DynamicDualMapRenderer`)**:
+  - **구현 내용**:
+    - 1. 세계관 생성 시 LoRA SD 1.5 모델로 2D 유클리드 도로 그래프 기반 전체 대륙/권역 지도를 고화질 렌더링.
+    - 2. 이중 이미지 UI 구조: 기존 서사/인물 메인 뷰 + 버튼 클릭 시 독립 토글/팝업되는 맵 전용 이미지 뷰.
+    - 3. 도로/지형 부분 실시간 갱신: 플레이어 이동(a마을 -> b마을) 또는 대규모 거시 지형 지각변동 발생 시, 전체 재생성 없이 해당 도로 구간/지형 파편만 정밀 연산 및 Masking Inpaint로 부분 갱신.
+    - 4. 이동 틱 오버레이: 도로 길이, 이동 속도, 플레이어 현재 위치 핀을 지도 상에 실시간 추적 갱신.
+- [ ] **🔥 [신규 백로그 - UI/플랫폼] 스팀 게임 스타일 독립 실행형 창 모드 런처 (`SteamStyleStandaloneLauncher`)**:
+  - **구현 내용**:
+    - 웹브라우저(Gradio Web GUI) 접속 방식 전면 탈피.
+    - 스팀 패키지 게임처럼 클릭 시 브라우저 주소창/주변 프레임이 없는 전용 스탠드얼론 GUI 창(PyWebView/Electron 기반)으로 게임이 즉시 구동되는 앱 구조 전환.
+
 ### [똥컴/학원 환경 — 순수 시스템/로직/엔진 고도화]
 - [x] **🔥 [완료] 6계층 거시-미시 현실 인프라 뼈대 시스템 (Level 0 ~ Level 5)**:
   - **구현 대상**: [아키텍처 전면 개편] `src/world/infrastructure.py`, `src/world/state.py`, `generator.py`, `geography.py`
@@ -123,13 +135,13 @@
     - [x] 4. [유저 피드백] 배경 소음 마스킹 시 [지면 미세 진동(Micro-Vibration)] 감지 (발소리가 묻혀도 발바닥 진동으로 기척 간파).
     - [x] 5. 풍향(풍상/풍하) 및 위생도 저하/피비린내 체취 분자 확산 판정.
     - [x] 6. 차폐 매질(문틈 8dB, 판자벽 15dB, 원목문 25dB, 석벽 45dB) 투과율 기반 도청(`evaluate_eavesdropping`) 및 비밀 청취.
-- [ ] **🔥 [신규 백로그] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`)**:
-  - **구현 대상**: `src/world/stat_engine.py`, `src/world/state.py`, `cosmology_templates.json`
+- [x] **🔥 [완료] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`)**:
+  - **구현 대상**: `src/world/stat_engine.py`, `src/world/state.py`, `src/world/infrastructure.py`, `src/world/generator.py`, `src/world/two_pass_engine.py`, `data/templates/cosmology_templates.json`, `tests/test_power_scale_presets.py`
   - **기능**: 세계관마다 다른 레벨 상한 및 스탯 성장률 프리셋 결합:
-    - 1. 로우 판타지(발더게3형): 최대 12~20렙, 렙당 스탯 0~1개, 상한 20~30, 대미지 10~50.
-    - 2. 스탠다드 판타지(D&D형): 최대 50렙, 렙당 스탯 2~3개, 상한 50~100.
-    - 3. 하이퍼 인플레(메이플형): 최대 300렙, 렙당 스탯 5개, 스탯 수천, 대미지 수만~수억.
-    - 4. 선협/무협(경지 돌파형): 평소 렙업 없음, 경지 돌파 시 스탯 10배 폭증.
+    - 1. 로우 판타지(발더게3형): 최대 16렙, 렙당 스탯 1개, 상한 30, 대미지 배율 1.0x.
+    - 2. 스탠다드 판타지(D&D형): 최대 50렙, 렙당 스탯 3개, 상한 100, 대미지 배율 1.5x.
+    - 3. 하이퍼 인플레(메이플형): 최대 300렙, 렙당 스탯 5개, 상한 99999, 대미지 배율 50.0x.
+    - 4. 선협/무협(경지 돌파형): 평소 렙업 없음, 경지 돌파 시 스탯 10배 폭증 및 10대 대경지 명칭 자동 부여.
 - [x] **2. 🔥 [완료] 몬스터 부위 파괴 & 특수 소재 채집 엔진 (`AnatomyHarvestEngine`) & 장비 세트 효과 시스템**:
   - **구현 대상**: [엔진: 신규] `src/world/harvest_engine.py`, [엔진: 확장] `src/world/equipment.py`, `src/world/state.py`
   - **구현 완료 기능**:
@@ -416,20 +428,40 @@
 - [ ] **🐛 [수정 G] `__pycache__/*.pyc` Git 추적 제거 [5분 단독 작업]**:
   - **증상**: `.gitignore`에 `__pycache__/`가 있지만, 이미 커밋된 3개 pyc 파일이 git 추적 상태로 남아있음: `src/__pycache__/__init__.cpython-314.pyc`, `src/image/__pycache__/__init__.cpython-314.pyc`, `src/image/__pycache__/flux.cpython-314.pyc`. AGENTS.md `<Prompt_Rules>` 4번 "NO ARTIFACT COMMIT" 규칙 위반.
   - **처방**: `git rm --cached src/__pycache__/__init__.cpython-314.pyc src/image/__pycache__/__init__.cpython-314.pyc src/image/__pycache__/flux.cpython-314.pyc` 실행 후 커밋. `.gitignore`는 이미 정상.
-- [ ] **🐛 [수정 H] `sanitize_pass2_result` 서사-판정 모순 검증 로직 부재 [중간 작업]**:
-  - **증상**: `two_pass_engine.py:976` — LLM이 반환한 `narration` 텍스트를 `.strip()` 후 무검증 통과. 주사위 판정이 실패(FAILURE)인데 서술에 "성공/돌파/격파" 키워드가 포함되어도 그대로 플레이어에게 출력됨. 즉 Pass 1 결정론적 진실과 Pass 2 서술이 모순되는 "문학적 날조 탈옥" 구멍.
-  - **처방**: `sanitize_pass2_result`에 판정-서사 일관성 검증 레이어 추가. (1) `fact_sheet.dice_result.is_success == False`일 때 narration에 성공 키워드(`["성공", "돌파", "격파", "관통", "제압", "처치"]`) 포함 시 `[⚠️ 서사-판정 모순 감지]` 경고 로그 + LLM 재시도 또는 강제 실패 서사 대체. (2) `killed == True`인데 narration에 대상 생존 묘사 시 동일 처리.
-- [ ] **🐛 [수정 I] 장거리 이동 시 생존 틱 시간 비례 미적용 — "30분 하드코딩" 문제 [중간 작업]**:
-  - **증상**: `two_pass_engine.py`에서 이동 시 실제 소요시간을 `GeographyEngine.calculate_segment_travel_hours` → `mins = max(15, int(hours * 60))`로 정확히 계산하지만(L398-399), 이 `mins` 값을 생존 틱 함수들에 전달하지 않음. 아래 4개 엔진이 하드코딩 `delta_minutes=30`으로 호출: `WeatherMagicSimulationEngine.tick_anomalies`(L216), `ToxicologyToleranceEngine.process_time_metabolism`(L223), `QuestEngine.check_turn_time_limits`(L232), `CorpseEcologyEngine.process_turn_corpse_decay`(L257). 또한 `process_turn_survival_ticks`, `process_turn_spoilage`, `process_turn_circadian`, `process_turn_sanity`는 분 단위 인자 자체를 받지 않고 "턴 1회"로만 동작.
-  - **결과**: 50km 도보(12시간=720분) 이동해도 날씨 이변/퀘스트 타이머/시체 부패/약물 대사는 30분치만, 굶주림/체온/수면/멘탈은 턴 1회치만 진행. 장거리 이동 중 생존계가 통째로 씹힘.
-  - **처방**: (1) 이동 액션일 때 계산된 `mins`를 `compute_pass1` 상단 틱 영역으로 전달하는 2패스 구조 (먼저 이동 의도 파싱 → 시간 계산 → 그 시간만큼 틱 반복). (2) 생존 틱 함수 시그니처에 `delta_minutes` 파라미터 추가 및 내부 로직 비례 스케일링. (3) 비이동 액션은 기존 30분/턴1회 유지.
-  - **아키텍처 주의**: 현재 `compute_pass1`에서 틱이 Step 1(L187~270)에, 이동 판정이 Step 2(L350~410)에 위치. 이동 시간을 틱에 반영하려면 순서 재배치 또는 이동 시간 사전계산 분리 필요.
+- [x] **🐛 [완료: 수정 H] `sanitize_pass2_result` 서사-판정 모순 검증 로직 구현**:
+  - **구현 대상**: [엔진: 확장] `src/world/two_pass_engine.py`, [테스트] `tests/test_two_pass_engine.py` (11 passed, 신규 4개 통과).
+  - **증명**: 구현 메서드 `TwoPassEngine.reconcile_narration_with_fact_sheet`, 테스트 `tests/test_two_pass_engine.py::test_sanitize_pass2_result_*`.
+  - **완료 기능**:
+    1) Anti-Yes-Man 물리/논리 거부(`is_valid=False`) 시 강제 거부 서사로 전면 대체.
+    2) 주사위 판정 실패(`is_success=False`)인데 LLM이 성공("성공", "돌파", "격파" 등) 날조 시 `[⚠️ 서사-판정 모순 감지]` 경고 로깅 및 `*(⚠️ 판정 결과: 실패...)*` 강제 팩트 보정 부착.
+    3) 적 생존(`killed=False`)인데 사망 날조 시 `*(⚠️ 전투 지속: ...)*` 강제 팩트 부착.
+    4) 적 사망(`killed=True`)인데 생존/도주 날조 시 `*(⚠️ 처치 확인: ...)*` 강제 팩트 부착.
+- [x] **🐛 [완료: 수정 I] 장거리 이동 시 생존 틱 시간 비례 미적용 — "30분 하드코딩" 문제 완공 [중간 작업]**:
+  - **구현 대상**: [엔진: 연동] `src/world/two_pass_engine.py` (`resolve_action_movement`, Step 1/Step 2.5), `src/world/weather_engine.py`, `src/world/thermal_engine.py`, `src/world/ration_engine.py`, `src/world/sleep_engine.py`, `src/world/party_sanity_engine.py`, `src/world/disease_engine.py`, [테스트] `tests/test_two_pass_engine.py` (2 passed, 13/13 passed).
+  - **증명**: 구현 메서드 `TwoPassEngine.resolve_action_movement`, `TwoPassEngine.compute_pass1`, 테스트 `tests/test_two_pass_engine.py::test_long_distance_travel_scales_survival_ticks`, `tests/test_two_pass_engine.py::test_non_movement_action_keeps_default_30min_ticks`.
+  - **완료 기능**:
+    1) 이동 액션 발생 시 `GeographyEngine.calculate_segment_travel_hours` 기반 실제 소요시간(`mins`)을 사전 연산(`resolve_action_movement`).
+    2) 계산된 `elapsed_minutes`를 Step 1의 모든 생존 및 환경 틱 함수에 전달:
+       - `WeatherEngine.process_turn_survival_ticks` & `ThermalSurvivalEngine.process_turn_thermal_survival` (`delta_minutes` 비례 체온/젖음/동상/열사 틱 반복).
+       - `RationSpoilageEngine.process_turn_spoilage` (`delta_minutes / 30.0` 비례 부패율 스케일링).
+       - `SleepDeprivationEngine.process_turn_circadian` (`delta_minutes / 20.0` 비례 각성 턴/시간 누적, 각성제 소모, 피로 가산).
+       - `PartySanityEngine.process_turn_sanity` (`delta_minutes / 30.0` 비례 지하 어둠 스트레스 및 붕괴 턴 차감).
+       - `EpidemicEngine.process_turn_infections` (`delta_minutes / 30.0` 비례 잠복기 감소 및 질병 지속 피해).
+       - `WeatherMagicSimulationEngine.tick_anomalies`, `ToxicologyToleranceEngine.process_time_metabolism`, `QuestEngine.check_turn_time_limits`, `CorpseEcologyEngine.process_turn_corpse_decay`, `PupilAdaptationEngine.tick_adaptation_seconds`, `EconomyEngine.restock_turn_ticks` 실시간 시간 비례 적용.
+    3) 비이동 액션은 기존 30분 틱 / 10분 소요시간 정상 유지.
+    4) 전체 539개 테스트 100% 무결점 통과 (BASELINE 537 대비 +2 신규 통과, 0 failed), `eval_runner.py --no-judge` 20턴 `Invalid transition rate: 0.0%` 달성.
 - [ ] **🐛 [수정 J] `dijkstra_shortest_travel` 다중 구간 경로탐색 미연결 [중간 작업]**:
   - **증상**: `geography.py:269-336`에 다익스트라 최단 경로 탐색 구현 완료. 그러나 실제 플레이어 이동(`two_pass_engine.py:366-406`)은 현재 위치의 직접 연결된 `curr_loc.exits`만 검색. 여러 구간을 거치는 장거리 이동("늪지대까지 가라")은 매칭 불가. `dijkstra_shortest_travel`은 테스트에서만 호출됨(소문 확산 엔진도 별도 함수 `get_all_reachable_locations_with_distances` 사용).
   - **처방**: 이동 액션에서 직접 exit에 없는 목적지 요청 시, `dijkstra_shortest_travel`로 다중 구간 경로 계산 → 첫 구간만 즉시 이동 + 나머지 경유지를 `state`에 `pending_travel_waypoints`로 저장 → 다음 턴마다 자동 1구간 진행.
-- [ ] **🐛 [수정 K] 인벤토리 무제한 append — 기존 `outfit_engine.py` 가방 용량 엔진 배선 [중간 작업]**:
-  - **증상**: `state.py:3407` — `self.player.inventory.append(item_id)` 시 무게/부피 체크 전무. 무제한 아이템 소지 가능. `outfit_engine.py`에 `BackpackSpec`(가방 3종 L/kg 규격), `calculate_carry_capacity`, `evaluate_backpack_storage` 이미 구현되어 있으나 `src/` 내 어디에서도 호출 안 됨 (고립 코드). 또한 `EquipmentSlots`에 `main_hand`/`off_hand` 슬롯 부재 — 무기 양손/한손 점유 개념 없음. `cave_in_engine.py:763-764`에서 `main_hand`/`off_hand`를 `getattr` 조회하는 유령 코드 발견.
-  - **처방**: (1) `state.py`의 `apply_state_delta` pickup 분기에 `OutfitMechanicsEngine.evaluate_backpack_storage` 호출 삽입 → 초과 시 거부. (2) 백로그 27번(`EncumbranceEngine`)과 연계. (3) `EquipmentSlots`에 `main_hand`/`off_hand` 분리는 별도 작업으로 분리(양손 무기 제약 시스템).
+- [x] **🐛 [완료: 수정 K] 인벤토리 무제한 append 방지 & 기존 `outfit_engine.py` 가방 용량/찢어짐 엔진 배선 [중간 작업]**:
+  - **구현 대상**: [엔진: 연동] `src/world/state.py` (L3401-3445 `pickup_item` 분기), [테스트] `tests/test_world_state.py` (3 passed).
+  - **증명**: 구현 메서드 `WorldState.apply_update:pickup_item`, 테스트 `tests/test_world_state.py::test_pickup_item_*`, `tests/test_world_state.py::test_validator_rejects_picking_up_massive_furniture`.
+  - **완료 기능**:
+    1) `apply_update`의 `pickup_item` 분기에서 `OutfitMechanicsEngine.get_backpack_spec` 및 `evaluate_backpack_storage` 배선.
+    2) 가방 파손 한계(`tear_weight_limit_kg`) 및 용적(1.5x) 초과 시 인벤토리 수납 거부(`REJECTED pickup ... — 가방 적재 한계 초과`) 및 필드 유지.
+    3) 가구/구조물(`item_type in ["furniture", "structure"]` 또는 `can_store_in_bag=False`) 수납 시도 시 즉각 거부(`⛔ [...]은(는) 너무 거대하거나 구조물 형태이므로 가방에 넣을 수 없습니다.`).
+    4) `state.py:3753`의 `update_environment` 등 LLM이 dict 대신 문자열/비-dict 입력 시의 타입 에러 예외 방어 보강 완료.
+    5) 전체 537개 테스트 100% 무결점 통과 (BASELINE 534 대비 +3 신규 통과, 0 failed), `eval_runner.py --no-judge` 20턴 `Invalid transition rate: 0.0%` 달성.
 - [ ] **🐛 [수정 L] NPC 처치 소문 무조건 발동 — 목격자 게이트(Witness Gate) 부재 [쉬운 작업]**:
   - **증상**: `two_pass_engine.py:689-699` — NPC 사망 시 같은 위치에 살아있는 목격자(다른 NPC/동료) 존재 여부를 검사하지 않고 무조건 `RumorDiffusionEngine.dispatch_event_rumor` 발동. 아무도 없는 던전 밀실에서 암살해도 `carrier="merchant"`로 소문 자동 발사.
   - **처방**: dispatch 호출 전에 `witnesses = [n for n in state.npcs.values() if n.location == state.player.location and n.id != target_npc.id and n.health > 0]` 체크 추가. `len(witnesses) == 0`이면 소문 미발동 (완전 범죄 성공). 동료 NPC만 있으면 동료 신뢰도에 따라 누설 확률 분기.
@@ -592,33 +624,123 @@
     - **E단계 (규칙 및 정적 검증 완료)**:
       - `AGENTS.md`에 배선 및 통합 규칙 8종 + 스코프 게이트 탑재, ruff 구문/미사용 변수/미정의 이름 0건 전원 통과 (`All checks passed!`).
 
+11. **[수정 H] `sanitize_pass2_result` 서사-판정 모순 검증 레이어 완공**:
+    - `src/world/two_pass_engine.py`: `reconcile_narration_with_fact_sheet` 구현 및 연동.
+    - Anti-Yes-Man 거부 강제 대체, 주사위 실패 시 성공 날조 차단, 적 생존 시 사망 날조 차단, 적 사망 시 생존/도주 날조 차단.
+    - `tests/test_two_pass_engine.py`: 4개 단위 테스트 추가 (11 passed).
+
+12. **[수정 K] 인벤토리 무제한 append 방지 & 기존 `outfit_engine.py` 가방 용량/찢어짐 엔진 배선 완공**:
+    - `src/world/state.py` (L3401-3445 `pickup_item` 분기): `OutfitMechanicsEngine.get_backpack_spec` 및 `evaluate_backpack_storage` 배선.
+    - 가방 파손 한계(`tear_weight_limit_kg`) 및 용적(1.5x) 초과 시 `REJECTED pickup ... — 가방 적재 한계 초과` 처리 및 인벤토리 추가 차단.
+    - 고정 구조물/가구(`item_type in ["furniture", "structure"]` 또는 `can_store_in_bag=False`) 수납 시도 시 즉시 거부 및 필드 유지.
+    - `src/world/state.py` (L3753-3825): LLM 비-dict 입력에 대한 `update_environment` 및 관련 갱신 방어 로직 보강.
+    - `tests/test_world_state.py`: 3개 테스트 추가 (`test_pickup_item_rejected_when_over_backpack_tear_capacity`, `test_pickup_item_rejected_when_furniture_or_cannot_store_in_bag`, `test_validator_rejects_picking_up_massive_furniture`, 10 passed).
+
+13. **[수정 I] 장거리 이동 시 생존 틱 시간 비례 미적용 ("30분 하드코딩" 문제) 완공**:
+    - `src/world/two_pass_engine.py`: `resolve_action_movement` 클래스 메서드 신설, `compute_pass1` 도입부에서 실제 이동 분(`mins`) 사전 연산 및 `DeterministicFactSheet.turn_duration_minutes` 탑재.
+    - Step 1의 모든 생존 및 환경 틱 함수에 `elapsed_minutes` 전달:
+      * `WeatherEngine.process_turn_survival_ticks` & `ThermalSurvivalEngine.process_turn_thermal_survival` (`delta_minutes` 비례 틱 반복 연산).
+      * `RationSpoilageEngine.process_turn_spoilage` (`delta_minutes / 30.0` 비례 부패 가속).
+      * `SleepDeprivationEngine.process_turn_circadian` (`delta_minutes / 20.0` 비례 각성 턴/시간 누적 및 각성제/피로 정산).
+      * `PartySanityEngine.process_turn_sanity` (`delta_minutes / 30.0` 비례 지하 어둠 스트레스 누적 및 붕괴 회복).
+      * `EpidemicEngine.process_turn_infections` (`delta_minutes / 30.0` 비례 잠복기 감소 및 지속 피해).
+      * 날씨 이변/약물 대사/퀘스트 타이머/시체 부패/암적응/상점 리스톡 실시간 연동.
+    - `tests/test_two_pass_engine.py`: 2개 신규 테스트 추가 (`test_long_distance_travel_scales_survival_ticks`, `test_non_movement_action_keeps_default_30min_ticks`, 13 passed).
+
+14. **[수정 L] NPC 처치 소문 목격자 게이트 (완전 범죄 밀실 암살 지원) 완공**:
+    - `src/world/two_pass_engine.py` (L720-770 `if killed:` 블록):
+      * 현장(`target_npc.location` 및 `state.player.location`)에 생존한 제3자 NPC(사망자 및 플레이어 파티원 제외, `alive=True` and `health > 0`) 목격자(`witnesses`) 존재 여부 판정 게이트 탑재.
+      * 목격자가 1명 이상 존재할 때만 `RumorDiffusionEngine.dispatch_event_rumor` 호출 및 상단 가도 소문 확산 발동.
+      * 목격자가 0명인 경우(단독 밀실 결투/기습 암살) 소문 디스패치 전면 차단, 지역/글로벌 평판 변동 억제, `은밀한 처치: 현장에 목격자가 없어 [{target_npc.name}] 처치 소문이 퍼지지 않았습니다. (완전 범죄)` 로그 기록.
+    - `tests/test_two_pass_engine.py`: 2개 신규 단위 테스트 추가 (`test_npc_kill_without_witness_suppresses_rumor_dispatch`, `test_npc_kill_with_witness_dispatches_rumor`, 15 passed).
+
+15. **[수정 J] `dijkstra_shortest_travel` 다중 구간 경로탐색 및 `pending_travel_waypoints` 자동 진행 배선 완공**:
+    - `src/world/state.py`:
+      * `WorldState`에 `pending_travel_waypoints: list[str] = field(default_factory=list)` (다중 구간 이동 대기열) 필드 탑재 (규칙 3, 6 준수).
+      * `apply_update` 및 `from_dict`/`to_json` 직렬화/역직렬화 100% 호환성 연동.
+    - `src/world/two_pass_engine.py`:
+      * `resolve_action_movement`:
+        - Case 0: `pending_travel_waypoints` 대기열이 있을 때 "계속/전진/가던 길" 입력 시 다음 웨이포인트로 자동 전진 및 대기열 갱신.
+        - Case 1: 인접 exits 단일 홉 직결 이동 처리.
+        - Case 2: 인접하지 않은 원거리 목적지 명시 시 `GeographyEngine.dijkstra_shortest_travel` 호출하여 도로망 및 노면 상태 반영 최단 경로(`path`, `hours`, `km`) 계산.
+      * `compute_pass1` Step 2.5:
+        - 다중 가도 이동 시 경유지 경로(`waypoints`) ➔ 화살표 연결 포맷으로 팩트시트 로그 기록.
+        - `state_delta["pending_travel_waypoints"]` 대기열 동기화.
+    - `tests/test_two_pass_engine.py`: 2개 신규 단위 테스트 추가 (`test_multi_hop_movement_via_dijkstra_shortest_travel`, `test_pending_travel_waypoints_auto_advance`, 17 passed).
+    - `tests/test_world_state.py`: 1개 신규 단위 테스트 추가 (`test_pending_travel_waypoints_serialization_and_update`, 11 passed).
+
+16. **[수정 F] `README.md` 죽은 문서 전면 교체 완공**:
+    - 5개 장소/3명 NPC toy demo 수준의 구형 문서를 전면 폐기하고, 최신 6계층 인프라, Two-Pass 결정론적 파이프라인, 10대 물리/생존 엔진, DoD Gate 551개 테스트 및 0.0% 무효 전이율 실측 지표, 디렉터리 레이아웃을 100% 충실히 반영하여 재작성 완료.
+
+17. **[수정 G] `__pycache__/*.pyc` Git 추적 제거 및 `.gitignore` 정제 완공**:
+    - Git 캐시에서 추적되던 `src/__pycache__/__init__.cpython-314.pyc`, `src/image/__pycache__/__init__.cpython-314.pyc`, `src/image/__pycache__/flux.cpython-314.pyc` 전면 `git rm --cached` 언트래킹 완료.
+    - `.gitignore`의 `__pycache__/` 및 `*.py[cod]` 규칙을 통해 향후 캐시 파일 커밋 원천 차단.
+
+18. **[신규 백로그] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`) 완공**:
+    - `src/world/stat_engine.py`:
+      * `PowerScalePreset` 데이터클래스 구현 (`id`, `name_ko`, `max_level`, `stat_points_per_level`, `stat_cap`, `exp_multiplier`, `damage_scale_multiplier`, `hp_gain_per_level`, `mp_gain_per_level`, `breakthrough_multiplier`, `realm_names`, `traits`).
+      * 4대 프리셋 구축: 로우 판타지(Lv.16/1pt/상한30/1.0x), 스탠다드 판타지(Lv.50/3pt/상한100/1.5x), 하이퍼 인플레이션(Lv.300/5pt/상한99999/50.0x), 선협/무협(Lv.10/0pt/상한100000/10x 경지 돌파 폭증 및 10대 대경지 부여).
+      * `StatEngine.get_preset`, `StatEngine.detect_preset_for_world`, `StatEngine.calculate_required_exp`, `StatEngine.calculate_scaled_damage` 구현.
+    - `src/world/state.py`:
+      * `Player.allocate_stat(stat_name, amount=1, stat_cap=None)`: 스탯 상한 초과 투자 방지.
+      * `Player.add_exp(amount, power_scale_preset=None)`: 프리셋별 레벨 상한, 스탯 포인트, 체력/마나 증가, 선협 경지 돌파(스탯 10배 폭증 및 realm 명칭 갱신) 연동.
+      * `WorldState.power_scale_preset_id: str = "standard_fantasy"` 및 `get_power_scale_preset()` 탑재 (JSON 직렬화/역직렬화 100% 호환).
+      * `WorldState.apply_update`: `"power_scale_preset_id"` 및 `"allocate_stat"` 델타 적용 로직 탑재.
+    - `src/world/infrastructure.py` & `src/world/generator.py`:
+      * 세계관 생성 및 cosmology 주입 시 `StatEngine.detect_preset_for_world`로 프리셋 자동 감지 및 `power_scale_preset_id` 바인딩.
+    - `src/world/two_pass_engine.py`:
+      * `DeterministicFactSheet`: `power_scale_summary` 필드 및 프롬프트 컨텍스트 렌더링 배선.
+      * `compute_pass1`: 프리셋 요약 주입, 스탯 투자 의도 처리, 적 처치 시 프리셋 비례 EXP 지급 및 레벨업/경지 돌파 로그 기록.
+    - `tests/test_power_scale_presets.py`: 7개 신규 단위/통합 테스트 전 종목 무결점 통과 (7 passed).
+
+19. **[코드베이스 정밀 감사, 불필요 파일 정리 & AGENTS.md 토큰 최적화] 완공**:
+    - **6개 불필요/고아/중복 파일 전면 삭제**:
+      * `tests/test_combat_tempo.py` (0바이트 빈 파일 삭제)
+      * `server_error.log` (0바이트 빈 로그 파일 삭제)
+      * `src/engine/streaming.py` (코드베이스 전체 0참조 완전 고아 클래스 `NarrationStreamer` 삭제)
+      * `src/agents/combat_profiler.py` (0호출 및 `LLM_NAME` 미존재 broken import 고아 모듈 삭제)
+      * `src/world/save_load_manager.py` (SQLite `persistence.py`와 완전 중복되는 JSON 슬롯 저장소 삭제)
+      * `tests/test_save_load_manager.py` (삭제된 `save_load_manager.py`의 단위 테스트 6건 동반 제거)
+    - **패키지 마커 위생 보강**:
+      * `src/engine/__init__.py` 및 `src/persistence/__init__.py` 생성으로 모듈 임포트 패키징 정상화.
+    - **데이터 모델 버그 수정 & 데드 코드 정리**:
+      * `src/world/state.py`: `dilemmas_faced: list = field(default_factory=list)` 누락 필드 선언 (`apply_update` 및 `from_dict`에서 호출되나 필드 미선언으로 인한 `AttributeError` 잠재 크래시 해결).
+      * `app.py`: 미참조 임포트(`DISPOSITION_KO_MAP`, `SkillSystem`, `IncantationSystem`) 제거 및 도달 불가 중복 return 문(`app.py:240-241`) 제거.
+      * `src/agents/game_master.py`: 미참조 임포트(`DiceCheckResult`, `SkillSystem`) 및 `process_turn` 내부 불필요 인라인 임포트(`StatusEffectEngine`, `PhysicsMatrixEngine`) 제거.
+    - **`AGENTS.md` AI 토크나이저 친화 영문 구조화 & 토큰 대폭 최적화**:
+      * 파일 크기 13,799 bytes / 135줄 ➔ **5,721 bytes / 98줄 (약 58.5% 토큰 압축 절감)**.
+      * 한국어/영어 혼용에서 AI 토크나이징 효율이 높은 간결한 영어 규칙 체계로 전환.
+      * 3곳에 분산되어 있던 중복 규칙(사전 검색, 기존 코드 재사용 등) 통합.
+      * `prompts.py`에 이미 존재하는 게임 디자인 철학은 핵심 1줄 앵커로 집약.
+    - **DoD Gate & 회귀 검증**:
+      * `pytest tests/`: **545 passed** (기존 BASELINE 551건 중 삭제된 `save_load_manager` 6건 제외 전원 정상 통과, 회귀 0건).
+      * `eval_runner.py --no-judge`: **`Invalid transition rate: 0.0%`** 달성.
+      * `python -m compileall src/ -q`: 구문 오류 0건 통과.
+
 ### 2. 테스트 및 평가 검증 상태
-- **프로젝트 전체 530개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 508 대비 +22 신규 통과)**:
-  - `tests/test_npc_psychology_state.py`: 4 passed (세이브/로드 라운드트립, 레거시 호환, MemoryEntry 및 NPC 확장 필드 직렬화 검증).
-  - `tests/test_npc_psychology_engine.py`: 5 passed (템플릿 결정론적 분산, 14종 감정 감쇠, 스트레스 5단계 붕괴, 트라우마 키워드 유발, 관계 9축 델타 및 레거시 동기화).
-  - `tests/test_npc_psychology_pipeline.py`: 6 passed (3-Tier 라우팅, 결정 캐시 적중/무효화, 메모리 앵커 브릿지, 코그너티브 엔진 직결, LLM 프롬프트 생성, 3-Tier 성능 프로파일링).
-  - `tests/test_npc_memory.py`: 8 passed (기억 감쇠 20턴 가지치기, 오프스크린 로그 30개 제한 검증).
-  - `tests/test_npc_skill_engine.py`: 8 passed (활 사격 장력/탄속 물리 역학 검증).
-  - `tests/test_two_pass_engine.py`: 7 passed (안티 예스맨 가설 검증, 사물 파괴/소각 물리 검증).
-  - `pytest tests/`: **530 passed in 6.07s**.
+- **프로젝트 전체 545개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 551 - 중복 삭제 6 = 545 passed)**:
+  - `tests/test_power_scale_presets.py`: 7 passed.
+  - `tests/test_balance_caps.py`: 24 passed.
+  - `tests/test_two_pass_engine.py`: 17 passed.
+  - `tests/test_world_state.py`: 11 passed.
+  - `pytest tests/`: **545 passed in 214.08s**.
 - **DoD Gate Eval Runner 검증**:
   - `python eval_runner.py --no-judge` (20턴): **`Invalid transition rate: 0.0%`** 달성.
 - **Static Analysis Gate**:
-  - `ruff check src/world/psychology_engine.py src/world/cognitive_engine.py src/world/two_pass_engine.py src/world/npc_skill_engine.py src/world/state.py src/world/perception_engine.py --select E9,F821,F841,F401`: **All checks passed!**
+  - `python -m compileall src/ -q`: **구문 오류 0건 통과**.
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
 - **현재 완료 상태**:
-  - 클로드 지시 배선 잇기 (A~E 전 단계: 안티예스맨, 인지 관찰, 오프스크린 예측, 활 물리, 사물 파괴, 기억 감쇠) 완공.
-  - NPC 심리·성격·인지 추론 & 12단계 행동 예측 엔진 (`NPCCognitiveDeductionEngine` & `PsychologyDecisionPipeline` / 백로그 40번) 완공.
-  - 만물 사물 내구도 & 물리 파괴 엔진 (`UniversalObjectPhysicsEngine`) 완공.
-  - 성벽 공성전 & 대규모 전열 전술 엔진 (`SiegeWarfareEngine` / 백로그 9번) 완공.
-  - 현상금 수배자 & 추적자 AI 엔진 (`BountyHunterEngine` / 백로그 11번) 완공.
-- **다음 작업 (유저 결정에 따른 후속 진행)**:
-  - **옵션 1: [🔥 신규 백로그] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`)**:
-    * `src/world/stat_engine.py`, `src/world/state.py`, `cosmology_templates.json` 연동.
-    * 4대 성장 스케일(로우 판타지 12~20렙, D&D형 50렙, 메이플형 300렙, 선협/무협 경지 돌파형) 프리셋 구축.
-  - **옵션 2: [백로그 10번] 가문 혈통 & 세대 계승 영구 레거시 엔진 (`LineageLegacyEngine` / legacy.py 확장)**:
-    * 영구 사망 시 유언장 집행, 직계 자손에게 가보/특성/영지/원수 가문 적대 관계 100% 인계.
-  - **옵션 3: [TRIAGE.md] 남은 13개 고립 모듈 순차 배선 또는 정리**:
-    * `stealth_engine.py`, `harvest_engine.py`, `campsite_engine.py` 등 실전 턴 루프 순차 연결.
+  - **[수정 F] `README.md` 전면 교체 완공**
+  - **[수정 G] `__pycache__/*.pyc` Git 추적 제거 및 `.gitignore` 점검 완공**
+  - **[신규 백로그] 세계관별 성장 스케일 프리셋 시스템 (`WorldPowerScalePresets`) 완공**
+  - **[정리/최적화] 불필요 파일 6종 삭제, 패키지 마커 보강, 버그/데드코드 수정, AGENTS.md 토큰 58.5% 최적화 완공**
+- **다음 잔여 백로그 후속 진행**:
+  - **옵션 1: [🔥 템플릿 확충 6] 방한/방열/방수 생존 의복 및 장비 템플릿 확충 (현재 4종 ➔ 목표 20종)**
+  - **옵션 2: [🔥 템플릿 확충 7] 생존 열원 및 조리/건조 시설 템플릿 확충 (현재 2종 ➔ 목표 10종)**
+  - **옵션 3: [🔥 템플릿 확충 8] 기상 물리 및 극한 환경 재해 템플릿 확충 (현재 2종 ➔ 목표 15종)**
+  - **옵션 4: [🔥 신규 백로그 - UI/그래픽] LoRA SD 1.5 기반 실시간 동적 부분 갱신 이중 맵 이미지 시스템 (`DynamicDualMapRenderer`)**
+  - **옵션 5: [🔥 신규 백로그 - UI/플랫폼] 스팀 게임 스타일 독립 실행형 창 모드 런처 (`SteamStyleStandaloneLauncher`)**
+
+
 

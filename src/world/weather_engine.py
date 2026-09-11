@@ -42,13 +42,13 @@ class WeatherEngine:
         return 1.0, ""
 
     @classmethod
-    def process_turn_survival_ticks(cls, state: WorldState) -> List[str]:
+    def process_turn_survival_ticks(cls, state: WorldState, delta_minutes: int = 30) -> List[str]:
         """
-        Processes physiological body temperature, wetness, and weather hazards per turn.
+        Processes physiological body temperature, wetness, and weather hazards per turn or elapsed minutes.
         Delegates to ThermalSurvivalEngine for deep deterministic thermal dynamics.
         """
         from src.world.thermal_engine import ThermalSurvivalEngine
-        logs = ThermalSurvivalEngine.process_turn_thermal_survival(state)
+        logs = ThermalSurvivalEngine.process_turn_thermal_survival(state, delta_minutes=delta_minutes)
 
         # Heavy Fog (Visibility / Ambush)
         weather = state.environment.weather

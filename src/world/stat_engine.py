@@ -54,28 +54,155 @@ CORE_STATS_KO: Dict[str, Dict[str, Any]] = {
 
 
 @dataclass
+class PowerScalePreset:
+    id: str                                # "low_fantasy", "standard_fantasy", "hyper_inflation", "cultivation"
+    name_ko: str                           # "로우 판타지 (발더스게이트/위쳐형)"
+    max_level: int                         # 16, 50, 300, 10
+    stat_points_per_level: int             # 1, 3, 5, 0
+    stat_cap: int                          # 30, 100, 99999, 100000
+    exp_multiplier: float                  # 1.2, 1.0, 0.8, 3.0
+    damage_scale_multiplier: float         # 1.0, 1.5, 50.0, 10.0
+    hp_gain_per_level: int                 # 4, 6, 25, 50
+    mp_gain_per_level: int                 # 2, 4, 15, 50
+    breakthrough_multiplier: float = 1.0   # 선협/무협 경지 돌파 배율
+    realm_names: List[str] = field(default_factory=list)
+    traits: List[str] = field(default_factory=lambda: [
+        "성장 스케일 프리셋",
+        "레벨 상한",
+        "스탯 성장률",
+    ])
+
+
+POWER_SCALE_PRESETS: Dict[str, PowerScalePreset] = {
+    "low_fantasy": PowerScalePreset(
+        id="low_fantasy",
+        name_ko="로우 판타지 (발더스게이트/위쳐형)",
+        max_level=16,
+        stat_points_per_level=1,
+        stat_cap=30,
+        exp_multiplier=1.2,
+        damage_scale_multiplier=1.0,
+        hp_gain_per_level=4,
+        mp_gain_per_level=2,
+        breakthrough_multiplier=1.0,
+        realm_names=[],
+        traits=["로우 판타지", "필멸자 한계", "제한된 성장", "현실적 대미지"],
+    ),
+    "standard_fantasy": PowerScalePreset(
+        id="standard_fantasy",
+        name_ko="스탠다드 판타지 (D&D형)",
+        max_level=50,
+        stat_points_per_level=3,
+        stat_cap=100,
+        exp_multiplier=1.0,
+        damage_scale_multiplier=1.5,
+        hp_gain_per_level=6,
+        mp_gain_per_level=4,
+        breakthrough_multiplier=1.0,
+        realm_names=[],
+        traits=["스탠다드 판타지", "영웅의 여정", "균형 성장"],
+    ),
+    "hyper_inflation": PowerScalePreset(
+        id="hyper_inflation",
+        name_ko="하이퍼 인플레이션 (메이플/MMO형)",
+        max_level=300,
+        stat_points_per_level=5,
+        stat_cap=99999,
+        exp_multiplier=0.8,
+        damage_scale_multiplier=50.0,
+        hp_gain_per_level=25,
+        mp_gain_per_level=15,
+        breakthrough_multiplier=1.0,
+        realm_names=[],
+        traits=["하이퍼 인플레", "수치 폭발", "만렙 300", "초고화력 대미지"],
+    ),
+    "cultivation": PowerScalePreset(
+        id="cultivation",
+        name_ko="선협/무협 (경지 돌파형)",
+        max_level=10,
+        stat_points_per_level=0,
+        stat_cap=100000,
+        exp_multiplier=3.0,
+        damage_scale_multiplier=10.0,
+        hp_gain_per_level=50,
+        mp_gain_per_level=50,
+        breakthrough_multiplier=10.0,
+        realm_names=[
+            "연기기 (煉氣期)",
+            "축기기 (築基期)",
+            "금단기 (金丹期)",
+            "원영기 (元嬰期)",
+            "화신기 (化神期)",
+            "연허기 (煉虛期)",
+            "합체기 (合體期)",
+            "대승기 (大乘期)",
+            "도겁기 (渡劫期)",
+            "진선 (眞仙)",
+        ],
+        traits=["선협 경지 돌파", "10배 스탯 폭증", "심득 축적", "천도 뇌겁"],
+    ),
+}
+
+
+@dataclass
 class StatEngine:
     TRAITS: List[str] = field(default_factory=lambda: [
         "스탯 엔진",
         "인간계 정점 15 앵커",
         "무한 서브스탯",
         "현실 물리 연동",
-        "경험치 레벨업"
+        "경험치 레벨업",
+        "세계관 성장 스케일 프리셋"
     ])
     traits: List[str] = field(default_factory=lambda: [
         "스탯 엔진",
         "인간계 정점 15 앵커",
         "무한 서브스탯",
         "현실 물리 연동",
-        "경험치 레벨업"
+        "경험치 레벨업",
+        "세계관 성장 스케일 프리셋"
     ])
 
     @classmethod
-    def calculate_required_exp(cls, level: int) -> int:
-        """레벨업 필요 경험치 공식: req_exp(L) = int(100 * L^1.5)."""
+    def get_preset(cls, preset_id: str) -> PowerScalePreset:
+        """프리셋 ID로 PowerScalePreset 조회 (기본값: standard_fantasy)."""
+        return POWER_SCALE_PRESETS.get(preset_id, POWER_SCALE_PRESETS["standard_fantasy"])
+
+    @classmethod
+    def detect_preset_for_world(cls, cosmo_dict: Optional[dict] = None, world_genre: str = "") -> PowerScalePreset:
+        """
+        세계관 템플릿(cosmo_dict) 또는 장르 텍스트 기반으로 적합한 성장 스케일 프리셋 자동 판별.
+        1) cosmology_template 내 'power_scale' 또는 'growth_preset' 명시 키 우선.
+        2) 장르 키워드 매칭 (선협/무협 -> cultivation, 하이퍼/메이플 -> hyper_inflation, 다크/생존 -> low_fantasy, 기본 -> standard_fantasy).
+        """
+        cosmo = cosmo_dict or {}
+        explicit = cosmo.get("power_scale") or cosmo.get("growth_preset") or cosmo.get("power_scale_preset_id")
+        if explicit and explicit in POWER_SCALE_PRESETS:
+            return POWER_SCALE_PRESETS[explicit]
+
+        genre_blob = f"{world_genre} {cosmo.get('genre', '')} {cosmo.get('world_name', '')}".lower()
+        if any(k in genre_blob for k in ["선협", "무협", "경지", "선계", "수선", "도호", "cultivation", "wuxia", "xianxia"]):
+            return POWER_SCALE_PRESETS["cultivation"]
+        if any(k in genre_blob for k in ["메이플", "하이퍼", "인플레", "mmo", "아케이드", "게임 판타지", "hyper_inflation"]):
+            return POWER_SCALE_PRESETS["hyper_inflation"]
+        if any(k in genre_blob for k in ["다크", "로우 판타지", "생존", "하드코어", "위쳐", "dark", "low fantasy"]):
+            return POWER_SCALE_PRESETS["low_fantasy"]
+        return POWER_SCALE_PRESETS["standard_fantasy"]
+
+    @classmethod
+    def calculate_required_exp(cls, level: int, preset: Optional[PowerScalePreset] = None) -> int:
+        """레벨업 필요 경험치 공식: req_exp(L) = int(100 * L^1.5 * exp_multiplier)."""
         if level <= 0:
             return 100
-        return int(100 * (level ** 1.5))
+        mult = preset.exp_multiplier if preset else 1.0
+        return max(10, int(100 * (level ** 1.5) * mult))
+
+    @classmethod
+    def calculate_scaled_damage(cls, base_damage: float, stat_val: int, preset: Optional[PowerScalePreset] = None) -> float:
+        """세계관 파워 스케일 프리셋의 대미지 배율을 적용한 최종 위력 계산."""
+        p = preset or cls.get_preset("standard_fantasy")
+        base = base_damage * (1.0 + max(0, stat_val - 10) * 0.1)
+        return round(base * p.damage_scale_multiplier, 1)
 
     @classmethod
     def calculate_movement_speed(cls, agility: int) -> float:

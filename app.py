@@ -9,10 +9,8 @@ import json
 from src.llm import get_llm
 from src.agents.game_master import GameMasterAgent
 from src.world.persistence import PersistenceManager
-from src.world.state import WorldState, DISPOSITION_KO_MAP
+from src.world.state import WorldState
 from src.world.legacy import LegacyManager
-from src.world.skills import SkillSystem
-from src.world.incantation import IncantationSystem
 from src.world.chronicle import ChronicleManager
 try:
     from src.image.flux import generate_scene_image
@@ -236,10 +234,6 @@ def start_game(world_state_json: str) -> tuple:
 
     # No progress / no save / corrupt save → generate a brand-new random world
     return create_new_world()
-
-    # No progress / no save / corrupt save → generate a brand-new random world
-    return create_new_world()
-
 
 
 

@@ -809,6 +809,7 @@ class WorldGenerator:
             "titles_db": {},
             "cosmology_template": full_cosmo,
             "world_lore": full_cosmo,
+            "power_scale_preset_id": full_cosmo.get("power_scale", "standard_fantasy"),
             "history": [],
             "world_facts": world_facts_list
         }

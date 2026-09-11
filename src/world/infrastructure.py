@@ -1920,6 +1920,10 @@ class InfrastructureTemplateLoader:
         world_state.cosmology_template = cosmo_dict
         world_state.world_lore = cosmo_dict
 
+        from src.world.stat_engine import StatEngine
+        detected_preset = StatEngine.detect_preset_for_world(cosmo_dict, getattr(world_state, "world_genre", ""))
+        world_state.power_scale_preset_id = detected_preset.id
+
     @classmethod
     def assemble_world_upper_layers(
         cls,

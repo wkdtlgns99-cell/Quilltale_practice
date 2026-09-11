@@ -162,9 +162,10 @@ class RationSpoilageEngine:
         return status
 
     @classmethod
-    def process_turn_spoilage(cls, state: Any) -> List[str]:
+    def process_turn_spoilage(cls, state: Any, delta_minutes: int = 30) -> List[str]:
         """
-        Processes 1 turn of spoilage for all food items in player's inventory and storage.
+        Processes spoilage for all food items in player's inventory and storage.
+        Scales with elapsed game time (delta_minutes, default 30m = 1 turn).
         Accelerated by ambient temperature (ThermalEngine) and wetness/rain (WeatherEngine).
         User Rule 1: Individual tracking and stack splitting on spoilage.
         """
@@ -190,6 +191,8 @@ class RationSpoilageEngine:
         elif wetness >= 40.0:
             env_multiplier *= 1.4
 
+        time_mult = max(0.1, delta_minutes / 30.0)
+
         # Iterate over inventory item IDs
         items_dict = getattr(state, "items", {})
         player_inv = list(player.inventory)
@@ -204,7 +207,7 @@ class RationSpoilageEngine:
                 continue  # Already rotten
 
             prev_freshness = status.freshness
-            decay = status.spoilage_rate_per_turn * env_multiplier
+            decay = status.spoilage_rate_per_turn * env_multiplier * time_mult
             status.freshness = max(0.0, status.freshness - decay)
 
             # Check Spoilage thresholds

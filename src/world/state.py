@@ -1821,8 +1821,8 @@ class Player:
         eq_def = getattr(self, "equipment_defense", 0)
         return max(0.0, round(base + eq_def * 0.5, 1))
 
-    def allocate_stat(self, stat_name: str, amount: int = 1) -> bool:
-        """자유 분배 스탯 포인트를 7대 핵심 스탯에 투자."""
+    def allocate_stat(self, stat_name: str, amount: int = 1, stat_cap: Optional[int] = None) -> bool:
+        """자유 분배 스탯 포인트를 7대 핵심 스탯에 투자 (세계관 스탯 상한 stat_cap 검증 지원)."""
         if amount <= 0 or self.stat_points < amount:
             return False
         stat_map = {
@@ -1838,31 +1838,61 @@ class Player:
         if not target_field or not hasattr(self, target_field):
             return False
         current_val = getattr(self, target_field)
+        if stat_cap is not None and current_val + amount > stat_cap:
+            return False
         setattr(self, target_field, current_val + amount)
         self.stat_points -= amount
         return True
 
-    def add_exp(self, amount: int) -> dict:
-        """경험치를 획득하고 필요 시 레벨업 처리: req_exp(L) = 100 * L^1.5."""
+    def add_exp(self, amount: int, power_scale_preset: Optional[Any] = None) -> dict:
+        """경험치를 획득하고 필요 시 레벨업 처리 (PowerScalePreset 연동)."""
         if amount <= 0:
             return {"leveled_up": False, "levels_gained": 0, "current_level": self.level, "exp": self.exp}
+
+        from src.world.stat_engine import StatEngine
+        preset = power_scale_preset or StatEngine.get_preset("standard_fantasy")
+        max_lvl = getattr(preset, "max_level", 50)
+        pts_per_lvl = getattr(preset, "stat_points_per_level", 3)
+        hp_base = getattr(preset, "hp_gain_per_level", 5)
+        mp_base = getattr(preset, "mp_gain_per_level", 3)
+        breakthrough_mult = getattr(preset, "breakthrough_multiplier", 1.0)
+        stat_cap = getattr(preset, "stat_cap", 100)
+        realm_names = getattr(preset, "realm_names", [])
+
         self.exp += amount
         levels_gained = 0
-        while True:
-            req = int(100 * (self.level ** 1.5))
+        while self.level < max_lvl:
+            req = StatEngine.calculate_required_exp(self.level, preset)
             if self.exp >= req:
                 self.exp -= req
                 self.level += 1
                 levels_gained += 1
-                self.stat_points += 3
-                hp_gain = 5 + (self.effective_constitution // 3)
-                mp_gain = 3 + (self.effective_intelligence // 3)
+                self.stat_points += pts_per_lvl
+                hp_gain = hp_base + (self.effective_constitution // 3)
+                mp_gain = mp_base + (self.effective_intelligence // 3)
                 self.max_health += hp_gain
                 self.max_mana += mp_gain
                 self.health = self.max_health
                 self.mana = self.max_mana
+
+                # 선협/무협 경지 돌파 특수 효과
+                if breakthrough_mult > 1.0:
+                    for s_field in ["strength", "agility", "constitution", "intelligence", "wisdom", "perception", "luck"]:
+                        cur = getattr(self, s_field, 10)
+                        setattr(self, s_field, min(stat_cap, int(cur * breakthrough_mult)))
+                    if realm_names and self.level - 1 < len(realm_names):
+                        new_realm = realm_names[self.level - 1]
+                        self.sub_stats["current_realm"] = new_realm
+                        self.traits = [t for t in self.traits if not t.startswith("경지:")]
+                        self.traits.append(f"경지: {new_realm}")
             else:
                 break
+
+        if self.level >= max_lvl:
+            req_cap = StatEngine.calculate_required_exp(self.level, preset)
+            if self.exp > req_cap:
+                self.exp = req_cap
+
         return {
             "leveled_up": levels_gained > 0,
             "levels_gained": levels_gained,
@@ -1871,6 +1901,8 @@ class Player:
             "stat_points": self.stat_points,
             "max_health": self.max_health,
             "max_mana": self.max_mana,
+            "power_scale": getattr(preset, "id", "standard_fantasy"),
+            "current_realm": self.sub_stats.get("current_realm", "") if breakthrough_mult > 1.0 else None,
         }
 
 
@@ -1926,6 +1958,7 @@ class WorldState:
     factions: dict[str, Faction] = field(default_factory=dict)         # 국가 및 주요 세력 DB
     cosmology_template: dict[str, Any] = field(default_factory=dict)   # 활성화된 세계관 템플릿 풀 스펙
     world_lore: dict[str, Any] = field(default_factory=dict)           # 세계관 세부 설정 (cosmology_template 동기화)
+    power_scale_preset_id: str = "standard_fantasy"                     # 세계관 성장 스케일 프리셋 ID ("low_fantasy", "standard_fantasy", "hyper_inflation", "cultivation")
     environment_states: dict[str, dict] = field(default_factory=dict) # {"tavern": {"door": "broken", "hearth": "burned"}}
     discovered_clues: dict[str, str] = field(default_factory=dict)     # 발견된 단서/비밀 DB
     world_secrets: dict[str, dict] = field(default_factory=dict)       # 비대칭 비밀/진실 DB (GM 비대칭 정보 & 단서 조각)
@@ -1962,6 +1995,8 @@ class WorldState:
     active_weather_anomalies: dict = field(default_factory=dict) # 활성화된 기상 이변 딕셔너리 {anomaly_id: ActiveWeatherAnomaly}
     active_corpses: dict = field(default_factory=dict)           # 활성화된 전장 시체 DB {corpse_id: CorpseInstance or dict}
     active_sieges: dict = field(default_factory=dict)            # 활성화된 공성전 DB {siege_id: SiegeBattleState or dict}
+    pending_travel_waypoints: list[str] = field(default_factory=list) # 다중 구간 경로 이동 대기열 [waypoint_loc_id, ...]
+    dilemmas_faced: list = field(default_factory=list)  # 플레이어가 직면한 윤리적 딜레마 기록
 
 
 
@@ -1972,6 +2007,12 @@ class WorldState:
     @property
     def current_day(self) -> int:
         return 1 + (self.total_minutes // (24 * 60))
+
+    def get_power_scale_preset(self) -> Any:
+        """현재 세계관의 성장 스케일 프리셋(PowerScalePreset) 객체 반환."""
+        from src.world.stat_engine import StatEngine
+        preset_id = getattr(self, "power_scale_preset_id", None) or "standard_fantasy"
+        return StatEngine.get_preset(preset_id)
 
     @property
     def current_hour(self) -> int:
@@ -3398,15 +3439,76 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 self.player.mana = max(0, min(self.player.max_mana, int(p_dict["mana"])))
                 changes.append(f"Player mana updated: {self.player.mana}")
 
+        # 1.5 Pending travel waypoints update
+        if "pending_travel_waypoints" in update and isinstance(update["pending_travel_waypoints"], list):
+            self.pending_travel_waypoints = list(update["pending_travel_waypoints"])
+            changes.append(f"Pending travel waypoints updated: {self.pending_travel_waypoints}")
+
+        # 1.6 Power scale preset update & Stat allocation
+        if "power_scale_preset_id" in update and isinstance(update["power_scale_preset_id"], str):
+            self.power_scale_preset_id = update["power_scale_preset_id"]
+            changes.append(f"Power scale preset updated to: {self.power_scale_preset_id}")
+
+        if "allocate_stat" in update and isinstance(update["allocate_stat"], dict):
+            s_name = update["allocate_stat"].get("stat_name", "")
+            amt = int(update["allocate_stat"].get("amount", 1))
+            preset = self.get_power_scale_preset()
+            success = self.player.allocate_stat(s_name, amt, stat_cap=preset.stat_cap)
+            if success:
+                changes.append(f"Player allocated {amt} points to {s_name} (cap: {preset.stat_cap})")
+            else:
+                changes.append(f"REJECTED stat allocation to {s_name} — insufficient points or cap reached ({preset.stat_cap})")
+
         # 2. Item pickup
         if "pickup_item" in update:
             item_id = update["pickup_item"]
             loc = self.current_location()
             if loc and item_id in loc.items and item_id in self.items:
-                loc.items.remove(item_id)
-                self.player.inventory.append(item_id)
-                self.items[item_id].location = "inventory"
-                changes.append(f"Player picked up {self.items[item_id].name}")
+                item = self.items[item_id]
+                from src.world.outfit_engine import OutfitMechanicsEngine
+
+                # Check 1: Can this item be stored in a bag?
+                can_store = getattr(item, "can_store_in_bag", True)
+                item_size = getattr(item, "size", "small")
+                if not can_store or item_size in ["heavy", "massive"] or item.item_type in ["furniture", "structure"]:
+                    changes.append(f"REJECTED pickup {item.name} — 너무 거대하거나 구조물 형태여서 가방에 수납할 수 없음 ({item_size})")
+                else:
+                    # Check 2: Evaluate backpack storage limit with candidate item
+                    storage_name = "여행자 배낭"
+                    eq = getattr(self.player, "equipment", None)
+                    if eq and getattr(eq, "storage", None):
+                        s_id = eq.storage
+                        if s_id in self.items:
+                            storage_name = self.items[s_id].name
+                    elif hasattr(self.player, "visual") and self.player.visual and self.player.visual.outfit:
+                        if self.player.visual.outfit.bags_storage:
+                            storage_name = self.player.visual.outfit.bags_storage[0]
+
+                    spec = OutfitMechanicsEngine.get_backpack_spec(storage_name)
+
+                    candidate_inv = list(self.player.inventory) + [item_id]
+                    hypo_weight = sum(getattr(self.items[i], "weight", 1.0) for i in candidate_inv if i in self.items)
+                    hypo_vol = sum(OutfitMechanicsEngine.estimate_item_volume_liters(self.items[i]) for i in candidate_inv if i in self.items)
+
+                    if hypo_weight > spec.tear_weight_limit_kg:
+                        changes.append(
+                            f"REJECTED pickup {item.name} — 가방 적재 한계({spec.tear_weight_limit_kg}kg) 초과 "
+                            f"(현재 {round(hypo_weight - getattr(item, 'weight', 1.0), 1)}kg + 아이템 {getattr(item, 'weight', 1.0)}kg)"
+                        )
+                    elif hypo_vol > spec.volume_liters * 1.5:
+                        changes.append(
+                            f"REJECTED pickup {item.name} — 가방 최대 용적({spec.volume_liters}L) 초과로 더 이상 들어가지 않음"
+                        )
+                    else:
+                        loc.items.remove(item_id)
+                        self.player.inventory.append(item_id)
+                        item.location = "inventory"
+                        changes.append(f"Player picked up {item.name}")
+
+                        # Trigger storage evaluation for warning / wear status
+                        storage_status = OutfitMechanicsEngine.evaluate_backpack_storage(self.player, self)
+                        if storage_status.is_overweight or storage_status.is_overfilled_volume or storage_status.is_torn:
+                            changes.append(f"🎒 {storage_status.narrative_summary}")
             else:
                 changes.append(f"REJECTED pickup {item_id} — not in current location")
 
@@ -3710,9 +3812,16 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             changes.append(f"Dynamically registered Item: {new_item.name}")
 
         if "update_environment" in update:
-            for loc_id, env_dict in update["update_environment"].items():
-                for elem_key, val_str in env_dict.items():
-                    self.update_environment_state(loc_id, elem_key, val_str)
+            env_updates = update["update_environment"]
+            if isinstance(env_updates, dict):
+                for loc_id, env_dict in env_updates.items():
+                    if isinstance(env_dict, dict):
+                        for elem_key, val_str in env_dict.items():
+                            self.update_environment_state(loc_id, elem_key, str(val_str))
+                    elif isinstance(env_dict, str):
+                        self.update_environment_state(loc_id, "state", env_dict)
+            elif isinstance(env_updates, str):
+                self.update_environment_state(self.player.location, "state", env_updates)
             changes.append("Environment physical state updated persistently")
 
         if "record_clue" in update:
@@ -3725,58 +3834,68 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         # 13. Environmental Hazard Triggering (Chandelier cut, oil ignited, ceiling collapsed)
         if "trigger_hazard" in update:
             hazard_info = update["trigger_hazard"]
-            loc_id = hazard_info.get("location_id", self.player.location)
-            hazard_name = hazard_info.get("hazard_name", "환경 기믹")
-            effect_desc = hazard_info.get("effect", "발동됨")
-            self.update_environment_state(loc_id, f"hazard_{hazard_name}", effect_desc)
-            changes.append(f"💥 [환경 상호작용] {hazard_name} 발동: {effect_desc}")
+            if isinstance(hazard_info, dict):
+                loc_id = hazard_info.get("location_id", self.player.location)
+                hazard_name = hazard_info.get("hazard_name", "환경 기믹")
+                effect_desc = hazard_info.get("effect", "발동됨")
+                self.update_environment_state(loc_id, f"hazard_{hazard_name}", effect_desc)
+                changes.append(f"💥 [환경 상호작용] {hazard_name} 발동: {effect_desc}")
 
         # 14. Asymmetric Mystery Clue Fragment Revelation
         if "reveal_clue_fragment" in update:
             clue_data = update["reveal_clue_fragment"]
-            secret_id = clue_data.get("secret_id", "main_mystery")
-            fragment = clue_data.get("fragment", "")
-            if secret_id not in self.world_secrets:
-                self.world_secrets[secret_id] = {"truth": clue_data.get("truth", ""), "clues": [], "solved": False}
-            if fragment and fragment not in self.world_secrets[secret_id]["clues"]:
-                self.world_secrets[secret_id]["clues"].append(fragment)
-                changes.append(f"🕵️ [비밀의 단서 조각 획득] ({secret_id}): {fragment}")
+            if isinstance(clue_data, dict):
+                secret_id = clue_data.get("secret_id", "main_mystery")
+                fragment = clue_data.get("fragment", "")
+                if secret_id not in self.world_secrets:
+                    self.world_secrets[secret_id] = {"truth": clue_data.get("truth", ""), "clues": [], "solved": False}
+                if fragment and fragment not in self.world_secrets[secret_id]["clues"]:
+                    self.world_secrets[secret_id]["clues"].append(fragment)
+                    changes.append(f"🕵️ [비밀의 단서 조각 획득] ({secret_id}): {fragment}")
 
         # 15. Meaningful Dilemma Choice & Cost Recording
         if "record_dilemma" in update:
             d_data = update["record_dilemma"]
-            self.dilemmas_faced.append(d_data)
-            changes.append(f"⚖️ [딜레마 선택과 대가] {d_data.get('choice_summary', '선택됨')}")
+            if isinstance(d_data, dict):
+                self.dilemmas_faced.append(d_data)
+                changes.append(f"⚖️ [딜레마 선택과 대가] {d_data.get('choice_summary', '선택됨')}")
 
         # 16. Faction Ripple Effect
         if "faction_ripple" in update:
             f_data = update["faction_ripple"]
-            fac_id = f_data.get("faction_id")
-            delta = int(f_data.get("delta", 0))
-            reason = f_data.get("reason", "")
-            if fac_id:
-                ripple_logs = self.apply_faction_ripple(fac_id, delta, reason)
-                changes.extend(ripple_logs)
-                
+            if isinstance(f_data, dict):
+                fac_id = f_data.get("faction_id")
+                try:
+                    delta = int(f_data.get("delta", 0))
+                except (ValueError, TypeError):
+                    delta = 0
+                reason = f_data.get("reason", "")
+                if fac_id:
+                    ripple_logs = self.apply_faction_ripple(fac_id, delta, reason)
+                    changes.extend(ripple_logs)
 
         # Update NPC Attitude Matrix (affinity, fear, debt)
         if "update_npc_attitude" in update:
-            for npc_id, att_delta in update["update_npc_attitude"].items():
-                if npc_id in self.npcs and isinstance(att_delta, dict):
-                    npc = self.npcs[npc_id]
-                    if "affinity" in att_delta:
-                        npc.affinity = max(0, min(100, npc.affinity + att_delta["affinity"]))
-                    if "fear" in att_delta:
-                        npc.fear = max(0, min(100, npc.fear + att_delta["fear"]))
-                    if "debt" in att_delta:
-                        npc.debt = max(-100, min(100, npc.debt + att_delta["debt"]))
-                    changes.append(f"NPC [{npc.name}] 태도 변화: 친밀도({npc.affinity}), 공포({npc.fear}), 부채({npc.debt})")
+            att_updates = update["update_npc_attitude"]
+            if isinstance(att_updates, dict):
+                for npc_id, att_delta in att_updates.items():
+                    if npc_id in self.npcs and isinstance(att_delta, dict):
+                        npc = self.npcs[npc_id]
+                        if "affinity" in att_delta:
+                            npc.affinity = max(0, min(100, npc.affinity + att_delta["affinity"]))
+                        if "fear" in att_delta:
+                            npc.fear = max(0, min(100, npc.fear + att_delta["fear"]))
+                        if "debt" in att_delta:
+                            npc.debt = max(-100, min(100, npc.debt + att_delta["debt"]))
+                        changes.append(f"NPC [{npc.name}] 태도 변화: 친밀도({npc.affinity}), 공포({npc.fear}), 부채({npc.debt})")
 
         # Add NPC Belief (BDI)
         if "add_npc_belief" in update:
-            for npc_id, belief_text in update["add_npc_belief"].items():
-                if npc_id in self.npcs and belief_text:
-                    self.npcs[npc_id].beliefs.append(str(belief_text))
+            b_updates = update["add_npc_belief"]
+            if isinstance(b_updates, dict):
+                for npc_id, belief_text in b_updates.items():
+                    if npc_id in self.npcs and belief_text:
+                        self.npcs[npc_id].beliefs.append(str(belief_text))
                     changes.append(f"NPC [{self.npcs[npc_id].name}] 인지 갱신: '{belief_text}'")
 
         # Update NPC BDI intention/desire
@@ -4089,6 +4208,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.last_npc_action = raw.get("last_npc_action", None)
         state.current_scenario_id = raw.get("current_scenario_id", None)
         state.current_scenario_act = raw.get("current_scenario_act", "act_1_hook_and_misdirection")
+        state.power_scale_preset_id = raw.get("power_scale_preset_id", "standard_fantasy")
 
         def safe_init(target_cls, data_dict: dict, **defaults):
             if not isinstance(data_dict, dict):
@@ -4385,6 +4505,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.active_corpses = raw.get("active_corpses", {})
         # Active Siege Battles DB
         state.active_sieges = raw.get("active_sieges", {})
+        # Pending Travel Waypoints
+        state.pending_travel_waypoints = raw.get("pending_travel_waypoints", [])
 
         return state
 

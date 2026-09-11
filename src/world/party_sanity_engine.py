@@ -317,11 +317,11 @@ class PartySanityEngine:
         }
 
     @classmethod
-    def process_turn_sanity(cls, state: Any) -> List[str]:
+    def process_turn_sanity(cls, state: Any, delta_minutes: int = 30) -> List[str]:
         """
-        Executes turn-based environmental stress ticks for all active party companions:
-        1. Underground darkness: +2 stress if pitch_black.
-        2. Safe zones (towns/rest): -2 stress.
+        Executes environmental stress ticks for all active party companions scaled by delta_minutes:
+        1. Underground darkness: +2 stress per 30m if pitch_black.
+        2. Safe zones (towns/rest): -2 stress per 30m.
         3. Breakdown turn counters decrement and recover.
         """
         logs: List[str] = []
@@ -331,6 +331,7 @@ class PartySanityEngine:
         curr_loc = state.locations.get(state.player.location)
         is_underground = (getattr(curr_loc, "location_category", "surface") == "dungeon")
         is_safe = (getattr(curr_loc, "location_category", "surface") == "surface" and getattr(curr_loc, "danger_level", 20) <= 20)
+        turn_ticks = max(1, round(delta_minutes / 30.0))
 
         for c_id, comp in state.party.items():
             if not getattr(comp, "is_active_party", True):
@@ -338,17 +339,17 @@ class PartySanityEngine:
 
             # 1. Darkness stress
             if is_underground:
-                res = cls.add_stress(comp, 2, "지하 칠흑 어둠 체류")
+                res = cls.add_stress(comp, 2 * turn_ticks, f"지하 칠흑 어둠 체류 ({turn_ticks * 30}분)" if turn_ticks > 1 else "지하 칠흑 어둠 체류")
                 if res["breakdown_triggered"]:
                     logs.append(res["breakdown_result"]["summary_ko"])
 
             # 2. Safe zone stress decay
             elif is_safe and comp.stress > 0:
-                comp.stress = max(0, comp.stress - cls.SAFE_DECAY_PER_TURN)
+                comp.stress = max(0, comp.stress - (cls.SAFE_DECAY_PER_TURN * turn_ticks))
 
             # 3. Decrement breakdown status
             if comp.breakdown_turns_remaining > 0:
-                comp.breakdown_turns_remaining -= 1
+                comp.breakdown_turns_remaining = max(0, comp.breakdown_turns_remaining - turn_ticks)
                 if comp.breakdown_turns_remaining == 0:
                     old_status = comp.mental_status
                     comp.mental_status = "normal"

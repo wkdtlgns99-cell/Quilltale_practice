@@ -419,10 +419,10 @@ class ThermalSurvivalEngine:
             return "multi_organ_failure"
 
     @classmethod
-    def process_turn_thermal_survival(cls, state: WorldState) -> List[str]:
+    def process_turn_thermal_survival(cls, state: WorldState, delta_minutes: int = 30) -> List[str]:
         """
         Processes turn-based physiological body temperature, wetness, wind chill,
-        and climate hazard ticks with 100% deterministic logic.
+        and climate hazard ticks with 100% deterministic logic. Scales with delta_minutes.
         """
         logs: List[str] = []
         player = state.player
@@ -430,138 +430,141 @@ class ThermalSurvivalEngine:
         weather = env.weather
         temp = env.temperature_celsius
 
-        # 1. Calculate clothing metrics
-        net_insulation, wet_prot, heat_res = cls.calculate_net_insulation(player, state)
+        ticks = max(1, round(delta_minutes / 30.0))
+        for _ in range(ticks):
+            # 1. Calculate clothing metrics
+            net_insulation, wet_prot, heat_res = cls.calculate_net_insulation(player, state)
 
-        # 2. Wetness Dynamics
-        is_raining = any(r in weather for r in ["비", "폭우", "소나기", "downpour", "rain"])
-        is_storm = "폭풍" in weather or "태풍" in weather
-        has_campfire = getattr(env, "has_heat_source", False)
+            # 2. Wetness Dynamics
+            is_raining = any(r in weather for r in ["비", "폭우", "소나기", "downpour", "rain"])
+            is_storm = "폭풍" in weather or "태풍" in weather
+            has_campfire = getattr(env, "has_heat_source", False)
 
-        # Rain wetness intake
-        rain_intake = 0.0
-        if is_storm:
-            rain_intake = 25.0 * (1.0 - (wet_prot / 100.0))
-        elif "폭우" in weather:
-            rain_intake = 15.0 * (1.0 - (wet_prot / 100.0))
-        elif is_raining:
-            rain_intake = 5.0 * (1.0 - (wet_prot / 100.0))
+            # Rain wetness intake
+            rain_intake = 0.0
+            if is_storm:
+                rain_intake = 25.0 * (1.0 - (wet_prot / 100.0))
+            elif "폭우" in weather:
+                rain_intake = 15.0 * (1.0 - (wet_prot / 100.0))
+            elif is_raining:
+                rain_intake = 5.0 * (1.0 - (wet_prot / 100.0))
 
-        # Drying dynamics
-        drying = 0.0
-        if has_campfire:
-            drying = 10.0
-        elif not is_raining:
-            drying = 2.0
-
-        wet_delta = rain_intake - drying
-
-        current_wet = getattr(player, "wetness", 0.0)
-        new_wet = max(0.0, min(100.0, round(current_wet + wet_delta, 1)))
-        player.wetness = new_wet
-
-        # Wetness heat loss multiplier
-        if new_wet >= 75.0:
-            wet_mult = 5.0
-        elif new_wet >= 50.0:
-            wet_mult = 3.0
-        else:
-            wet_mult = 1.0
-
-        # Wind chill heat loss multiplier
-        wind_mult = 1.0
-        wind_level = getattr(env, "wind_level", "calm")
-        if wind_level == "storm" or "폭풍" in weather:
-            wind_mult = 3.0
-        elif wind_level == "strong_wind" or "강풍" in weather:
-            wind_mult = 1.8
-        elif wind_level == "breeze":
-            wind_mult = 1.2
-
-        # 3. Physiological Temperature Evolution
-        curr_temp = getattr(player, "body_temperature", 36.5)
-
-        # Cold Environment (Snow / Blizzard / Sub-zero / Freezing)
-        if "폭설" in weather or "한파" in weather or temp <= 0:
+            # Drying dynamics
+            drying = 0.0
             if has_campfire:
-                # Fire restores warmth
-                new_temp = min(36.5, curr_temp + 0.5)
+                drying = 10.0
+            elif not is_raining:
+                drying = 2.0
+
+            wet_delta = rain_intake - drying
+
+            current_wet = getattr(player, "wetness", 0.0)
+            new_wet = max(0.0, min(100.0, round(current_wet + wet_delta, 1)))
+            player.wetness = new_wet
+
+            # Wetness heat loss multiplier
+            if new_wet >= 75.0:
+                wet_mult = 5.0
+            elif new_wet >= 50.0:
+                wet_mult = 3.0
             else:
-                cold_severity = max(1.0, (10.0 - temp) / 10.0)
-                # Net insulation dampens loss
-                insulation_mitigation = max(0.0, net_insulation * 0.05)
-                heat_loss = max(0.1, (0.3 * cold_severity * wet_mult * wind_mult) - insulation_mitigation)
-                new_temp = max(28.0, curr_temp - heat_loss)
+                wet_mult = 1.0
 
-        # Hot Environment (Heatwave / Desert / Over 38C)
-        elif "폭염" in weather or "열풍" in weather or temp >= 38:
-            heat_severity = max(1.0, (temp - 30.0) / 10.0)
-            heat_gain = 0.3 * heat_severity
-            # Heavy plate conducts heat
-            if net_insulation < 0:
-                heat_gain *= 1.5
-            new_temp = min(42.0, curr_temp + heat_gain)
+            # Wind chill heat loss multiplier
+            wind_mult = 1.0
+            wind_level = getattr(env, "wind_level", "calm")
+            if wind_level == "storm" or "폭풍" in weather:
+                wind_mult = 3.0
+            elif wind_level == "strong_wind" or "강풍" in weather:
+                wind_mult = 1.8
+            elif wind_level == "breeze":
+                wind_mult = 1.2
 
-        else:
-            # Mild Environment: Normalizes towards 36.5
-            if has_campfire:
-                new_temp = min(36.5, curr_temp + 0.5)
-            elif curr_temp < 36.5:
-                new_temp = min(36.5, curr_temp + 0.2)
-            elif curr_temp > 36.5:
-                new_temp = max(36.5, curr_temp - 0.2)
+            # 3. Physiological Temperature Evolution
+            curr_temp = getattr(player, "body_temperature", 36.5)
+
+            # Cold Environment (Snow / Blizzard / Sub-zero / Freezing)
+            if "폭설" in weather or "한파" in weather or temp <= 0:
+                if has_campfire:
+                    new_temp = min(36.5, curr_temp + 0.5)
+                else:
+                    cold_severity = max(1.0, (10.0 - temp) / 10.0)
+                    insulation_mitigation = max(0.0, net_insulation * 0.05)
+                    heat_loss = max(0.1, (0.3 * cold_severity * wet_mult * wind_mult) - insulation_mitigation)
+                    new_temp = max(28.0, curr_temp - heat_loss)
+
+            # Hot Environment (Heatwave / Desert / Over 38C)
+            elif "폭염" in weather or "열풍" in weather or temp >= 38:
+                heat_severity = max(1.0, (temp - 30.0) / 10.0)
+                heat_gain = 0.3 * heat_severity
+                if net_insulation < 0:
+                    heat_gain *= 1.5
+                new_temp = min(42.0, curr_temp + heat_gain)
+
             else:
-                new_temp = 36.5
+                # Mild Environment: Normalizes towards 36.5
+                if has_campfire:
+                    new_temp = min(36.5, curr_temp + 0.5)
+                elif curr_temp < 36.5:
+                    new_temp = min(36.5, curr_temp + 0.2)
+                elif curr_temp > 36.5:
+                    new_temp = max(36.5, curr_temp - 0.2)
+                else:
+                    new_temp = 36.5
 
-        new_temp = round(new_temp, 1)
-        player.body_temperature = new_temp
-        stage_id = cls.determine_thermal_stage(new_temp)
-        player.thermal_status = stage_id
+            new_temp = round(new_temp, 1)
+            player.body_temperature = new_temp
+            stage_id = cls.determine_thermal_stage(new_temp)
+            player.thermal_status = stage_id
+
+            # Apply tick damage per tick if applicable
+            if stage_id in ["moderate", "severe", "fatal"]:
+                spec = HYPOTHERMIA_STAGES_REGISTRY[stage_id]
+                player.health = max(1, player.health - spec.damage_per_turn)
+            elif stage_id in ["heat_stroke", "multi_organ_failure"]:
+                spec = HYPERTHERMIA_STAGES_REGISTRY[stage_id]
+                player.health = max(1, player.health - spec.hp_loss_per_turn)
+                fatigue_add = 10 if stage_id == "heat_stroke" else 15
+                player.fatigue = min(100, player.fatigue + fatigue_add)
 
         # 4. Status Effects and Narration Logs
+        duration_note = f" ({ticks * 30}분 경과)" if ticks > 1 else ""
         if stage_id == "mild":
             logs.append(
-                f"🥶 [경도 저체온증] 체온이 {new_temp:.1f}℃로 떨어졌습니다! (젖음: {new_wet:.0f}%) 사지 떨림으로 민첩 -2 및 원거리 조준에 불이익을 받습니다."
+                f"🥶 [경도 저체온증]{duration_note} 체온이 {new_temp:.1f}℃로 떨어졌습니다! (젖음: {new_wet:.0f}%) 사지 떨림으로 민첩 -2 및 원거리 조준에 불이익을 받습니다."
             )
         elif stage_id == "moderate":
             spec = HYPOTHERMIA_STAGES_REGISTRY["moderate"]
-            player.health = max(1, player.health - spec.damage_per_turn)
             logs.append(
-                f"🥶 [중등도 저체온증] 체온 {new_temp:.1f}℃! 혀가 굳어 주문 실패율이 25% 증가하고 지속 동상 피해 {spec.damage_per_turn}를 입었습니다."
+                f"🥶 [중등도 저체온증]{duration_note} 체온 {new_temp:.1f}℃! 혀가 굳어 주문 실패율이 25% 증가하고 지속 동상 피해 {spec.damage_per_turn}를 입었습니다."
             )
         elif stage_id == "severe":
             spec = HYPOTHERMIA_STAGES_REGISTRY["severe"]
-            player.health = max(1, player.health - spec.damage_per_turn)
             logs.append(
-                f"🥶 [중증 저체온증] 체온 {new_temp:.1f}℃! 극심한 오한과 섬망으로 지속 피해 {spec.damage_per_turn}를 입었습니다! (이동속도 50% 반감)"
+                f"🥶 [중증 저체온증]{duration_note} 체온 {new_temp:.1f}℃! 극심한 오한과 섬망으로 지속 피해 {spec.damage_per_turn}를 입었습니다! (이동속도 50% 반감)"
             )
         elif stage_id == "fatal":
             spec = HYPOTHERMIA_STAGES_REGISTRY["fatal"]
-            player.health = max(1, player.health - spec.damage_per_turn)
             logs.append(
-                f"🚨 [치명적 저체온증] 체온이 {new_temp:.1f}℃로 급락하여 심정지 위기! 즉각적인 열원 확보가 없으면 사망합니다! (피해 {spec.damage_per_turn})"
+                f"🚨 [치명적 저체온증]{duration_note} 체온이 {new_temp:.1f}℃로 급락하여 심정지 위기! 즉각적인 열원 확보가 없으면 사망합니다! (피해 {spec.damage_per_turn})"
             )
         elif stage_id == "heat_exhaustion":
             logs.append(
-                f"☀️ [열탈진] 체온 {new_temp:.1f}℃! 살인적인 더위로 갈증이 폭증하고 기력 소모량이 1.5배로 증가합니다."
+                f"☀️ [열탈진]{duration_note} 체온 {new_temp:.1f}℃! 살인적인 더위로 갈증이 폭증하고 기력 소모량이 1.5배로 증가합니다."
             )
         elif stage_id == "heat_cramps":
             logs.append(
-                f"☀️ [열경련] 체온 {new_temp:.1f}℃! 전해질 고갈로 인한 근육 경련으로 근력과 민첩이 -3 저하됩니다."
+                f"☀️ [열경련]{duration_note} 체온 {new_temp:.1f}℃! 전해질 고갈로 인한 근육 경련으로 근력과 민첩이 -3 저하됩니다."
             )
         elif stage_id == "heat_stroke":
             spec = HYPERTHERMIA_STAGES_REGISTRY["heat_stroke"]
-            player.health = max(1, player.health - spec.hp_loss_per_turn)
-            player.fatigue = min(100, player.fatigue + 10)
             logs.append(
-                f"☀️ [폭염 열사병] 체온이 {new_temp:.1f}℃로 치솟아 땀이 멈추고 열사 피해 {spec.hp_loss_per_turn}를 입었습니다!"
+                f"☀️ [폭염 열사병]{duration_note} 체온이 {new_temp:.1f}℃로 치솟아 땀이 멈추고 열사 피해 {spec.hp_loss_per_turn}를 입었습니다!"
             )
         elif stage_id == "multi_organ_failure":
             spec = HYPERTHERMIA_STAGES_REGISTRY["multi_organ_failure"]
-            player.health = max(1, player.health - spec.hp_loss_per_turn)
-            player.fatigue = min(100, player.fatigue + 15)
             logs.append(
-                f"🚨 [다발성 장기부전] 체온 {new_temp:.1f}℃ 초고열로 뇌 손상 발생 및 치명적 피해 {spec.hp_loss_per_turn}를 입었습니다!"
+                f"🚨 [다발성 장기부전]{duration_note} 체온 {new_temp:.1f}℃ 초고열로 뇌 손상 발생 및 치명적 피해 {spec.hp_loss_per_turn}를 입었습니다!"
             )
 
         return logs

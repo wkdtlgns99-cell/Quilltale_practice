@@ -3,6 +3,7 @@
     "id": "cosmology_aethelgard",
     "world_name": "에델가르드(Aethelgard) - 황금사자 왕국과 드래곤의 잔영",
     "genre": "정통 하이 판타지 / 왕도 기사도 서사",
+    "power_scale": "standard_fantasy",
     "cosmology": {
       "sun_and_moons": "황금빛 주신(主神)의 눈동자인 태양 '솔라리스' 1개와 두 은빛 위성 '루나(순결)'와 '녹티스(망각)'. 루나가 차오를 때는 신성 기적의 위력이 증폭되고, 녹티스가 차오를 때는 비전 마법의 마나 회로가 요동치는 '에테르 조석 현상'이 일어남.",
       "mana_origin": "천지를 창조하고 잠든 태초의 시조룡(Wyrm of Origin)들의 심장 박동과 대지 깊숙이 얽힌 지맥(Leyline) 에테르.",

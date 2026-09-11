@@ -10,11 +10,9 @@ from typing import Optional, Dict, Any, List, Tuple
 from src.llm.base import BaseLLM
 from src.world.state import WorldState
 from src.world.validator import ActionValidator
-from src.world.dice import DiceCheckResult
 from src.world.persistence import PersistenceManager
 from src.world.legacy import LegacyManager
 from src.world.generator import WorldGenerator
-from src.world.skills import SkillSystem
 from src.world.incantation import IncantationSystem
 from src.world.chronicle import ChronicleManager
 from src.world.scenario_manager import ScenarioManager
@@ -40,9 +38,6 @@ class GameMasterAgent:
         - Step 5: LLM Literary Narration Generation (Adhering 100% to confirmed state)
         - Step 6: WorldState Delta Synchronization & Vector Memory Persistence
         """
-        from src.world.status_engine import StatusEffectEngine
-        from src.world.physics_matrix import PhysicsMatrixEngine
-
         # Step 0: Handle Character Release / Retirement
         if ActionValidator.is_release_action(action):
             reason = "retired" if "은퇴" in action or "마치" in action else "released"

@@ -68,6 +68,8 @@ class DeterministicFactSheet:
     dropped_skill_name: Optional[str] = None
     npc_skill_logs: List[str] = field(default_factory=list)
     anti_yesman_verdict: Optional[Dict[str, Any]] = None
+    turn_duration_minutes: int = 30
+    power_scale_summary: Optional[str] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -87,6 +89,10 @@ class DeterministicFactSheet:
             "팩트를 왜곡, 번복, 날조(사망하지 않은 적을 사망 처리, 실패를 성공으로 변경 등)하는 것은 엄격히 금지됩니다.",
             "=================================================================",
         ]
+
+        if self.power_scale_summary:
+            lines.append("⚡ [세계관 성장 규격 및 위계 (Power Scale)]")
+            lines.append(f"- {self.power_scale_summary}")
 
         if self.anti_yesman_verdict:
             lines.append("🛡️ [안티 예스맨 현실성 검증 및 서사 지침 (Anti-Yes-Man Reality Check)]")
@@ -177,12 +183,171 @@ class TwoPassEngine:
     """
 
     @classmethod
+    def resolve_action_movement(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses movement intent, matching exit direction/target location,
+        and computes deterministic road distance, condition, travel hours, and minutes.
+        Supports single-hop exits, pending waypoints auto-advance, and multi-hop Dijkstra shortest paths.
+        Returns travel info dict if valid movement, None otherwise.
+        """
+        curr_loc = state.current_location()
+        if not curr_loc:
+            return None
+
+        action_lower = action.lower()
+        is_move_action = any(v in action_lower for v in [
+            "이동", "걸어", "향해", "달려", "들어", "나선", "오르", "내려", "나간", "떠난",
+            "발걸음", "간다", "가자", "가려", "향한다", "내려간다", "올라간다", "접근",
+            "가본다", "밑바닥으로", "도착", "계속", "전진", "여정", "가던 길", "여행",
+            "move", "go", "enter", "exit", "continue", "forward", "travel", "journey"
+        ])
+        if not is_move_action:
+            return None
+
+        from src.world.geography import GeographyEngine
+
+        # Case 0: Auto-advance on pending_travel_waypoints if continuing journey
+        is_continue_intent = any(k in action_lower for k in ["계속", "가던 길", "다음", "전진", "continue", "next"])
+        if is_continue_intent and getattr(state, "pending_travel_waypoints", None):
+            next_wp_id = state.pending_travel_waypoints[0]
+            remaining_wps = list(state.pending_travel_waypoints[1:])
+            next_loc = state.locations.get(next_wp_id)
+            if next_loc:
+                road = GeographyEngine.get_road(state, curr_loc.id, next_wp_id)
+                dist_km = road.distance_km if road else 5.0
+                r_type = road.road_type if road else "dirt_road"
+                cond_info = GeographyEngine.get_effective_road_condition(road, state.environment) if road else {
+                    "condition": "normal", "speed_multiplier": 1.0, "name_ko": "정상 도로", "fatigue_bonus": 0, "warning_ko": ""
+                }
+                cond_speed = cond_info["speed_multiplier"] / road.speed_multiplier if (road and road.speed_multiplier > 0) else 1.0
+                hours = GeographyEngine.calculate_segment_travel_hours(dist_km, r_type, travel_mode="foot", condition_speed_mult=cond_speed)
+                mins = max(15, int(hours * 60))
+                fatigue_inc = max(1, int(mins / 30) + cond_info.get("fatigue_bonus", 0))
+                road_warn = f" ({cond_info['warning_ko']})" if cond_info.get("warning_ko") else ""
+
+                return {
+                    "target_loc_id": next_wp_id,
+                    "target_name": next_loc.name,
+                    "dist_km": dist_km,
+                    "mins": mins,
+                    "fatigue_inc": fatigue_inc,
+                    "cond_info": cond_info,
+                    "road_warn": road_warn,
+                    "pending_waypoints": remaining_wps,
+                    "is_waypoint_advance": True
+                }
+
+        # Case 1: Check direct exits (1-hop)
+        direction_keywords = {
+            "north": ["북쪽", "북", "north", "앞으로", "정면"],
+            "south": ["남쪽", "남", "south", "뒤로", "남문"],
+            "east": ["동쪽", "동", "east", "오른쪽"],
+            "west": ["서쪽", "서", "west", "왼쪽"],
+            "upstairs": ["2층", "계단", "위층", "upstairs", "올라"],
+            "downstairs": ["지하", "아래층", "지하실", "downstairs", "내려"]
+        }
+
+        if hasattr(curr_loc, "exits") and curr_loc.exits:
+            for exit_dir, target_loc_id in curr_loc.exits.items():
+                keywords = direction_keywords.get(exit_dir.lower(), [exit_dir.lower()])
+                target_loc = state.locations.get(target_loc_id)
+                loc_name_match = bool(target_loc and target_loc.name.lower() in action_lower)
+                dir_match = any(k in action_lower for k in keywords)
+
+                # Contextual match: if player mentions '수문' or '운하' and exit is north/subterranean
+                context_match = False
+                if exit_dir in ["north", "downstairs"] and any(w in action_lower for w in ["수문", "운하", "밑바닥", "지하"]):
+                    context_match = True
+
+                if dir_match or loc_name_match or context_match:
+                    if target_loc_id in state.locations:
+                        if context_match and target_loc:
+                            if "비유클리드" in target_loc.name or "미지의" in target_loc.name:
+                                target_loc.name = "도시 북쪽 외곽의 폐기된 운하 수문 지하"
+
+                        target_name = target_loc.name if target_loc else target_loc_id
+
+                        road = GeographyEngine.get_road(state, curr_loc.id, target_loc_id)
+                        dist_km = road.distance_km if road else 1.5
+                        r_type = road.road_type if road else "dirt_road"
+                        cond_info = GeographyEngine.get_effective_road_condition(road, state.environment) if road else {
+                            "condition": "normal", "speed_multiplier": 1.0, "name_ko": "정상 도로", "fatigue_bonus": 0, "warning_ko": ""
+                        }
+                        cond_speed = cond_info["speed_multiplier"] / road.speed_multiplier if (road and road.speed_multiplier > 0) else 1.0
+                        hours = GeographyEngine.calculate_segment_travel_hours(dist_km, r_type, travel_mode="foot", condition_speed_mult=cond_speed)
+                        mins = max(15, int(hours * 60))
+                        fatigue_inc = max(1, int(mins / 30) + cond_info.get("fatigue_bonus", 0))
+                        road_warn = f" ({cond_info['warning_ko']})" if cond_info.get("warning_ko") else ""
+
+                        return {
+                            "target_loc_id": target_loc_id,
+                            "target_name": target_name,
+                            "dist_km": dist_km,
+                            "mins": mins,
+                            "fatigue_inc": fatigue_inc,
+                            "cond_info": cond_info,
+                            "road_warn": road_warn,
+                            "pending_waypoints": []
+                        }
+
+        # Case 2: Multi-hop destination search via Dijkstra shortest path!
+        candidate_destinations = []
+        for loc_id, loc_obj in state.locations.items():
+            if loc_id == curr_loc.id:
+                continue
+            if loc_obj.name and loc_obj.name.lower() in action_lower:
+                candidate_destinations.append(loc_obj)
+            elif loc_id.lower() in action_lower:
+                candidate_destinations.append(loc_obj)
+
+        if candidate_destinations:
+            candidate_destinations.sort(key=lambda l: len(l.name), reverse=True)
+            chosen_dest = candidate_destinations[0]
+
+            hours, km, path = GeographyEngine.dijkstra_shortest_travel(
+                state, curr_loc.id, chosen_dest.id, travel_mode="foot", environment=state.environment
+            )
+
+            if hours < float('inf') and len(path) >= 2:
+                mins = max(15, int(hours * 60))
+                fatigue_inc = max(1, int(mins / 30))
+                waypoints = path[1:]
+
+                return {
+                    "target_loc_id": chosen_dest.id,
+                    "target_name": chosen_dest.name,
+                    "dist_km": km,
+                    "mins": mins,
+                    "fatigue_inc": fatigue_inc,
+                    "cond_info": {"name_ko": "다중 도로망 연결로", "warning_ko": ""},
+                    "road_warn": "",
+                    "waypoints": waypoints,
+                    "is_multi_hop": True,
+                    "pending_waypoints": []
+                }
+
+        return None
+
+    @classmethod
     def compute_pass1(cls, action: str, state: WorldState) -> DeterministicFactSheet:
         """
         Pass 1: Computes all deterministic mechanics in strict logical order.
         """
         fact_sheet = DeterministicFactSheet(action=action)
         state_delta: Dict[str, Any] = {}
+
+        # 0. Pre-evaluate Travel Duration for Time-Scaled Survival Ticks
+        curr_loc = state.current_location()
+        travel_info = cls.resolve_action_movement(action, state)
+        elapsed_minutes = travel_info["mins"] if travel_info else 30
+        fact_sheet.turn_duration_minutes = elapsed_minutes
+
+        # 0.1 Determine World Power Scale Preset (Deterministic Reader)
+        preset = state.get_power_scale_preset()
+        fact_sheet.power_scale_summary = (
+            f"{preset.name_ko} (최대 Lv.{preset.max_level}, 스탯 상한 {preset.stat_cap}, "
+            f"대미지 배율 x{preset.damage_scale_multiplier})"
+        )
 
         # 1. Status Ticks, Weather Survival & Celestial Cycles
         from src.world.npc_skill_engine import NPCSkillEngine
@@ -192,35 +357,35 @@ class TwoPassEngine:
         fact_sheet.status_tick_logs = tick_result.get("logs", [])
         
         # Weather survival ticks (Hypothermia / Heatstroke)
-        weather_ticks = WeatherEngine.process_turn_survival_ticks(state)
+        weather_ticks = WeatherEngine.process_turn_survival_ticks(state, delta_minutes=elapsed_minutes)
         fact_sheet.weather_logs = weather_ticks
         fact_sheet.status_tick_logs.extend(weather_ticks)
 
         # Epidemic & Disease progression ticks
         from src.world.disease_engine import EpidemicEngine
-        disease_ticks = EpidemicEngine.process_turn_infections(state)
+        disease_ticks = EpidemicEngine.process_turn_infections(state, delta_minutes=elapsed_minutes)
         fact_sheet.status_tick_logs.extend(disease_ticks)
 
         # Ration & Food Spoilage ticks
         from src.world.ration_engine import RationSpoilageEngine
-        spoilage_ticks = RationSpoilageEngine.process_turn_spoilage(state)
+        spoilage_ticks = RationSpoilageEngine.process_turn_spoilage(state, delta_minutes=elapsed_minutes)
         fact_sheet.status_tick_logs.extend(spoilage_ticks)
 
         # Sleep Deprivation & Circadian Clock ticks
         from src.world.sleep_engine import SleepDeprivationEngine
-        circadian_ticks = SleepDeprivationEngine.process_turn_circadian(state)
+        circadian_ticks = SleepDeprivationEngine.process_turn_circadian(state, delta_minutes=elapsed_minutes)
         fact_sheet.status_tick_logs.extend(circadian_ticks)
 
         # Active Weather Magic Anomalies ticks (Blizzards, Hail, Acid Rain, etc.)
         from src.world.weather_magic_engine import WeatherMagicSimulationEngine
-        weather_magic_logs = WeatherMagicSimulationEngine.tick_anomalies(state, delta_minutes=30)
+        weather_magic_logs = WeatherMagicSimulationEngine.tick_anomalies(state, delta_minutes=elapsed_minutes)
         if weather_magic_logs:
             fact_sheet.weather_logs.extend(weather_magic_logs)
             fact_sheet.status_tick_logs.extend(weather_magic_logs)
 
         # Toxicology & Liver Metabolism time progression (User Q1: Real in-game time decay)
         from src.world.toxicology_engine import ToxicologyToleranceEngine
-        tox_time_logs = ToxicologyToleranceEngine.process_time_metabolism(state.player, elapsed_minutes=30)
+        tox_time_logs = ToxicologyToleranceEngine.process_time_metabolism(state.player, elapsed_minutes=elapsed_minutes)
         if tox_time_logs:
             fact_sheet.status_tick_logs.extend(tox_time_logs)
 
@@ -228,13 +393,13 @@ class TwoPassEngine:
         celestial_logs = CelestialEngine.advance_celestial_turn(state)
         fact_sheet.celestial_logs = celestial_logs
 
-        # Advance quest timers (30 mins per standard turn)
-        quest_timer_logs = QuestEngine.check_turn_time_limits(state, delta_minutes=30)
+        # Advance quest timers (scaled by elapsed_minutes)
+        quest_timer_logs = QuestEngine.check_turn_time_limits(state, delta_minutes=elapsed_minutes)
         fact_sheet.status_tick_logs.extend(quest_timer_logs)
         fact_sheet.quest_timer_logs = quest_timer_logs
 
         # Economy shop restock
-        EconomyEngine.restock_turn_ticks(state, delta_turns=1)
+        EconomyEngine.restock_turn_ticks(state, delta_turns=max(1, round(elapsed_minutes / 30.0)))
 
         # Stamina natural recovery per turn (Player and NPCs in current location)
         from src.world.stamina_engine import StaminaEngine
@@ -252,21 +417,21 @@ class TwoPassEngine:
             if getattr(npc, "location", "") == state.player.location:
                 PosturePoiseEngine.recover_posture_turn(npc)
 
-        # Battlefield Corpse Ecology & Decay progression (30 mins per turn)
+        # Battlefield Corpse Ecology & Decay progression (scaled by elapsed_minutes)
         from src.world.corpse_ecology_engine import CorpseEcologyEngine
-        corpse_decay_logs = CorpseEcologyEngine.process_turn_corpse_decay(state, delta_minutes=30)
+        corpse_decay_logs = CorpseEcologyEngine.process_turn_corpse_decay(state, delta_minutes=elapsed_minutes)
         if corpse_decay_logs:
             fact_sheet.status_tick_logs.extend(corpse_decay_logs)
 
-        # Pupil Adaptation time tick (30m turn fully resolves any sensory adjustment)
+        # Pupil Adaptation time tick (scaled by elapsed_minutes)
         from src.world.pupil_adaptation_engine import PupilAdaptationEngine
-        pupil_logs = PupilAdaptationEngine.tick_adaptation_seconds(state.player, delta_seconds=1800.0)
+        pupil_logs = PupilAdaptationEngine.tick_adaptation_seconds(state.player, delta_seconds=elapsed_minutes * 60.0)
         if pupil_logs:
             fact_sheet.status_tick_logs.extend(pupil_logs)
 
         # Party & Companion Mental Sanity ticks (Darkness stress, safe recovery, breakdown counters)
         from src.world.party_sanity_engine import PartySanityEngine
-        sanity_logs = PartySanityEngine.process_turn_sanity(state)
+        sanity_logs = PartySanityEngine.process_turn_sanity(state, delta_minutes=elapsed_minutes)
         fact_sheet.status_tick_logs.extend(sanity_logs)
 
         # Subterranean Cave Collapse & Environmental dynamics (Oxygen, toxic gas, floor hazard)
@@ -346,68 +511,43 @@ class TwoPassEngine:
                     fact_sheet.npc_skill_logs.append(f"   * [GM 서사 지침]: {obs_res['gm_directive']}")
 
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
-        curr_loc = state.current_location()
-        if curr_loc and curr_loc.exits:
-            action_lower = action.lower()
-            direction_keywords = {
-                "north": ["북쪽", "북", "north", "앞으로", "정면"],
-                "south": ["남쪽", "남", "south", "뒤로", "남문"],
-                "east": ["동쪽", "동", "east", "오른쪽"],
-                "west": ["서쪽", "서", "west", "왼쪽"],
-                "upstairs": ["2층", "계단", "위층", "upstairs", "올라"],
-                "downstairs": ["지하", "아래층", "지하실", "downstairs", "내려"]
-            }
-            is_move_action = any(v in action_lower for v in [
-                "이동", "걸어", "향해", "달려", "들어", "나선", "오르", "내려", "나간", "떠난",
-                "발걸음", "간다", "가자", "가려", "향한다", "내려간다", "올라간다", "접근",
-                "가본다", "밑바닥으로", "도착", "move", "go", "enter", "exit"
-            ])
-            if is_move_action:
-                for exit_dir, target_loc_id in curr_loc.exits.items():
-                    keywords = direction_keywords.get(exit_dir.lower(), [exit_dir.lower()])
-                    target_loc = state.locations.get(target_loc_id)
-                    loc_name_match = bool(target_loc and target_loc.name.lower() in action_lower)
-                    dir_match = any(k in action_lower for k in keywords)
-                    
-                    # Contextual match: if player mentions '수문' or '운하' and exit is north/subterranean
-                    context_match = False
-                    if exit_dir in ["north", "downstairs"] and any(w in action_lower for w in ["수문", "운하", "밑바닥", "지하"]):
-                        context_match = True
+        if travel_info:
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["location"] = travel_info["target_loc_id"]
+            state_delta["time_minutes"] = travel_info["mins"]
+            state_delta["fatigue_delta"] = travel_info["fatigue_inc"]
 
-                    if dir_match or loc_name_match or context_match:
-                        if target_loc_id in state.locations:
-                            if "player" not in state_delta:
-                                state_delta["player"] = {}
-                            state_delta["player"]["location"] = target_loc_id
-                            
-                            # Narrative location name refinement if generic/mismatched
-                            if context_match and target_loc:
-                                if "비유클리드" in target_loc.name or "미지의" in target_loc.name:
-                                    target_loc.name = "도시 북쪽 외곽의 폐기된 운하 수문 지하"
+            # Update pending waypoints in state delta
+            if "pending_waypoints" in travel_info:
+                state_delta["pending_travel_waypoints"] = travel_info["pending_waypoints"]
 
-                            target_name = target_loc.name if target_loc else target_loc_id
+            target_name = travel_info["target_name"]
+            dist_km = travel_info["dist_km"]
+            mins = travel_info["mins"]
+            cond_info = travel_info["cond_info"]
+            road_warn = travel_info["road_warn"]
 
-                            from src.world.geography import GeographyEngine
-                            road = GeographyEngine.get_road(state, curr_loc.id, target_loc_id)
-                            dist_km = road.distance_km if road else 1.5
-                            r_type = road.road_type if road else "dirt_road"
-                            cond_info = GeographyEngine.get_effective_road_condition(road, state.environment) if road else {
-                                "condition": "normal", "speed_multiplier": 1.0, "name_ko": "정상 도로", "fatigue_bonus": 0, "warning_ko": ""
-                            }
-                            cond_speed = cond_info["speed_multiplier"] / road.speed_multiplier if (road and road.speed_multiplier > 0) else 1.0
-                            hours = GeographyEngine.calculate_segment_travel_hours(dist_km, r_type, travel_mode="foot", condition_speed_mult=cond_speed)
-                            mins = max(15, int(hours * 60))
-                            state_delta["time_minutes"] = mins
-                            fatigue_inc = max(1, int(mins / 30) + cond_info.get("fatigue_bonus", 0))
-                            state_delta["fatigue_delta"] = fatigue_inc
+            if travel_info.get("is_waypoint_advance"):
+                rem_count = len(travel_info.get("pending_waypoints", []))
+                rem_msg = f" (남은 경유지: {rem_count}개)" if rem_count > 0 else " (최종 목적지 도달)"
+                fact_sheet.quest_progress_logs.append(
+                    f"여정 전진: 이전 여로를 따라 [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요){rem_msg}"
+                )
+            elif travel_info.get("is_multi_hop") and travel_info.get("waypoints") and len(travel_info["waypoints"]) > 1:
+                wp_names = " ➔ ".join([state.locations[wid].name if wid in state.locations else wid for wid in travel_info["waypoints"]])
+                from_name = curr_loc.name if curr_loc else "현재 위치"
+                fact_sheet.quest_progress_logs.append(
+                    f"다중 구간 가도 이동 완료: [{from_name}]에서 최단 경로({wp_names})를 거쳐 [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요, 노면: {cond_info.get('name_ko', '정상')}){road_warn}"
+                )
+            else:
+                fact_sheet.quest_progress_logs.append(
+                    f"장소 이동 완료: [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요, 노면: {cond_info.get('name_ko', '정상')}){road_warn}"
+                )
 
-                            road_warn = f" ({cond_info['warning_ko']})" if cond_info.get("warning_ko") else ""
-                            fact_sheet.quest_progress_logs.append(f"장소 이동 완료: [{target_name}]에 도착함 ({dist_km:.1f}km 이동, {mins}분 소요, 노면: {cond_info.get('name_ko', '정상')}){road_warn}")
-                            break
-
-            # Default passage of time for minor actions if not moving
-            if "time_minutes" not in state_delta:
-                state_delta["time_minutes"] = 10
+        # Default passage of time for minor actions if not moving
+        if "time_minutes" not in state_delta:
+            state_delta["time_minutes"] = 10
 
         # 2.5 Equipment Equip / Unequip Intent Execution
         equip_intent = fact_sheet.extra_flags.get("equip_intent")
@@ -422,6 +562,27 @@ class TwoPassEngine:
             elif e_act == "unequip":
                 state_delta["unequip_slot"] = {"item_id": e_item_id, "slot": e_slot}
                 fact_sheet.quest_progress_logs.append(f"장비 해제: [{e_item_name}]을(를) {e_slot} 부위에서 해제했습니다.")
+
+        # 2.6 Stat Allocation Intent Execution (WorldPowerScalePresets Integration)
+        if any(k in action for k in ["스탯 투자", "스탯 분배", "능력치 투자", "스탯 올리기"]):
+            stat_name_target = None
+            for s_k, s_names in [
+                ("strength", ["근력", "힘", "str"]),
+                ("agility", ["민첩", "민", "dex", "agi"]),
+                ("constitution", ["체질", "체력", "con"]),
+                ("intelligence", ["지능", "int"]),
+                ("wisdom", ["지혜", "wis"]),
+                ("perception", ["감각", "인지", "per"]),
+                ("luck", ["행운", "luk", "운"]),
+            ]:
+                if any(n in action for n in s_names):
+                    stat_name_target = s_k
+                    break
+            if stat_name_target:
+                state_delta["allocate_stat"] = {"stat_name": stat_name_target, "amount": 1}
+                fact_sheet.quest_progress_logs.append(
+                    f"스탯 투자 신청: [{stat_name_target}]에 스탯 포인트 1점 투자 (상한: {preset.stat_cap})"
+                )
 
         # 2.7 Medical Treatment Execution
         treatment_intent = fact_sheet.extra_flags.get("treatment_intent")
@@ -686,18 +847,55 @@ class TwoPassEngine:
                         from src.world.corpse_ecology_engine import CorpseEcologyEngine
                         CorpseEcologyEngine.register_corpse_from_killed_actor(state, target_npc, killer=state.player)
                         fact_sheet.quest_progress_logs.append(f"전장 시체 발생: [{target_npc.name}]의 유해가 쓰러졌습니다.")
-                        from src.world.rumor_diffusion_engine import RumorDiffusionEngine
-                        sig = 3 if getattr(target_npc, "tier", "commoner") in ["elite", "boss", "noble", "legendary"] else 2
-                        rep_delta = 15 if target_npc.disposition == "hostile" else -20
-                        RumorDiffusionEngine.dispatch_event_rumor(
-                            state=state,
-                            origin_loc=state.player.location,
-                            event_text=f"플레이어가 [{target_npc.name}]을(를) 치명적 결투 끝에 처치함",
-                            significance=sig,
-                            reputation_delta=rep_delta,
-                            carrier="merchant"
-                        )
-                        fact_sheet.quest_progress_logs.append(f"소문 확산 시작: [{target_npc.name}] 처치 소식이 상단 가도를 타고 퍼져나갑니다. (파급력 Lv.{sig})")
+
+                        # --- Witness Gate: 현장에 생존한 제3자 NPC 목격자 검사 (완전 범죄 밀실 암살 지원) ---
+                        event_loc = getattr(target_npc, "location", "") or state.player.location
+                        candidate_npc_ids = set()
+                        for loc_key in filter(None, [event_loc, state.player.location]):
+                            if loc_key in state.locations:
+                                candidate_npc_ids.update(getattr(state.locations[loc_key], "npcs", []))
+                            for nid, n_obj in state.npcs.items():
+                                if getattr(n_obj, "location", "") == loc_key:
+                                    candidate_npc_ids.add(nid)
+
+                        party_ids = set()
+                        if hasattr(state, "party") and state.party:
+                            for p in state.party:
+                                pid = getattr(p, "companion_id", None) or getattr(p, "id", None)
+                                if pid:
+                                    party_ids.add(pid)
+
+                        witnesses = []
+                        for nid in candidate_npc_ids:
+                            if nid == target_npc.id or nid in party_ids:
+                                continue
+                            w_obj = state.npcs.get(nid)
+                            if not w_obj:
+                                continue
+                            if getattr(w_obj, "alive", True) and getattr(w_obj, "health", 1) > 0:
+                                witnesses.append(w_obj)
+
+                        if witnesses:
+                            from src.world.rumor_diffusion_engine import RumorDiffusionEngine
+                            sig = 3 if getattr(target_npc, "tier", "commoner") in ["elite", "boss", "noble", "legendary"] else 2
+                            rep_delta = 15 if target_npc.disposition == "hostile" else -20
+                            RumorDiffusionEngine.dispatch_event_rumor(
+                                state=state,
+                                origin_loc=state.player.location,
+                                event_text=f"플레이어가 [{target_npc.name}]을(를) 치명적 결투 끝에 처치함",
+                                significance=sig,
+                                reputation_delta=rep_delta,
+                                carrier="merchant"
+                            )
+                            witness_names = ", ".join([w.name for w in witnesses[:3]])
+                            fact_sheet.quest_progress_logs.append(
+                                f"소문 확산 시작: 현장 목격자({witness_names} 등 {len(witnesses)}명)에 의해 [{target_npc.name}] 처치 소식이 상단 가도를 타고 퍼져나갑니다. (파급력 Lv.{sig})"
+                            )
+                        else:
+                            fact_sheet.quest_progress_logs.append(
+                                f"은밀한 처치: 현장에 목격자가 없어 [{target_npc.name}] 처치 소문이 퍼지지 않았습니다. (완전 범죄)"
+                            )
+
                         dropped_skill_id = SkillSystem.roll_unique_skill_drop(target_npc, state.player)
                         if dropped_skill_id:
                             sk_obj = state.skills_db.get(dropped_skill_id)
@@ -705,6 +903,29 @@ class TwoPassEngine:
                             if "grant_skill" not in state_delta:
                                 state_delta["grant_skill"] = {}
                             state_delta["grant_skill"]["player"] = dropped_skill_id
+
+                        # EXP reward scaled by PowerScalePreset
+                        base_exp = 50 if getattr(target_npc, "tier", "") in ["elite", "boss", "legendary"] else 25
+                        exp_earned = int(base_exp * preset.exp_multiplier)
+                        lvl_res = state.player.add_exp(exp_earned, preset)
+                        if lvl_res.get("leveled_up"):
+                            if "player" not in state_delta:
+                                state_delta["player"] = {}
+                            state_delta["player"]["level"] = state.player.level
+                            state_delta["player"]["stat_points"] = state.player.stat_points
+                            state_delta["player"]["max_health"] = state.player.max_health
+                            state_delta["player"]["max_mana"] = state.player.max_mana
+                            fact_sheet.quest_progress_logs.append(
+                                f"⭐ [레벨업]: +{exp_earned} EXP 획득! 레벨 {state.player.level} 달성 (세계관 규격: {preset.name_ko})"
+                            )
+                            if lvl_res.get("current_realm"):
+                                fact_sheet.quest_progress_logs.append(
+                                    f"⚡ [선협 경지 돌파]: {lvl_res.get('current_realm')} 경지에 도달하여 전신 스탯이 {preset.breakthrough_multiplier}배 폭증했습니다!"
+                                )
+                        else:
+                            fact_sheet.quest_progress_logs.append(
+                                f"⭐ [경험치 획득]: +{exp_earned} EXP"
+                            )
 
         # 6.5 Player Skill Resource Deduction & Cooldown Application
         skill_info = fact_sheet.extra_flags.get("player_skill_used")
@@ -963,6 +1184,85 @@ class TwoPassEngine:
         return fact_sheet
 
     @classmethod
+    def reconcile_narration_with_fact_sheet(
+        cls,
+        narration: str,
+        fact_sheet: DeterministicFactSheet
+    ) -> str:
+        """
+        Validates narrative text against deterministic Pass 1 truth.
+        Detects contradictions (jailbreaks/hallucinations) and enforces deterministic facts:
+        1. Action Rejection (Anti-Yes-Man): Overrides narration if action is physically/logically invalid.
+        2. Dice Failure Contradiction: Appends deterministic failure correction if narration falsely claims success.
+        3. Alive NPC Falsely Reported Killed: Appends survival correction if target is still alive.
+        4. Killed NPC Falsely Reported Alive: Appends lethal kill confirmation if target is dead.
+        """
+        if not narration:
+            return narration
+
+        # 1. Action Rejection (Anti-Yes-Man Reality Check)
+        if not fact_sheet.is_valid:
+            reason = fact_sheet.rejection_reason or "물리적 또는 논리적 제약으로 인해 행동이 가로막혔습니다."
+            logger.warning(f"[⚠️ 서사-판정 모순 감지] 거부된 행동(is_valid=False)에 대한 서사 교정 적용: {reason}")
+            return f"당신의 행동은 현실적인 제약으로 가로막혔습니다.\n사유: {reason}"
+
+        # 2. Dice Failure Contradiction Check
+        if fact_sheet.dice_result and fact_sheet.dice_result.get("is_success") is False:
+            success_keywords = ["성공", "돌파", "격파", "관통", "제압", "처치", "숨통을 끊", "목을 베", "쓰러뜨", "명중"]
+            has_positive_success = any(kw in narration for kw in success_keywords)
+            has_failure_context = any(neg in narration for neg in [
+                "실패", "빗나", "막혔", "튕겨", "가로막", "피했", "못하", "못했", "않았", "못한", "않은"
+            ])
+
+            if has_positive_success and not has_failure_context:
+                logger.warning(
+                    f"[⚠️ 서사-판정 모순 감지] 판정 실패(FAILURE)이나 LLM 서사에 성공 묘사가 감지되었습니다. "
+                    f"판정: {fact_sheet.dice_result.get('summary_ko')}"
+                )
+                correction_note = "\n\n*(⚠️ 판정 결과: 실패 — 실제 판정에서는 목표를 달성하지 못하고 빗나가거나 가로막혔습니다.)*"
+                if correction_note not in narration:
+                    narration += correction_note
+
+        # 3. Combat Outcome Contradiction Check
+        if fact_sheet.combat_outcome:
+            co = fact_sheet.combat_outcome
+            t_name = co.get("target_name", "대상")
+            is_killed = co.get("killed", False)
+            hp_after = co.get("hp_after", 0)
+            max_hp = co.get("max_hp", 0)
+
+            if not is_killed:
+                lethal_keywords = ["숨통을 끊", "처치", "사망", "목숨을 잃", "시체가 되", "숨을 거두", "절명"]
+                claims_kill = any(kw in narration for kw in lethal_keywords)
+                has_alive_context = any(neg in narration for neg in [
+                    "살아", "버텨", "남은", "부상", "비틀거", "숨이 붙어", "쓰러지지", "죽지", "아직", "실패", "못했"
+                ])
+
+                if claims_kill and not has_alive_context:
+                    logger.warning(
+                        f"[⚠️ 서사-판정 모순 감지] 대상({t_name}) 생존(HP: {hp_after}/{max_hp})이나 서사에 사망 처치 묘사가 포함되었습니다."
+                    )
+                    survival_note = f"\n\n*(⚠️ 전투 지속: {t_name}은(는) 큰 부상을 입었으나 아직 쓰러지지 않고 생존해 있습니다. 남은 체력: {hp_after}/{max_hp})*"
+                    if survival_note not in narration:
+                        narration += survival_note
+            else:
+                survival_keywords = ["도망", "도주", "자리를 피", "상처 하나 없이", "여유롭게 웃"]
+                claims_survival = any(kw in narration for kw in survival_keywords)
+                has_death_context = any(neg in narration for neg in [
+                    "사망", "쓰러", "숨을 거", "죽", "처치", "피를 흘리며 쓰러", "절명", "숨통이 끊"
+                ])
+
+                if claims_survival and not has_death_context:
+                    logger.warning(
+                        f"[⚠️ 서사-판정 모순 감지] 대상({t_name}) 사망 판정이나 서사에 생존/도주 묘사가 포함되었습니다."
+                    )
+                    death_note = f"\n\n*(⚠️ 처치 확인: {t_name}은(는) 치명상을 입고 완전히 쓰러져 사망했습니다.)*"
+                    if death_note not in narration:
+                        narration += death_note
+
+        return narration
+
+    @classmethod
     def sanitize_pass2_result(
         cls,
         raw_llm_result: Dict[str, Any],
@@ -974,6 +1274,7 @@ class TwoPassEngine:
         Ensures state updates and narration adhere 100% to deterministic mechanics.
         """
         narration = raw_llm_result.get("narration", "").strip()
+        narration = cls.reconcile_narration_with_fact_sheet(narration, fact_sheet)
         llm_state_update = raw_llm_result.get("state_update", {})
         final_state_update = dict(fact_sheet.pre_computed_state_delta)
 

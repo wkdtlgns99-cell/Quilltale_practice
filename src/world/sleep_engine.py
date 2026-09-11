@@ -155,9 +155,9 @@ class SleepDeprivationEngine:
         return target.circadian
 
     @classmethod
-    def process_turn_circadian(cls, state: Any) -> List[str]:
+    def process_turn_circadian(cls, state: Any, delta_minutes: int = 20) -> List[str]:
         """
-        Advances wakefulness by 1 turn (~20 minutes of game time, 3 turns = 1 hour).
+        Advances wakefulness by delta_minutes (~20 minutes = 1 turn, 3 turns = 1 hour).
         """
         logs = []
         player = getattr(state, "player", None)
@@ -166,12 +166,14 @@ class SleepDeprivationEngine:
 
         clock = cls.get_clock(player)
         clock.microsleep_occurred_this_turn = False
-        clock.awake_turns += 1
+        added_turns = max(1, round(delta_minutes / 20.0))
+        prev_awake = clock.awake_turns
+        clock.awake_turns += added_turns
         clock.awake_hours = round(clock.awake_turns / 3.0, 1)
 
         # 1. Stimulant Timer Countdown & Crash Trigger
         if clock.active_stimulant_turns > 0:
-            clock.active_stimulant_turns -= 1
+            clock.active_stimulant_turns = max(0, clock.active_stimulant_turns - added_turns)
             if clock.active_stimulant_turns == 0 and clock.crash_pending:
                 clock.crash_pending = False
                 stim_spec = STIMULANTS_REGISTRY.get(clock.stimulant_id or "")
@@ -205,9 +207,9 @@ class SleepDeprivationEngine:
 
         # In-Turn Passive Fatigue Gain
         if clock.active_stimulant_turns == 0:
-            # Gradually increase base fatigue every 6 turns (2 hours)
-            if clock.awake_turns % 6 == 0:
-                fatigue_inc = 1 + clock.deprivation_tier
+            boundaries = (clock.awake_turns // 6) - (prev_awake // 6)
+            if boundaries > 0:
+                fatigue_inc = (1 + clock.deprivation_tier) * boundaries
                 player.fatigue = min(100, player.fatigue + fatigue_inc)
 
         return logs

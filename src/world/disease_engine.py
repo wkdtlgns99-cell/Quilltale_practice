@@ -643,10 +643,10 @@ class EpidemicEngine:
             )
 
     @classmethod
-    def process_turn_infections(cls, state: WorldState) -> List[str]:
+    def process_turn_infections(cls, state: WorldState, delta_minutes: int = 30) -> List[str]:
         """
         Processes turn-based disease progression, symptoms, damage,
-        and behavioral anomalies for the player and active companions.
+        and behavioral anomalies for the player and active companions, scaled by delta_minutes.
         """
         logs: List[str] = []
         entities = [state.player]
@@ -655,6 +655,8 @@ class EpidemicEngine:
         if hasattr(state, "party") and hasattr(state.party, "companions"):
             for comp in state.party.companions.values():
                 entities.append(comp)
+
+        turn_ticks = max(1, round(delta_minutes / 30.0))
 
         for entity in entities:
             name = getattr(entity, "name", "플레이어")
@@ -669,7 +671,7 @@ class EpidemicEngine:
 
                 # 1. Incubation progression
                 if inf.is_incubating:
-                    inf.incubation_turns_remaining -= 1
+                    inf.incubation_turns_remaining -= turn_ticks
                     if inf.incubation_turns_remaining <= 0:
                         inf.is_incubating = False
                         inf.current_stage = "stage_1"
@@ -685,21 +687,24 @@ class EpidemicEngine:
                 if not stage_spec:
                     continue
 
-                inf.turns_in_stage += 1
+                inf.turns_in_stage += turn_ticks
 
                 # Apply Stage Damage & Physiological Effects
                 effects = stage_spec.effects
 
                 # Damage per turn (fever / hp_loss)
-                damage = effects.get("hp_loss_per_turn", 0) + effects.get("fever_damage_per_turn", 0)
+                damage_per_turn = effects.get("hp_loss_per_turn", 0) + effects.get("fever_damage_per_turn", 0)
+                damage = damage_per_turn * turn_ticks
                 if damage > 0:
                     entity.health = max(1, entity.health - damage)
+                    duration_str = f" ({turn_ticks * 30}분간)" if turn_ticks > 1 else ""
                     logs.append(
-                        f"🩸 [{spec.name_ko} {stage_spec.name_ko}] {name}이(가) 병마로 인해 지속 피해 {damage}를 입었습니다. (현재 체력: {entity.health}/{entity.max_health})"
+                        f"🩸 [{spec.name_ko} {stage_spec.name_ko}] {name}이(가) 병마로 인해{duration_str} 지속 피해 {damage}를 입었습니다. (현재 체력: {entity.health}/{entity.max_health})"
                     )
 
                 # Stamina loss per turn
-                sta_loss = effects.get("stamina_loss_per_turn", 0)
+                sta_loss_per_turn = effects.get("stamina_loss_per_turn", 0)
+                sta_loss = sta_loss_per_turn * turn_ticks
                 if sta_loss > 0 and hasattr(entity, "stamina"):
                     entity.stamina = max(0, entity.stamina - sta_loss)
                     logs.append(f"💧 [{spec.name_ko}] 극심한 전해질 손실로 기력이 {sta_loss} 감소했습니다.")

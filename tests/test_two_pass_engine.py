@@ -1,6 +1,6 @@
 import json
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from src.world.state import WorldState, Location, NPC, Player, Item
 from src.world.two_pass_engine import TwoPassEngine, DeterministicFactSheet
@@ -317,5 +317,310 @@ def test_two_pass_engine_object_physics_destruction_and_burning():
     fact_sheet_burn = TwoPassEngine.compute_pass1(burn_action, state)
     assert any("잿더미" in pr or "소멸" in pr or "불길" in pr for pr in fact_sheet_burn.physics_reactions)
     assert scroll.is_destroyed is True
+
+
+def test_sanitize_pass2_result_rejects_hallucinated_success_on_dice_failure():
+    state = create_test_state()
+    from src.world.two_pass_engine import DeterministicFactSheet
+    fact_sheet = DeterministicFactSheet(
+        action="검투사를 찌른다",
+        is_valid=True,
+        dice_result={
+            "action_type": "combat",
+            "is_success": False,
+            "summary_ko": "근력 12 vs DC 15 (실패)",
+            "damage_dealt": 0,
+        },
+    )
+
+    # Case A: LLM hallucinates success
+    hallucinated_res = {
+        "narration": "당신의 칼날이 상대의 방패를 완벽하게 돌파하고 치명상을 입히는 데 성공했습니다.",
+        "state_update": {},
+    }
+    sanitized = TwoPassEngine.sanitize_pass2_result(hallucinated_res, fact_sheet, state)
+    assert "⚠️ 판정 결과: 실패" in sanitized["narration"]
+
+    # Case B: LLM correctly narrating failure should NOT append redundant warning
+    honest_failure_res = {
+        "narration": "당신의 칼날은 상대의 방패를 돌파하지 못하고 허공으로 빗나갔습니다.",
+        "state_update": {},
+    }
+    sanitized_honest = TwoPassEngine.sanitize_pass2_result(honest_failure_res, fact_sheet, state)
+    assert "⚠️ 판정 결과: 실패" not in sanitized_honest["narration"]
+
+
+def test_sanitize_pass2_result_rejects_hallucinated_death_when_npc_alive():
+    state = create_test_state()
+    from src.world.two_pass_engine import DeterministicFactSheet
+    fact_sheet = DeterministicFactSheet(
+        action="검투사를 공격한다",
+        is_valid=True,
+        combat_outcome={
+            "target_name": "검투사 바르카",
+            "target_id": "npc_gladiator",
+            "damage_dealt": 15,
+            "hp_after": 35,
+            "max_hp": 50,
+            "target_alive": True,
+            "killed": False,
+        },
+    )
+
+    # LLM hallucinates that NPC died
+    hallucinated_res = {
+        "narration": "당신의 일격에 검투사는 숨통을 끊기고 차가운 바닥에 사망했습니다.",
+        "state_update": {},
+    }
+    sanitized = TwoPassEngine.sanitize_pass2_result(hallucinated_res, fact_sheet, state)
+    assert "⚠️ 전투 지속" in sanitized["narration"]
+    assert "35/50" in sanitized["narration"]
+
+
+def test_sanitize_pass2_result_rejects_hallucinated_survival_when_npc_killed():
+    state = create_test_state()
+    from src.world.two_pass_engine import DeterministicFactSheet
+    fact_sheet = DeterministicFactSheet(
+        action="검투사의 목을 벤다",
+        is_valid=True,
+        combat_outcome={
+            "target_name": "검투사 바르카",
+            "target_id": "npc_gladiator",
+            "damage_dealt": 50,
+            "hp_after": 0,
+            "max_hp": 50,
+            "target_alive": False,
+            "killed": True,
+        },
+    )
+
+    # LLM hallucinates that NPC survived and ran away smiling
+    hallucinated_res = {
+        "narration": "검투사는 여유롭게 웃으며 상처 하나 없이 어둠 속으로 도망쳤습니다.",
+        "state_update": {},
+    }
+    sanitized = TwoPassEngine.sanitize_pass2_result(hallucinated_res, fact_sheet, state)
+    assert "⚠️ 처치 확인" in sanitized["narration"]
+    assert "치명상을 입고 완전히 쓰러져 사망" in sanitized["narration"]
+
+
+def test_sanitize_pass2_result_overrides_narration_on_action_rejection():
+    state = create_test_state()
+    from src.world.two_pass_engine import DeterministicFactSheet
+    fact_sheet = DeterministicFactSheet(
+        action="손가락 튕겨서 태양을 부순다",
+        is_valid=False,
+        rejection_reason="우주적 불가능: 필멸자는 태양을 파괴할 수 없습니다.",
+    )
+
+    # LLM hallucinates godlike success
+    hallucinated_res = {
+        "narration": "당신이 손가락을 튕기자 태양이 산산조각나며 암흑이 찾아왔습니다.",
+        "state_update": {},
+    }
+    sanitized = TwoPassEngine.sanitize_pass2_result(hallucinated_res, fact_sheet, state)
+    assert "현실적인 제약으로 가로막혔습니다" in sanitized["narration"]
+    assert "우주적 불가능" in sanitized["narration"]
+    assert "태양이 산산조각" not in sanitized["narration"]
+
+
+def test_long_distance_travel_scales_survival_ticks():
+    state = create_test_state()
+    from src.world.geography import RoadConnection, RoadType
+    from src.world.ration_engine import RationSpoilageEngine
+
+    # Create destination location and attach 45km road
+    gate_loc = Location(
+        id="loc_gate",
+        name="도시 북쪽 관문",
+        description="거대한 성문",
+        exits={"south": "loc_arena"}
+    )
+    state.locations["loc_gate"] = gate_loc
+    state.locations["loc_arena"].roads["loc_gate"] = RoadConnection(
+        destination_id="loc_gate",
+        distance_km=45.0,
+        road_type=RoadType.DIRT_ROAD,
+        road_name_ko="북부 간선 가도"
+    )
+
+    # Put a perishable food item in player inventory
+    meat = Item(
+        id="fresh_meat",
+        name="신선한 멧돼지 고기",
+        description="갓 잡은 고기",
+        location="inventory",
+        item_type="food"
+    )
+    state.items["fresh_meat"] = meat
+    state.player.inventory.append("fresh_meat")
+    status = RationSpoilageEngine.get_or_create_food_status(meat)
+    status.freshness = 100.0
+    status.spoilage_rate_per_turn = 5.0
+
+    # Move to north gate
+    fact_sheet = TwoPassEngine.compute_pass1("북쪽 관문으로 이동한다", state)
+
+    # 45km dirt road takes ~10 hours (~600+ minutes)
+    assert fact_sheet.turn_duration_minutes >= 500
+    assert fact_sheet.pre_computed_state_delta["time_minutes"] == fact_sheet.turn_duration_minutes
+
+    # Food spoilage must scale with the long travel duration (significantly more than 5.0 decay of 1 turn)
+    assert status.freshness <= 50.0
+
+
+def test_non_movement_action_keeps_default_30min_ticks():
+    state = create_test_state()
+    fact_sheet = TwoPassEngine.compute_pass1("주변을 조심스럽게 둘러본다", state)
+    assert fact_sheet.turn_duration_minutes == 30
+    assert fact_sheet.pre_computed_state_delta["time_minutes"] == 10
+
+
+@patch("src.world.dice.DiceEngine.roll_d20", return_value=15)
+def test_npc_kill_without_witness_suppresses_rumor_dispatch(mock_d20):
+    """현장에 생존한 제3자 목격자가 없을 때 소문 디스패치를 억제하고 완전 범죄 처리 (수정 L 검증)."""
+    state = create_test_state()
+    target_npc = state.npcs["npc_gladiator"]
+    target_npc.health = 1  # 1 HP: 강철검 피해로 일격 즉사
+    state.player.reputation = 0
+    state.player.regional_reputation = {}
+    init_rumor_count = len(getattr(state, "active_rumors", []))
+
+    action = "강철검으로 검투사 바르카를 일격에 베어 숨통을 끊는다"
+    fact_sheet = TwoPassEngine.compute_pass1(action, state)
+
+    # 1. 대상 처치 확인
+    assert fact_sheet.combat_outcome is not None
+    assert fact_sheet.combat_outcome.get("killed") is True
+    assert fact_sheet.pre_computed_state_delta["npc_state"][target_npc.id]["alive"] is False
+
+    # 2. 소문 발사 억제 확인 (완전 범죄)
+    assert len(getattr(state, "active_rumors", [])) == init_rumor_count
+    assert state.player.reputation == 0
+    assert any("은밀한 처치: 현장에 목격자가 없어" in log for log in fact_sheet.quest_progress_logs)
+    assert not any("소문 확산 시작:" in log for log in fact_sheet.quest_progress_logs)
+
+
+@patch("src.world.dice.DiceEngine.roll_d20", return_value=15)
+def test_npc_kill_with_witness_dispatches_rumor(mock_d20):
+    """현장에 생존한 제3자 목격자가 존재할 때 정상적으로 소문이 확산됨 (수정 L 검증)."""
+    state = create_test_state()
+    target_npc = state.npcs["npc_gladiator"]
+    target_npc.health = 1  # 1 HP: 강철검 피해로 일격 즉사
+
+    # 제3자 생존 목격자 NPC 추가
+    witness = NPC(
+        id="npc_spectator",
+        name="투기장 관람객 카를",
+        description="투기장의 결투를 지켜보는 관객",
+        location="loc_arena",
+        health=30,
+        max_health=30,
+        alive=True
+    )
+    state.npcs["npc_spectator"] = witness
+    state.locations["loc_arena"].npcs.append("npc_spectator")
+    init_rumor_count = len(getattr(state, "active_rumors", []))
+
+    action = "강철검으로 검투사 바르카를 일격에 베어 숨통을 끊는다"
+    fact_sheet = TwoPassEngine.compute_pass1(action, state)
+
+    # 1. 대상 처치 확인
+    assert fact_sheet.combat_outcome is not None
+    assert fact_sheet.combat_outcome.get("killed") is True
+    assert fact_sheet.pre_computed_state_delta["npc_state"][target_npc.id]["alive"] is False
+
+    # 2. 소문 확산 발동 확인
+    assert len(getattr(state, "active_rumors", [])) == init_rumor_count + 1
+    assert any("소문 확산 시작: 현장 목격자" in log for log in fact_sheet.quest_progress_logs)
+    assert not any("은밀한 처치:" in log for log in fact_sheet.quest_progress_logs)
+    # 목격자의 신념에 직접 목격 기록 추가 확인
+    assert any("[직접 목격]" in b for b in witness.beliefs)
+    # 적대 NPC 처치로 평판 상승 반영 확인 (disposition='hostile' -> +15)
+    assert state.player.regional_reputation.get("loc_arena", 0) > 0
+
+
+def test_multi_hop_movement_via_dijkstra_shortest_travel():
+    """인접 exits에 없는 원거리 목적지 이동 시 다익스트라 최단 경로 탐색 및 다중 가도 이동 검증 (수정 J)."""
+    state = create_test_state()
+    from src.world.geography import RoadConnection, RoadType
+
+    # loc_arena -> loc_crossroads (10km) -> loc_citadel (20km)
+    loc_crossroads = Location(
+        id="loc_crossroads",
+        name="황야의 삼거리",
+        description="동서남북으로 갈라지는 교차로",
+        exits={"south": "loc_arena", "north": "loc_citadel"}
+    )
+    loc_citadel = Location(
+        id="loc_citadel",
+        name="제국 수도 성채",
+        description="거대한 백색 성벽의 수도",
+        exits={"south": "loc_crossroads"}
+    )
+
+    state.locations["loc_crossroads"] = loc_crossroads
+    state.locations["loc_citadel"] = loc_citadel
+
+    # 도로 연결 (arena의 exits에는 citadel이 직접 연결되어 있지 않음!)
+    state.locations["loc_arena"].roads["loc_crossroads"] = RoadConnection(
+        destination_id="loc_crossroads", distance_km=10.0, road_type=RoadType.PAVED_HIGHWAY
+    )
+    state.locations["loc_crossroads"].roads["loc_citadel"] = RoadConnection(
+        destination_id="loc_citadel", distance_km=20.0, road_type=RoadType.PAVED_HIGHWAY
+    )
+
+    action = "제국 수도 성채로 장거리 이동을 떠난다"
+    fact_sheet = TwoPassEngine.compute_pass1(action, state)
+
+    # 1. 다익스트라 경로 탐색으로 수도 성채 도달 확인
+    assert fact_sheet.pre_computed_state_delta["player"]["location"] == "loc_citadel"
+    # 2. 총 거리(10km + 20km = 30km) 및 시간 계산 확인 (30km paved highway = 6.0 hours = 360 mins)
+    assert fact_sheet.turn_duration_minutes >= 300
+    # 3. 다중 구간 로그 기록 확인
+    assert any("다중 구간 가도 이동 완료:" in log for log in fact_sheet.quest_progress_logs)
+    assert any("황야의 삼거리" in log and "제국 수도 성채" in log for log in fact_sheet.quest_progress_logs)
+
+
+def test_pending_travel_waypoints_auto_advance():
+    """대기열에 pending_travel_waypoints가 있을 때 계속 이동 액션으로 자동 전진 검증 (수정 J)."""
+    state = create_test_state()
+    from src.world.geography import RoadConnection, RoadType
+
+    loc_crossroads = Location(
+        id="loc_crossroads",
+        name="황야의 삼거리",
+        description="교차로",
+        exits={"south": "loc_arena"}
+    )
+    loc_citadel = Location(
+        id="loc_citadel",
+        name="제국 수도 성채",
+        description="수도",
+        exits={"south": "loc_crossroads"}
+    )
+    state.locations["loc_crossroads"] = loc_crossroads
+    state.locations["loc_citadel"] = loc_citadel
+
+    state.locations["loc_arena"].roads["loc_crossroads"] = RoadConnection(
+        destination_id="loc_crossroads", distance_km=10.0, road_type=RoadType.DIRT_ROAD
+    )
+
+    # 대기열에 다음 경유지들 등록
+    state.pending_travel_waypoints = ["loc_crossroads", "loc_citadel"]
+
+    action = "가던 길을 계속해서 전진한다"
+    fact_sheet = TwoPassEngine.compute_pass1(action, state)
+
+    # 1. 첫 번째 웨이포인트(loc_crossroads)로 이동 확인
+    assert fact_sheet.pre_computed_state_delta["player"]["location"] == "loc_crossroads"
+    # 2. 남은 대기열이 1개(loc_citadel)로 갱신되었는지 확인
+    assert fact_sheet.pre_computed_state_delta["pending_travel_waypoints"] == ["loc_citadel"]
+    # 3. 여정 전진 로그 확인
+    assert any("여정 전진:" in log for log in fact_sheet.quest_progress_logs)
+    assert any("남은 경유지: 1개" in log for log in fact_sheet.quest_progress_logs)
+
+
+
 
 
