@@ -85,6 +85,15 @@
     - 스팀 패키지 게임처럼 클릭 시 브라우저 주소창/주변 프레임이 없는 전용 스탠드얼론 GUI 창(PyWebView/Electron 기반)으로 게임이 즉시 구동되는 앱 구조 전환.
 
 ### [똥컴/학원 환경 — 순수 시스템/로직/엔진 고도화]
+- [x] **🔥 [긴급 0순위] 클린업 커밋 버그 수정 및 ATOMIC 커밋 룰 준수 강화**:
+  - **발생 문제**: 
+    1. `state.py`의 `Optional` import 누락으로 인해 앱 전체 크래시(`NameError: name 'Optional' is not defined`) 발생. (pytest 및 eval_runner가 이로 인해 실패했으나 잘못 보고됨)
+    2. 이전 "클린업" 커밋에 신규 기능(`PowerScalePreset`, 다익스트라 경로 등)이 몰래 포함되어 `<Scope_Commit>`의 ATOMIC 원칙 훼손.
+  - **해결 내역**:
+    1. `state.py` L9에 `Optional` 추가.
+    2. 커밋 전 `pyflakes`로 코드베이스 전체 undefined name 검사 수행 (`outfit_engine.py`의 `random` 누락 건도 추가 조치).
+    3. `pytest`를 다시 실행해 진짜 545 passed 검증.
+    4. 이후 작업 시 반드시 "1 session = 1 task only" 원칙을 엄수해 커밋 분리할 것.
 - [x] **🔥 [완료] 6계층 거시-미시 현실 인프라 뼈대 시스템 (Level 0 ~ Level 5)**:
   - **구현 대상**: [아키텍처 전면 개편] `src/world/infrastructure.py`, `src/world/state.py`, `generator.py`, `geography.py`
   - **계층 구조 설계**:

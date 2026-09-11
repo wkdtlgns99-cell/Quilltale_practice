@@ -11,6 +11,7 @@ Deterministically resolves:
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List, Tuple
 import logging
+import random
 
 from src.world.state import WorldState, Item, Player, NPC, ClothingLayer
 

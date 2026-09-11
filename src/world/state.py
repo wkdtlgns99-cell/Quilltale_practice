@@ -6,7 +6,7 @@ Korean localization mappings, and deterministic delta state transitions.
 import json
 import logging
 from dataclasses import dataclass, field, fields
-from typing import Any
+from typing import Any, Optional, List, Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
