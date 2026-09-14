@@ -6,9 +6,9 @@ Calculates:
 3. Body part hit mapping to equipment slots and armor durability consumption.
 """
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Tuple
 import logging
-from src.world.state import WorldState, Item, Player, NPC
+from src.world.state import WorldState, Item
 from src.world.enchant_engine import EnchantEngine
 
 logger = logging.getLogger(__name__)
@@ -469,10 +469,12 @@ class EquipmentEngine:
         state: WorldState,
         entity: Any,
         incoming_damage: int,
-        target_part: str = ""
+        target_part: str = "",
+        armor_penetration_pct: float = 0.0
     ) -> Tuple[int, List[str]]:
         """
         Consumes durability of the targeted armor piece and slightly mitigates damage.
+        Supports armor penetration percentage from attack physics.
         Returns (mitigated_damage: int, logs: List[str]).
         """
         logs: List[str] = []
@@ -494,10 +496,12 @@ class EquipmentEngine:
         if dur_warn:
             logs.append(dur_warn)
 
-        # Damage reduction based on armor defense
+        # Damage reduction based on armor defense with penetration
         armor_def = getattr(armor_item, "defense", 0)
-        mitigated = max(1, incoming_damage - (armor_def // 2))
+        effective_def = max(0, int(round(armor_def * (1.0 - armor_penetration_pct))))
+        mitigated = max(1, incoming_damage - (effective_def // 2))
         if armor_def > 0 and incoming_damage > mitigated:
-            logs.append(f"[{armor_item.name}]이(가) 충격을 흡수하여 피해 {incoming_damage - mitigated} 경감 (내구도 -1)")
+            pen_note = f" (방어력 {armor_penetration_pct:.0%} 관통)" if armor_penetration_pct > 0 else ""
+            logs.append(f"[{armor_item.name}]이(가) 충격을 흡수하여 피해 {incoming_damage - mitigated} 경감{pen_note} (내구도 -1)")
 
         return mitigated, logs

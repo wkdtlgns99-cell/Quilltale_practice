@@ -9,7 +9,7 @@ import logging
 import re
 import random
 
-from src.world.state import WorldState, Item
+from src.world.state import WorldState, Item, NPC
 from src.world.validator import ActionValidator
 from src.world.skills import SkillSystem
 from src.world.status_engine import StatusEffectEngine
@@ -24,6 +24,13 @@ from src.world.bounty_engine import BountyEngine
 from src.world.puzzle_engine import PuzzleEngine
 from src.world.celestial_engine import CelestialEngine
 from src.world.enchant_engine import EnchantEngine
+from src.world.stealth_engine import StealthInfiltrationEngine
+from src.world.mana_burn_engine import ManaBurnEngine
+from src.world.harvest_engine import AnatomyHarvestEngine, HarvestOutcome
+from src.world.attack_physics_engine import AttackPhysicsEngine
+from src.world.campsite_engine import CampsiteRestEngine
+from src.world.alcohol_engine import AlcoholIntoxicationEngine, ALCOHOL_DRINK_REGISTRY
+from src.world.botany_engine import HerbalismBotanyEngine, PLANT_REGISTRY
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +77,14 @@ class DeterministicFactSheet:
     anti_yesman_verdict: Optional[Dict[str, Any]] = None
     turn_duration_minutes: int = 30
     power_scale_summary: Optional[str] = None
+    stealth_summary: Optional[str] = None
+    eavesdrop_summary: Optional[str] = None
+    mana_burn_summary: Optional[str] = None
+    harvest_summary: Optional[str] = None
+    attack_physics_summary: Optional[str] = None
+    campsite_summary: Optional[str] = None
+    alcohol_summary: Optional[str] = None
+    botany_summary: Optional[str] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -169,8 +184,45 @@ class DeterministicFactSheet:
             ef = self.eco_feedback
             if ef.get("terraforming"):
                 lines.append(f"🌍 [지형 변화]: {ef['terraforming']}")
-            if ef.get("world_news"):
-                lines.append(f"📢 [소문/뉴스]: {ef['world_news']}")
+        if self.stealth_summary:
+            lines.append("🥷 [물리 잠입 및 은신 판정 (Stealth Infiltration)]")
+            lines.append(f"- {self.stealth_summary}")
+            lines.append("*GM 서사 지침*: 은신 성공 시 그림자와 정적을 타고 흔적 없이 숨어든 상태를 묘사하고, 발각 시 관찰자가 고개를 돌려 기척을 알아채고 경계/대치에 돌입한 긴박한 상황을 사실적으로 서술하십시오.")
+
+        if self.eavesdrop_summary:
+            lines.append("👂 [물리 음향 도청 및 밀담 청취 (Acoustic Eavesdropping)]")
+            lines.append(f"- {self.eavesdrop_summary}")
+            lines.append("*GM 서사 지침*: 청취 선명도(Clarity)에 따라 식별된 대화 내용을 정확하게 서술에 반영하십시오.")
+
+        if self.mana_burn_summary:
+            lines.append("⚡ [마나 과부하 및 회로 상태 (Mana Burn & Circuit)]")
+            lines.append(f"- {self.mana_burn_summary}")
+            lines.append("*GM 서사 지침*: 생명력 연소 과충전, 마나 회로 파열, 마나 폭주 충격파 및 에테르 변이 발현을 극적이고 처절한 문학적 묘사로 서술하십시오. 확정 연산된 회로 손상과 신체 변화를 숨기거나 축소하지 마십시오.")
+
+        if self.harvest_summary:
+            lines.append("🥩 [몬스터 부위 파괴 및 갈무리/도축 (Anatomy & Harvesting)]")
+            lines.append(f"- {self.harvest_summary}")
+            lines.append("*GM 서사 지침*: 부위 파괴 및 꼬리 절단, 사체 도축/갈무리의 감각적이고 처절한 물리적 과정을 문학적으로 서술하십시오. 수확된 전리품과 칼날의 마모를 서사에 사실적으로 반영하십시오.")
+
+        if self.attack_physics_summary:
+            lines.append("⚔️ [물리 공격 역학 및 피격 반응 (Attack Physics & Stagger)]")
+            lines.append(f"- {self.attack_physics_summary}")
+            lines.append("*GM 서사 지침*: 물리 타격 유형(찌르기/베기/둔기/잽/사격)에 따른 운동에너지 충격량, 방어구 관통, 출혈, 뼈 골절 및 피격 저지력으로 인한 적의 행동 캔슬을 박진감 넘치고 처절한 물리 묘사로 서술하십시오.")
+
+        if self.campsite_summary:
+            lines.append("⛺ [야영지 및 야간 숙영 판정 (Campsite & Night Rest)]")
+            lines.append(f"- {self.campsite_summary}")
+            lines.append("*GM 서사 지침*: 야영지 구축, 모닥불의 온기와 피어오르는 연기, 불침번의 고요한 긴장감, 혹은 어둠을 뚫고 덮쳐오는 기습과 이에 맞선 요격 태세를 현장감 넘치고 생생하게 서술하십시오.")
+
+        if self.alcohol_summary:
+            lines.append("🍺 [주류 음용 및 취기/숙취/실신 판정 (Alcohol Intoxication & Blackout)]")
+            lines.append(f"- {self.alcohol_summary}")
+            lines.append("*GM 서사 지침*: 음용된 주류의 맛과 목넘김, 체내 알코올 대사로 인한 열기와 감각 둔화, 만취 시의 비틀거림이나 블랙아웃 시 동료의 든든한 호송 또는 뒷골목 방치/소매치기 피습 위기를 처절하고 생생하게 서술하십시오.")
+
+        if self.botany_summary:
+            lines.append("🌿 [야생 식물학 채집/감별/섭취 판정 (Herbalism & Botany)]")
+            lines.append(f"- {self.botany_summary}")
+            lines.append("*GM 서사 지침*: 수풀을 헤치며 발견한 약초나 버섯의 생생한 외형과 냄새, 채집 시의 손맛, 감별을 통해 드러난 진실(진짜 명약 vs 위험한 맹독 유사종의 소름 돋는 위장), 또는 섭취 시의 신체 치유나 치명적 중독 반응을 감각적이고 사실적인 문학으로 서술하십시오.")
 
         lines.append("=================================================================")
         return "\n".join(lines)
@@ -329,6 +381,726 @@ class TwoPassEngine:
         return None
 
     @classmethod
+    def resolve_action_eavesdrop(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        도청/엿듣기 의도 파싱 및 StealthInfiltrationEngine.evaluate_eavesdropping 결정론적 판정.
+        """
+        eavesdrop_keywords = ["엿듣", "도청", "훔쳐듣", "귀를 기울", "귀 기울", "밀담을 듣", "소리를 엿", "eavesdrop"]
+        if not any(k in action for k in eavesdrop_keywords):
+            return None
+
+        curr_loc = state.current_location()
+        if not curr_loc:
+            return None
+
+        # 관찰/청취 대상 NPC 검색
+        loc_npcs = state.npcs_in_location(curr_loc.id)
+        if not loc_npcs:
+            loc_npcs = [n for n in state.npcs.values() if getattr(n, "location", "") == curr_loc.id]
+        target_speaker = None
+        for n in loc_npcs:
+            if n.name in action or n.id in action:
+                target_speaker = n
+                break
+        if not target_speaker:
+            if loc_npcs:
+                target_speaker = loc_npcs[0]
+            else:
+                target_speaker = NPC(id="shadow_speaker", name="그림자 속 인물", description="밀담을 나누는 자", location=curr_loc.id)
+
+        # 차폐 매질 감지
+        barrier_type = "thick_wood_door"
+        if any(k in action for k in ["문틈", "열쇠구멍", "crack"]):
+            barrier_type = "door_crack"
+        elif any(k in action for k in ["석벽", "돌벽", "stone_wall"]):
+            barrier_type = "stone_wall"
+        elif any(k in action for k in ["판자", "목재벽", "board", "나무벽"]):
+            barrier_type = "board_partition"
+        elif any(k in action for k in ["창문", "유리창", "window"]):
+            barrier_type = "thick_wood_door"
+
+        # 비밀 대화 내용 (NPC의 dialogue, intention, 또는 지역 특화 밀담)
+        secret = getattr(target_speaker, "dialogue", None)
+        if not secret or len(secret) < 5:
+            secret = f"오늘 밤, {curr_loc.name} 외곽에서 비밀 접선이 예정되어 있다."
+
+        res = StealthInfiltrationEngine.evaluate_eavesdropping(
+            state=state,
+            listener=state.player,
+            speaker=target_speaker,
+            barrier_type=barrier_type,
+            distance_m=2.0,
+            secret_dialogue=secret
+        )
+
+        return {
+            "speaker_name": target_speaker.name,
+            "barrier_type": barrier_type,
+            "result": res
+        }
+
+    @classmethod
+    def resolve_action_stealth(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        은신/잠입 의도 파싱 및 StealthInfiltrationEngine.evaluate_stealth_approach 결정론적 판정.
+        """
+        stealth_keywords = [
+            "숨는", "숨어", "잠입", "은신", "살금살금", "기척을 죽이", "몰래 다가가",
+            "포복", "발소리를 죽이", "숨죽이", "발끝으로", "stealth", "sneak", "creep"
+        ]
+        if not any(k in action for k in stealth_keywords):
+            return None
+
+        curr_loc = state.current_location()
+        if not curr_loc:
+            return None
+
+        # 관찰자 NPC 검색
+        loc_npcs = state.npcs_in_location(curr_loc.id)
+        if not loc_npcs:
+            loc_npcs = [n for n in state.npcs.values() if getattr(n, "location", "") == curr_loc.id]
+        observer = None
+        for n in loc_npcs:
+            if n.name in action or n.id in action:
+                observer = n
+                break
+        if not observer:
+            # 적대적 or 경계 중인 NPC 우선
+            for n in loc_npcs:
+                if getattr(n, "disposition", "") == "hostile" or getattr(n, "alert_level", "") in ["alert", "suspicious"]:
+                    observer = n
+                    break
+        if not observer:
+            if loc_npcs:
+                observer = loc_npcs[0]
+            else:
+                observer = NPC(id="ambient_patrol", name="순찰병", description="순찰 중인 경비", location=curr_loc.id, perception=10)
+
+        # 바닥 재질 감지
+        floor_material = getattr(curr_loc, "floor_material", None)
+        if not floor_material:
+            if any(k in action for k in ["양탄자", "카펫", "융단"]):
+                floor_material = "carpet_soft"
+            elif any(k in action for k in ["깨진 유리", "유리 파편", "자갈"]):
+                floor_material = "broken_glass"
+            elif any(k in action for k in ["나무", "마루", "목재", "복도"]):
+                floor_material = "wood_creaky"
+            elif any(k in action for k in ["진흙", "흙길", "웅덩이"]):
+                floor_material = "dirt_mud"
+            else:
+                floor_material = "stone_flagstone"
+
+        # 보행 보법 감지
+        if any(k in action for k in ["발끝", "포복", "극저속", "기는", "기어서"]):
+            stride_stance = "creeping_toe"
+        elif any(k in action for k in ["달려", "전력", "질주", "sprint"]):
+            stride_stance = "running_sprint"
+        elif any(k in action for k in ["저벅", "평상", "보통"]):
+            stride_stance = "normal_walk"
+        else:
+            stride_stance = "cautious_walk"
+
+        # 조도 감지 (시간대 및 위치 특성)
+        is_night = getattr(state.time, "is_night", False) if hasattr(state, "time") else False
+        if is_night:
+            lighting_lux = getattr(curr_loc, "lighting_lux", 8.0)
+        else:
+            lighting_lux = getattr(curr_loc, "lighting_lux", 500.0)
+
+        # 주변 소음
+        ambient_noise_db = getattr(curr_loc, "ambient_noise_db", 35.0)
+
+        # 풍향 감지: 실내/지하는 체취 바람 차단(180도), 키워드 지정 반영, 기본 측풍(90도)
+        if any(k in action for k in ["풍하", "바람을 마주", "바람을 안고", "바람 아래", "냄새를 숨기"]):
+            wind_angle = 180.0
+        elif any(k in action for k in ["풍상", "바람을 등지"]):
+            wind_angle = 0.0
+        elif curr_loc and (getattr(curr_loc, "location_category", "") != "surface" or any(w in curr_loc.name for w in ["복도", "회랑", "방", "실", "지하", "던전", "동굴", "성내"])):
+            wind_angle = 180.0  # 실내/밀폐 공간 풍향 차단
+        else:
+            wind_angle = 90.0   # 기본 측풍
+
+        res = StealthInfiltrationEngine.evaluate_stealth_approach(
+            state=state,
+            infiltrator=state.player,
+            observer=observer,
+            floor_material=floor_material,
+            stride_stance=stride_stance,
+            distance_m=5.0,
+            lighting_lux=lighting_lux,
+            ambient_noise_db=ambient_noise_db,
+            wind_angle_degrees=wind_angle
+        )
+
+        return {
+            "observer": observer,
+            "floor_material": floor_material,
+            "stride_stance": stride_stance,
+            "result": res
+        }
+
+    @classmethod
+    def resolve_action_harvest(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses harvest/butchering intent on monster corpses or severed parts.
+        Returns dict with outcome and target info if valid harvest intent, None otherwise.
+        """
+        curr_loc = state.current_location()
+        if not curr_loc:
+            return None
+
+        action_lower = action.lower()
+        harvest_keywords = [
+            "갈무리", "도축", "해체", "carve", "harvest",
+            "가죽을 벗", "살점을 베", "살점을 발라", "발라낸", "떼어낸", "적출",
+            "부위를 베", "고기를 도축", "시체를 갈무리", "사체를 갈무리"
+        ]
+        if not any(k in action_lower for k in harvest_keywords):
+            return None
+
+        # Detect knife if explicitly named in action
+        knife_item_id = None
+        for i_id in state.player.inventory:
+            if i_id in state.items:
+                it = state.items[i_id]
+                if it.name.lower() in action_lower or i_id.lower() in action_lower:
+                    knife_item_id = i_id
+                    break
+
+        # Case 1: Check severed parts dropped on the floor
+        severed_items = []
+        for it_id in getattr(curr_loc, "items", []):
+            if it_id in state.items:
+                it = state.items[it_id]
+                props = getattr(it, "properties", {}) or {}
+                if props.get("severed_part"):
+                    severed_items.append(it)
+        if not severed_items:
+            for it in state.items.values():
+                if getattr(it, "location", "") == curr_loc.id:
+                    props = getattr(it, "properties", {}) or {}
+                    if props.get("severed_part"):
+                        severed_items.append(it)
+
+        # Match specific severed item or pick first
+        target_severed = None
+        if severed_items:
+            for sit in severed_items:
+                if sit.name.lower() in action_lower or sit.id in action_lower:
+                    target_severed = sit
+                    break
+            if not target_severed and any(k in action_lower for k in ["꼬리", "잔해", "절단", "토막", "바닥"]):
+                target_severed = severed_items[0]
+
+        if target_severed:
+            outcome = AnatomyHarvestEngine.harvest_severed_object(state.player, target_severed.id, state, knife_item_id=knife_item_id)
+            return {
+                "type": "severed_part",
+                "target_name": target_severed.name,
+                "outcome": outcome
+            }
+
+        # Case 2: Check dead monsters / corpses in location
+        dead_monsters = []
+        for n in state.npcs.values():
+            if getattr(n, "location", "") == curr_loc.id and not getattr(n, "alive", True):
+                if getattr(n, "anatomy_parts", None):
+                    dead_monsters.append(n)
+        if not dead_monsters and curr_loc:
+            for nid in getattr(curr_loc, "npcs", []):
+                if nid in state.npcs:
+                    n = state.npcs[nid]
+                    if not getattr(n, "alive", True) and getattr(n, "anatomy_parts", None):
+                        if n not in dead_monsters:
+                            dead_monsters.append(n)
+
+        if not dead_monsters:
+            return None
+
+        # Match specific dead monster
+        target_monster = None
+        for m in dead_monsters:
+            if m.name.lower() in action_lower or m.id in action_lower:
+                target_monster = m
+                break
+        if not target_monster:
+            target_monster = dead_monsters[0]
+
+        # Match specific part in monster.anatomy_parts
+        target_part_id = None
+        for pid, pobj in target_monster.anatomy_parts.items():
+            p_name = pobj.name_ko.lower() if hasattr(pobj, "name_ko") else pobj.get("name_ko", "").lower()
+            tokens = [t for t in re.split(r'[\s_]+', p_name) if len(t) >= 2]
+            if p_name in action_lower or pid.lower() in action_lower or any(t in action_lower for t in tokens):
+                target_part_id = pid
+                break
+
+        if not target_part_id:
+            # Check weak point aliases / keywords
+            for pid, pobj in target_monster.anatomy_parts.items():
+                p_name = pobj.name_ko.lower() if hasattr(pobj, "name_ko") else pobj.get("name_ko", "").lower()
+                combined = f"{p_name} {pid.lower()}"
+                if any(k in action_lower for k in ["뿔", "뇌각", "각"]) and any(k in combined for k in ["뿔", "각", "horn"]):
+                    target_part_id = pid
+                    break
+                if any(k in action_lower for k in ["꼬리", "미부"]) and any(k in combined for k in ["꼬리", "tail"]):
+                    target_part_id = pid
+                    break
+                if any(k in action_lower for k in ["날개", "익부"]) and any(k in combined for k in ["날개", "wing"]):
+                    target_part_id = pid
+                    break
+                if any(k in action_lower for k in ["머리", "두부"]) and any(k in combined for k in ["머리", "head"]):
+                    target_part_id = pid
+                    break
+
+        # Fallback: pick first unharvested part
+        if not target_part_id:
+            harvested = getattr(target_monster, "harvested_parts", []) or []
+            for pid in target_monster.anatomy_parts.keys():
+                if pid not in harvested:
+                    target_part_id = pid
+                    break
+
+        if not target_part_id:
+            # All parts already harvested
+            return {
+                "type": "corpse",
+                "target_name": target_monster.name,
+                "outcome": HarvestOutcome(
+                    success=False,
+                    part_id="",
+                    part_name_ko="",
+                    item_id="",
+                    item_name_ko="",
+                    is_ruined=False,
+                    knife_durability_lost=0,
+                    remaining_knife_durability=100,
+                    narration_ko=f"[{target_monster.name}]의 모든 신체 부위는 이미 갈무리가 완료되어 더 이상 떼어낼 소재가 없습니다."
+                )
+            }
+
+        outcome = AnatomyHarvestEngine.harvest_part(state.player, target_monster, target_part_id, state, knife_item_id=knife_item_id)
+        return {
+            "type": "corpse",
+            "target_name": target_monster.name,
+            "outcome": outcome
+        }
+
+    @classmethod
+    def resolve_action_campsite(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        야영지 구축, 모닥불 점화, 불침번 배정, 야간 숙영/수면 의도 파싱 및 CampsiteRestEngine 결정론적 판정.
+        """
+        action_lower = action.lower()
+        curr_loc = state.current_location()
+        if not curr_loc:
+            return None
+
+        # 1. 야영지 구축 (구축, 설치, 텐트, 마련)
+        setup_keywords = ["야영지 구축", "캠프 구축", "캠프 설치", "텐트 친다", "텐트를 친", "야영지를 만든", "캠프를 친다", "야영지를 마련", "campsite", "setup camp", "야영지 설치", "텐트를 치고"]
+        if any(k in action_lower for k in setup_keywords):
+            has_tent = any("tent" in i.lower() or "텐트" in getattr(state.items.get(i), "name", "").lower() for i in state.player.inventory)
+            has_traps = any(k in action_lower for k in ["덫", "방울", "방어선", "트랩", "경보선", "tripwire"])
+            success, msg = CampsiteRestEngine.setup_campsite(state, has_tent=has_tent, has_perimeter_traps=has_traps)
+            camp = CampsiteRestEngine.get_campsite(state)
+            return {
+                "type": "setup",
+                "success": success,
+                "summary": msg,
+                "camp": camp,
+                "logs": [msg]
+            }
+
+        # 2. 모닥불 점화
+        fire_keywords = ["모닥불", "장작불", "캠프파이어", "campfire", "불을 지핀", "불을 피운", "불피운"]
+        light_verbs = ["피운", "지핀", "붙인", "점화", "light", "피우", "지피", "붙여"]
+        if any(k in action_lower for k in fire_keywords) and any(v in action_lower for v in light_verbs):
+            # 장작 소모 (인벤토리에 있으면 식별)
+            firewood_id = None
+            for i_id in state.player.inventory:
+                if i_id in state.items:
+                    it = state.items[i_id]
+                    if any(w in it.name.lower() or w in i_id.lower() for w in ["장작", "firewood", "나뭇가지", "목재"]):
+                        firewood_id = i_id
+                        break
+            success, msg = CampsiteRestEngine.light_campfire(state, duration_minutes=240)
+            camp = CampsiteRestEngine.get_campsite(state)
+            return {
+                "type": "campfire",
+                "success": success,
+                "summary": msg,
+                "camp": camp,
+                "consumed_firewood_id": firewood_id,
+                "logs": [msg]
+            }
+
+        # 3. 불침번 배정
+        sentry_keywords = ["불침번", "경계 근무", "보초", "sentry", "경계를 서", "불침번을 배정", "경계 배정"]
+        if any(k in action_lower for k in sentry_keywords):
+            # 플레이어 및 동행 동료 수집
+            shifts = [{"shift_number": 1, "companion_id": "player", "companion_name": state.player.name}]
+            loc_npcs = state.npcs_in_location(curr_loc.id)
+            allies = [n for n in loc_npcs if n.alive and (getattr(n, "disposition", "") in ["allied", "friendly"] or n.id in state.party)]
+            for idx, ally in enumerate(allies[:2], start=2):
+                shifts.append({
+                    "shift_number": idx,
+                    "companion_id": ally.id,
+                    "companion_name": ally.name
+                })
+            logs = CampsiteRestEngine.assign_sentry_shifts(state, shifts)
+            camp = CampsiteRestEngine.get_campsite(state)
+            summary = " / ".join(logs)
+            return {
+                "type": "sentry",
+                "success": True,
+                "summary": f"🛡️ [불침번 편성 완료] {summary}",
+                "camp": camp,
+                "logs": logs
+            }
+
+        # 4. 야간 숙영 / 수면 / 휴식
+        rest_keywords = [
+            "야영지에서 휴식", "야영지에서 잠", "캠프에서 잠", "캠프에서 휴식", "모닥불 곁에서 잠",
+            "모닥불 옆에서 잠", "노숙", "야영하며 밤", "침낭을 펴고", "야영 수면", "숙영",
+            "야영한다", "캠프에서 쉰다", "rest at camp", "sleep at camp", "캠프에서 하룻밤",
+            "야영 휴식", "캠프 휴식", "모닥불 가에서 잠"
+        ]
+        if any(k in action_lower for k in rest_keywords):
+            # 침낭 식별
+            bedding_id = "leather_bedroll"
+            for i_id in state.player.inventory:
+                if i_id in state.items:
+                    it_name = state.items[i_id].name.lower()
+                    if "모피" in it_name or "fur" in it_name:
+                        bedding_id = "fur_bedroll"
+                        break
+                    elif "침낭" in it_name or "bedroll" in it_name:
+                        bedding_id = "leather_bedroll"
+
+            # CampsiteRestEngine 실행
+            night_res = CampsiteRestEngine.resolve_campsite_night(state, hours=8, bedding_id=bedding_id)
+            camp = CampsiteRestEngine.get_campsite(state)
+
+            spawned_npcs = []
+            if night_res.get("ambush_triggered"):
+                spec = night_res.get("ambush_spec", {})
+                count = spec.get("attacker_count", 2)
+                ambush_name = spec.get("name_ko", "야간 습격자")
+                for i in range(count):
+                    e_id = f"ambush_{spec.get('ambush_id', 'enemy')}_{state.turn}_{i+1}"
+                    e_npc = NPC(
+                        id=e_id,
+                        name=f"{ambush_name} #{i+1}",
+                        description="어둠을 틈타 야영지를 습격한 야간 침입자.",
+                        location=curr_loc.id,
+                        alive=True,
+                        disposition="hostile",
+                        health=30,
+                        max_health=30,
+                        armor_class=12,
+                        perception=spec.get("attacker_perception", 10),
+                        traits=spec.get("traits", ["ambush", "hostile"])
+                    )
+                    state.npcs[e_id] = e_npc
+                    if curr_loc and e_id not in curr_loc.npcs:
+                        curr_loc.npcs.append(e_id)
+                    spawned_npcs.append(e_npc)
+
+            summary = " ".join(night_res.get("logs", []))
+            return {
+                "type": "night_rest",
+                "success": True,
+                "summary": summary,
+                "camp": camp,
+                "night_res": night_res,
+                "spawned_npcs": spawned_npcs,
+                "logs": night_res.get("logs", [])
+            }
+
+        return None
+
+    @classmethod
+    def resolve_action_drink(cls, action: str, state: WorldState, fixed_theft_roll: Optional[int] = None) -> Optional[Dict[str, Any]]:
+        """
+        Parses drinking intent (alcohol beverages), handles tavern purchase vs inventory consumption,
+        updates BAC, intoxication stages, User Q3 companion safe escort vs solo street mugging/hypothermia.
+        """
+        action_lower = action.lower()
+        non_alc_words = ["수술", "기술", "전술", "마술", "예술", "요술", "학술", "서술", "상술", "주술", "시술", "권술", "검술", "창술", "궁술", "의술", "인술", "화술"]
+        action_cleaned_for_alc = action_lower
+        for nw in non_alc_words:
+            action_cleaned_for_alc = action_cleaned_for_alc.replace(nw, " ")
+
+        alcohol_keywords = [
+            "술을", "술이", "술 마", "술마", "맥주", "에일", "와인", "포도주", "뱅쇼",
+            "위스키", "독주", "증류주", "감청주", "술 한 잔", "술 한잔", "술잔을", "한잔 마",
+            "술을 들이", "술을 벌컥", "주류를", "drink ale", "drink beer", "drink wine", "drink alcohol"
+        ]
+        is_potion = any(k in action_lower for k in ["포션", "물약", "치료약", "해독제", "비약", "potion", "elixir"])
+        if not any(k in action_cleaned_for_alc for k in alcohol_keywords) or is_potion:
+            return None
+
+        # 1. Check if drinking from inventory
+        consumed_inv_id = None
+        drink_id = None
+
+        # Try to find matching drink in player's inventory first
+        for i_id in state.player.inventory:
+            if i_id in state.items:
+                it = state.items[i_id]
+                it_name = it.name.lower()
+                it_traits = getattr(it, "traits", [])
+
+                # Direct match to registry keys or Korean names
+                if i_id in ALCOHOL_DRINK_REGISTRY:
+                    consumed_inv_id = i_id
+                    drink_id = i_id
+                    break
+                for reg_id, spec in ALCOHOL_DRINK_REGISTRY.items():
+                    if spec.name_ko.lower() in it_name or reg_id in it_name or reg_id in i_id.lower():
+                        consumed_inv_id = i_id
+                        drink_id = reg_id
+                        break
+                if consumed_inv_id:
+                    break
+
+                # General keyword match in inventory item
+                if any(w in it_name for w in ["맥주", "에일", "ale", "beer"]):
+                    consumed_inv_id = i_id
+                    drink_id = "barley_ale"
+                    break
+                elif any(w in it_name for w in ["와인", "포도주", "뱅쇼", "wine"]):
+                    consumed_inv_id = i_id
+                    drink_id = "spiced_wine"
+                    break
+                elif any(w in it_name for w in ["독주", "증류주", "불꽃", "firewater"]):
+                    consumed_inv_id = i_id
+                    drink_id = "dwarven_firewater"
+                    break
+                elif any(w in it_name for w in ["감청주", "달빛", "nectar"]):
+                    consumed_inv_id = i_id
+                    drink_id = "elven_moon_nectar"
+                    break
+                elif "alcohol" in it_traits or "beverage" in it_traits:
+                    consumed_inv_id = i_id
+                    drink_id = "barley_ale"
+                    break
+
+        # 2. If not from inventory, determine tavern order
+        if not drink_id:
+            if any(w in action_lower for w in ["독주", "증류주", "불꽃", "firewater"]):
+                drink_id = "dwarven_firewater"
+            elif any(w in action_lower for w in ["와인", "포도주", "뱅쇼", "wine"]):
+                drink_id = "spiced_wine"
+            elif any(w in action_lower for w in ["감청주", "달빛", "엘프", "nectar"]):
+                drink_id = "elven_moon_nectar"
+            else:
+                drink_id = "barley_ale"
+
+        spec = ALCOHOL_DRINK_REGISTRY.get(drink_id, ALCOHOL_DRINK_REGISTRY["barley_ale"])
+
+        # If from inventory, temporarily credit gold to bypass purchase cost check
+        prev_gold = getattr(state.player, "gold", 0)
+        if consumed_inv_id:
+            if prev_gold < spec.cost_gold:
+                state.player.gold += spec.cost_gold
+
+        # Execute drink consumption
+        success, msg, data = AlcoholIntoxicationEngine.consume_drink(
+            state, state.player, drink_id, fixed_theft_roll=fixed_theft_roll
+        )
+
+        # Restore gold if consumed from inventory
+        if consumed_inv_id:
+            state.player.gold = prev_gold
+
+        if not success:
+            return {
+                "success": False,
+                "summary": msg,
+                "drink_id": drink_id,
+                "logs": [msg]
+            }
+
+        return {
+            "success": True,
+            "summary": msg,
+            "drink_id": drink_id,
+            "consumed_inventory_item_id": consumed_inv_id,
+            "stage": data.get("stage", 0),
+            "bac": data.get("bac", 0.0),
+            "blackout": data.get("blackout", False),
+            "logs": msg.split("\n")
+        }
+
+    @classmethod
+    def resolve_action_botany(
+        cls,
+        action: str,
+        state: WorldState,
+        fixed_forage_roll: Optional[int] = None,
+        fixed_id_roll: Optional[int] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Parses botany intent: wild plant foraging, precise plant identification, and plant consumption.
+        """
+        action_lower = action.lower()
+        curr_loc = state.current_location()
+
+        # 1. Identify intent (식물 감별)
+        id_keywords = ["약초 감별", "식물 감별", "버섯 감별", "감별한다", "정밀 감별", "약초를 조사", "버섯을 조사", "식물을 조사", "identify plant", "identify herb"]
+        is_id_action = any(k in action_lower for k in id_keywords)
+        if is_id_action:
+            # Find an uninspected or foraged plant in player inventory
+            target_item = None
+            for i_id in state.player.inventory:
+                if i_id in state.items:
+                    it = state.items[i_id]
+                    if getattr(it, "true_spec_id", "") or "botany_foraged" in getattr(it, "traits", []) or "unidentified" in getattr(it, "traits", []):
+                        target_item = it
+                        break
+
+            if not target_item:
+                return None
+
+            plant_dict = {
+                "id": target_item.id,
+                "name": target_item.name,
+                "true_spec_id": getattr(target_item, "true_spec_id", ""),
+                "is_identified": getattr(target_item, "is_identified", False),
+                "is_poisonous_lookalike": getattr(target_item, "is_poisonous_lookalike", False),
+                "origin_target_name": getattr(target_item, "origin_target_name", target_item.name),
+                "traits": list(getattr(target_item, "traits", []))
+            }
+            success, msg = HerbalismBotanyEngine.identify_plant(state.player, plant_dict, fixed_roll=fixed_id_roll)
+            if success:
+                target_item.is_identified = True
+                if plant_dict.get("is_poisonous_lookalike"):
+                    target_item.name = plant_dict["name"]
+                    target_item.is_poisonous_lookalike = True
+                    if "unidentified" in target_item.traits:
+                        target_item.traits.remove("unidentified")
+                    if "poison" not in target_item.traits:
+                        target_item.traits.append("poison")
+                else:
+                    if "unidentified" in target_item.traits:
+                        target_item.traits.remove("unidentified")
+
+            return {
+                "type": "identify",
+                "success": success,
+                "summary": msg,
+                "item_id": target_item.id,
+                "logs": [msg]
+            }
+
+        # 2. Consume intent (Eating / Brewing foraged plant)
+        consume_verbs = ["먹는", "먹어", "삼킨", "삼켜", "섭취", "달여", "씹어", "eat", "consume"]
+        if any(v in action_lower for v in consume_verbs):
+            # Check if matching a botany item in player inventory
+            target_item = None
+            for i_id in state.player.inventory:
+                if i_id in state.items:
+                    it = state.items[i_id]
+                    it_name = it.name.lower()
+                    it_traits = getattr(it, "traits", [])
+                    has_spec = bool(getattr(it, "true_spec_id", ""))
+                    is_botany = "botany_foraged" in it_traits or has_spec or any(p.name_ko.lower() in it_name for p in PLANT_REGISTRY.values())
+                    if is_botany and (it_name in action_lower or any(w in action_lower for w in ["약초", "버섯", "풀", "이끼", "나물", "plant", "herb", "mushroom"])):
+                        target_item = it
+                        break
+
+            if target_item:
+                plant_dict = {
+                    "id": target_item.id,
+                    "name": target_item.name,
+                    "true_spec_id": getattr(target_item, "true_spec_id", ""),
+                    "is_identified": getattr(target_item, "is_identified", True),
+                    "is_poisonous_lookalike": getattr(target_item, "is_poisonous_lookalike", False),
+                    "origin_target_name": getattr(target_item, "origin_target_name", target_item.name),
+                    "traits": list(getattr(target_item, "traits", []))
+                }
+                # If true_spec_id was empty, try to match by name
+                if not plant_dict["true_spec_id"]:
+                    for spec_id, spec in PLANT_REGISTRY.items():
+                        if spec.name_ko.lower() in target_item.name.lower() or spec_id in target_item.id.lower():
+                            plant_dict["true_spec_id"] = spec_id
+                            break
+
+                logs = HerbalismBotanyEngine.consume_plant(state.player, plant_dict, state=state)
+                summary = "\n".join(logs)
+                if target_item.id in state.player.inventory:
+                    state.player.inventory.remove(target_item.id)
+                return {
+                    "type": "consume",
+                    "success": True,
+                    "summary": summary,
+                    "consumed_item_id": target_item.id,
+                    "logs": logs
+                }
+
+        # 3. Forage intent
+        forage_keywords = [
+            "약초 채집", "식물 채집", "버섯 채집", "약초를 캐", "약초를 캔", "약초를 찾",
+            "풀을 뜯", "식물을 캔", "버섯을 딴", "버섯을 채집", "약초를 뜯", "forage", "gather herb",
+            "채집한다", "약초 채취", "식물 채취", "버섯 채취", "풀을 채취"
+        ]
+        is_forage_action = any(k in action_lower for k in forage_keywords) and not any(v in action_lower for v in ["갈무리", "도축", "해체", "carve", "harvest", "광석", "채광"])
+        if is_forage_action:
+            if not curr_loc:
+                return None
+
+            # Detect targeted plant if any
+            target_plant_id = None
+            for p_id, spec in PLANT_REGISTRY.items():
+                if spec.name_ko.lower() in action_lower or spec.name_ko.replace(" ", "").lower() in action_lower.replace(" ", ""):
+                    target_plant_id = p_id
+                    break
+
+            res = HerbalismBotanyEngine.forage(
+                gatherer=state.player,
+                location=curr_loc,
+                state=state,
+                target_plant_id=target_plant_id,
+                fixed_roll=fixed_forage_roll
+            )
+
+            created_item_id = None
+            if res.get("success") and res.get("plant_data"):
+                p_data = res["plant_data"]
+                item_id = p_data["id"]
+                item_name = p_data["name"]
+                true_spec = PLANT_REGISTRY.get(p_data["true_spec_id"])
+                item_desc = true_spec.description if true_spec else "야생에서 채집한 식물 표본."
+
+                new_item = Item(
+                    id=item_id,
+                    name=item_name,
+                    description=item_desc,
+                    location="inventory",
+                    item_type="consumable",
+                    traits=p_data.get("traits", ["botany_foraged"]),
+                    true_spec_id=p_data.get("true_spec_id", ""),
+                    is_identified=p_data.get("is_identified", True),
+                    is_poisonous_lookalike=p_data.get("is_poisonous_lookalike", False),
+                    origin_target_name=p_data.get("origin_target_name", item_name)
+                )
+                state.items[item_id] = new_item
+                state.player.inventory.append(item_id)
+                created_item_id = item_id
+
+            return {
+                "type": "forage",
+                "success": res.get("success", False),
+                "is_lookalike": res.get("is_lookalike", False),
+                "summary": res.get("message_ko", ""),
+                "created_item_id": created_item_id,
+                "logs": [res.get("message_ko", "")]
+            }
+
+        return None
+
+    @classmethod
     def compute_pass1(cls, action: str, state: WorldState) -> DeterministicFactSheet:
         """
         Pass 1: Computes all deterministic mechanics in strict logical order.
@@ -389,6 +1161,11 @@ class TwoPassEngine:
         if tox_time_logs:
             fact_sheet.status_tick_logs.extend(tox_time_logs)
 
+        # Alcohol Metabolism & Hangover decay time progression
+        alc_time_logs = AlcoholIntoxicationEngine.tick_metabolism(state.player, delta_minutes=elapsed_minutes)
+        if alc_time_logs:
+            fact_sheet.status_tick_logs.extend(alc_time_logs)
+
         # Celestial & Festival cycle turns
         celestial_logs = CelestialEngine.advance_celestial_turn(state)
         fact_sheet.celestial_logs = celestial_logs
@@ -438,6 +1215,20 @@ class TwoPassEngine:
         from src.world.cave_in_engine import CaveCollapseEngine
         env_hazard_logs = CaveCollapseEngine.process_turn_environment(state)
         fact_sheet.status_tick_logs.extend(env_hazard_logs)
+
+        # Mana circuit burnout cooling ticks (Player and NPCs in current location)
+        p_circuit = ManaBurnEngine.get_circuit_state(state.player)
+        if p_circuit.burnout_turns > 0:
+            p_circuit.burnout_turns = max(0, p_circuit.burnout_turns - 1)
+            if p_circuit.burnout_turns == 0:
+                fact_sheet.status_tick_logs.append("✨ [마나 회로 냉각] 타버렸던 마나 회로의 열기가 식어 다시 마법을 영창할 수 있습니다.")
+            else:
+                fact_sheet.status_tick_logs.append(f"⚠️ [마나 회로 과열 지속] 마나 회로가 식는 중입니다. (잔여 침묵: {p_circuit.burnout_turns}턴)")
+        for npc in state.npcs.values():
+            if getattr(npc, "location", "") == state.player.location:
+                n_circuit = ManaBurnEngine.get_circuit_state(npc)
+                if n_circuit.burnout_turns > 0:
+                    n_circuit.burnout_turns = max(0, n_circuit.burnout_turns - 1)
 
         # Advance world simulation
         state.advance_world_simulation()
@@ -509,6 +1300,140 @@ class TwoPassEngine:
                     fact_sheet.npc_skill_logs.append(f"👁️ [인물 관찰 및 속내 간파]: {obs_target.name}")
                     fact_sheet.npc_skill_logs.append(f"   * [신체 언어 복선]: {obs_res['leakage_clue']}")
                     fact_sheet.npc_skill_logs.append(f"   * [GM 서사 지침]: {obs_res['gm_directive']}")
+
+        # 2.45 Physical Eavesdropping Resolution (StealthInfiltrationEngine)
+        eavesdrop_info = cls.resolve_action_eavesdrop(action, state)
+        if eavesdrop_info:
+            e_res = eavesdrop_info["result"]
+            fact_sheet.eavesdrop_summary = f"{e_res.narrative_ko} (식별된 핵심 밀담: '{e_res.eavesdropped_content_ko}')"
+            fact_sheet.quest_progress_logs.append(
+                f"밀담 도청 ({e_res.clarity_level}): {eavesdrop_info['speaker_name']}의 대화 청취 (체감 음압: {e_res.perceived_db:.1f} dB)"
+            )
+
+        # 2.46 Physical Stealth & Infiltration Resolution (StealthInfiltrationEngine)
+        stealth_info = cls.resolve_action_stealth(action, state)
+        if stealth_info:
+            s_res = stealth_info["result"]
+            s_obs = stealth_info["observer"]
+            fact_sheet.stealth_summary = s_res.narrative_ko
+            if s_res.success:
+                fact_sheet.quest_progress_logs.append(f"🥷 잠입 성공: {s_res.narrative_ko}")
+                if "player" not in state_delta:
+                    state_delta["player"] = {}
+                state_delta["player_stealthed"] = True
+            else:
+                fact_sheet.quest_progress_logs.append(f"🚨 잠입 발각: {s_res.narrative_ko}")
+                if s_obs and getattr(s_obs, "id", None) in state.npcs:
+                    if "npc_state" not in state_delta:
+                        state_delta["npc_state"] = {}
+                    if s_obs.id not in state_delta["npc_state"]:
+                        state_delta["npc_state"][s_obs.id] = {}
+                    state_delta["npc_state"][s_obs.id]["disposition"] = "hostile"
+
+        # 2.47 Field Harvesting & Butchering Resolution (AnatomyHarvestEngine)
+        harvest_info = cls.resolve_action_harvest(action, state)
+        if harvest_info:
+            h_out = harvest_info["outcome"]
+            fact_sheet.harvest_summary = h_out.narration_ko
+            fact_sheet.quest_progress_logs.append(h_out.narration_ko)
+            if h_out.success:
+                if "player" not in state_delta:
+                    state_delta["player"] = {}
+                state_delta["player"]["inventory"] = list(state.player.inventory)
+                QuestEngine.progress_event(state, "harvest", h_out.item_id)
+
+        # 2.48 Campsite Setup, Campfire, Sentry & Night Rest Resolution (CampsiteRestEngine)
+        campsite_info = cls.resolve_action_campsite(action, state)
+        if campsite_info:
+            fact_sheet.campsite_summary = campsite_info["summary"]
+            fact_sheet.quest_progress_logs.extend(campsite_info.get("logs", []))
+            if "active_campsite" not in state_delta:
+                state_delta["active_campsite"] = campsite_info["camp"].to_dict()
+
+            if campsite_info["type"] == "setup":
+                state_delta["time_minutes"] = 30
+            elif campsite_info["type"] == "sentry":
+                state_delta["time_minutes"] = 10
+            elif campsite_info["type"] == "campfire":
+                state_delta["time_minutes"] = 15
+                f_id = campsite_info.get("consumed_firewood_id")
+                if f_id and f_id in state.player.inventory:
+                    if "player" not in state_delta:
+                        state_delta["player"] = {}
+                    new_inv = list(state.player.inventory)
+                    new_inv.remove(f_id)
+                    state_delta["player"]["inventory"] = new_inv
+            elif campsite_info["type"] == "night_rest":
+                n_res = campsite_info.get("night_res", {})
+                if n_res.get("ambush_triggered"):
+                    state_delta["time_minutes"] = 180  # 자정 기습까지 3시간
+                    if n_res.get("is_surprise_attack"):
+                        StatusEffectEngine.apply_status(state.player, "stunned", duration=1, potency=1)
+                        fact_sheet.quest_progress_logs.append("💥 [불시 기습 피격] 잠결에 무방비로 기습당해 1턴간 충격(Stun) 상태에 빠집니다!")
+                else:
+                    state_delta["time_minutes"] = 480  # 8시간 완전 숙면
+                    heal_hp = int(state.player.max_health * 0.3)
+                    heal_mp = int(state.player.max_mana_effective * 0.5)
+                    state.player.health = min(state.player.max_health, state.player.health + heal_hp)
+                    state.player.mana = min(state.player.max_mana_effective, state.player.mana + heal_mp)
+                    if "player" not in state_delta:
+                        state_delta["player"] = {}
+                    state_delta["player"]["health"] = state.player.health
+                    state_delta["player"]["mana"] = state.player.mana
+                    state_delta["player"]["fatigue"] = state.player.fatigue
+                    state_delta["player"]["alcohol_state"] = dict(state.player.alcohol_state)
+
+            QuestEngine.progress_event(state, "campsite", campsite_info["type"])
+
+        # 2.49 Alcohol Drinking Resolution (AlcoholIntoxicationEngine)
+        drink_info = cls.resolve_action_drink(action, state)
+        if drink_info:
+            fact_sheet.alcohol_summary = drink_info["summary"]
+            fact_sheet.quest_progress_logs.extend(drink_info.get("logs", []))
+            state_delta["time_minutes"] = 15
+
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["alcohol_state"] = dict(state.player.alcohol_state)
+            state_delta["player"]["gold"] = state.player.gold
+            state_delta["player"]["fatigue"] = state.player.fatigue
+            state_delta["player"]["body_temperature"] = state.player.body_temperature
+            if hasattr(state.player, "wetness"):
+                state_delta["player"]["wetness"] = state.player.wetness
+
+            consumed_inv_id = drink_info.get("consumed_inventory_item_id")
+            if consumed_inv_id and consumed_inv_id in state.player.inventory:
+                new_inv = list(state.player.inventory)
+                new_inv.remove(consumed_inv_id)
+                state.player.inventory = new_inv
+                state_delta["player"]["inventory"] = new_inv
+
+            QuestEngine.progress_event(state, "drink", drink_info["drink_id"])
+
+        # 2.495 Wild Botany & Herbalism Resolution (HerbalismBotanyEngine)
+        botany_info = cls.resolve_action_botany(action, state)
+        if botany_info:
+            fact_sheet.botany_summary = botany_info["summary"]
+            fact_sheet.quest_progress_logs.extend(botany_info.get("logs", []))
+
+            b_type = botany_info.get("type")
+            if b_type == "forage":
+                state_delta["time_minutes"] = 20
+            else:
+                state_delta["time_minutes"] = 10
+
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["inventory"] = list(state.player.inventory)
+            state_delta["player"]["health"] = state.player.health
+            if hasattr(state.player, "stamina"):
+                state_delta["player"]["stamina"] = state.player.stamina
+            if hasattr(state.player, "hunger"):
+                state_delta["player"]["hunger"] = state.player.hunger
+            if hasattr(state.player, "mana"):
+                state_delta["player"]["mana"] = state.player.mana
+
+            QuestEngine.progress_event(state, "botany", b_type)
 
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         if travel_info:
@@ -625,6 +1550,24 @@ class TwoPassEngine:
                             state_delta["player"] = {}
                         state_delta["player"]["gold"] = max(0, state.player.gold - fee)
                         state_delta["remove_player_injury"] = inj_name
+
+        # 2.75 Mana Circuit Repair Intent Execution
+        if any(k in action for k in ["마나 안정제", "마나안정제", "은침", "침술", "성수 정화", "성수", "회로 치료", "회로 수리"]):
+            remedy = None
+            if any(k in action for k in ["마나 안정제", "마나안정제", "안정제"]):
+                remedy = "mana_stabilizer"
+            elif any(k in action for k in ["은침", "침술", "소통술"]):
+                remedy = "silver_needle_acupuncture"
+            elif any(k in action for k in ["성수"]):
+                remedy = "holy_water_purge"
+            if remedy:
+                rep_ok, rep_msg = ManaBurnEngine.repair_circuit(state.player, remedy)
+                if rep_ok:
+                    fact_sheet.quest_progress_logs.append(rep_msg)
+                    p_circuit = ManaBurnEngine.get_circuit_state(state.player)
+                    if "player" not in state_delta:
+                        state_delta["player"] = {}
+                    state_delta["player"]["mana_burn_state"] = p_circuit.to_dict()
 
         # 3. Environmental Puzzles & Mechanisms
         puzzle_res = PuzzleEngine.evaluate_puzzle_action(state, action)
@@ -753,6 +1696,75 @@ class TwoPassEngine:
                     raw_damage = dice_res.damage_dealt
                     target_part = fact_sheet.extra_flags.get("target_part", "")
 
+                    # 1. Physics Tags & Kinetic Momentum Extraction
+                    eq_wep = state.get_equipped_weapon_item()
+                    atk_tags = []
+                    action_lower_comb = action.lower()
+                    if eq_wep:
+                        w_tags = getattr(eq_wep, "physics_tags", []) or []
+                        w_name = eq_wep.name.lower()
+                        w_props = getattr(eq_wep, "properties", {}) or {}
+                        w_type = w_props.get("weapon_type", "") or getattr(eq_wep, "weapon_type", "")
+                        for t in w_tags:
+                            if t not in atk_tags:
+                                atk_tags.append(t)
+                        if any(k in w_type or k in w_name for k in ["sword", "axe", "dagger", "blade", "도", "검", "도끼", "참격"]):
+                            if "slash" not in atk_tags:
+                                atk_tags.append("slash")
+                        if any(k in w_type or k in w_name for k in ["mace", "hammer", "club", "둔기", "망치", "타격"]):
+                            if "blunt" not in atk_tags:
+                                atk_tags.append("blunt")
+                        if any(k in w_type or k in w_name for k in ["spear", "bow", "arrow", "thrust", "창", "활", "관통", "레이피어"]):
+                            if any(k in w_type or k in w_name for k in ["bow", "arrow", "활"]):
+                                if "projectile" not in atk_tags:
+                                    atk_tags.append("projectile")
+                            else:
+                                if "thrust" not in atk_tags:
+                                    atk_tags.append("thrust")
+
+                    # Action keywords for attack types
+                    if any(k in action_lower_comb for k in ["찌른", "찔러", "관통", "내지른", "thrust"]):
+                        if "thrust" not in atk_tags:
+                            atk_tags.append("thrust")
+                    if any(k in action_lower_comb for k in ["베어", "베는", "참격", "가르고", "휘둘러", "slash"]):
+                        if "slash" not in atk_tags:
+                            atk_tags.append("slash")
+                    if any(k in action_lower_comb for k in ["내려친", "후려친", "둔기", "강타", "망치", "blunt", "strike"]):
+                        if "blunt" not in atk_tags:
+                            atk_tags.append("blunt")
+                    if any(k in action_lower_comb for k in ["잽", "견제타", "빠르게 찔러", "간보기", "jab"]):
+                        if "jab" not in atk_tags:
+                            atk_tags.append("jab")
+                    if any(k in action_lower_comb for k in ["정권", "스트레이트", "체중을 실어", "straight"]):
+                        if "straight" not in atk_tags:
+                            atk_tags.append("straight")
+                    if any(k in action_lower_comb for k in ["활을", "화살", "석궁", "사격", "발사", "투척", "projectile", "shoot"]):
+                        if "projectile" not in atk_tags:
+                            atk_tags.append("projectile")
+
+                    if not atk_tags:
+                        atk_tags.append("slash")
+
+                    # Charge momentum
+                    charge_dist = 0.0
+                    if any(k in action_lower_comb for k in ["돌진", "달려들며", "뛰어들며", "돌격"]):
+                        charge_dist = 5.0
+
+                    target_action = getattr(target_npc, "current_intent", "") or getattr(target_npc, "action", "")
+
+                    # Evaluate attack physics
+                    phys_res = AttackPhysicsEngine.evaluate_attack_physics(
+                        attacker=state.player,
+                        defender=target_npc,
+                        weapon=eq_wep,
+                        attack_tags=atk_tags,
+                        distance_charge_m=charge_dist,
+                        target_current_action=target_action
+                    )
+                    fact_sheet.attack_physics_summary = phys_res.summary_ko
+                    fact_sheet.quest_progress_logs.append(f"⚔️ [물리 타격] {phys_res.summary_ko}")
+                    raw_damage = max(1, int(round(raw_damage + phys_res.physics_damage_bonus)))
+
                     # Check if AoE skill or whole-body attack
                     skill_info = fact_sheet.extra_flags.get("player_skill_used")
                     is_aoe = False
@@ -764,21 +1776,63 @@ class TwoPassEngine:
                             is_aoe = True
 
                     from src.world.equipment import EquipmentEngine
+                    matched_part_id = None
+                    if hasattr(target_npc, "anatomy_parts") and target_npc.anatomy_parts:
+                        for pid, pobj in target_npc.anatomy_parts.items():
+                            p_name = pobj.name_ko if hasattr(pobj, "name_ko") else pobj.get("name_ko", "")
+                            tokens = [t for t in re.split(r'[\s_]+', p_name) if len(t) >= 2]
+                            if (target_part and (target_part in p_name or p_name in target_part or pid == target_part)) or p_name in action or pid in action or any(t in action for t in tokens):
+                                matched_part_id = pid
+                                break
+                        if not matched_part_id:
+                            for pid, pobj in target_npc.anatomy_parts.items():
+                                p_name = pobj.name_ko if hasattr(pobj, "name_ko") else pobj.get("name_ko", "")
+                                combined = f"{p_name} {pid.lower()}"
+                                if any(k in action or k in target_part for k in ["뿔", "뇌각", "각"]) and any(k in combined for k in ["뿔", "각", "horn"]):
+                                    matched_part_id = pid
+                                    break
+                                if any(k in action or k in target_part for k in ["꼬리", "미부"]) and any(k in combined for k in ["꼬리", "tail"]):
+                                    matched_part_id = pid
+                                    break
+                                if any(k in action or k in target_part for k in ["날개", "익부"]) and any(k in combined for k in ["날개", "wing"]):
+                                    matched_part_id = pid
+                                    break
+                                if any(k in action or k in target_part for k in ["머리", "두부"]) and any(k in combined for k in ["머리", "head"]):
+                                    matched_part_id = pid
+                                    break
+
                     # If AoE: cannot pinpoint specific anatomy, hits full body (chest/cape)
                     if is_aoe:
                         actual_part = "chest"
                         mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
-                            state, target_npc, raw_damage, target_part="chest"
+                            state, target_npc, raw_damage, target_part="chest", armor_penetration_pct=phys_res.armor_penetration_pct
                         )
                         elem = sk_obj.element if sk_obj else "물리"
                         injury_name = "전신 화상" if "화염" in elem else ("폭압 타박상" if "대지" in elem or "충격" in elem else "파편 열상")
                         if injury_name not in target_npc.injuries:
                             target_npc.injuries.append(injury_name)
                         target_npc.morale = max(0, target_npc.morale - 20)
+                    elif matched_part_id:
+                        # 몬스터 해부학 부위 타격 판정 (AnatomyHarvestEngine)
+                        actual_part = target_npc.anatomy_parts[matched_part_id].name_ko if hasattr(target_npc.anatomy_parts[matched_part_id], "name_ko") else matched_part_id
+                        part_res = AnatomyHarvestEngine.attack_targeted_part(
+                            target_npc, matched_part_id, raw_damage, attack_tags=atk_tags, state=state
+                        )
+                        mitigated_dmg = part_res.effective_damage
+                        fact_sheet.quest_progress_logs.append(part_res.combat_log_ko)
+
+                        if part_res.is_now_severed:
+                            fact_sheet.harvest_summary = f"💥【신체 절단!】 [{target_npc.name}]의 [{part_res.part_name_ko}]이(가) 날카로운 참격에 잘려나가 바닥에 떨어졌습니다!"
+                            target_npc.morale = max(0, target_npc.morale - 30)
+                        elif part_res.is_now_broken:
+                            fact_sheet.harvest_summary = f"💥【부위 파괴!】 [{target_npc.name}]의 [{part_res.part_name_ko}]이(가) 완전히 파괴되어 큰 경직에 빠졌습니다!"
+                            target_npc.morale = max(0, target_npc.morale - 20)
+                        elif part_res.stagger_inflicted:
+                            target_npc.morale = max(0, target_npc.morale - 15)
                     elif target_part:
                         actual_part = target_part
                         mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
-                            state, target_npc, raw_damage, target_part=target_part
+                            state, target_npc, raw_damage, target_part=target_part, armor_penetration_pct=phys_res.armor_penetration_pct
                         )
                         injury_map = {
                             "머리": ("머리 충격(뇌진탕)", 20),
@@ -790,6 +1844,9 @@ class TwoPassEngine:
                             "손": ("손목 골절", 15),
                             "다리": ("다리 골절/힘줄 파열", 20),
                             "발": ("발목 부상", 15),
+                            "꼬리": ("꼬리 손상", 15),
+                            "뿔": ("뿔 손상", 15),
+                            "날개": ("날개 파열", 20),
                         }
                         inj_name, morale_loss = injury_map.get(target_part, (f"{target_part} 부상", 15))
                         if inj_name not in target_npc.injuries:
@@ -798,8 +1855,24 @@ class TwoPassEngine:
                     else:
                         actual_part = "chest"
                         mitigated_dmg, armor_logs = EquipmentEngine.apply_armor_durability_and_mitigation(
-                            state, target_npc, raw_damage, target_part="chest"
+                            state, target_npc, raw_damage, target_part="chest", armor_penetration_pct=phys_res.armor_penetration_pct
                         )
+
+                    # Apply physics combat side effects
+                    if phys_res.bleed_inflicted:
+                        StatusEffectEngine.apply_status(target_npc, "bleeding", duration=3, potency=max(3, int(raw_damage * 0.2)))
+                        fact_sheet.status_tick_logs.append(f"🩸 [출혈 유발] 예리한 참격이 혈관을 갈라 [{target_npc.name}]에게 출혈 상태이상을 유발했습니다!")
+                    if phys_res.bone_fracture_risk:
+                        fracture_name = f"{actual_part} 타박 골절"
+                        if fracture_name not in target_npc.injuries:
+                            target_npc.injuries.append(fracture_name)
+                            fact_sheet.quest_progress_logs.append(f"🦴 [골절 유발] 육중한 둔기 충격으로 [{target_npc.name}]의 {actual_part}에 골절이 발생했습니다!")
+                    if phys_res.interrupted_action:
+                        target_npc.current_intent = ""
+                        target_npc.morale = max(0, target_npc.morale - 15)
+                        fact_sheet.quest_progress_logs.append(f"⚡ [행동 캔슬] {phys_res.interrupt_reason}")
+                    if hasattr(target_npc, "poise") and phys_res.stagger_inflicted > 0:
+                        target_npc.poise = max(0.0, target_npc.poise - phys_res.stagger_inflicted)
 
                     hp_before = target_npc.health
                     hp_after = max(0, hp_before - mitigated_dmg)
@@ -937,10 +2010,33 @@ class TwoPassEngine:
             sk_cd = skill_info.get("cooldown_turns", 0)
 
             if sk_res_type == "mana":
-                state.player.mana = max(0, state.player.mana - sk_cost)
-                if "player" not in state_delta:
-                    state_delta["player"] = {}
-                state_delta["player"]["mana"] = state.player.mana
+                overchannel_res = fact_sheet.extra_flags.get("overchannel")
+                if overchannel_res:
+                    # 과충전 생명력 연소 및 반동 처리
+                    logs = ManaBurnEngine.apply_overchannel_consequences(state.player, overchannel_res, state)
+                    p_circuit = ManaBurnEngine.get_circuit_state(state.player)
+                    state.player.mana = 0
+                    if "player" not in state_delta:
+                        state_delta["player"] = {}
+                    state_delta["player"]["mana"] = 0
+                    state_delta["player"]["health"] = state.player.health
+                    state_delta["player"]["mana_burn_state"] = p_circuit.to_dict()
+                    fact_sheet.mana_burn_summary = "\n".join(logs)
+                    fact_sheet.quest_progress_logs.extend(logs)
+                else:
+                    state.player.mana = max(0, state.player.mana - sk_cost)
+                    if "player" not in state_delta:
+                        state_delta["player"] = {}
+                    state_delta["player"]["mana"] = state.player.mana
+
+                    # 손상된 회로로 인한 신경통/기력 소모 페널티
+                    p_circuit = ManaBurnEngine.get_circuit_state(state.player)
+                    if p_circuit.stamina_drain_on_cast > 0:
+                        from src.world.stamina_engine import StaminaEngine
+                        StaminaEngine.consume(state.player, p_circuit.stamina_drain_on_cast)
+                        fact_sheet.status_tick_logs.append(
+                            f"⚡ [회로 신경통] 손상된 마나 회로의 과부하로 기력이 {p_circuit.stamina_drain_on_cast} 소모되었습니다."
+                        )
             elif sk_res_type == "hp":
                 state.player.health = max(1, state.player.health - sk_cost)
                 if "player" not in state_delta:
@@ -1047,6 +2143,19 @@ class TwoPassEngine:
             fact_sheet.quest_progress_logs.append(
                 f"⚡ [마나 역류 자해!] 고대어/언령 반작용으로 마력이 시전자에게 역류하여 {backfire_dmg} 자해 피해를 입었습니다! (현재 체력: {state.player.health}/{state.player.max_health})"
             )
+
+            # Mana circuit backlash & damage integration
+            backlash_logs = ManaBurnEngine.trigger_mana_backlash(state.player, severity=max(1, unk_cnt), state=state)
+            p_circuit = ManaBurnEngine.get_circuit_state(state.player)
+            state_delta["player"]["mana_burn_state"] = p_circuit.to_dict()
+            state_delta["player"]["health"] = state.player.health
+
+            backlash_text = "\n".join(backlash_logs)
+            if fact_sheet.mana_burn_summary:
+                fact_sheet.mana_burn_summary += "\n" + backlash_text
+            else:
+                fact_sheet.mana_burn_summary = backlash_text
+            fact_sheet.quest_progress_logs.extend(backlash_logs)
 
         # 7.8 Trap Search & Disarm Handling
         action_lower_act = action.lower()

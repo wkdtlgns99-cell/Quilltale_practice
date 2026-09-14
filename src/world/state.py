@@ -6,7 +6,7 @@ Korean localization mappings, and deterministic delta state transitions.
 import json
 import logging
 from dataclasses import dataclass, field, fields
-from typing import Any, Optional, List, Dict, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -436,6 +436,12 @@ class Item:
     stagger_power: float = 0.0            # 피격 저지력/경직 유발 수치
     physics_tags: list[str] = field(default_factory=list) # 물리 태그 (예: ["thrust", "slash", "blunt", "jab", "straight", "projectile"])
     visual: ItemVisualProfile | None = None # 무기/장비 조형 및 마감 프로필
+
+    # Botany & Herbalism Mechanics
+    true_spec_id: str = ""          # 야생 식물학 고유 도감 ID
+    is_identified: bool = True      # 정밀 감별 완료 여부
+    is_poisonous_lookalike: bool = False # 외형 위장 맹독 유사종 여부
+    origin_target_name: str = ""    # 채집 시도했던 원래 목표 식물명
 
     @property
     def display_weight(self) -> str:
@@ -1288,7 +1294,10 @@ class NPC:
         return BASE_CRIT_DAMAGE + self.crit_damage_bonus * CRIT_DMG_PER_POINT
     @property
     def max_mana_effective(self) -> int:
-        return self.max_mana + max(0, self.intelligence - 10) * 5
+        penalty = 0
+        if hasattr(self, "mana_burn_state") and isinstance(self.mana_burn_state, dict):
+            penalty = self.mana_burn_state.get("max_mp_penalty", 0)
+        return max(0, self.max_mana + max(0, self.intelligence - 10) * 5 - penalty)
     @property
     def max_stamina_effective(self) -> int:
         from src.world.stamina_engine import StaminaEngine
@@ -1588,6 +1597,7 @@ class Player:
     alcohol_state: dict = field(default_factory=dict)      # 혈중 알코올 및 취기/숙취 상태
     posture_state: dict = field(default_factory=dict)      # 체간/강인도 및 가드 브레이크 상태
     pupil_state: dict = field(default_factory=dict)        # 동공 조도 암적응/명적응 상태
+    is_stealthed: bool = False                             # 물리 은신/잠입 성공 상태
     visual: NPCVisualDetails = field(default_factory=NPCVisualDetails)
     
     @property
@@ -1683,7 +1693,11 @@ class Player:
     def effective_agility(self) -> int:
         from src.world.status_engine import StatusEffectEngine
         eq_b = self.equipment_stat_bonuses.get("agility", 0) if hasattr(self, "equipment_stat_bonuses") else 0
-        return max(1, self.agility + StatusEffectEngine.get_effective_stat_modifiers(self).get("agility", 0) + eq_b)
+        alc_penalty = 0
+        if hasattr(self, "alcohol_state") and isinstance(self.alcohol_state, dict):
+            if self.alcohol_state.get("intoxication_stage", 0) >= 2:
+                alc_penalty = 3
+        return max(1, self.agility + StatusEffectEngine.get_effective_stat_modifiers(self).get("agility", 0) + eq_b - alc_penalty)
 
     @property
     def effective_constitution(self) -> int:
@@ -1695,7 +1709,11 @@ class Player:
     def effective_intelligence(self) -> int:
         from src.world.status_engine import StatusEffectEngine
         eq_b = self.equipment_stat_bonuses.get("intelligence", 0) if hasattr(self, "equipment_stat_bonuses") else 0
-        return max(1, self.intelligence + StatusEffectEngine.get_effective_stat_modifiers(self).get("intelligence", 0) + eq_b)
+        alc_penalty = 0
+        if hasattr(self, "alcohol_state") and isinstance(self.alcohol_state, dict):
+            if self.alcohol_state.get("has_hangover", False):
+                alc_penalty = 2
+        return max(1, self.intelligence + StatusEffectEngine.get_effective_stat_modifiers(self).get("intelligence", 0) + eq_b - alc_penalty)
 
     # Properties
     @property
@@ -1742,6 +1760,9 @@ class Player:
             for eff in self.status_effects.values():
                 if getattr(eff, "stat_debuffs", None) and "perception" in eff.stat_debuffs:
                     base += eff.stat_debuffs["perception"]
+        if hasattr(self, "alcohol_state") and isinstance(self.alcohol_state, dict):
+            if self.alcohol_state.get("has_hangover", False):
+                base -= 2
         return max(1, base)
 
     def get_effective_reputation(self, location_id: str) -> int:
@@ -1775,14 +1796,21 @@ class Player:
     @property
     def max_mana_effective(self) -> int:
         eq_mana = self.equipment_stat_bonuses.get("max_mana", 0) if hasattr(self, "equipment_stat_bonuses") else 0
-        return self.max_mana + eq_mana + max(0, self.intelligence - 10) * 5
+        penalty = 0
+        if hasattr(self, "mana_burn_state") and isinstance(self.mana_burn_state, dict):
+            penalty = self.mana_burn_state.get("max_mp_penalty", 0)
+        return max(0, self.max_mana + eq_mana + max(0, self.intelligence - 10) * 5 - penalty)
 
     base_armor_class: int = 10
 
     @property
     def armor_class(self) -> int:
         eq_def = getattr(self, "equipment_defense", 0)
-        return self.base_armor_class + self.agi_mod + eq_def
+        alc_bonus = 0
+        if hasattr(self, "alcohol_state") and isinstance(self.alcohol_state, dict):
+            if self.alcohol_state.get("intoxication_stage", 0) >= 2:
+                alc_bonus = 2
+        return self.base_armor_class + self.agi_mod + eq_def + alc_bonus
 
     @armor_class.setter
     def armor_class(self, value: int):
@@ -3438,6 +3466,24 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             if "mana" in p_dict:
                 self.player.mana = max(0, min(self.player.max_mana, int(p_dict["mana"])))
                 changes.append(f"Player mana updated: {self.player.mana}")
+            if "mana_burn_state" in p_dict and isinstance(p_dict["mana_burn_state"], dict):
+                self.player.mana_burn_state = dict(p_dict["mana_burn_state"])
+                changes.append("Player mana circuit state updated")
+            if "alcohol_state" in p_dict and isinstance(p_dict["alcohol_state"], dict):
+                self.player.alcohol_state = dict(p_dict["alcohol_state"])
+                changes.append("Player alcohol state updated")
+
+        if "player_stealthed" in update:
+            self.player.is_stealthed = bool(update["player_stealthed"])
+            changes.append(f"Player stealth state: {self.player.is_stealthed}")
+
+        if "mana_burn_state" in update and isinstance(update["mana_burn_state"], dict):
+            self.player.mana_burn_state = dict(update["mana_burn_state"])
+            changes.append("Player mana circuit state updated")
+
+        if "alcohol_state" in update and isinstance(update["alcohol_state"], dict):
+            self.player.alcohol_state = dict(update["alcohol_state"])
+            changes.append("Player alcohol state updated")
 
         # 1.5 Pending travel waypoints update
         if "pending_travel_waypoints" in update and isinstance(update["pending_travel_waypoints"], list):
@@ -4148,6 +4194,16 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             self.player.body_temperature = round(self.player.body_temperature + float(update["update_body_temperature"]), 1)
             changes.append(f"🌡️ 플레이어 체온: {self.player.body_temperature}°C")
 
+        # 21. Active Campsite State
+        if "active_campsite" in update:
+            from src.world.campsite_engine import CampsiteState
+            c_val = update["active_campsite"]
+            if isinstance(c_val, dict):
+                self.active_campsite = CampsiteState.from_dict(c_val)
+            elif isinstance(c_val, CampsiteState) or c_val is None:
+                self.active_campsite = c_val
+            changes.append("⛺ 야영지 상태 동기화")
+
         # World ended
         if "world_ended" in update:
             self.active_world_ended = update["world_ended"]
@@ -4280,7 +4336,10 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             traumas=p_raw.get("traumas", []) if isinstance(p_raw, dict) else [],
             traits=p_raw.get("traits", []) if isinstance(p_raw, dict) else [],
             sub_stats=p_raw.get("sub_stats", {}) if isinstance(p_raw, dict) else {},
-            poise=float(p_raw.get("poise", 0.0)) if isinstance(p_raw, dict) else 0.0
+            poise=float(p_raw.get("poise", 0.0)) if isinstance(p_raw, dict) else 0.0,
+            is_stealthed=bool(p_raw.get("is_stealthed", False)) if isinstance(p_raw, dict) else False,
+            mana_burn_state=dict(p_raw.get("mana_burn_state", {})) if isinstance(p_raw, dict) else {},
+            alcohol_state=dict(p_raw.get("alcohol_state", {})) if isinstance(p_raw, dict) else {}
         )
         from src.world.status_engine import StatusEffect
         raw_p_status = p_raw.get("status_effects", {}) if isinstance(p_raw, dict) else {}
@@ -4418,7 +4477,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 improvised_damage=2, document_text="", utility_function="", puzzle_hint="",
                 draw_weight_lbs=0.0, windup_seconds=0.0, stagger_power=0.0, physics_tags=[],
                 traits=[], material="wood", hardness=0.0, flammability=1.0, is_destroyed=False,
-                stored_items=[]
+                stored_items=[], true_spec_id="", is_identified=True, is_poisonous_lookalike=False,
+                origin_target_name=""
             )
             if isinstance(getattr(item_obj, "visual", None), dict):
                 item_obj.visual = safe_init(ItemVisualProfile, item_obj.visual)
@@ -4507,6 +4567,17 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.active_sieges = raw.get("active_sieges", {})
         # Pending Travel Waypoints
         state.pending_travel_waypoints = raw.get("pending_travel_waypoints", [])
+
+        # Active Campsite
+        camp_raw = raw.get("active_campsite")
+        if camp_raw:
+            from src.world.campsite_engine import CampsiteState
+            if isinstance(camp_raw, dict):
+                state.active_campsite = CampsiteState.from_dict(camp_raw)
+            elif isinstance(camp_raw, CampsiteState):
+                state.active_campsite = camp_raw
+        else:
+            state.active_campsite = None
 
         return state
 

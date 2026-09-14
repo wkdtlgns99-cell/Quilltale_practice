@@ -9,7 +9,7 @@ Features:
    whereas cleanly subduing monsters preserves parts for 100% guaranteed pristine material yields.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Tuple
 import random
 import logging
 
@@ -238,7 +238,7 @@ class AnatomyHarvestEngine:
                     severed_item = Item(
                         id=dropped_item_id,
                         name=f"【{monster.name}의 잘려나간 {part.name_ko}】",
-                        description=f"전투 중 날카로운 참격에 의해 동강 나 바닥에 뒹구는 거대한 잔해입니다. 현장에서 해체하여 소재를 갈무리할 수 있습니다.",
+                        description="전투 중 날카로운 참격에 의해 동강 나 바닥에 뒹구는 거대한 잔해입니다. 현장에서 해체하여 소재를 갈무리할 수 있습니다.",
                         location=loc_id,
                         item_type="material",
                         weight=5.0,
@@ -304,27 +304,39 @@ class AnatomyHarvestEngine:
         if preferred_knife_id and preferred_knife_id in state.items:
             return state.items[preferred_knife_id]
 
-        # 1. Check weapon slot
+        # 1. Dedicated butchering/skinning tool in inventory or equipped
+        for i_id in player.inventory:
+            if i_id in state.items:
+                item = state.items[i_id]
+                i_name = item.name.lower()
+                if any(k in i_name for k in ["도축", "갈무리", "해체", "carve", "butcher", "skinning"]):
+                    return item
         wep_id = getattr(player.equipment, "weapon", None)
+        if wep_id and wep_id in state.items:
+            wep = state.items[wep_id]
+            if any(k in wep.name.lower() for k in ["도축", "갈무리", "해체"]):
+                return wep
+
+        # 2. Check weapon slot
         if wep_id and wep_id in state.items:
             wep = state.items[wep_id]
             wep_name = wep.name.lower()
             if any(k in wep_name for k in ["검", "단검", "나이프", "칼", "도"]) or "slash" in getattr(wep, "physics_tags", []):
                 return wep
 
-        # 2. Check inventory
+        # 3. Check other daggers/knives in inventory
         for i_id in player.inventory:
             if i_id in state.items:
                 item = state.items[i_id]
                 i_name = item.name.lower()
-                if any(k in i_name for k in ["나이프", "단검", "칼", "도축", "갈무리", "단도"]):
+                if any(k in i_name for k in ["나이프", "단검", "칼", "단도"]):
                     return item
 
-        # 3. Fallback: Any weapon with cutting physics tag or item_type == "weapon"
+        # 4. Fallback: Any weapon with cutting physics tag or item_type == "weapon"
         for i_id in player.inventory:
             if i_id in state.items:
                 item = state.items[i_id]
-                if item.item_type in ["weapon", "tool"]:
+                if item.item_type in ["weapon", "tool"] or "slash" in getattr(item, "physics_tags", []):
                     return item
 
         return None

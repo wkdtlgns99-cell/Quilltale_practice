@@ -237,6 +237,9 @@ class CampsiteRestEngine:
             elif hasattr(state, "party") and char_id in state.party:
                 comp = state.party[char_id]
                 per_stat = getattr(comp, "perception", 10)
+            elif hasattr(state, "npcs") and char_id in state.npcs:
+                comp = state.npcs[char_id]
+                per_stat = getattr(comp, "perception", 10)
 
             per_bonus = (per_stat - 10) // 2
             s_obj = SentryShift(
@@ -321,6 +324,8 @@ class CampsiteRestEngine:
                 "rest_completed": False,
                 "ambush_triggered": True,
                 "is_surprise_attack": is_ambushed,
+                "trap_bypassed": trap_bypassed,
+                "sentry_spotted": sentry_spotted,
                 "ambush_spec": ambush_spec.to_dict() if ambush_spec else {},
                 "logs": logs
             }

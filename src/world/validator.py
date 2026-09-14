@@ -37,6 +37,9 @@ class ActionValidator:
         '다리': ['다리', '허벅지', '정강이'],
         '관절': ['관절', '무릎'],
         '발': ['발을', '발에', '발목'],
+        '꼬리': ['꼬리', '미부', 'tail'],
+        '뿔': ['뿔', '뇌각', '각부', 'horn'],
+        '날개': ['날개', '익부', 'wing'],
     }
 
     @staticmethod
@@ -169,7 +172,13 @@ class ActionValidator:
             extra_flags['is_dungeon_nav'] = True
 
         # 2. Inventory check: Cannot use or drop items not owned
-        accessible_item_ids = set(state.player.inventory) | (set(curr_loc.items) if curr_loc else set())
+        equipped_ids = set()
+        if hasattr(state.player, "equipment") and state.player.equipment:
+            if hasattr(state.player.equipment, "__dict__"):
+                equipped_ids = {v for v in state.player.equipment.__dict__.values() if isinstance(v, str)}
+            elif isinstance(state.player.equipment, dict):
+                equipped_ids = {v for v in state.player.equipment.values() if isinstance(v, str)}
+        accessible_item_ids = set(state.player.inventory) | equipped_ids | (set(curr_loc.items) if curr_loc else set())
         accessible_item_names = {state.items[i].name.lower() for i in accessible_item_ids if i in state.items}
 
         usage_verbs = ["사용", "찌른", "열", "먹", "휘두", "버린", "착용", "장착", "입는", "입어", "쓴다", "써", "낀다", "끼어", "차다", "찬다", "쥔다", "use", "unlock", "drop", "equip"]
@@ -331,6 +340,147 @@ class ActionValidator:
                         extra_flags
                     )
 
+        # 3.1 Living Monster Butchering/Harvesting Prevention
+        is_harvest_action = any(v in action_lower for v in ["갈무리", "도축", "해체", "carve", "harvest", "가죽을 벗", "살점을 베", "살점을 발라"])
+        if is_harvest_action:
+            for npc_id, npc in state.npcs.items():
+                if (npc.name.lower() in action_lower or npc_id in action_lower) and npc.alive:
+                    return (
+                        False,
+                        f"아직 숨이 붙어 날뛰는 [{npc.name}]을(를) 살아있는 채로 해체하거나 갈무리할 수는 없습니다.",
+                        None,
+                        extra_flags
+                    )
+
+        # 3.2 Combat Campsite / Rest / Campfire Prevention
+        camp_actions = [
+            "야영", "캠프", "텐트", "모닥불", "장작불", "불을 지핀", "불을 피운", "불피운",
+            "노숙", "잠을 청", "잠에 든", "휴식을 취", "숙영", "침낭", "campsite", "campfire"
+        ]
+        if any(k in action_lower for k in camp_actions):
+            if curr_loc:
+                loc_npcs = state.npcs_in_location(curr_loc.id)
+                has_hostile = any(n.alive and getattr(n, "disposition", "") == "hostile" for n in loc_npcs)
+                if has_hostile:
+                    return (
+                        False,
+                        "⚠️ 적이 눈앞에서 무기를 겨누고 있는 교전 중에는 야영지를 구축하거나 잠에 들 수 없습니다.",
+                        None,
+                        extra_flags
+                    )
+
+        # 3.3 Alcohol Drinking Intent Pre-validation
+        non_alc_words = ["수술", "기술", "전술", "마술", "예술", "요술", "학술", "서술", "상술", "주술", "시술", "권술", "검술", "창술", "궁술", "의술", "인술", "화술"]
+        action_cleaned_for_alc = action_lower
+        for nw in non_alc_words:
+            action_cleaned_for_alc = action_cleaned_for_alc.replace(nw, " ")
+
+        alcohol_keywords = [
+            "술을", "술이", "술 마", "술마", "맥주", "에일", "와인", "포도주", "뱅쇼",
+            "위스키", "독주", "증류주", "감청주", "술 한 잔", "술 한잔", "술잔을", "한잔 마",
+            "술을 들이", "술을 벌컥", "주류를", "drink ale", "drink beer", "drink wine", "drink alcohol"
+        ]
+        is_potion = any(k in action_lower for k in ["포션", "물약", "치료약", "해독제", "비약", "potion", "elixir"])
+        is_alcohol_action = any(k in action_cleaned_for_alc for k in alcohol_keywords) and not is_potion
+        if is_alcohol_action:
+            alc_dict = getattr(state.player, "alcohol_state", {})
+            if isinstance(alc_dict, dict) and alc_dict.get("intoxication_stage", 0) >= 3:
+                return (
+                    False,
+                    "😵 이미 인사불성으로 정신을 잃고 쓰러진 상태에서는 술을 더 마실 수 없습니다.",
+                    None,
+                    extra_flags
+                )
+
+            has_alc_item = False
+            for i_id in state.player.inventory:
+                if i_id in state.items:
+                    it = state.items[i_id]
+                    it_name = it.name.lower()
+                    it_traits = getattr(it, "traits", [])
+                    if any(w in it_name or w in i_id.lower() for w in ["맥주", "에일", "와인", "포도주", "뱅쇼", "독주", "증류주", "감청주", "ale", "beer", "wine", "firewater", "nectar"]) or "alcohol" in it_traits:
+                        has_alc_item = True
+                        break
+
+            loc_traits = getattr(curr_loc, "traits", []) if curr_loc else []
+            loc_text = ((curr_loc.name + " " + curr_loc.description).lower()) if curr_loc else ""
+            is_tavern = any(k in loc_text for k in ["선술집", "주점", "여관", "주막", "바", "tavern", "inn", "pub", "bar"]) or any(k in loc_traits for k in ["tavern", "inn", "pub"])
+
+            from_bag = any(k in action_lower for k in ["가방", "인벤토리", "소지품", "배낭", "backpack", "inventory"])
+            if from_bag and not has_alc_item:
+                return (
+                    False,
+                    "소지품(가방)에 보유 중인 주류가 없습니다.",
+                    None,
+                    extra_flags
+                )
+
+            if not has_alc_item and not is_tavern:
+                return (
+                    False,
+                    "마실 수 있는 주류를 소지하고 있지 않으며, 현재 위치는 주류를 판매하는 선술집이나 주점이 아닙니다.",
+                    None,
+                    extra_flags
+                )
+
+            if not has_alc_item and is_tavern:
+                if getattr(state.player, "gold", 0) < 1:
+                    return (
+                        False,
+                        "❌ [소지금 부족] 주점에서 술을 주문하여 마실 골드가 부족합니다. (최소 1 골드 필요)",
+                        None,
+                        extra_flags
+                    )
+
+        # 3.4 Wild Botany & Herb Foraging / Identification Pre-validation
+        forage_keywords = [
+            "약초 채집", "식물 채집", "버섯 채집", "약초를 캐", "약초를 캔", "약초를 찾",
+            "풀을 뜯", "식물을 캔", "버섯을 딴", "버섯을 채집", "약초를 뜯", "forage", "gather herb",
+            "채집한다", "약초 채취", "식물 채취", "버섯 채취", "풀을 채취"
+        ]
+        is_forage_action = any(k in action_lower for k in forage_keywords) and not any(v in action_lower for v in ["갈무리", "도축", "해체", "carve", "harvest", "광석", "채광"])
+        if is_forage_action:
+            if curr_loc:
+                loc_npcs = state.npcs_in_location(curr_loc.id)
+                has_hostile = any(n.alive and getattr(n, "disposition", "") == "hostile" for n in loc_npcs) or any(
+                    n.alive and getattr(n, "disposition", "") == "hostile" and n.location == curr_loc.id for n in state.npcs.values()
+                )
+                if has_hostile:
+                    return (
+                        False,
+                        "⚠️ 적이 눈앞에서 무기를 겨누고 있는 교전 중에는 약초나 식물을 한가롭게 채집할 수 없습니다.",
+                        None,
+                        extra_flags
+                    )
+                loc_traits = getattr(curr_loc, "traits", [])
+                loc_text = (curr_loc.name + " " + curr_loc.description).lower()
+                is_sterile_indoor = any(k in loc_text for k in ["선술집", "주점", "감옥", "지하감옥", "밀실"]) or any(k in loc_traits for k in ["tavern", "jail", "dungeon_jail"])
+                has_vegetation = any(k in loc_text for k in ["숲", "정원", "화단", "온실", "약초", "이끼", "버섯", "풀밭"]) or any(k in loc_traits for k in ["forest", "mountain", "swamp", "garden", "cave", "wild"])
+                if is_sterile_indoor and not has_vegetation:
+                    return (
+                        False,
+                        "석벽과 인공 바닥으로 둘러싸인 실내에서는 야생 약초나 식물을 채집할 수 없습니다.",
+                        None,
+                        extra_flags
+                    )
+
+        id_keywords = ["약초 감별", "식물 감별", "버섯 감별", "감별한다", "정밀 감별", "약초를 조사", "버섯을 조사", "식물을 조사", "identify plant", "identify herb"]
+        if any(k in action_lower for k in id_keywords):
+            has_plant = False
+            for i_id in state.player.inventory:
+                if i_id in state.items:
+                    it = state.items[i_id]
+                    if getattr(it, "true_spec_id", "") or "botany_foraged" in getattr(it, "traits", []) or "unidentified" in getattr(it, "traits", []):
+                        has_plant = True
+                        break
+            if not has_plant:
+                return (
+                    False,
+                    "소지품에 정밀 감별할 수 있는 야생 식물이나 약초 표본이 없습니다.",
+                    None,
+                    extra_flags
+                )
+
         # 4.1 Spatial Ergonomics Check (Narrow Space & Long Weapons)
         loc_desc = (curr_loc.name + " " + curr_loc.description).lower() if curr_loc else ""
         if any(k in loc_desc for k in ["동굴", "석실", "환풍구", "비좁은", "밀실", "통로"]):
@@ -425,13 +575,32 @@ class ActionValidator:
                     None,
                     extra_flags
                 )
-            if matched_player_skill.resource_type == "mana" and state.player.mana < matched_player_skill.resource_cost:
-                return (
-                    False,
-                    f"마나가 부족하여 [{matched_player_skill.name}]을(를) 시전할 수 없습니다. (필요: {matched_player_skill.resource_cost}, 현재: {state.player.mana})",
-                    None,
-                    extra_flags
-                )
+            if matched_player_skill.resource_type == "mana":
+                from src.world.mana_burn_engine import ManaBurnEngine
+                circuit = ManaBurnEngine.get_circuit_state(state.player)
+                if circuit.burnout_turns > 0:
+                    return (
+                        False,
+                        f"⚠️ [마나 회로 과열] 마나 회로가 까맣게 타버려 영창할 수 없습니다! (잔여 침묵: {circuit.burnout_turns}턴)",
+                        None,
+                        extra_flags
+                    )
+                if state.player.mana < matched_player_skill.resource_cost:
+                    overchannel_eval = ManaBurnEngine.evaluate_overchannel(
+                        state.player,
+                        matched_player_skill.resource_cost,
+                        state.player.mana,
+                        matched_player_skill.name
+                    )
+                    if not overchannel_eval.get("success"):
+                        err_reason = overchannel_eval.get("message_ko", "")
+                        return (
+                            False,
+                            f"마나가 부족하여 [{matched_player_skill.name}]을(를) 시전할 수 없습니다. (필요: {matched_player_skill.resource_cost}, 현재: {state.player.mana}) {err_reason}",
+                            None,
+                            extra_flags
+                        )
+                    extra_flags["overchannel"] = overchannel_eval
             if matched_player_skill.resource_type == "hp" and state.player.health <= matched_player_skill.resource_cost:
                 return (
                     False,
@@ -539,6 +708,16 @@ class ActionValidator:
         is_magic_combat = (is_magic_attack_noun or ("마법" in action_clean.lower() and is_magic_attack_verb) or is_intuitive_shaping or has_ancient_words_present) and not is_inquiry_intent
 
         if dice_result is None and is_magic_combat:
+            from src.world.mana_burn_engine import ManaBurnEngine
+            circuit = ManaBurnEngine.get_circuit_state(state.player)
+            if circuit.burnout_turns > 0:
+                return (
+                    False,
+                    f"⚠️ [마나 회로 과열] 마나 회로가 까맣게 타버려 마법을 영창할 수 없습니다! (잔여 침묵: {circuit.burnout_turns}턴)",
+                    None,
+                    extra_flags
+                )
+
             has_incant_speech = bool(parsed["dialogue"]) or ("영창" in action_lower)
             is_no_incant = not has_incant_speech
             extra_flags['is_no_incantation'] = is_no_incant
@@ -666,7 +845,10 @@ class ActionValidator:
                 extra_flags['interrupt_counter'] = True
 
         # B. Generic Physical Combat Attack (0 mana standard attack to conserve resources)
-        elif dice_result is None and not is_inquiry_intent and any(v in action_clean.lower() for v in ["공격", "찌르", "베", "벤", "찍", "내려치", "후려", "타격", "때리", "칼로", "검으", "단검으", "도끼", "attack", "strike", "stab", "slash"]):
+        elif dice_result is None and not is_inquiry_intent and any(v in action_clean.lower() for v in [
+            "공격", "찌르", "베", "벤", "찍", "내려치", "내려친", "내려쳐", "후려", "후려친", "후려쳐", "강타", "타격", "때리", "가격", "칼로", "검으", "단검으", "도끼", "창으", "활로",
+            "쏜다", "쏘아", "사격", "발사", "잽", "정권", "스트레이트", "휘둘", "attack", "strike", "stab", "slash", "shoot", "jab"
+        ]):
             eq_wep = state.get_equipped_weapon_item()
             base_dmg = eq_wep.damage if eq_wep else 3
             scaling = eq_wep.scaling_factor if eq_wep else 1.0
@@ -717,9 +899,9 @@ class ActionValidator:
                 # 1. Check Taboo / Trauma Trigger (-10 Penalty / Negotiation Collapse)
                 taboo_str = getattr(target_npc, "taboo", "").lower()
                 trauma_str = getattr(target_npc, "trauma", "").lower()
-                if taboo_str and any(k in speech_lower for k in ["부모", "모욕", "천박", "겁쟁이", "패배자", "배신자"]):
+                if (taboo_str or trauma_str) and any(k in speech_lower for k in ["부모", "모욕", "천박", "겁쟁이", "패배자", "배신자"]):
                     psy_bonus -= 10
-                    feedback_logs.append(f"⚠️ [역린/금기 촉발: {target_npc.name} 극노 (-10 패널티)]")
+                    feedback_logs.append(f"⚠️ [역린/금기/트라우마 촉발: {target_npc.name} 극노 (-10 패널티)]")
                 
                 # 2. Check Desire Alignment (+6 Bonus)
                 desire_str = getattr(target_npc, "desire", "").lower()

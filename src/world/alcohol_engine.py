@@ -325,3 +325,57 @@ class AlcoholIntoxicationEngine:
 
         cls.sync_state(drinker, alc_state)
         return logs
+
+    @classmethod
+    def tick_metabolism(
+        cls,
+        drinker: Any,
+        delta_minutes: int = 20
+    ) -> List[str]:
+        """
+        Advances natural alcohol metabolism and hangover recovery over time.
+        Metabolism rate: ~0.005% BAC per 20 minutes (0.015% per hour).
+        """
+        logs = []
+        raw = getattr(drinker, "alcohol_state", None)
+        if raw is None:
+            return logs
+
+        alc_state = cls.get_state(drinker)
+        if alc_state.blood_alcohol_content <= 0.0 and not alc_state.has_hangover and alc_state.intoxication_stage == 0:
+            return logs
+
+        # 1. BAC metabolism decay
+        if alc_state.blood_alcohol_content > 0.0:
+            decay = round((delta_minutes / 20.0) * 0.005, 4)
+            prev_bac = alc_state.blood_alcohol_content
+            alc_state.blood_alcohol_content = max(0.0, round(prev_bac - decay, 3))
+
+            # Recalculate stage
+            new_bac = alc_state.blood_alcohol_content
+            old_stage = alc_state.intoxication_stage
+            if new_bac >= 0.20:
+                new_stage = 3
+            elif new_bac >= 0.08:
+                new_stage = 2
+            elif new_bac >= 0.03:
+                new_stage = 1
+            else:
+                new_stage = 0
+
+            if new_stage < old_stage:
+                alc_state.intoxication_stage = new_stage
+                stage_names = {0: "맨정신", 1: "알딸딸함", 2: "비틀거리는 만취"}
+                logs.append(f"🍺 [알코올 분해] 체내 알코올이 대사되어 취기가 가라앉습니다. (현재: {stage_names.get(new_stage, '해소')} / BAC {new_bac:.3f}%)")
+
+        # 2. Hangover countdown
+        if alc_state.has_hangover:
+            hours_passed = max(1, round(delta_minutes / 60.0))
+            alc_state.hangover_hours_remaining = max(0, alc_state.hangover_hours_remaining - hours_passed)
+            if alc_state.hangover_hours_remaining == 0:
+                alc_state.has_hangover = False
+                logs.append("✨ [숙취 해소] 깨질 듯하던 두통과 갈증이 가라앉고 머리가 맑아졌습니다. (지능/감각 정상 복구)")
+
+        cls.sync_state(drinker, alc_state)
+        return logs
+
