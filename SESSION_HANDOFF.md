@@ -695,6 +695,33 @@
   - **증상**: `two_pass_engine.py:689-699` — NPC 사망 시 같은 위치에 살아있는 목격자(다른 NPC/동료) 존재 여부를 검사하지 않고 무조건 `RumorDiffusionEngine.dispatch_event_rumor` 발동. 아무도 없는 던전 밀실에서 암살해도 `carrier="merchant"`로 소문 자동 발사.
   - **처방**: dispatch 호출 전에 `witnesses = [n for n in state.npcs.values() if n.location == state.player.location and n.id != target_npc.id and n.health > 0]` 체크 추가. `len(witnesses) == 0`이면 소문 미발동 (완전 범죄 성공). 동료 NPC만 있으면 동료 신뢰도에 따라 누설 확률 분기.
 
+### [🏛️ 6계층 인프라 실전 결합 & 시스템 결함 정비 — 클로드 3차 정밀 분석 기반]
+> ⚠️ **[발견 경위]**: 2026-09-14 외부 Claude 코드베이스 정적 추적 분석 피드백 → 6계층 인프라 템플릿(5.3MB)의 게임 루프 단절, Claude 백엔드 퇴역 모델 고정 버그, app.py 상태 파싱 레이스 컨디션, 5대 엔진 고립 및 state.py 비대화 문제 확인.
+
+- [ ] **🔥 [인프라 1] 6계층 인프라 템플릿(5.3MB)과 `WorldGenerator.generate_new_world` 실전 결합**:
+  - **증상**: README 최상단 핵심 기능인 6계층 인프라 시스템(`infrastructure.py`)의 공개 메서드 39개 중 36개(`assemble_full_world`, `bind_settlement_npcs`, `register_nation`, `bind_facility_inventories` 등)가 단위 테스트에서만 호출됨. `WorldGenerator.generate_new_world`는 `cosmology_templates.json`과 `region_templates.json`만 로드하며, 기구축된 `continent_templates.json`(120종), `nation_templates.json`(134종), `settlement_templates.json`(215종), `facility_templates.json`(14종) 총 5.3MB 템플릿은 실전 생성에서 100% 미참조. 플레이어가 "새 세계 시작"을 누르면 정교한 인프라 대신 LLM 즉석 생성 단일 지역+NPC 1명짜리 빈약한 세계가 생성되고, 다익스트라 도로망(`geography.py`)도 테스트 전용으로 방치됨.
+  - **처방**: `WorldGenerator.generate_new_world` 생성 파이프라인에서 `InfrastructureTemplateLoader` 및 `assemble_full_world(bind_entities=True)`를 실전 호출하도록 결합. 새 세계 생성 시 대륙-국가-마을-시설 6계층 및 도로망 그래프가 온전히 구축된 `WorldState`가 생성되도록 결합.
+- [ ] **🐛 [엔진 결함 2] Claude 백엔드(`src/llm/claude.py`) 퇴역 모델 교체 및 복원력 강화**:
+  - **증상**: `src/llm/claude.py`가 2026-06-15부로 완전히 retired된 `claude-sonnet-4-20250514` 모델을 하드코딩 사용 중으로 호출 시 즉각 API 실패. 환경 변수 `ANTHROPIC_API_KEY` 누락 시 `KeyError`로 즉각 크래시되며, 재시도 및 폴백 로직이 전무하여 Gemini 프로바이더 대비 안정성 결함 큼.
+  - **처방**: 현행 활성 모델(`claude-3-5-sonnet-latest` 등)로 기본 모델 갱신 및 환경 변수 기반 모델 오버라이드 지원. API 키 누락 시 graceful fallback/안내, API 호출 실패 시 지수 백오프 재시도 로직 구축.
+- [ ] **🐛 [안정성 3] `app.py` `take_action` 내 `world_state` 파싱 실패 시 `None` 유입 방어**:
+  - **증상**: `app.py:157-168`의 `take_action`에서 `WorldState.from_json` 파싱 실패 시 `state = None`이 되고, 아무 방어 검증 없이 `gm.process_turn(action, state)`로 전달되어 `AttributeError` 서버 크래시를 유발할 수 있는 레이스 컨디션/상태 유실 취약점 존재.
+  - **처방**: `state is None`일 때 즉각 세션 자동 복구 시도 또는 `gr.Warning("세계 상태 복구 실패...")`와 함께 이전 안전 상태를 유지하여 None 유입 원천 차단.
+- [ ] **🔧 [배선 4] 잔여 미연결 엔진 5개 실전 게임 루프(`TwoPassEngine`/`process_turn`) 연결**:
+  - **대상 엔진**:
+    - 1) `siege_engine.py` (공성전 전열/성벽 내구도 등 23개 메서드)
+    - 2) `merchant_barter_engine.py` (상인 흥정/물물교환 — 백로그 21번 `EconomyEngine` 흡수 통합)
+    - 3) `combat_time_track_engine.py` (전투 액션 타임트랙 및 라운드 경과)
+    - 4) `time_calendar_engine.py` (세계관 기년법 및 역법 달력)
+    - 5) `vein_restoration_engine.py` (마나 맥로 손상 수술 및 에테르 정화 치료 — 차기 배선 1순위)
+  - **처방**: `TwoPassEngine`의 Step 1 연산 및 `DeterministicFactSheet` 슬롯에 순차 연결.
+- [ ] **🔧 [구조 정비 5] `state.py` 비대화(4,589행/107개 메서드) 해소 및 Tests-only 메서드 정리**:
+  - **증상**: `state.py`가 4,589줄에 달하며 107개 공개 메서드 중 절반가량이 단위 테스트에서만 호출되는 비대화 및 관심사 혼재 문제.
+  - **처방**: 데이터 엔티티 모델(스키마)과 상태 전이/비즈니스 로직을 관심사별로 분리하고, tests-only로 전락한 레거시 메서드 식별 및 정리.
+- [ ] **🔧 [엔진 전수조사 6] 기 배선 엔진들의 부분 연결(Partial Wiring) 전수 감사 및 메서드 활성화**:
+  - **증상**: 파일 자체는 import되어 1~2개 메서드만 호출되고 나머지 핵심 메서드가 방치된 "부분 연결" 엔진들의 실전 reachability 점검 필요.
+  - **처방**: 엔진별 공개 API와 `TwoPassEngine`/`GameMasterAgent` 실전 호출 경로 교차 감사 및 필요한 트리거 연결 확장.
+
 ### [인프라, UI 및 플랫폼 시스템 (공통/플랫폼)]
 > ⚠️ **[유저 절대 규칙] 찐찐 마지막 최종 업데이트 지정**: UI 연동, TTS 음성, 이미지 AI(SD LoRA) 연동 등은 전반적인 게임플레이, 전투, 생존 물리 시스템 및 밸런싱 작업이 100% 완료된 이후에 진행할 '찐찐 마지막 최종 업데이트'로 동결한다.
 
@@ -737,134 +764,35 @@
 
 ##### 📅 [2026-09-14] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 시스템
-1. **[배선 A-2] 마나 과부하 폭주 & 마나 회로 손상 엔진 (`mana_burn_engine.py`) 턴 루프 완전 배선**:
-   - `src/world/validator.py`:
-     * `ActionValidator.pre_validate_action` 스킬 시전 분기:
-       - **회로 과열 침묵 검사**: `ManaBurnEngine.get_circuit_state(player).burnout_turns > 0`일 때 마법 시전 즉시 기각 (`is_valid = False`, `⚠️ [마나 회로 과열]...`).
-       - **마나 부족 시 과충전 평가**: 마나 부족 시 `ManaBurnEngine.evaluate_overchannel` 호출. 대가/혈마법/변이 지식 미보유 일반 마법사는 엄격 차단, 자격 보유자는 `extra_flags["overchannel"]` 플래그 및 과충전 판정 정보 기록.
-     * 일반 마법 공격 분기: 동일하게 `burnout_turns > 0` 회로 과열 침묵 차단.
-   - `src/world/two_pass_engine.py`:
-     * `DeterministicFactSheet`: `mana_burn_summary: Optional[str] = None` 슬롯 탑재 및 `to_prompt_context()` 프롬프트 렌더링/GM 서사 지침문 결합.
-     * `compute_pass1` 턴 루프 결합:
-       - **턴 틱 자연 냉각**: 턴 경과 시 플레이어 및 현재 위치 NPC의 `circuit.burnout_turns`를 1씩 자연 냉각 (0 도달 시 냉각 해제 로그 출력).
-       - **스킬 과충전 실행**: `extra_flags["overchannel"]` 존재 시 `ManaBurnEngine.apply_overchannel_consequences`를 통해 HP 연소 차감, 회로 긴장 건전도 감소, 백래시 판정 및 에테르 오염/변이 발현을 확정 처리하고 `fact_sheet.mana_burn_summary`에 기록.
-       - **회로 손상 신경통**: 일반 마나 소모 시에도 `circuit.stamina_drain_on_cast > 0`인 경우 기력 추가 소모 적용.
-       - **마법 역류/백파이어 연계**: 고대어/언령 마법 실패로 인한 백파이어 시 `ManaBurnEngine.trigger_mana_backlash`를 직접 호출하여 회로 파열 흉터, 최대 MP 페널티, 과열 침묵, 비전 파편 충격파 발생.
-       - **회로 치료 연계**: 마나 안정제, 은침 소통술, 성수 정화 복용/치료 시 `ManaBurnEngine.repair_circuit` 호출 및 델타 동기화.
-   - `src/world/state.py`:
-     * `WorldState.apply_update`: `mana_burn_state` 델타 수신 및 플레이어 상태 동기화 지원.
-     * `WorldState.from_dict`: 플레이어 역직렬화 시 `mana_burn_state` 완벽 복원.
-     * `Player.max_mana_effective` 및 `NPC.max_mana_effective`: 회로 파열 흉터로 인한 `max_mp_penalty`를 유효 최대 마나에서 결정론적으로 감산 반영 (Deterministic Reader 보장).
-   - `tests/test_mana_burn_wiring.py`:
-     * 신규 통합 배선 테스트 6종 구축 및 100% 통과:
-       - `test_mana_burnout_silence_blocks_magic`: 회로 과열 침묵 시 마법 영창 물리적 차단 검증.
-       - `test_unqualified_caster_cannot_overchannel`: 일반 마법사의 생명력 연소 과충전 불가 검증.
-       - `test_blood_mage_overchannel_executes_in_pass1`: 혈마법사의 생명력 연소 과충전 영창 성공 및 회로 손상/프롬프트 반영 검증.
-       - `test_circuit_burnout_tick_cooling`: 턴 경과 시 마나 과열 침묵 자연 냉각 틱 검증.
-       - `test_max_mp_penalty_deterministic_reader`: 회로 흉터 `max_mp_penalty`의 유효 최대 마나 감산 결정론적 리더 검증.
-       - `test_mana_circuit_remedy_repair`: 마나 안정제 복용을 통한 회로 건전도 회복 검증.
+### 1. 이번 세션 구현 완료 핵심 내용
+1. **외부 Claude 3차 정밀 분석 기반 아키텍처 결함 전수 검증 및 백로그 공식 등재**:
+   - **6계층 인프라 템플릿(5.3MB) 단절 확인**: `infrastructure.py` 39개 메서드 중 36개 tests-only 확인 및 `generator.py`가 120종 대륙/134종 국가/215종 정주지/14종 시설 템플릿을 일절 읽지 않는 문제 백로그 등재 (`[인프라 1]`).
+   - **Claude 백엔드 퇴역 모델 및 안정성 결함 확인**: `src/llm/claude.py`가 2026-06-15 퇴역 완료된 `claude-sonnet-4-20250514` 모델을 고정 사용 중이며 API 키 누락 시 `KeyError` 크래시 및 재시도 부재 결함 확인 백로그 등재 (`[엔진 결함 2]`).
+   - **`app.py` `take_action` 상태 파싱 레이스 컨디션 확인**: `WorldState.from_json` 파싱 실패 시 `state=None`이 방어 없이 `gm.process_turn`으로 유입되는 결함 백로그 등재 (`[안정성 3]`).
+   - **잔여 미연결 엔진 5개 식별 및 정리**: `siege_engine.py`, `merchant_barter_engine.py`, `combat_time_track_engine.py`, `time_calendar_engine.py`, `vein_restoration_engine.py` 백로그 등재 (`[배선 4]`).
+   - **`state.py` 비대화(4,589행) 및 tests-only 메서드 정리 과제 백로그 등재 (`[구조 정비 5]`)**.
+   - **기 배선 엔진들의 부분 연결(Partial Wiring) 전수 감사 과제 백로그 등재 (`[엔진 전수조사 6]`)**.
 
-2. **[배선 A-4] 물리 타격 3대 유형 & 피격 캔슬 엔진 (`attack_physics_engine.py`) 턴 루프 완전 배선**:
-   - `src/world/equipment.py`:
-     * `apply_armor_durability_and_mitigation`에 `armor_penetration_pct: float = 0.0` 인자 추가. 방어구의 기본 경감률을 관통률만큼 곱연산 감산(`effective_mitigation = mitigation * (1.0 - armor_penetration_pct)`)하여 돌진 찌르기 및 철갑탄 방어 관통 대미지 결정론적 계산.
-   - `src/world/validator.py`:
-     * 물리 공격 동사("내려친", "후려친", "내려쳐", "후려쳐", "잽", "정권", "스트레이트", "사격", "쏜다", "발사") 키워드 확충하여 관형/현재형 물리 타격 액션이 정상 검증 통과되도록 보강.
-   - `src/world/two_pass_engine.py`:
-     * `DeterministicFactSheet`: `attack_physics_summary: Optional[str] = None` 슬롯 탑재 및 `to_prompt_context()` GM 서사 지침문 결합.
-     * `compute_pass1` 전투 섹션 결합:
-       - **물리 태그 및 돌진 거리 추출**: 행동 텍스트 및 무기 속성 기반 `atk_tags` 자동 식별, 돌진 거리(`distance_charge_m`) 추출.
-       - **AttackPhysicsEngine 평가**: `evaluate_attack_physics` 호출하여 운동에너지 대미지 배율, 방어구 관통률, 출혈/골절 확률, 행동 캔슬 여부 판정.
-       - **참격 출혈 및 둔기 골절 연동**: `StatusEffectEngine.apply_status(target, "bleeding", ...)` 및 `target.injuries.append("blunt_fracture_...")` 상태이상 결정론적 부여.
-       - **잽 적 행동 캔슬 및 강인도 붕괴**: `cancelled_opponent_action` 시 적의 예정된 공격/영창 차단(`interrupted_action = True`), 대상 강인도(`poise`) 감산 및 그로기 유도.
-   - `tests/test_attack_physics_wiring.py`:
-     * 신규 통합 배선 테스트 6종 구축 및 100% 통과:
-       - `test_charge_thrust_kinetic_damage_and_armor_penetration`: 돌진 찌르기 가속도 운동에너지 배율 및 방어 관통 대미지 검증.
-       - `test_slash_inflicts_bleeding_status`: 참격 공격 시 고민첩 비례 출혈 부여 검증.
-       - `test_blunt_heavy_strike_causes_bone_fracture`: 둔기 강타 시 고근력 비례 뼈 골절 부상 부여 검증.
-       - `test_quick_jab_cancels_enemy_action`: 기습 잽 공격으로 적의 공격 의도 캔슬 검증.
-       - `test_physics_summary_in_fact_sheet_prompt_context`: 물리 결과가 `fact_sheet` 프롬프트에 정상 주입되는지 검증.
-       - `test_two_pass_engine_full_turn_attack_physics_integration`: `TwoPassEngine.process_turn` 전체 파이프라인 무결점 통과 검증.
-
-2. **[배선 A-5] 야영/모닥불 온기 및 야외 생존 회복 엔진 (`campsite_engine.py`) 턴 루프 완전 배선**:
-   - `src/world/state.py`: `active_campsite` 상태 필드, `apply_update` 델타 동기화 및 `from_dict` 복원 완비.
-   - `src/world/validator.py`: 교전 중 야영/수면/모닥불 시도 사전 차단.
-   - `src/world/two_pass_engine.py`: `DeterministicFactSheet.campsite_summary` 슬롯 탑재, 야영지 구축, 모닥불 점화, 불침번 편성, 야간 기습 몬스터 실제 스폰 및 안전 수면 생존 회복 결합.
-   - `tests/test_campsite_wiring.py`: 6 passed.
-
-3. **[배선 A-6] 주류 음용/만취/알코올 중독 및 숙취 엔진 (`alcohol_engine.py`) 턴 루프 완전 배선**:
-   - `src/world/alcohol_engine.py`: `tick_metabolism` 자연 대사 틱 탑재.
-   - `src/world/state.py`: `Player.effective_agility` -3, `armor_class` +2, `effective_intelligence` -2, `effective_perception` -2 결정론적 프로퍼티 리더 탑재.
-   - `src/world/validator.py`: 음주 의도 식별 및 비선술집/골드부족/블랙아웃 차단, '수술/기술' 등 비주류 합성어 오인 차단.
-   - `src/world/two_pass_engine.py`: `DeterministicFactSheet.alcohol_summary` 슬롯 탑재, 턴 시작 알코올 대사 틱, 선술집 골드 구매 vs 가방 소지품 음용 `resolve_action_drink` 리졸버, 3단계 블랙아웃 호송/소매치기/저체온증 및 야영 숙면 익일 숙취 연동.
-   - `tests/test_alcohol_wiring.py`: 6 passed.
-
-4. **[배선 A-7] 독초 감별 & 야생 약초 채집 식물학 엔진 (`botany_engine.py`) 턴 루프 완전 배선**:
-   - `src/world/state.py`:
-     * `Item` 데이터클래스에 식물학 전용 4대 필드 탑재: `true_spec_id: str = ""`, `is_identified: bool = True`, `is_poisonous_lookalike: bool = False`, `origin_target_name: str = ""`.
-     * `Item.from_dict` 역직렬화 safe_init 완비로 기존 세이브 데이터 100% 하위 호환 복원 지원.
-   - `src/world/validator.py`:
-     * 교전 중 채집 차단: 위치 내 생존 적대적(`disposition == "hostile"`) NPC 감지 시 채집 차단 (`ActionValidator.pre_validate_action`).
-     * 비식생 실내 채집 차단: 선술집, 주점, 감옥, 밀실 등 석벽/인공 바닥 실내 환경에서 야생 채집 차단.
-     * 미소지 정밀 감별 차단: 가방에 감별 대상 표본이 없을 시 액션 사전 기각.
-   - `src/world/two_pass_engine.py`:
-     * `DeterministicFactSheet`: `botany_summary: Optional[str] = None` 슬롯 탑재 및 `to_prompt_context()` GM 서사 지침문 결합.
-     * `resolve_action_botany`: 야생 채집(`forage`), 정밀 감별(`identify`), 섭취/달임(`consume`) 3대 액션 완전 분기 파싱.
-     * `compute_pass1` 턴 루프 결합:
-       - **채집 성공**: `Item` 실체 생성 및 플레이어 인벤토리 등록 (`state.items`, `state.player.inventory`).
-       - **대실패(Roll 1/DC-4 미만)**: 치명적 위장종(예: 송이버섯 외형의 '독우산광대버섯') 획득 및 미감별(`unidentified`) 태그 부여.
-       - **정밀 감별**: `HerbalismBotanyEngine.identify_plant` 판정 성공 시 위장 해제 및 진짜 독초 스펙/이름 폭로.
-       - **섭취/달임**: 진짜 약초 섭취 시 체력 회복/지혈/피로 개선; 맹독초 섭취 시 즉시 독성 피해 및 패혈증/심정지 치명 상태이상 격발, 인벤토리 아이템 소모.
-   - `tests/test_botany_wiring.py`:
-     * 신규 통합 배선 테스트 6종 구축 및 100% 통과:
-       - `test_botany_forage_success_inventory_and_pass1`: 야생 약초 채집 성공 시 인벤토리 등록, 아이템 생성 및 Pass 1 FactSheet 연동 검증.
-       - `test_botany_forage_lookalike_critical_failure`: 채집 대실패 시 외형 위장 맹독 유사종(독우산광대버섯) 채집 검증.
-       - `test_botany_identify_reveals_lookalike`: 정밀 감별 성공 시 위장된 맹독 유사종의 정체 폭로 및 아이템 갱신 검증.
-       - `test_botany_consume_genuine_herb_heals`: 진짜 약초(지혈 이끼) 섭취 시 체력 회복, 피로 개선 및 인벤토리 소모 검증.
-       - `test_botany_consume_toxic_lookalike_inflicts_poison`: 미감별 맹독 버섯 섭취 시 독 대미지 피격 및 중독 상태이상 격발 검증.
-       - `test_botany_validator_combat_and_indoor_prevention`: ActionValidator 사전 검증(교전 중 채집 차단, 비식생 실내 채집 차단, 미소지 감별 차단) 검증.
-
----
-
-### [디자인/아키텍처 Q&A 기록]
-- **Q. 옥토패스 트래블러 스타일 2D-3D HD-2D 도트 그래픽 구현 시, 2D 좌표와 노드-엣지 그래프만으로 장비/건물/몬스터/외형 모델링 및 그래픽 표현이 가능한가?**:
-  - **A. 공간 위상(Topology)과 시각 표현(Visual Presentation)의 분리 원칙**:
-    1) 2D 유클리드 좌표 + 노드-엣지 그래프는 **"세계의 뼈대와 연결 구조(어디에 무엇이 있고 어떻게 이동/충돌하는가)"**를 정의하는 순수 데이터 레이어임.
-    2) 외형(시각적 렌더링)은 좌표 자체가 아니라 엔티티 데이터에 부여된 **결정론적 태그(`traits`), 메타데이터 템플릿(`visual_profile`, 재질, 양식, 손상도), 프로시저럴 타일셋/페이퍼돌 스프라이트 조립 규칙**을 통해 생성됨.
-    3) **건물/맵**: 좌표(x, y, w, h) + 연결 노드(문/벽/창문) + 건축 테마(예: '고딕 양식 석조', '퇴색된 참나무') -> 타일셋 자동 배치 및 2.5D 깊이감(Z-축 빌보드/스프라이트) 부여.
-    4) **장비/캐릭터**: 장비 부위 + 소재(강철, 미스릴) + 제작 양식 + 상태(녹슨, 피묻은) -> 도트 레이어 합성(Paper-Doll 스프라이트 시스템: 몸체 베이스 + 의복 레이어 + 무기 오버레이).
-    5) **LLM의 역할**: LLM은 픽셀을 직접 그리는 것이 아니라 100% 결정론적 팩트시트를 받아 시각적/감각적 서사(Pass 2)를 묘사하며, 실제 그래픽 렌더러는 파이썬 월드 스테이트의 결정론적 시각 데이터 구조를 읽어 스프라이트/도트 그래픽을 화면에 렌더링함.
+2. **프로젝트 무결성 및 DoD Gate 검증**:
+   - 전체 585개 단위 테스트 회귀 검증: 585 passed (0 failed).
+   - 작업 환경 및 고정 규칙(말투 규칙, 백로그 보존, 하드웨어 스펙) 무결성 유지.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **프로젝트 전체 585개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, BASELINE 579 + 신규 배선 6 = 585 passed)**:
-  - `tests/test_botany_wiring.py`: **6 passed in 1.13s**.
-  - `tests/test_botany_engine.py`: 5 passed.
-  - `tests/test_alcohol_wiring.py`: 6 passed.
-  - `tests/test_campsite_wiring.py`: 6 passed.
-  - `tests/test_attack_physics_wiring.py`: 6 passed.
-  - `tests/test_harvest_wiring.py`: 6 passed.
-  - `tests/test_mana_burn_wiring.py`: 6 passed.
-  - `tests/test_stealth_wiring.py`: 4 passed.
-  - `pytest tests/`: **585 passed in 211.71s**.
-- **DoD Gate Eval Runner 검증**:
-  - `python eval_runner.py --no-judge` (20턴 실전 시뮬레이션): **`Invalid transition rate: 0.0%`** 완벽 달성.
-- **Static Analysis Gate**:
-  - `pyflakes` 및 `python -m compileall src/ -q`: **구문 오류 및 미사용 import 0건 통과**.
+- **프로젝트 전체 585개 단위 테스트 100% 무결점 통과 (회귀 결함 0건, 585 passed)**:
+  - `pytest tests/`: **585 passed in 226.88s**.
+- **Static Analysis & Repository Hygiene**:
+  - `__pycache__` 및 불필요한 임시 산출물 없음 확인.
+
+---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-- **현재 완료 상태**:
-  - **[배선 A-1] `stealth_engine.py` (물리 은신/잠입/도청) 배선 완공**
-  - **[배선 A-2] `mana_burn_engine.py` (마나 과부하 폭주 & 회로 파열) 배선 완공**
-  - **[배선 A-3] `harvest_engine.py` (몬스터 부위 파괴 & 도축/갈무리) 배선 완공**
-  - **[배선 A-4] `attack_physics_engine.py` (물리 타격 3대 유형: 찌르기/베기/둔기 골절/피격 캔슬) 배선 완공**
-  - **[배선 A-5] `campsite_engine.py` (야영지 구축/모닥불 온기/불침번 경계/야간 기습 및 생존 회복) 배선 완공**
-  - **[배선 A-6] `alcohol_engine.py` (주류 음용, 만취, 알코올 중독 및 숙취) 배선 완공**
-  - **[배선 A-7] `botany_engine.py` (독초 감별 & 약초 채집 야생 식물학) 배선 완공**
-- **다음 잔여 배선 후속 진행 (잔여 7개 엔진)**:
-  - **차기 타겟: [배선 A-8] `vein_restoration_engine.py` (마나 맥로 손상 및 혈맥 재생) 배선**
-  - 후속 대기: [배선 A-9] `object_physics_engine.py` (사물 투척/파괴/엄폐/가구 물리) 배선
+- **긴급/우선 결함 조치 권장 순서**:
+  1. **[엔진 결함 2] `claude.py` 퇴역 모델 교체 및 API 키 예외 방어/폴백 강화**
+  2. **[안정성 3] `app.py` `take_action` 내 `state is None` 유입 방어**
+  3. **[인프라 1] 6계층 인프라 템플릿(5.3MB)과 `WorldGenerator.generate_new_world` 실전 결합**
+  4. **[배선 4] 잔여 미연결 5대 엔진(`vein_restoration_engine`, `siege_engine` 등) 순차 배선**
 
 
 
