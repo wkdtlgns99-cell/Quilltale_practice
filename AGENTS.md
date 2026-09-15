@@ -15,6 +15,7 @@
 3. `scratch/` = local-only, never tracked in git. Tests use `tmp_path` only.
 4. NO committing `__pycache__/`, `*.pyc`, or 0-byte files. Check `git status`.
 5. Before commit: run ruff/pyflakes on `src/`. Zero syntax errors, unused vars, undefined names.
+6. UI (`app.py`): I/O and rendering only. Zero business logic. Never block UI thread (async). All player-facing text: 100% natural Korean.
 </Code_Hygiene>
 
 <Dup_Prevention>
@@ -32,12 +33,6 @@
 3. NPC episodic memory: must have truncation/summarization to prevent token overflow.
 4. Network/image APIs: must have fallback paths. Log failures, never return fake success.
 </Two_Pass>
-
-<UI>
-1. `app.py`: I/O and rendering only. Zero business logic.
-2. ASYNC: never block UI thread with heavy processing/external API calls.
-3. All player-facing text: 100% natural Korean. Isolate system/debug text from user view.
-</UI>
 
 <Scope_Commit>
 1. AGENTS.md edits: forbidden without explicit user approval. If rule changes are needed, explain rationale and ASK first.
@@ -63,31 +58,15 @@
 </Wiring>
 
 <Dev_Ops>
-1. Communication: token-efficient Korean, no filler phrases.
+1. Communication: token-efficient Korean, caveman style without filler words ('우가' 제외 단답/원시인 말투).
 2. Handoff updates: preserve fixed rules, HW specs, backlog. Update details only.
-3. Environment split: home/laptop = content+system; school/lab = pure system code only.
+3. Environment: laptop=content+system, lab=system-only.
 4. Before proposing new class/engine/template: search codebase for existing similar code. Report findings and ask user before creating.
 5. New game data classes MUST include `traits: List[str] = field(default_factory=list)`.
 6. Proposals/questions to user: always include concrete explanation of what/why.
 7. External LLM delegation: (1) provide executable prompts, (2) internal code = interface/skeleton only, (3) bulk data/content generation → external LLM.
 8. Incremental Integration: Step 1 = standalone module + unit test pass. Step 2 = wire slot to TwoPassEngine/GameMasterAgent. Step 3 = full regression (BASELINE) pass.
 </Dev_Ops>
-
-<Game_Design_Anchors>
-Detailed game design rules live in `src/agents/prompts.py` (GM_SYSTEM_PROMPT). Key anchors for dev reference:
-1. Anti-Yes-Man: player is mortal. Absurd/impossible actions fail realistically.
-2. WorldState = single source of truth. LLM narration must never contradict it.
-3. d20 + stat modifier vs DC for all checks. LLM describes outcome, never decides it.
-4. Ancient magic words: Korean phonetic transcription only (e.g. 바르, 카르), never Latin/English.
-5. Skill book UI: abstract formula `[원소]+[형태]+[기동]` only, no spoiler examples.
-6. No invisible walls. Strict causality & butterfly effect. NPC independence.
-7. Dilemmas, flawed victories, resource/physical constraints, failing forward.
-8. Dynamic focalization: combat=sharp/tactical, stealth=hyper-sensory, exploration=wide/detailed.
-</Game_Design_Anchors>
-
-<Scope_Gate>
-TTS, 3D, sound/BGM, character illustration deferred to final phase. Do not scaffold until core simulation is wired and stable.
-</Scope_Gate>
 
 <Report_Format>
 Session end report (exact format):

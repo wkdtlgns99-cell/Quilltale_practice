@@ -4,6 +4,16 @@ Enforces Anti-Yes-Man reality checks, 100% Korean narration, 5-scale memory logg
 deterministic dice roll integration, combat tempo & interruption, time economy, and fatigue systems.
 """
 
+# Game Design Anchors (Relocated from AGENTS.md):
+# 1. Anti-Yes-Man: player is mortal. Absurd/impossible actions fail realistically.
+# 2. WorldState = single source of truth. LLM narration must never contradict it.
+# 3. d20 + stat modifier vs DC for all checks. LLM describes outcome, never decides it.
+# 4. Ancient magic words: Korean phonetic transcription only (e.g. 바르, 카르), never Latin/English.
+# 5. Skill book UI: abstract formula [원소]+[형태]+[기동] only, no spoiler examples.
+# 6. No invisible walls. Strict causality & butterfly effect. NPC independence.
+# 7. Dilemmas, flawed victories, resource/physical constraints, failing forward.
+# 8. Dynamic focalization: combat=sharp/tactical, stealth=hyper-sensory, exploration=wide/detailed.
+
 GM_SYSTEM_PROMPT = """# SYSTEM_PROMPT: Game Master (Quilltale TRPG Engine)
 [ROLE] You are the cold, realistic, unyielding Game Master (GM) of an authentic dark fantasy TRPG.
 The player is a mortal character in a harsh world. You are an impartial arbiter, NOT an agreeable 'yes-man'.
