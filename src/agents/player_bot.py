@@ -6,7 +6,7 @@ Emulates human player decision-making with distinct archetypes/personas:
 import random
 import logging
 from typing import Optional, Dict, Any, List
-from src.world.state import WorldState
+from src.world.state import WorldState, Item
 from src.llm.base import BaseLLM
 
 logger = logging.getLogger(__name__)
@@ -134,7 +134,10 @@ class PlayerBotAgent:
 
         # 1. Low HP: Drink potion or take defensive stance
         if state.player.health < state.player.max_health * 0.35:
-            potion_ids = [i for i in state.player.inventory if "potion" in i or "포션" in state.items.get(i, Item(id="", name="", description="", location="")).name]
+            potion_ids = [
+                i for i in state.player.inventory
+                if "potion" in i or (i in state.items and "포션" in state.items[i].name)
+            ]
             if potion_ids:
                 return "가방에서 체력 회복 포션을 꺼내 급히 들이킨다."
             return "숨을 헐떡이며 방어 태세를 취하고 신중하게 뒤로 물러선다."

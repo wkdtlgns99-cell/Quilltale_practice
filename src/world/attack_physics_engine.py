@@ -46,9 +46,14 @@ class AttackPhysicsEngine:
     ])
 
     @classmethod
-    def can_draw_bow(cls, strength: int, draw_weight_lbs: float) -> Tuple[bool, float, str]:
+    def can_draw_bow(
+        cls,
+        strength: int,
+        draw_weight_lbs: float,
+        allow_overdraw: bool = False,
+    ) -> Tuple[bool, float, str]:
         """
-        근력에 따른 활 당김 가능 여부 및 인장율(0.0 ~ 1.0) 계산.
+        근력에 따른 활 당김 가능 여부 및 인장율(0.0 ~ 1.0, 오버드로우 활성화 시 최대 1.2) 계산.
         반환: (완발 가능 여부, 실제 인장 배율, 한글 설명)
         """
         max_draw = StatEngine.calculate_max_draw_weight(strength)
@@ -56,8 +61,13 @@ class AttackPhysicsEngine:
             return (True, 1.0, "일반 투사체 (장력 제한 없음)")
 
         if max_draw >= draw_weight_lbs:
-            ratio = min(1.2, max_draw / draw_weight_lbs)
-            return (True, 1.0, f"완전 만작 (장력 {draw_weight_lbs:.0f} lbs / 근력 한계 {max_draw:.0f} lbs)")
+            ratio = min(1.2, max_draw / draw_weight_lbs) if allow_overdraw else 1.0
+            desc = (
+                f"오버드로우 만작 (장력 {draw_weight_lbs:.0f} lbs / 근력 한계 {max_draw:.0f} lbs, 배율 {ratio:.2f}x)"
+                if (allow_overdraw and ratio > 1.0)
+                else f"완전 만작 (장력 {draw_weight_lbs:.0f} lbs / 근력 한계 {max_draw:.0f} lbs)"
+            )
+            return (True, round(ratio, 2), desc)
         else:
             draw_ratio = max(0.1, max_draw / draw_weight_lbs)
             return (False, round(draw_ratio, 2), f"불완전 인장 (장력 부족: {draw_ratio * 100:.0f}%만 당겨짐, 탄속 및 사거리 급감)")

@@ -1,0 +1,110 @@
+﻿import os
+import pytest
+from src.world.state import WorldState, Player, Location, Item
+from src.agents.player_bot import PlayerBotAgent
+from src.llm.claude import ClaudeLLM
+from src.world.economy_engine import EconomyEngine
+from src.world.status_engine import StatusEffectEngine
+from src.world.attack_physics_engine import AttackPhysicsEngine
+from app import take_action
+
+
+def test_player_bot_low_hp_with_potion_no_name_error():
+    """P0-1: 플레이어 체력 < 35% 시 Item 미임포트로 인한 NameError가 발생하지 않는지 검증."""
+    bot = PlayerBotAgent(persona_key="cautious_scholar")
+    state = WorldState()
+    state.locations["loc1"] = Location(id="loc1", name="시작의 방", description="아늑한 방", exits={}, items=[], npcs=[])
+    state.player.location = "loc1"
+    state.player.health = 20
+    state.player.max_health = 100
+    state.player.inventory = ["hp_potion_1", "unknown_item_999"]
+    state.items["hp_potion_1"] = Item(id="hp_potion_1", name="하급 체력 회복 포션", description="포션", location="inventory")
+
+    # NameError 없이 정상적으로 포션 복용 행동이 반환되어야 함
+    decision = bot.decide_action(state)
+    assert "포션" in decision or "들이킨다" in decision or "태세" in decision
+
+
+def test_player_bot_low_hp_without_potion_safe():
+    """P0-1: 플레이어 체력 < 35%이고 포션이 없을 때 방어 태세 정상 반환 검증."""
+    bot = PlayerBotAgent(persona_key="cautious_scholar")
+    state = WorldState()
+    state.locations["loc1"] = Location(id="loc1", name="시작의 방", description="아늑한 방", exits={}, items=[], npcs=[])
+    state.player.location = "loc1"
+    state.player.health = 20
+    state.player.max_health = 100
+    state.player.inventory = ["iron_dagger"]
+    state.items["iron_dagger"] = Item(id="iron_dagger", name="철 단검", description="단검", location="inventory")
+
+    decision = bot.decide_action(state)
+    assert "방어 태세" in decision or "물러선다" in decision
+
+
+def test_claude_llm_without_api_key_no_crash(monkeypatch):
+    """P0-2: ANTHROPIC_API_KEY 환경변수가 없을 때 KeyError 없이 초기화되고 에러 응답 반환 검증."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_MODEL", raising=False)
+
+    claude = ClaudeLLM()
+    assert claude._model == "claude-3-5-sonnet-latest"
+    assert claude._client is None
+
+    resp = claude.generate("안녕")
+    assert "[오류:" in resp.text
+    assert "API 키가 설정되지 않아" in resp.text
+
+
+def test_claude_llm_model_env_override(monkeypatch):
+    """P0-2: ANTHROPIC_MODEL 환경변수로 기본 모델 오버라이드 지원 검증."""
+    monkeypatch.setenv("ANTHROPIC_MODEL", "claude-3-7-sonnet-custom")
+    claude = ClaudeLLM()
+    assert claude._model == "claude-3-7-sonnet-custom"
+
+
+def test_app_take_action_none_state_guarded():
+    """P0-3: world_state_json 파싱 실패 시 AttributeError 없이 안전한 에러 안내 및 뷰 반환 검증."""
+    invalid_json = "{ corrupted json"
+    chat_history = []
+    curr_img = None
+
+    results = take_action("앞으로 이동", chat_history, invalid_json, curr_img)
+    assert len(results) == 10
+    ret_history = results[0]
+    assert len(ret_history) == 2
+    assert "세계 상태를 불러오지 못했습니다" in ret_history[1]["content"]
+
+
+def test_economy_engine_remove_poison_cured_check():
+    """P2-6: 독 치료 서비스 이용 시 치료 대상 상태이상이 없으면 골드 미차감 및 False 반환 검증."""
+    state = WorldState()
+    state.player.gold = 100
+    
+    # 1. 상태이상이 없는 상태에서 해독 서비스 호출
+    success, msg = EconomyEngine.use_service(state, "moonlit_apothecary", "remove_poison")
+    assert success is False
+    assert state.player.gold == 100  # 골드 차감 없어야 함
+    assert "치료할 중독 또는 유해 상태이상이 없습니다" in msg
+
+    # 2. 독 상태이상 적용 후 해독 서비스 호출
+    StatusEffectEngine.apply_status(state.player, "poison", duration=3)
+    assert "poison" in state.player.status_effects
+
+    success2, msg2 = EconomyEngine.use_service(state, "moonlit_apothecary", "remove_poison")
+    assert success2 is True
+    assert state.player.gold == 60  # 40G 차감
+    assert "poison" not in state.player.status_effects
+    assert "치료 완료" in msg2
+
+
+def test_attack_physics_can_draw_bow_overdraw_ratio():
+    """P2-7: can_draw_bow에서 allow_overdraw 옵션에 따라 정상적으로 오버드로우 배율(최대 1.2) 반환 검증."""
+    # 근력 15(한계 150 lbs), 활 장력 120 lbs -> ratio = 150/120 = 1.25 -> cap 1.2
+    can_draw_def, ratio_def, msg_def = AttackPhysicsEngine.can_draw_bow(15, 120.0, allow_overdraw=False)
+    assert can_draw_def is True
+    assert ratio_def == 1.0
+    assert "완전 만작" in msg_def
+
+    can_draw_od, ratio_od, msg_od = AttackPhysicsEngine.can_draw_bow(15, 120.0, allow_overdraw=True)
+    assert can_draw_od is True
+    assert ratio_od == 1.2
+    assert "오버드로우 만작" in msg_od

@@ -421,8 +421,11 @@ class EconomyEngine:
         if service_id == "remove_poison":
             from src.world.status_engine import StatusEffectEngine
             cured = StatusEffectEngine.cure_by_condition(state.player, "해독제")
-            state.player.gold -= cost
-            return True, f"🌿 [{shop.shop_name}] 중독 및 유해 상태이상 치료 완료! (지불: {cost}G)"
+            if cured:
+                state.player.gold -= cost
+                cured_str = ", ".join(cured)
+                return True, f"🌿 [{shop.shop_name}] {cured_str} 치료 완료! (지불: {cost}G)"
+            return False, f"🌿 [{shop.shop_name}] 치료할 중독 또는 유해 상태이상이 없습니다. (골드 미차감)"
 
         # 2. Equipment Repair
         elif service_id == "repair":

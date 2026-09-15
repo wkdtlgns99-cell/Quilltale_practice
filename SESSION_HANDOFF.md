@@ -21,15 +21,15 @@
 ### [🏛️ 시스템 결함 수정 & 6계층 인프라 실전 결합 — 2026-09-15 분석 기반]
 
 #### [P0 — CONFIRMED CRASH BUGS (최우선 긴급 수정)]
-- [ ] **🔥 [P0-1] `src/agents/player_bot.py:137` `Item` import 누락으로 인한 NameError 크래시 해결**:
-  - **증상**: 봇 체력 < 35% 시 포션 검색 라인에서 `Item` 미임포트로 `NameError` 발생, 100% 크래시.
-  - **처방**: `from src.world.state import Item` 추가 또는 `i in state.items` 사전 검사 구조 개선.
-- [ ] **🔥 [P0-2] `src/llm/claude.py` 퇴역 모델 교체, KeyError 방어 및 Gemini 수준 재시도/폴백 구축**:
-  - **증상**: `claude-sonnet-4-20250514` 모델 퇴역으로 호출 불가. 키 누락 시 KeyError 발생 및 재시도 부재.
-  - **처방**: 최신 현행 모델(`claude-3-5-sonnet-latest` 등) 갱신, 안전한 키 참조 및 지수 백오프/재시도 이식.
-- [ ] **🔥 [P0-3] `app.py` `take_action()` 내 `world_state` 파싱 실패 시 `None` 유입 크래시 방어**:
-  - **증상**: `state is None` 상태로 `gm.process_turn()` 호출 시 `AttributeError` 크래시 발생.
-  - **처방**: `state is None` 가드 단락 추가 및 로드 대기 안내 반환.
+- [x] **🔥 [P0-1] `src/agents/player_bot.py:137` `Item` import 누락으로 인한 NameError 크래시 해결**:
+  - **수정**: `from src.world.state import Item` 임포트 및 안전한 딕셔너리 검사 적용.
+  - **검증 파일/테스트**: `src/agents/player_bot.py` | `tests/test_p0_p2_fixes.py::test_player_bot_low_hp_with_potion_no_name_error` (통과)
+- [x] **🔥 [P0-2] `src/llm/claude.py` 퇴역 모델 교체, KeyError 방어 및 Gemini 수준 재시도/폴백 구축**:
+  - **수정**: 퇴역 모델 제거, `claude-3-5-sonnet-latest` 및 `ANTHROPIC_MODEL` 환경변수 우선 적용, 키 부재 시 KeyError 방어 및 3회 지수 백오프/안전 폴백 구축.
+  - **검증 파일/테스트**: `src/llm/claude.py` | `tests/test_p0_p2_fixes.py::test_claude_llm_without_api_key_no_crash` (통과)
+- [x] **🔥 [P0-3] `app.py` `take_action()` 내 `world_state` 파싱 실패 시 `None` 유입 크래시 방어**:
+  - **수정**: `state is None` 가드 단락 추가 및 안내 메시지와 기존 뷰 안전 반환(AttributeError 방어).
+  - **검증 파일/테스트**: `app.py` | `tests/test_p0_p2_fixes.py::test_app_take_action_none_state_guarded` (통과)
 
 #### [P1 — ENGINE WIRING GAPS (엔진 미연결 & 6계층 인프라 실전 결합)]
 - [ ] **🔥 [P1-1] 6계층 인프라 시스템(5.3MB 템플릿/infrastructure.py)과 `WorldGenerator.generate_new_world` 실전 결합**:
@@ -43,10 +43,14 @@
 - [ ] **🔧 [P2-1] God 메서드 분할 (`apply_update` 797줄, `pre_validate_action` 870줄)**: 업데이트/액션 타입별 디스패치 핸들러로 모듈화 분할.
 - [ ] **🔧 [P2-2] God 파일 분할 로드맵 수립 (`state.py` 4,588줄, `infrastructure.py` 3,092줄, `two_pass_engine.py` 2,433줄)**: 데이터클래스/엔티티 스키마와 턴 상태 갱신/전이 로직 분리.
 - [ ] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**: `pytest tests/`, `ruff check --select F,E9`, `python scripts/reachability_audit.py` 자동 검증.
-- [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**: README.md 수치 최신화(585 통과), 배선 변경 시 `reachability_audit.py` 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
+- [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**: README.md 수치 최신화(604 통과), 배선 변경 시 `reachability_audit.py` 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
 - [ ] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**: `game_master.py:638` raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일.
-- [ ] **🐛 [P2-6] `src/world/economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정**: `cured` 결과에 따라 성공 시에만 골드 차감 및 메시지 분기.
-- [ ] **🐛 [P2-7] `src/world/attack_physics_engine.py:59` 활 오버드로우 배율(`ratio`) 미사용 버그 수정**: 반환 튜플의 인장 배율 자리에 계산된 `ratio` 정상 연결.
+- [x] **🐛 [P2-6] `src/world/economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정**:
+  - **수정**: `cured` 결과에 따라 치료 대상 존재 시에만 골드 차감 및 성공 반환, 미치료 시 골드 미차감 및 안내 메시지 반환.
+  - **검증 파일/테스트**: `src/world/economy_engine.py` | `tests/test_p0_p2_fixes.py::test_economy_engine_remove_poison_cured_check` (통과)
+- [x] **🐛 [P2-7] `src/world/attack_physics_engine.py:59` 활 오버드로우 배율(`ratio`) 미사용 버그 수정**:
+  - **수정**: `allow_overdraw` 플래그 지원을 통해 기존 완전 만작 계약(1.0)을 유지하면서 과인장 시 계산된 `ratio`(최대 1.2) 정상 반영.
+  - **검증 파일/테스트**: `src/world/attack_physics_engine.py` | `tests/test_p0_p2_fixes.py::test_attack_physics_can_draw_bow_overdraw_ratio` (통과)
 - [ ] **⚠️ [P2-8 / 원칙] `scripts/reachability_audit.py` 단일 파일 내부 호출 판정(False Positive) 주의 원칙**: 동일 파일 내 호출 메서드 오인 방지 및 삭제 전 grep 필수.
 
 ### [로드맵 & 플랫폼 백로그 (공통/플랫폼)]
@@ -97,23 +101,31 @@
 - 미도달 모듈: **13/64 → 3/64** (이번 세션 및 이전 세션 누적 해소)
 - `CHANGES_AUDIT.md` 자동 갱신 완료.
 
+#### P0 크래시 3종 & P2 로직 결함 2종 해결 (완료)
+- `src/agents/player_bot.py:137`: `Item` 임포트 누락 해결 및 안전한 딕셔너리 검사 적용.
+- `src/llm/claude.py`: 퇴역 모델 교체(`claude-3-5-sonnet-latest`), `ANTHROPIC_MODEL` 환경변수 우선 적용, 키 부재 시 KeyError 방어 및 재시도/지수 백오프 구축.
+- `app.py`: `take_action()` 내 `state is None` 가드 단락 추가 (AttributeError 차단).
+- `src/world/economy_engine.py:423`: `cured` 결과에 따라 치료 성공 시에만 골드 차감 분기.
+- `src/world/attack_physics_engine.py:59`: `allow_overdraw` 플래그로 과인장 배율(`ratio`, 최대 1.2) 연결 및 기존 완전 만작 계약(1.0) 보존.
+
+#### 신규 테스트 (7개 → 총 604개)
+- `tests/test_p0_p2_fixes.py`: P0 버그 3종 및 P2 버그 2종 회귀 방지 단위 테스트 (7개)
+
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: 597 passed (0 failed) — 신규 12개 추가.
-- **회귀 기준선 대비**: 585 → 597 (+12, 기존 회귀 0건).
+- **전체 단위 테스트**: 604 passed (0 failed) — 신규 7개 추가.
+- **회귀 기준선 대비**: 597 → 604 (+7, 기존 회귀 0건).
+- **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과)
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P0 긴급 버그]**:
-   - `src/agents/player_bot.py:137` `Item` 임포트 누락 수정.
-   - `src/llm/claude.py` 퇴역 모델 교체 및 API 에러 가드 보강.
-   - `app.py` `take_action()` 내 `state is None` 가드 추가.
-2. **[P2 로직 결함]**:
-   - `src/world/economy_engine.py:423` 독 치료 반환값 분기.
-   - `src/world/attack_physics_engine.py:59` 활 오버드로우 `ratio` 연결.
-3. **[P1-1 6계층 인프라 결합]**:
-   - `generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world` 호출.
-4. **[P2 CI 구축]**:
-   - `.github/workflows/ci.yml` 작성.
+1. **[P1-1 6계층 인프라 결합]**:
+   - `WorldGenerator.generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world` 호출로 대륙/국가/정주지/시설 데이터와 도로망 그래프 실전 턴 루프 결합.
+2. **[P2-3 CI 구축]**:
+   - `.github/workflows/ci.yml` 작성 (`pytest tests/`, `ast/ruff syntax check`, `python scripts/reachability_audit.py`).
+3. **[P2-2 God 파일 분할 로드맵 착수]**:
+   - `state.py` (4,588줄) 데이터클래스 분할 및 `two_pass_engine.py` (2,508줄) 핸들러 모듈화.
+4. **[P1-2 미도달/보류 모듈 정리]**:
+   - `save_load_manager.py` (중복 제거), `merchant_barter_engine.py` (EconomyEngine 흡수).

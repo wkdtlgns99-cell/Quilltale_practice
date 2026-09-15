@@ -159,7 +159,28 @@ def take_action(
     except Exception:
         state = None
 
-    if state and getattr(state, "active_world_ended", False):
+    if not state:
+        chat_history = chat_history + [
+            {"role": "user", "content": action},
+            {
+                "role": "assistant",
+                "content": "⚠️ 세계 상태를 불러오지 못했습니다. 왼쪽 패널에서 [🌍 새 세계 시작]을 누르거나 저장 데이터를 다시 불러와주세요.",
+            },
+        ]
+        return (
+            chat_history,
+            current_image,
+            world_state_json,
+            "<div class='qt-panel-content'>세계 상태를 불러올 수 없습니다.</div>",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+        )
+
+    if getattr(state, "active_world_ended", False):
         return chat_history, current_image, world_state_json, state.to_player_summary_html(), state.to_quest_journal_html(), state.to_shop_html(), state.to_crafting_html(), state.to_party_html(), state.to_skills_html(), state.to_inventory_html()
 
     llm = get_llm(LLM_NAME)
