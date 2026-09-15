@@ -20,12 +20,37 @@
 
 ### [🏛️ 시스템 결함 수정 & 6계층 인프라 실전 결합 — 2026-09-15 분석 기반]
 
-#### [P0 — CONFIRMED CRASH BUGS (최우선 긴급 수정)]
+#### [P0-0 — 2026-09-15 교차 검증 기반 0순위 긴급 과제 (Backlog 0순위)]
+- [ ] **🔥 [P0-0-1] `src/llm/claude.py` 퇴역 모델 교체 및 다중 모델 폴백 체인 구축**:
+  - **위험**: `claude-3-5-sonnet-latest`는 2026년 2월 19일 완전 퇴역(retired)되어 provider 전환 시 100% 호출 실패. 현재 단일 모델 재시도만 존재하여 Gemini 수준 다중 모델 폴백 부재.
+  - **처방**: 최신 활성 모델(`claude-3-7-sonnet-latest` 등)로 하드코딩 교체, `gemini.py`처럼 후보 모델 리스트(`candidate_models`) 순차 폴백 구조 구축.
+- [ ] **🔥 [P0-0-2] `src/world/two_pass_engine.py` 무효 행동 선행 변이 차단 (QT-F01)**:
+  - **위험**: `compute_pass1()`에서 `ActionValidator.pre_validate_action()` 전에 상태이상 피해, 저체온증, 감염, 식량 부패, 수면 피로, 퀘스트 시간 차감, 쿨다운, 세계 시뮬레이션이 인플레이스로 먼저 반영된 후 기각 시 롤백 없이 DB에 영구 저장됨.
+  - **처방**: 딥카피 오버헤드 없이 `ActionValidator.pre_validate_action()`을 `compute_pass1()` 최상단(모든 환경/상태 틱 이전)으로 순서 재배치하여 무효 행동 시 0-변이 보장.
+- [ ] **🚨 [P0-0-3] `src/world/state.py` 토큰 폭발 방지 world_facts 프롬프트 슬라이싱 & 원본 리스트 상한 (QT-F03)**:
+  - **위험**: `state.world_facts`가 슬라이싱 없이 매 턴 전체가 LLM 프롬프트에 통째로 주입됨. `npc.off_screen_logs`, `location.physical_traces`, `state.history`의 상한 부재로 세이브 파일 비대화.
+  - **처방**: `to_narrative_context()`에서 `world_facts[-10:]` 슬라이싱 적용. `off_screen_logs` 10개 캡, `physical_traces` 10개 캡/15턴 감쇄, `history` 활성 50턴 캡 및 별도 SQLite 아카이브 분리.
+- [ ] **🚨 [P0-0-4] 보조 LLM JSON 출력 파싱 시 raw `json.loads`의 `JSONRepairEngine` 통일 (QT-F04)**:
+  - **위험**: `game_master.py:643`(세계 뉴스), `chronicle.py:105`(연대기), `generator.py:850`(동적 지역)에서 마크다운 코드 블록(```json)이나 trailing comma 출력 시 JSONDecodeError로 조용한 기능 실패/유실.
+  - **처방**: `JSONRepairEngine.repair_json(raw)` 공통 헬퍼 메서드로 파싱 통일.
+- [ ] **🔧 [P0-0-5] 8개 파일 UTF-8 BOM (`\ufeff`) 제거 및 정적 분석 정상화 (QT-F05)**:
+  - **위험**: `event_perspective.py`, `scenario_manager.py` 등 8개 파일에 잔존하는 `\xef\xbb\xbf`로 인해 Python `ast.parse`가 SyntaxError를 던지고 `reachability_audit.py`가 메서드 수를 0으로 오판.
+  - **처방**: 8개 파일 UTF-8 no-BOM 재저장 및 `reachability_audit.py`에 `utf-8-sig` 적용.
+- [ ] **🔧 [P0-0-6] 문서-코드 팩트 정정 및 동기화 (QT-F07)**:
+  - **처방**: `TRIAGE.md`에서 배선 완료된 4종(`alcohol`, `botany`, `harvest`, `mana_burn`)만 배선 완료로 갱신. 실전 미호출인 `campsite`, `stealth` 2종은 '차기 보류' 상태 유지(거짓 정보화 방지). 삭제 완료된 `save_load_manager.py` 항목 정리, `README.md` 테스트 수치(604개) 갱신.
+- [ ] **🔧 [P0-0-7] LLM 쿼터 고갈 시 영문 예외 문자열 서사 유출 방어 (QT-F08)**:
+  - **위험**: API 고갈 시 `repair_and_parse(str(e))`가 영문 예외 메시지를 그대로 나레이션으로 플레이어에게 노출 (100% 한국어 유저 페이싱 위반).
+  - **처방**: 예외 발생 시 자연스러운 한국어 시스템 안내 메시지로 폴백.
+- [ ] **🔧 [P0-0-8] 잔여 결함 디테일 보강 (P0-1, P2-7)**:
+  - `player_bot.py:137`: 미사용 죽은 `Item` import 청소.
+  - `attack_physics_engine.py`: `can_draw_bow` 호출부(`npc_skill_engine.py` 등)에 `allow_overdraw=True` 전달 진입점 마련.
+
+#### [P0 — CONFIRMED CRASH BUGS (최우선 긴급 수정 — 1차 완료)]
 - [x] **🔥 [P0-1] `src/agents/player_bot.py:137` `Item` import 누락으로 인한 NameError 크래시 해결**:
-  - **수정**: `from src.world.state import Item` 임포트 및 안전한 딕셔너리 검사 적용.
+  - **수정**: `i in state.items` 검사 리팩터링으로 더미 Item 생성 제거 및 NameError 해결 (미사용 Item import는 P0-0-8에서 청소 예정).
   - **검증 파일/테스트**: `src/agents/player_bot.py` | `tests/test_p0_p2_fixes.py::test_player_bot_low_hp_with_potion_no_name_error` (통과)
-- [x] **🔥 [P0-2] `src/llm/claude.py` 퇴역 모델 교체, KeyError 방어 및 Gemini 수준 재시도/폴백 구축**:
-  - **수정**: 퇴역 모델 제거, `claude-3-5-sonnet-latest` 및 `ANTHROPIC_MODEL` 환경변수 우선 적용, 키 부재 시 KeyError 방어 및 3회 지수 백오프/안전 폴백 구축.
+- [x] **🔥 [P0-2] `src/llm/claude.py` 퇴역 모델 교체, KeyError 방어 및 3회 재시도 구축**:
+  - **수정**: `ANTHROPIC_MODEL` 환경변수 우선 적용, 키 부재 시 KeyError 방어 및 3회 지수 백오프 구축. (단, 하드코딩된 `claude-3-5-sonnet-latest`의 2026-02-19 퇴역으로 P0-0-1에서 최신 활성 모델 교체 및 다중 모델 폴백 재작업 등록).
   - **검증 파일/테스트**: `src/llm/claude.py` | `tests/test_p0_p2_fixes.py::test_claude_llm_without_api_key_no_crash` (통과)
 - [x] **🔥 [P0-3] `app.py` `take_action()` 내 `world_state` 파싱 실패 시 `None` 유입 크래시 방어**:
   - **수정**: `state is None` 가드 단락 추가 및 안내 메시지와 기존 뷰 안전 반환(AttributeError 방어).
@@ -121,11 +146,15 @@
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P1-1 6계층 인프라 결합]**:
+1. **[P0-0-1 & P0-0-2 최우선 버그 해결]**:
+   - `claude.py` 퇴역 모델명 교체 및 후보 모델 순차 폴백 체인 구축.
+   - `two_pass_engine.py`의 `ActionValidator.pre_validate_action`을 최상단으로 재배치하여 무효 행동 시 선행 상태 변이 및 오염 저장 원천 차단.
+2. **[P0-0-3 ~ P0-0-5 토큰/안정성/BOM 정리]**:
+   - `world_facts` 프롬프트 슬라이싱 `[-10:]`, 원본 리스트 상한/감쇄 적용.
+   - raw `json.loads`의 `JSONRepairEngine` 공통 통일.
+   - 8개 파일 UTF-8 BOM 제거 및 `reachability_audit.py` `utf-8-sig` 적용.
+3. **[P1-1 6계층 인프라 결합]**:
    - `WorldGenerator.generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world` 호출로 대륙/국가/정주지/시설 데이터와 도로망 그래프 실전 턴 루프 결합.
-2. **[P2-3 CI 구축]**:
-   - `.github/workflows/ci.yml` 작성 (`pytest tests/`, `ast/ruff syntax check`, `python scripts/reachability_audit.py`).
-3. **[P2-2 God 파일 분할 로드맵 착수]**:
-   - `state.py` (4,588줄) 데이터클래스 분할 및 `two_pass_engine.py` (2,508줄) 핸들러 모듈화.
-4. **[P1-2 미도달/보류 모듈 정리]**:
-   - `save_load_manager.py` (중복 제거), `merchant_barter_engine.py` (EconomyEngine 흡수).
+4. **[P0-0-6 문서 최신화 및 보류 정리]**:
+   - `TRIAGE.md`, `SESSION_HANDOFF.md`, `README.md` 실제 코드 상태와 동기화 (`campsite`/`stealth` 보류 유지, `save_load_manager.py` 잔여 언급 제거, 604 통과 수치 최신화).
+   - `merchant_barter_engine.py` (EconomyEngine 흡수).
