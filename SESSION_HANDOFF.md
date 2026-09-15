@@ -695,32 +695,56 @@
   - **증상**: `two_pass_engine.py:689-699` — NPC 사망 시 같은 위치에 살아있는 목격자(다른 NPC/동료) 존재 여부를 검사하지 않고 무조건 `RumorDiffusionEngine.dispatch_event_rumor` 발동. 아무도 없는 던전 밀실에서 암살해도 `carrier="merchant"`로 소문 자동 발사.
   - **처방**: dispatch 호출 전에 `witnesses = [n for n in state.npcs.values() if n.location == state.player.location and n.id != target_npc.id and n.health > 0]` 체크 추가. `len(witnesses) == 0`이면 소문 미발동 (완전 범죄 성공). 동료 NPC만 있으면 동료 신뢰도에 따라 누설 확률 분기.
 
-### [🏛️ 6계층 인프라 실전 결합 & 시스템 결함 정비 — 클로드 3차 정밀 분석 기반]
-> ⚠️ **[발견 경위]**: 2026-09-14 외부 Claude 코드베이스 정적 추적 분석 피드백 → 6계층 인프라 템플릿(5.3MB)의 게임 루프 단절, Claude 백엔드 퇴역 모델 고정 버그, app.py 상태 파싱 레이스 컨디션, 5대 엔진 고립 및 state.py 비대화 문제 확인.
+### [🏛️ 시스템 결함 수정 & 6계층 인프라 실전 결합 — 클로드 정밀 정적 분석 전수 검증 기반]
+> ⚠️ **[발견 경위]**: 2026-09-15 외부 Claude 코드베이스 정밀 추적(테스트 전체, ruff F/E9, reachability_audit, 소스 정적 분석) 결과. 3대 확정 크래시 버그(P0), 6계층 인프라/엔진 배선 공백(P1), 코드 품질/CI/사소한 로직 결함(P2)이 확인되어 백로그로 공식 등재함.
 
-- [ ] **🔥 [인프라 1] 6계층 인프라 템플릿(5.3MB)과 `WorldGenerator.generate_new_world` 실전 결합**:
-  - **증상**: README 최상단 핵심 기능인 6계층 인프라 시스템(`infrastructure.py`)의 공개 메서드 39개 중 36개(`assemble_full_world`, `bind_settlement_npcs`, `register_nation`, `bind_facility_inventories` 등)가 단위 테스트에서만 호출됨. `WorldGenerator.generate_new_world`는 `cosmology_templates.json`과 `region_templates.json`만 로드하며, 기구축된 `continent_templates.json`(120종), `nation_templates.json`(134종), `settlement_templates.json`(215종), `facility_templates.json`(14종) 총 5.3MB 템플릿은 실전 생성에서 100% 미참조. 플레이어가 "새 세계 시작"을 누르면 정교한 인프라 대신 LLM 즉석 생성 단일 지역+NPC 1명짜리 빈약한 세계가 생성되고, 다익스트라 도로망(`geography.py`)도 테스트 전용으로 방치됨.
-  - **처방**: `WorldGenerator.generate_new_world` 생성 파이프라인에서 `InfrastructureTemplateLoader` 및 `assemble_full_world(bind_entities=True)`를 실전 호출하도록 결합. 새 세계 생성 시 대륙-국가-마을-시설 6계층 및 도로망 그래프가 온전히 구축된 `WorldState`가 생성되도록 결합.
-- [ ] **🐛 [엔진 결함 2] Claude 백엔드(`src/llm/claude.py`) 퇴역 모델 교체 및 복원력 강화**:
-  - **증상**: `src/llm/claude.py`가 2026-06-15부로 완전히 retired된 `claude-sonnet-4-20250514` 모델을 하드코딩 사용 중으로 호출 시 즉각 API 실패. 환경 변수 `ANTHROPIC_API_KEY` 누락 시 `KeyError`로 즉각 크래시되며, 재시도 및 폴백 로직이 전무하여 Gemini 프로바이더 대비 안정성 결함 큼.
-  - **처방**: 현행 활성 모델(`claude-3-5-sonnet-latest` 등)로 기본 모델 갱신 및 환경 변수 기반 모델 오버라이드 지원. API 키 누락 시 graceful fallback/안내, API 호출 실패 시 지수 백오프 재시도 로직 구축.
-- [ ] **🐛 [안정성 3] `app.py` `take_action` 내 `world_state` 파싱 실패 시 `None` 유입 방어**:
-  - **증상**: `app.py:157-168`의 `take_action`에서 `WorldState.from_json` 파싱 실패 시 `state = None`이 되고, 아무 방어 검증 없이 `gm.process_turn(action, state)`로 전달되어 `AttributeError` 서버 크래시를 유발할 수 있는 레이스 컨디션/상태 유실 취약점 존재.
-  - **처방**: `state is None`일 때 즉각 세션 자동 복구 시도 또는 `gr.Warning("세계 상태 복구 실패...")`와 함께 이전 안전 상태를 유지하여 None 유입 원천 차단.
-- [ ] **🔧 [배선 4] 잔여 미연결 엔진 5개 실전 게임 루프(`TwoPassEngine`/`process_turn`) 연결**:
+#### [P0 — CONFIRMED CRASH BUGS (최우선 긴급 수정)]
+- [ ] **🔥 [P0-1] `src/agents/player_bot.py:137` `Item` import 누락으로 인한 NameError 크래시 해결**:
+  - **증상**: 봇 체력 < 35% 시 포션 검색 라인 `state.items.get(i, Item(...)).name`에서 `Item`이 미임포트되어 `NameError: name 'Item' is not defined` 100% 크래시 발생. 관전자/배치 모드(`spectator_runner.py`, `batch_collector.py`) 파탄 상태.
+  - **처방**: `from src.world.state import Item` 임포트 추가 또는 불필요한 throwaway Item 생성 대신 `i in state.items` 사전 검사 구조로 개선.
+- [ ] **🔥 [P0-2] `src/llm/claude.py` 퇴역 모델 교체, KeyError 방어 및 Gemini 수준 재시도/폴백 구축**:
+  - **증상**: `src/llm/claude.py`에 하드코딩된 `claude-sonnet-4-20250514` 모델이 2026-06-15부로 공식 retired되어 API 호출 불가. 환경변수 `ANTHROPIC_API_KEY` 누락 시 raw `KeyError` 크래시 발생. 재시도/백오프 및 폴백 로직이 전무하여 GeminiLLM(키 로테이션, 모델 폴백 체인) 대비 극심한 안정성 격차 존재.
+  - **처방**: 최신 현행 모델(`claude-3-5-sonnet-latest` 등)로 기본 모델 갱신 및 환경변수 오버라이드 지원. `os.environ.get()`과 명확한 에러 핸들링 도입. GeminiLLM과 동등한 수준의 재시도(지수 백오프) 및 폴백 패턴 이식.
+- [ ] **🔥 [P0-3] `app.py` `take_action()` 내 `world_state` 파싱 실패 시 `None` 유입 크래시 방어**:
+  - **증상**: `app.py:157-168`에서 `WorldState.from_json(world_state_json)` 실패 시 `state = None`이 되고, 아무 방어 없이 `gm.process_turn(action, state)`로 전달되어 `AttributeError: 'NoneType' object has no attribute 'current_location'` 크래시 유발. UI 로딩 완료 전 사용자 액션 제출 시 레이스 컨디션 발생.
+  - **처방**: `state is None`일 때 즉각 단락(short-circuit)하여 "세계 상태가 아직 로드되지 않았습니다. 잠시만 기다려주세요." 안내 메시지 반환.
+
+#### [P1 — ENGINE WIRING GAPS (엔진 미연결 & 6계층 인프라 실전 결합)]
+- [ ] **🔥 [P1-1] 6계층 인프라 시스템(5.3MB 템플릿/infrastructure.py)과 `WorldGenerator.generate_new_world` 실전 결합 의사결정 및 구현**:
+  - **증상**: README 최상단 핵심 기능인 6계층 인프라 시스템(`infrastructure.py`, 3,092행, 39개 공개 메서드)의 36개 메서드가 단위 테스트에서만 호출됨. `WorldGenerator.generate_new_world`는 `cosmology_templates.json`과 `region_templates.json`만 읽고 평면적 딕셔너리(지역 1곳, NPC 1명)만 생성. `continent_templates.json`(120종), `nation_templates.json`(134종), `settlement_templates.json`(215종), `facility_templates.json`(14종) 총 1.7MB+ 정형 데이터와 계층 조립 파이프라인, 다익스트라 도로망(`geography.py`)이 실제 게임플레이에서 100% 미사용 상태.
+  - **선택 및 처방**: `generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world(bind_entities=True)`를 실제 호출하여 대륙->국가->정주지->시설 계층과 도로망 그래프를 온전히 생성하도록 실전 결합. (결정 사항 `MASTER_GAME_ARCHITECTURE.md`에 문서화).
+- [ ] **🔧 [P1-2] 미연결 5대 엔진 게임 루프(`TwoPassEngine`/`process_turn`) 연결**:
   - **대상 엔진**:
-    - 1) `siege_engine.py` (공성전 전열/성벽 내구도 등 23개 메서드)
-    - 2) `merchant_barter_engine.py` (상인 흥정/물물교환 — 백로그 21번 `EconomyEngine` 흡수 통합)
+    - 1) `siege_engine.py` (SiegeWarfareEngine 등 23개 메서드, 공성전/성벽 내구도/진형)
+    - 2) `merchant_barter_engine.py` (상인 흥정/물물교환 — TRIAGE.md 권고에 따라 `EconomyEngine` 흡수 통합)
     - 3) `combat_time_track_engine.py` (전투 액션 타임트랙 및 라운드 경과)
     - 4) `time_calendar_engine.py` (세계관 기년법 및 역법 달력)
     - 5) `vein_restoration_engine.py` (마나 맥로 손상 수술 및 에테르 정화 치료 — 차기 배선 1순위)
-  - **처방**: `TwoPassEngine`의 Step 1 연산 및 `DeterministicFactSheet` 슬롯에 순차 연결.
-- [ ] **🔧 [구조 정비 5] `state.py` 비대화(4,589행/107개 메서드) 해소 및 Tests-only 메서드 정리**:
-  - **증상**: `state.py`가 4,589줄에 달하며 107개 공개 메서드 중 절반가량이 단위 테스트에서만 호출되는 비대화 및 관심사 혼재 문제.
-  - **처방**: 데이터 엔티티 모델(스키마)과 상태 전이/비즈니스 로직을 관심사별로 분리하고, tests-only로 전락한 레거시 메서드 식별 및 정리.
-- [ ] **🔧 [엔진 전수조사 6] 기 배선 엔진들의 부분 연결(Partial Wiring) 전수 감사 및 메서드 활성화**:
-  - **증상**: 파일 자체는 import되어 1~2개 메서드만 호출되고 나머지 핵심 메서드가 방치된 "부분 연결" 엔진들의 실전 reachability 점검 필요.
-  - **처방**: 엔진별 공개 API와 `TwoPassEngine`/`GameMasterAgent` 실전 호출 경로 교차 감사 및 필요한 트리거 연결 확장.
+  - **처방**: `TwoPassEngine.compute_pass1` / `DeterministicFactSheet` 슬롯에 순차 연결 또는 기존 엔진 통합.
+
+#### [P2 — CODE QUALITY, CI & REFACTORING (품질 / CI / 유지보수)]
+- [ ] **🔧 [P2-1] God 메서드 분할 (`apply_update` 797줄, `pre_validate_action` 870줄)**:
+  - **증상**: `WorldState.apply_update()`가 797행(state.py:3421-4218), `ActionValidator.pre_validate_action()`이 약 870행으로 단일 함수에 과도한 로직 집중. 가독성 저하 및 머지 충돌 위험 극대화.
+  - **처방**: 업데이트 타입별 / 액션 타입별 디스패치 핸들러(`handle_movement_update`, `handle_combat_update` 등)로 모듈화 분할.
+- [ ] **🔧 [P2-2] God 파일 분할 로드맵 수립 (`state.py` 4,588줄, `infrastructure.py` 3,092줄, `two_pass_engine.py` 2,433줄)**:
+  - **처방**: `state.py`의 데이터클래스/엔티티 스키마와 턴 상태 갱신/전이 로직을 분리.
+- [ ] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**:
+  - **증상**: AGENTS.md에서 커밋 전 검증을 의무화하고 있으나 CI가 없어 수동 실행에 전적으로 의존 중.
+  - **처방**: push/PR 시 `pytest tests/`, `ruff check --select F,E9 src/ app.py eval_runner.py scripts/`, `python scripts/reachability_audit.py`를 자동 검증하는 CI 워크플로우 작성.
+- [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**:
+  - **증상**: README.md의 "544 passed" 표기가 실제 585개 통과와 불일치. `CHANGES_AUDIT.md`/`TRIAGE.md`의 고립 모듈 수치가 최신 커밋 상태를 반영하지 못함.
+  - **처방**: README.md 수치 최신화(585 통과), 배선 변경 커밋 시 `reachability_audit.py` 실행 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
+- [ ] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**:
+  - **증상**: `game_master.py:638` `generate_world_news_tick()`에서 raw `json.loads()`를 사용하며 broad except로 실패를 묵살.
+  - **처방**: `src/llm/resilience.py`의 `JSONRepairEngine.repair_json()`으로 라우팅하여 마크다운 펜스/잘림 등 자동 복원 통일.
+- [ ] **🐛 [P2-6] `src/world/economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정**:
+  - **증상**: `StatusEffectEngine.cure_by_condition()`의 반환값이 버려져, 실제 치료 여부와 무관하게 골드가 차감되고 성공 메시지가 출력됨.
+  - **처방**: `cured` 결과에 따라 성공 시에만 골드 차감 및 메시지 분기 처리.
+- [ ] **🐛 [P2-7] `src/world/attack_physics_engine.py:59` 활 오버드로우 배율(`ratio`) 미사용 버그 수정**:
+  - **증상**: 장궁 오버드로우 파워 스케일링 `ratio`(최대 1.2x)를 연산해놓고 리턴에서 1.0 하드코딩으로 누락.
+  - **처방**: 반환 튜플의 인장 배율 자리에 계산된 `ratio` 정상 연결.
+- [ ] **⚠️ [P2-8 / 원칙] `scripts/reachability_audit.py` 단일 파일 내부 호출 판정(False Positive) 주의 원칙**:
+  - **지침**: reachability_audit은 동일 파일 내 호출을 제외(`if f != w_resolved`)하므로 동일 파일 내에서만 호출되는 정상 메서드(`state.py`의 `register_dynamic_npc` 등, `cave_in_engine.py`의 `get_rock_strata` 등)를 tests-only/never-called로 오인함. 코드 삭제 전 반드시 전체 grep 검증 필수. (진짜 죽은 코드: `cave_in_engine.py:assess_stability` 등 선별 조치).
 
 ### [인프라, UI 및 플랫폼 시스템 (공통/플랫폼)]
 > ⚠️ **[유저 절대 규칙] 찐찐 마지막 최종 업데이트 지정**: UI 연동, TTS 음성, 이미지 AI(SD LoRA) 연동 등은 전반적인 게임플레이, 전투, 생존 물리 시스템 및 밸런싱 작업이 100% 완료된 이후에 진행할 '찐찐 마지막 최종 업데이트'로 동결한다.
@@ -762,20 +786,30 @@
 
 ---
 
-##### 📅 [2026-09-14] 현재 세션 개발 현황
+##### 📅 [2026-09-15] 현재 세션 개발 현황
 
 ### 1. 이번 세션 구현 완료 핵심 내용
-1. **외부 Claude 3차 정밀 분석 기반 아키텍처 결함 전수 검증 및 백로그 공식 등재**:
-   - **6계층 인프라 템플릿(5.3MB) 단절 확인**: `infrastructure.py` 39개 메서드 중 36개 tests-only 확인 및 `generator.py`가 120종 대륙/134종 국가/215종 정주지/14종 시설 템플릿을 일절 읽지 않는 문제 백로그 등재 (`[인프라 1]`).
-   - **Claude 백엔드 퇴역 모델 및 안정성 결함 확인**: `src/llm/claude.py`가 2026-06-15 퇴역 완료된 `claude-sonnet-4-20250514` 모델을 고정 사용 중이며 API 키 누락 시 `KeyError` 크래시 및 재시도 부재 결함 확인 백로그 등재 (`[엔진 결함 2]`).
-   - **`app.py` `take_action` 상태 파싱 레이스 컨디션 확인**: `WorldState.from_json` 파싱 실패 시 `state=None`이 방어 없이 `gm.process_turn`으로 유입되는 결함 백로그 등재 (`[안정성 3]`).
-   - **잔여 미연결 엔진 5개 식별 및 정리**: `siege_engine.py`, `merchant_barter_engine.py`, `combat_time_track_engine.py`, `time_calendar_engine.py`, `vein_restoration_engine.py` 백로그 등재 (`[배선 4]`).
-   - **`state.py` 비대화(4,589행) 및 tests-only 메서드 정리 과제 백로그 등재 (`[구조 정비 5]`)**.
-   - **기 배선 엔진들의 부분 연결(Partial Wiring) 전수 감사 과제 백로그 등재 (`[엔진 전수조사 6]`)**.
+1. **외부 Claude 정밀 정적 분석(전체 테스트, ruff F/E9, reachability_audit) 기반 시스템 결함 전수 교차 검증 및 백로그 세부화 등재**:
+   - **P0 확정 크래시 3건 등재**:
+     1) `player_bot.py:137` `Item` import 누락 NameError 크래시 (`[P0-1]`).
+     2) `claude.py` 퇴역 모델(`claude-sonnet-4-20250514`) 및 `KeyError` 크래시 (`[P0-2]`).
+     3) `app.py` `take_action()` 내 `state is None` 유입 시 AttributeError 크래시 (`[P0-3]`).
+   - **P1 배선 공백 & 거대 인프라 결합 2건 등재**:
+     1) 6계층 인프라 시스템(5.3MB 템플릿, `infrastructure.py`)의 `WorldGenerator.generate_new_world` 실전 결합 과제 (`[P1-1]`).
+     2) 미연결 5대 엔진(`siege_engine`, `merchant_barter_engine`, `combat_time_track_engine`, `time_calendar_engine`, `vein_restoration_engine`) 게임 루프 연결 (`[P1-2]`).
+   - **P2 코드 품질, CI, 유지보수, 로직 버그 8건 등재**:
+     1) God 메서드 분할: `apply_update`(797줄), `pre_validate_action`(870줄) (`[P2-1]`).
+     2) God 파일 분할 로드맵: `state.py`, `infrastructure.py`, `two_pass_engine.py` (`[P2-2]`).
+     3) GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축 (`[P2-3]`).
+     4) README.md 테스트 카운트(585 통과) 및 `CHANGES_AUDIT.md` 수치 최신화 (`[P2-4]`).
+     5) `game_master.py` `generate_world_news_tick()`의 raw `json.loads`를 `JSONRepairEngine`으로 통일 (`[P2-5]`).
+     6) `economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정 (`[P2-6]`).
+     7) `attack_physics_engine.py:59` 활 오버드로우 배율(`ratio`) 미사용 버그 수정 (`[P2-7]`).
+     8) `scripts/reachability_audit.py` 동일 파일 내부 호출 오인(False Positive) 방지 원칙 명시 (`[P2-8]`).
 
 2. **프로젝트 무결성 및 DoD Gate 검증**:
    - 전체 585개 단위 테스트 회귀 검증: 585 passed (0 failed).
-   - 작업 환경 및 고정 규칙(말투 규칙, 백로그 보존, 하드웨어 스펙) 무결성 유지.
+   - 고정 규칙 1~10, 하드웨어 스펙, 백로그 전체 보존 완료.
 
 ---
 
@@ -788,11 +822,12 @@
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-- **긴급/우선 결함 조치 권장 순서**:
-  1. **[엔진 결함 2] `claude.py` 퇴역 모델 교체 및 API 키 예외 방어/폴백 강화**
-  2. **[안정성 3] `app.py` `take_action` 내 `state is None` 유입 방어**
-  3. **[인프라 1] 6계층 인프라 템플릿(5.3MB)과 `WorldGenerator.generate_new_world` 실전 결합**
-  4. **[배선 4] 잔여 미연결 5대 엔진(`vein_restoration_engine`, `siege_engine` 등) 순차 배선**
+- **긴급/우선 조치 권장 순서**:
+  1. **[P0 긴급 버그] `player_bot.py:137` `Item` 임포트/검사 수정 및 `app.py` `state is None` 가드 추가**
+  2. **[P0 긴급 버그] `claude.py` 퇴역 모델 교체 및 API 키 graceful 핸들링/Gemini 수준 재시도 패턴 이식**
+  3. **[P2 로직 버그] `economy_engine.py` 독 치료 반환값 분기 및 `attack_physics_engine.py` 활 `ratio` 연결**
+  4. **[P2 CI 구축] `.github/workflows/ci.yml` 작성 (pytest + ruff F,E9 + reachability_audit 자동화)**
+  5. **[P1 인프라/배선] 6계층 인프라 템플릿 실전 결합 및 미연결 엔진(`vein_restoration_engine` 등) 순차 배선**
 
 
 
