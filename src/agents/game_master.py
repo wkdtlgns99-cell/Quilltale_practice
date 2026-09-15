@@ -311,10 +311,15 @@ class GameMasterAgent:
 
         PersistenceManager.save_session(state)
 
-        # Audio triggers evaluation (BGM & SFX)
-        from src.world.audio_engine import AudioEngine
-        audio_data = AudioEngine.determine_turn_audio(state, fact_sheet=fact_sheet, action=action)
-        audio_html = AudioEngine.format_audio_html(audio_data)
+        # Audio triggers evaluation (BGM & SFX) — gated behind ENABLE_AUDIO feature flag
+        from src.core.config import ENABLE_AUDIO
+        if ENABLE_AUDIO:
+            from src.world.audio_engine import AudioEngine
+            audio_data = AudioEngine.determine_turn_audio(state, fact_sheet=fact_sheet, action=action)
+            audio_html = AudioEngine.format_audio_html(audio_data)
+        else:
+            audio_data = {}
+            audio_html = ""
 
         return {
             "narration": narration,

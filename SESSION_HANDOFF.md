@@ -63,35 +63,57 @@
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
 ### 1. 이번 세션 구현 완료 핵심 내용
-1. **문서 및 에이전트 거버넌스 토큰 부하 대규모 최적화 (Token Diet)**:
-   - **`SESSION_HANDOFF.md` 압축**:
-     - 중복 "고정 규칙 1-10" 삭제 ➔ `AGENTS.md` 단일 원천 포인터로 일원화.
-     - 완료된 40여 개 과거 백로그 및 상세 세션 로그를 `docs/archive/SESSION_LOG_2026-09.md`로 아카이빙 분리.
-     - 미도달 엔진 세부 목록을 `TRIAGE.md` / `CHANGES_AUDIT.md` 참조 구조로 정리.
-   - **`AGENTS.md` 단일 출처화 & 정비**:
-     - `<UI>` 섹션을 `<Code_Hygiene>`에 통합.
-     - `<Game_Design_Anchors>` 8대 원칙을 `src/agents/prompts.py`의 `GM_SYSTEM_PROMPT` 상단 주석으로 재배치.
-     - `<Scope_Gate>` 동결 정책 및 HD-2D 시각화 Q&A를 `MASTER_GAME_ARCHITECTURE.md` Section 8, 9로 재배치.
-     - `<Dev_Ops>` 3번 환경 분리 조항 압축.
-2. **DoD Gate 및 전체 테스트 회귀 검증**:
-   - `pytest tests/`: **585 passed** (0 failed).
+
+#### P1-6 시간 경제 단일 원천 정리 (3중 구현 → 1개)
+- `src/core/config.py`의 미사용 고정 상수(`TIME_TALK_MINUTES` 등 4종) 삭제.
+- `TimeCalendarEngine.determine_action_duration()` 단일 원천으로 채택.
+- `TwoPassEngine.compute_pass1()` 1119행: 비이동 행동 기본 시간을 고정 30분에서 키워드 기반 가변 소요 시간으로 교체. 피로도 변화도 자동 반영.
+- 파일: `src/core/config.py`, `src/world/two_pass_engine.py`
+
+#### P1-7 오디오 파이프라인 낭비 차단
+- `src/core/config.py`에 `ENABLE_AUDIO: bool = False` 플래그 추가.
+- `src/agents/game_master.py` 314행: `ENABLE_AUDIO=False` 시 `AudioEngine` 연산 완전 스킵.
+- 파일: `src/core/config.py`, `src/agents/game_master.py`
+
+#### vein_restoration_engine.py 실전 배선 완료 (마나 파괴↔치유 루프 완성)
+- `ManaVeinRestorationEngine.perform_surgery()` → `two_pass_engine.py:2.75 Sub-path B` 연결.
+- 수술 키워드(에테르 투석/탕약/기적 봉합/회로 재건 등) 감지 시 회로 손상 가드 후 실행.
+- `DeterministicFactSheet.vein_restoration_summary` 필드 및 `to_prompt_context()` 섹션 추가.
+- `vein_restoration_engine.get_circuit_state()`: `ManaCircuitState` 객체 ↔ dict 자동 변환.
+- 파일: `src/world/two_pass_engine.py`, `src/world/vein_restoration_engine.py`
+
+#### 공식 보류 엔진 3종 (의도적 Shelve 처리 문서화)
+- `siege_engine.py`: 요새 공성 시나리오 세션까지 보류.
+- `combat_time_track_engine.py`: 초/미터 단위 전투 개편 세션까지 보류.
+- `merchant_barter_engine.py`: EconomyEngine 흡수 통합(Backlog #21) 대기 유지.
+- `TRIAGE.md` 갱신 완료.
+
+#### 신규 통합 테스트 (12개 → 총 597개)
+- `tests/test_vein_restoration_wiring.py`: `compute_pass1()` 통과 수술/골드차감/회로 복구/프롬프트 컨텍스트 (5개)
+- `tests/test_time_economy_wiring.py`: 행동별 가변 소요 시간 검증 (7개)
+- `tests/test_two_pass_engine.py::test_non_movement_action_uses_calendar_engine_duration`: P1-6 반영 갱신
+
+#### Reachability Audit
+- 미도달 모듈: **13/64 → 3/64** (이번 세션 및 이전 세션 누적 해소)
+- `CHANGES_AUDIT.md` 자동 갱신 완료.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: 585 passed in full suite (0 failed, 231.25s).
-- **Static Analysis & Repository Hygiene**:
-  - `src/` 내 문법 오류, 미정의 변수(`pyflakes`), 미사용 임포트 없음.
+- **전체 단위 테스트**: 597 passed (0 failed) — 신규 12개 추가.
+- **회귀 기준선 대비**: 585 → 597 (+12, 기존 회귀 0건).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P0 긴급 버그 착수]**:
-   - `src/agents/player_bot.py:137` `Item` 임포트 누락 수정 및 회귀 테스트.
+1. **[P0 긴급 버그]**:
+   - `src/agents/player_bot.py:137` `Item` 임포트 누락 수정.
    - `src/llm/claude.py` 퇴역 모델 교체 및 API 에러 가드 보강.
    - `app.py` `take_action()` 내 `state is None` 가드 추가.
-2. **[P2 로직 결함 즉시 수정]**:
+2. **[P2 로직 결함]**:
    - `src/world/economy_engine.py:423` 독 치료 반환값 분기.
    - `src/world/attack_physics_engine.py:59` 활 오버드로우 `ratio` 연결.
-3. **[P2 CI 구축]**:
+3. **[P1-1 6계층 인프라 결합]**:
+   - `generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world` 호출.
+4. **[P2 CI 구축]**:
    - `.github/workflows/ci.yml` 작성.

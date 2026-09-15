@@ -469,10 +469,15 @@ def test_long_distance_travel_scales_survival_ticks():
     assert status.freshness <= 50.0
 
 
-def test_non_movement_action_keeps_default_30min_ticks():
+def test_non_movement_action_uses_calendar_engine_duration():
+    """P1-6: 비이동 행동은 TimeCalendarEngine.determine_action_duration()에 따른 가변 시간을 사용한다.
+    '주변을 조심스럽게 둘러본다' = 키워드 미매칭 → default_action 10분.
+    (기존 하드코딩 30분 고정 동작을 TimeCalendarEngine으로 대체한 것을 검증)
+    """
     state = create_test_state()
     fact_sheet = TwoPassEngine.compute_pass1("주변을 조심스럽게 둘러본다", state)
-    assert fact_sheet.turn_duration_minutes == 30
+    # default_action: 10분 (DAILY_ACTION_DURATIONS 키워드 미매칭 시 fallback)
+    assert fact_sheet.turn_duration_minutes == 10
     assert fact_sheet.pre_computed_state_delta["time_minutes"] == 10
 
 

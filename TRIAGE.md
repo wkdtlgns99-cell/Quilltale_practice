@@ -52,20 +52,29 @@ These modules are directly relevant to current priorities (NPC cognition/psychol
    - Orphan file (unregistered in `__init__.py`). Slated for complete absorption into `EconomyEngine` under Backlog #21 (`UnifiedCommerceEngine`). Deletion / absorption candidate.
 
 ---
-
 ### Category C: `KEEP_WIRE_LATER` (Needed eventually, defer to subsequent cycles)
 These modules have 100% passing unit tests and clean architectures, but are deferred to preserve the atomic scope of this remediation cycle:
 1. **`alcohol_engine.py`**: Defer until Tavern / Campsite recreation loop expansion.
 2. **`botany_engine.py`**: Defer until wilderness foraging turn actions are wired.
 3. **`campsite_engine.py`**: Defer until long rest / campsite security loop is wired.
-4. **`combat_time_track_engine.py`**: Defer until micro-second reaction interrupt turn track is fully phased in.
+4. **`combat_time_track_engine.py`**: **[공식 보류 SHELVED]** — 미터 단위 거리/초 단위 인터럽트 엔진. 현재 고정 턴제 전투 전면 개편 세션으로 보류 (CombatDistanceManager, ActionTimeTrackEngine).
 5. **`harvest_engine.py`**: Defer until post-combat monster butchery / part severing loop is wired.
 6. **`mana_burn_engine.py`**: Defer until spell overcharge / ether backlash is wired into magic casting.
 7. **`outfit_engine.py`**: Defer until backpack tearing / modular armor layer refit loop is wired.
-8. **`siege_engine.py`**: Defer until settlement warfare / siege event trigger is wired.
+8. **`siege_engine.py`**: **[공식 보류 SHELVED]** — 1,065줄 요새 공성전/군단 전술 엔진. 독립 공성 시나리오 설계 세션까지 분리 보류.
 9. **`stealth_engine.py`**: Defer until dedicated infiltration / eavesdropping turn action is wired.
-10. **`time_calendar_engine.py`**: Defer until calendar epoch / daily action duration loop is integrated with `WorldState.turn`.
-11. **`vein_restoration_engine.py`**: Defer until medical surgery / clinic interaction loop is wired.
+
+### Wired in This Session (previously Category C → now WIRED_ACTIVE):
+- ✅ **`vein_restoration_engine.py`** → `two_pass_engine.py:2.75 Sub-path B`: `ManaVeinRestorationEngine.perform_surgery()` 연결 완료. 통합 테스트: `tests/test_vein_restoration_wiring.py`.
+- ✅ **`time_calendar_engine.py`** → `two_pass_engine.py:compute_pass1()`: `TimeCalendarEngine.determine_action_duration()` 기반 가변 소요 시간 연결 완료. 통합 테스트: `tests/test_time_economy_wiring.py`.
+
+---
+
+### Category B: `DUPLICATE_DELETE` (Deletion Candidates)
+1. **`save_load_manager.py`**:
+   - Covered completely by `persistence.py`. Redundant JSON file-based persistence engine.
+2. **`merchant_barter_engine.py`**:
+   - **[공식 보류 SHELVED - 통합 대기]** Orphan file (unregistered in `__init__.py`). Slated for complete absorption into `EconomyEngine` under Backlog #21 (`UnifiedCommerceEngine`). Deletion / absorption candidate.
 
 ---
 

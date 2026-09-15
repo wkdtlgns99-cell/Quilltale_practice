@@ -78,11 +78,8 @@ MAX_FATIGUE = 100
 FATIGUE_TIRED_THRESHOLD = 50
 FATIGUE_EXHAUSTED_THRESHOLD = 80
 
-# Time Economy
-TIME_TALK_MINUTES = 2
-TIME_SEARCH_MINUTES = 20
-TIME_COMBAT_BASE_MINUTES = 30
-TIME_TRAVEL_MINUTES = 120
+# Audio Feature Flag (deferred to final phase per Scope_Gate — BGM/SFX UI not yet wired)
+ENABLE_AUDIO: bool = False
 
 # 8-Personality Archetype Mental Breakdown & Decision Weights
 PERSONALITY_BREAKDOWN_WEIGHTS = {

@@ -111,8 +111,19 @@ class ManaVeinRestorationEngine:
 
     @classmethod
     def get_circuit_state(cls, character: Any) -> Dict[str, Any]:
-        """Retrieves or creates mana_burn_state dictionary on character."""
-        if not hasattr(character, "mana_burn_state") or not isinstance(character.mana_burn_state, dict):
+        """Retrieves or creates mana_burn_state dictionary on character.
+        Handles both raw dict and ManaCircuitState object (from ManaBurnEngine) transparently.
+        """
+        state_attr = getattr(character, "mana_burn_state", None)
+        # If stored as a ManaCircuitState dataclass object, convert to dict
+        if state_attr is not None and not isinstance(state_attr, dict):
+            if hasattr(state_attr, "to_dict"):
+                state_attr = state_attr.to_dict()
+                character.mana_burn_state = state_attr
+            else:
+                # Fallback: treat as having no valid circuit data
+                state_attr = None
+        if not isinstance(state_attr, dict):
             character.mana_burn_state = {
                 "vein_integrity_pct": 100.0,
                 "scarred_veins": 0,

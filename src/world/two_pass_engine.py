@@ -31,6 +31,8 @@ from src.world.attack_physics_engine import AttackPhysicsEngine
 from src.world.campsite_engine import CampsiteRestEngine
 from src.world.alcohol_engine import AlcoholIntoxicationEngine, ALCOHOL_DRINK_REGISTRY
 from src.world.botany_engine import HerbalismBotanyEngine, PLANT_REGISTRY
+from src.world.vein_restoration_engine import ManaVeinRestorationEngine, VEIN_SURGERY_REGISTRY
+from src.world.time_calendar_engine import TimeCalendarEngine
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +87,7 @@ class DeterministicFactSheet:
     campsite_summary: Optional[str] = None
     alcohol_summary: Optional[str] = None
     botany_summary: Optional[str] = None
+    vein_restoration_summary: Optional[str] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -223,6 +226,11 @@ class DeterministicFactSheet:
             lines.append("🌿 [야생 식물학 채집/감별/섭취 판정 (Herbalism & Botany)]")
             lines.append(f"- {self.botany_summary}")
             lines.append("*GM 서사 지침*: 수풀을 헤치며 발견한 약초나 버섯의 생생한 외형과 냄새, 채집 시의 손맛, 감별을 통해 드러난 진실(진짜 명약 vs 위험한 맹독 유사종의 소름 돋는 위장), 또는 섭취 시의 신체 치유나 치명적 중독 반응을 감각적이고 사실적인 문학으로 서술하십시오.")
+
+        if self.vein_restoration_summary:
+            lines.append("🩺 [마나 혈맥 수술 및 회로 복구 (Mana Vein Restoration Surgery)]")
+            lines.append(f"- {self.vein_restoration_summary}")
+            lines.append("*GM 서사 지침*: 집도의의 섬세한 손끝에서 전해지는 긴장감, 은침의 냉기 혹은 비전 수술 도구의 빛 튐, 수술 성공 시 막혔던 마나 회로가 뚫리는 황홀한 해방감 또는 실패 시 에테르 역류로 인한 전신 경련과 신경 타는 고통을 처절하고 생생하게 서술하십시오.")
 
         lines.append("=================================================================")
         return "\n".join(lines)
@@ -1111,7 +1119,12 @@ class TwoPassEngine:
         # 0. Pre-evaluate Travel Duration for Time-Scaled Survival Ticks
         curr_loc = state.current_location()
         travel_info = cls.resolve_action_movement(action, state)
-        elapsed_minutes = travel_info["mins"] if travel_info else 30
+        if travel_info:
+            elapsed_minutes = travel_info["mins"]
+            default_fatigue_delta = 0  # travel path handles its own fatigue
+        else:
+            # P1-6: replace hardcoded flat-30 with keyword-matched variable action duration
+            _act_key, elapsed_minutes, default_fatigue_delta = TimeCalendarEngine.determine_action_duration(action)
         fact_sheet.turn_duration_minutes = elapsed_minutes
 
         # 0.1 Determine World Power Scale Preset (Deterministic Reader)
@@ -1471,8 +1484,12 @@ class TwoPassEngine:
                 )
 
         # Default passage of time for minor actions if not moving
+        # P1-6: uses TimeCalendarEngine.determine_action_duration() result instead of flat 10
         if "time_minutes" not in state_delta:
-            state_delta["time_minutes"] = 10
+            state_delta["time_minutes"] = elapsed_minutes
+        # Apply default_fatigue_delta from calendar engine (non-travel actions)
+        if "fatigue_delta" not in state_delta and default_fatigue_delta != 0:
+            state_delta["fatigue_delta"] = default_fatigue_delta
 
         # 2.5 Equipment Equip / Unequip Intent Execution
         equip_intent = fact_sheet.extra_flags.get("equip_intent")
@@ -1552,6 +1569,7 @@ class TwoPassEngine:
                         state_delta["remove_player_injury"] = inj_name
 
         # 2.75 Mana Circuit Repair Intent Execution
+        # Sub-path A: quick item-based repair (mana stabilizer, silver needle, holy water)
         if any(k in action for k in ["마나 안정제", "마나안정제", "은침", "침술", "성수 정화", "성수", "회로 치료", "회로 수리"]):
             remedy = None
             if any(k in action for k in ["마나 안정제", "마나안정제", "안정제"]):
@@ -1568,6 +1586,63 @@ class TwoPassEngine:
                     if "player" not in state_delta:
                         state_delta["player"] = {}
                     state_delta["player"]["mana_burn_state"] = p_circuit.to_dict()
+
+        # Sub-path B: full surgical restoration (arcane surgery / herbal tonic / divine miracle)
+        # Requires MANA-CIRCUIT-SPECIFIC keywords — must NOT fire on generic physical surgery.
+        # Guard: only triggers when player's mana circuit has actual damage (vein_integrity_pct < 100).
+        MANA_SURGERY_KEYWORDS = [
+            "탕약", "투석", "기적 봉합", "회로 재건", "혈맥 수술",
+            "비전 의사", "에테르 투석", "성맥 재건", "회로 복구 수술",
+            "마나 회로 수술", "마나 혈맥 수술",
+        ]
+        if any(k in action for k in MANA_SURGERY_KEYWORDS):
+            # Pre-guard: only trigger if circuit is actually damaged
+            _circuit_check = getattr(state.player, "mana_burn_state", None)
+            _has_damage = False
+            if _circuit_check is not None:
+                if isinstance(_circuit_check, dict):
+                    _has_damage = _circuit_check.get("vein_integrity_pct", 100.0) < 100.0
+                elif hasattr(_circuit_check, "vein_integrity_pct"):
+                    _has_damage = _circuit_check.vein_integrity_pct < 100.0
+
+            if _has_damage:
+                # 1. Pick surgeon: first doctor/healer NPC in current location, else player self-treatment
+                surgeon = state.player
+                curr_loc_id = state.player.location
+                for npc_id, npc in state.npcs.items():
+                    if npc.location == curr_loc_id:
+                        npc_traits = set(getattr(npc, "traits", []))
+                        if npc_traits.intersection({"doctor", "healer", "arcane_surgeon", "priest", "cleric", "의사", "사제", "집도의"}):
+                            surgeon = npc
+                            break
+
+                # 2. Determine surgery_id from keywords
+                surgery_id = "silver_needle_acupuncture"  # default
+                if any(k in action for k in ["탕약", "영지", "농축"]):
+                    surgery_id = "herbal_vein_decoction"
+                elif any(k in action for k in ["투석", "비전 의사", "에테르 투석"]):
+                    surgery_id = "arcane_dialysis_surgery"
+                elif any(k in action for k in ["성맥", "기적 봉합", "성령", "성직자", "사제"]):
+                    surgery_id = "divine_artery_miracle"
+
+                # Only run if surgery type exists in registry
+                if surgery_id in VEIN_SURGERY_REGISTRY:
+                    surg_ok, surg_msg, surg_data = ManaVeinRestorationEngine.perform_surgery(
+                        state, state.player, surgeon, surgery_id
+                    )
+                    fact_sheet.quest_progress_logs.append(surg_msg)
+                    fact_sheet.vein_restoration_summary = surg_msg
+
+                    if "player" not in state_delta:
+                        state_delta["player"] = {}
+                    # Sync gold change (perform_surgery already mutated patient.gold)
+                    state_delta["player"]["gold"] = state.player.gold
+                    state_delta["player"]["health"] = state.player.health
+                    # Persist circuit state
+                    p_circuit = ManaVeinRestorationEngine.get_circuit_state(state.player)
+                    state_delta["player"]["mana_burn_state"] = (
+                        p_circuit.to_dict() if hasattr(p_circuit, "to_dict") else p_circuit
+                    )
 
         # 3. Environmental Puzzles & Mechanisms
         puzzle_res = PuzzleEngine.evaluate_puzzle_action(state, action)
