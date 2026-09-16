@@ -3,12 +3,10 @@ Session Persistence Manager for Quilltale TRPG Engine.
 Saves and restores WorldState snapshots to prevent data loss on browser refresh.
 Now uses SQLite3 Document Store pattern instead of raw JSON files.
 """
-import os
 import json
 import sqlite3
 import logging
-from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional
 from src.core.config import SAVES_DIR
 from .state import WorldState
 
@@ -32,6 +30,17 @@ class PersistenceManager:
                     is_manual BOOLEAN,
                     state_data TEXT,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS turn_history_archive (
+                    world_id TEXT,
+                    turn INTEGER,
+                    action TEXT,
+                    narration TEXT,
+                    turn_data TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (world_id, turn)
                 )
             """)
             conn.commit()
@@ -164,4 +173,68 @@ class PersistenceManager:
         except Exception as e:
             logger.error(f"Failed to delete save {world_id}: {e}")
             return False
+
+    @classmethod
+    def archive_turns(cls, world_id: str, turns: list[dict]) -> int:
+        """Archive turn history entries to SQLite turn_history_archive table."""
+        if not turns:
+            return 0
+        cls._init_db()
+        archived_count = 0
+        try:
+            with sqlite3.connect(cls.DB_PATH) as conn:
+                cursor = conn.cursor()
+                for t in turns:
+                    turn_num = t.get("turn", 0)
+                    action = t.get("action", "")
+                    narration = t.get("narration", "")
+                    data_json = json.dumps(t, ensure_ascii=False)
+                    cursor.execute("""
+                        INSERT INTO turn_history_archive (world_id, turn, action, narration, turn_data, created_at)
+                        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                        ON CONFLICT(world_id, turn) DO UPDATE SET
+                            action=excluded.action,
+                            narration=excluded.narration,
+                            turn_data=excluded.turn_data,
+                            created_at=CURRENT_TIMESTAMP
+                    """, (world_id, turn_num, action, narration, data_json))
+                    archived_count += 1
+                conn.commit()
+        except Exception as e:
+            logger.error(f"Failed to archive turns for '{world_id}': {e}")
+        return archived_count
+
+    @classmethod
+    def get_archived_turns(cls, world_id: str) -> list[dict]:
+        """Fetch all archived turns for a world sorted by turn ascending."""
+        cls._init_db()
+        results = []
+        try:
+            with sqlite3.connect(cls.DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT turn_data FROM turn_history_archive WHERE world_id = ? ORDER BY turn ASC",
+                    (world_id,)
+                )
+                for row in cursor.fetchall():
+                    try:
+                        results.append(json.loads(row[0]))
+                    except Exception:
+                        pass
+        except Exception as e:
+            logger.error(f"Failed to fetch archived turns for '{world_id}': {e}")
+        return results
+
+    @classmethod
+    def get_full_history(cls, world_id: str, active_history: list[dict] | None = None) -> list[dict]:
+        """Combine archived history and active history, deduplicated and sorted by turn."""
+        archived = cls.get_archived_turns(world_id)
+        turn_map = {}
+        for item in archived:
+            turn_map[item.get("turn")] = item
+        if active_history:
+            for item in active_history:
+                turn_map[item.get("turn")] = item
+        return sorted(turn_map.values(), key=lambda x: x.get("turn", 0))
+
 

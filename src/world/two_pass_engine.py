@@ -2352,8 +2352,8 @@ class TwoPassEngine:
                 log_entry = f"[Turn {state.turn}] {pred_action.concrete_plan} (위험도: {pred_action.execution_risk})"
                 off_npc.off_screen_logs.append(log_entry)
                 # Cap logs to prevent unbounded growth (Rule 6)
-                if len(off_npc.off_screen_logs) > 30:
-                    off_npc.off_screen_logs = off_npc.off_screen_logs[-30:]
+                if len(off_npc.off_screen_logs) > 10:
+                    off_npc.off_screen_logs = off_npc.off_screen_logs[-10:]
 
         # 9. Ecological Feedback
         loc_name = curr_loc.name if curr_loc else "미지의 지대"

@@ -5,7 +5,7 @@ Autonomous NPC turns, Fog of War, and Legacy character archiving.
 """
 import json
 import logging
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List
 
 from src.llm.base import BaseLLM
 from src.world.state import WorldState
@@ -51,7 +51,7 @@ class GameMasterAgent:
                 f"*(다음 모험가로 시작할 때, 이 세계 어딘가에서 은퇴한 {state.player.name}을(를) NPC로 다시 조우할 수 있습니다.)*"
             )
 
-            state.history.append({
+            state.append_history({
                 "turn": state.turn,
                 "action": action,
                 "narration": farewell_narration,
@@ -85,7 +85,7 @@ class GameMasterAgent:
             state.last_dice_result = None
             state.last_npc_action = None
             narration = fact_sheet.rejection_reason or "그 행동은 현재 상황에서 불가능합니다."
-            state.history.append({
+            state.append_history({
                 "turn": state.turn,
                 "action": action,
                 "narration": narration,
@@ -299,7 +299,7 @@ class GameMasterAgent:
         )
 
         # Log history
-        state.history.append({
+        state.append_history({
             "turn": state.turn,
             "action": action,
             "narration": narration,
@@ -488,7 +488,7 @@ class GameMasterAgent:
         try:
             dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
             try:
-                action_text = action if "action" in locals() else ""
+                action_text = locals().get("action", "")
                 magic_keywords = ["마법", "영창", "주문", "캐스팅", "마나", "원소", "형태", "기동"]
                 if any(k in action_text for k in magic_keywords):
                     from src.agents.prompts import MAGIC_SYSTEM_PROMPT

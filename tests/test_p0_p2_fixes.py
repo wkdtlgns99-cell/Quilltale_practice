@@ -253,5 +253,132 @@ def test_invalid_action_zero_mutation_guaranteed():
     assert fact_sheet.pre_computed_state_delta == {}
 
 
+def test_world_facts_summary_sliced():
+    """P0-0-3: world_facts가 대량 누적되어도 to_context_summary()에는 최근 10개만 전달되어 토큰 폭발 방지 검증."""
+    state = WorldState()
+    state.locations["loc1"] = Location(id="loc1", name="중앙 광장", description="광장", exits={}, items=[], npcs=[])
+    state.player.location = "loc1"
+    state.world_facts = [f"소문 {i}" for i in range(25)]
+
+    summary = state.to_context_summary()
+    assert "소문 24" in summary
+    assert "소문 15" in summary
+    # 0~14번 소문은 프롬프트 요약에서 제외되어야 함
+    assert "소문 0" not in summary
+    assert "소문 14" not in summary
 
 
+def test_physical_traces_decay_and_cap():
+    """P0-0-3: physical_traces가 15턴 초과 시 자동 소멸(감쇄)되고 최대 10개로 캡되는지 검증."""
+    state = WorldState()
+    loc = Location(id="loc1", name="골목길", description="어두운 골목", exits={}, items=[], npcs=[])
+    state.locations["loc1"] = loc
+    state.player.location = "loc1"
+    state.turn = 20
+
+    # 오래된 흔적 (턴 1: 19턴 전 -> 15턴 초과로 소멸 대상)
+    # 최신 흔적 (턴 10, 15, 20: 15턴 이내 -> 유지)
+    loc.physical_traces = [
+        {"trace": "오래된 발자국", "turn": 1, "npc_name": "괴한"},
+        {"trace": "최근 핏자국 1", "turn": 10, "npc_name": "괴한"},
+        {"trace": "최근 핏자국 2", "turn": 15, "npc_name": "괴한"},
+        {"trace": "방금 떨어진 동전", "turn": 20, "npc_name": "괴한"},
+    ]
+
+    # advance_world_simulation 호출 시 감쇄 로직 작동
+    state.advance_world_simulation()
+
+    trace_names = [t["trace"] for t in loc.physical_traces]
+    assert "오래된 발자국" not in trace_names
+    assert "최근 핏자국 1" in trace_names
+    assert "최근 핏자국 2" in trace_names
+    assert "방금 떨어진 동전" in trace_names
+
+    # 12개 흔적 추가 시 10개 캡 확인
+    loc.physical_traces = [{"trace": f"흔적 {i}", "turn": state.turn, "npc_name": "누군가"} for i in range(12)]
+    state.advance_world_simulation()
+    assert len(loc.physical_traces) == 10
+    assert loc.physical_traces[0]["trace"] == "흔적 2"
+
+
+def test_history_50_turn_cap_and_sqlite_archive(tmp_path, monkeypatch):
+    """P0-0-3: state.append_history로 50턴 초과 시 초과분이 SQLite 아카이브로 이관되고 full history 복원 가능한지 검증."""
+    from src.world.persistence import PersistenceManager
+    db_file = tmp_path / "test_quilltale.db"
+    monkeypatch.setattr(PersistenceManager, "DB_PATH", db_file)
+
+    state = WorldState()
+    state.world_id = "test_world_archive_01"
+
+    # 60개 턴 기록 순차 추가
+    for t in range(1, 61):
+        state.append_history({
+            "turn": t,
+            "action": f"행동 {t}",
+            "narration": f"서사 {t}",
+        })
+
+    # 메모리 state.history는 정확히 최근 50개 유지 (턴 11 ~ 60)
+    assert len(state.history) == 50
+    assert state.history[0]["turn"] == 11
+    assert state.history[-1]["turn"] == 60
+
+    # 초과분 10개(턴 1~10)는 SQLite 아카이브에 안전하게 보존
+    archived = PersistenceManager.get_archived_turns("test_world_archive_01")
+    assert len(archived) == 10
+    assert archived[0]["turn"] == 1
+    assert archived[-1]["turn"] == 10
+
+    # get_full_history 호출 시 1~60턴 전체가 누락 없이 순서대로 복원
+    full_history = PersistenceManager.get_full_history("test_world_archive_01", state.history)
+    assert len(full_history) == 60
+    assert full_history[0]["turn"] == 1
+    assert full_history[59]["turn"] == 60
+
+
+def test_save_migration_list_trimming_and_archive(tmp_path, monkeypatch):
+    """P0-0-3: SaveMigrationEngine이 구버전 세이브의 초과 리스트를 트리밍하고 초과 턴을 SQLite로 이관하는지 검증."""
+    from src.persistence.migration import SaveMigrationEngine
+    from src.world.persistence import PersistenceManager
+    db_file = tmp_path / "migration_test.db"
+    monkeypatch.setattr(PersistenceManager, "DB_PATH", db_file)
+
+    raw_save = {
+        "save_version": 2,
+        "world_id": "migrated_world_01",
+        "world_facts": [f"팩트 {i}" for i in range(40)],
+        "npcs": {
+            "npc1": {
+                "name": "상인",
+                "off_screen_logs": [f"로그 {i}" for i in range(15)],
+            }
+        },
+        "locations": {
+            "loc1": {
+                "name": "광장",
+                "physical_traces": [{"trace": f"흔적 {i}", "turn": i} for i in range(18)],
+            }
+        },
+        "history": [{"turn": i, "action": f"행동 {i}", "narration": f"서사 {i}"} for i in range(1, 61)],
+    }
+
+    migrated = SaveMigrationEngine.migrate(raw_save)
+
+    assert migrated["save_version"] == 3
+    # world_facts 30개 캡
+    assert len(migrated["world_facts"]) == 30
+    assert migrated["world_facts"][-1] == "팩트 39"
+
+    # off_screen_logs 10개 캡
+    assert len(migrated["npcs"]["npc1"]["off_screen_logs"]) == 10
+    assert migrated["npcs"]["npc1"]["off_screen_logs"][-1] == "로그 14"
+
+    # physical_traces 10개 캡
+    assert len(migrated["locations"]["loc1"]["physical_traces"]) == 10
+
+    # history 50개 캡 및 초과분 10개 SQLite 아카이브 확인
+    assert len(migrated["history"]) == 50
+    assert migrated["history"][0]["turn"] == 11
+    archived = PersistenceManager.get_archived_turns("migrated_world_01")
+    assert len(archived) == 10
+    assert archived[0]["turn"] == 1

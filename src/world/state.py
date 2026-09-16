@@ -2482,6 +2482,16 @@ class WorldState:
                     if npc.location != self.player.location:
                         log_entry = f"턴 {self.turn} [{self.locations.get(npc.location, Location(id='', name='', description='', exits={})).name}]: {activity}"
                         npc.off_screen_logs.append(log_entry)
+                        if len(npc.off_screen_logs) > 10:
+                            npc.off_screen_logs = npc.off_screen_logs[-10:]
+
+        # Decay & cap physical traces across all locations (max 10, decay after 15 turns)
+        for loc in self.locations.values():
+            if loc.physical_traces:
+                loc.physical_traces = [
+                    t for t in loc.physical_traces
+                    if isinstance(t, dict) and (self.turn - t.get("turn", self.turn)) <= 15
+                ][-10:]
 
         return events
 
@@ -2585,7 +2595,7 @@ class WorldState:
         rumor_block = ""
         if self.world_facts:
             rumor_block = "\nGLOBAL WORLD FACTS / RUMORS:\n" + "\n".join(
-                f"- {fact}" for fact in self.world_facts
+                f"- {fact}" for fact in self.world_facts[-10:]
             )
 
         cosmo_block = ""
@@ -3715,12 +3725,17 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             trace_info = update["add_location_trace"]
             target_lid = trace_info.get("location_id", self.player.location)
             if target_lid in self.locations:
-                self.locations[target_lid].physical_traces.append({
+                loc_obj = self.locations[target_lid]
+                loc_obj.physical_traces.append({
                     "trace": trace_info.get("trace", ""),
                     "turn": self.turn,
                     "npc_name": trace_info.get("npc_name", "미상")
                 })
-                changes.append(f"Physical trace left at {self.locations[target_lid].name}")
+                loc_obj.physical_traces = [
+                    t for t in loc_obj.physical_traces
+                    if isinstance(t, dict) and (self.turn - t.get("turn", self.turn)) <= 15
+                ][-10:]
+                changes.append(f"Physical trace left at {loc_obj.name}")
 
 
 
@@ -4215,6 +4230,19 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
 
 
 
+    def append_history(self, entry: dict) -> None:
+        """Append a turn entry to history, auto-archiving turns beyond the 50-turn cap to SQLite."""
+        self.history.append(entry)
+        if len(self.history) > 50:
+            excess = self.history[:-50]
+            self.history = self.history[-50:]
+            try:
+                from src.world.persistence import PersistenceManager
+                wid = self.world_id or self.session_id or "default_world"
+                PersistenceManager.archive_turns(wid, excess)
+            except Exception as e:
+                logger.warning(f"Failed to auto-archive history excess: {e}")
+
     def to_dict(self) -> dict:
         return json.loads(self.to_json())
 
@@ -4228,6 +4256,8 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
 
     @classmethod
     def from_dict(cls, raw: dict) -> "WorldState":
+        from src.persistence.migration import SaveMigrationEngine
+        raw = SaveMigrationEngine.migrate(raw)
         state = cls()
         state.session_id = raw.get("session_id", "default_session")
         state.world_id = raw.get("world_id", "")
