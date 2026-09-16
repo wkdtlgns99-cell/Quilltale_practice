@@ -165,13 +165,22 @@ class NPCSkillEngine:
         if is_ranged:
             from src.world.attack_physics_engine import AttackPhysicsEngine
             d_weight = getattr(eq_wep, "draw_weight_lbs", 70.0) if eq_wep and getattr(eq_wep, "draw_weight_lbs", 0) > 0 else 70.0
-            can_draw, draw_ratio, draw_msg = AttackPhysicsEngine.can_draw_bow(npc.strength, draw_weight_lbs=d_weight)
+            allow_overdraw = getattr(chosen_skill, "allow_overdraw", False) if chosen_skill else False
+            if chosen_skill and any(k in chosen_skill.name for k in ["강궁", "저격", "만작", "과인장", "오버드로우", "저격수"]):
+                allow_overdraw = True
+            can_draw, draw_ratio, draw_msg = AttackPhysicsEngine.can_draw_bow(
+                npc.strength, draw_weight_lbs=d_weight, allow_overdraw=allow_overdraw
+            )
             flight_s = AttackPhysicsEngine.calculate_flight_time(distance_m=15.0, projectile_speed_mps=60.0)
+            phys_tags = ["projectile"]
+            if allow_overdraw:
+                phys_tags.append("overdraw")
             phys_res = AttackPhysicsEngine.evaluate_attack_physics(
                 attacker=npc,
                 defender=state.player,
                 weapon=eq_wep,
-                attack_tags=["projectile"]
+                attack_tags=phys_tags,
+                allow_overdraw=allow_overdraw,
             )
             calculated_dmg = max(1, int(phys_res.total_damage * draw_ratio))
             physics_summary_extra = f" (물리 역학: {draw_msg}, 탄속 {flight_s:.2f}초, 관통 {phys_res.armor_penetration_pct:.0%})"

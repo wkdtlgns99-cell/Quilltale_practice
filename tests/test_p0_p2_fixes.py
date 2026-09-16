@@ -382,3 +382,89 @@ def test_save_migration_list_trimming_and_archive(tmp_path, monkeypatch):
     archived = PersistenceManager.get_archived_turns("migrated_world_01")
     assert len(archived) == 10
     assert archived[0]["turn"] == 1
+
+
+def test_player_bot_no_dead_item_import():
+    """P0-0-8: player_bot.py 모듈에 미사용 죽은 Item import가 존재하지 않는지 검증."""
+    import inspect
+    import src.agents.player_bot as pb_mod
+    # Item이 전역 네임스페이스에 노출되지 않아야 함
+    assert "Item" not in pb_mod.__dict__
+    # PlayerBotAgent 인스턴스 정상 생성
+    bot = pb_mod.PlayerBotAgent(persona_key="cautious_scholar")
+    assert bot is not None
+
+
+def test_npc_skill_engine_overdraw_wiring(monkeypatch):
+    """P0-0-8: npc_skill_engine이 원거리 스킬/무기 사용 시 allow_overdraw 진입점과 정상 연결되는지 검증."""
+    from src.world.npc_skill_engine import NPCSkillEngine
+    from src.world.state import WorldState, NPC, Item, EquipmentSlots, Skill
+    from src.world.dice import DiceEngine
+
+    # d20 굴림 15로 고정하여 명중 보장
+    monkeypatch.setattr(DiceEngine, "roll_d20", lambda: 15)
+
+    state = WorldState()
+    state.player.health = 100
+    state.player.max_health = 100
+
+    # 근력 18인 궁수 NPC (한계 장력 = 18 * 5 = 90 lbs)
+    npc = NPC(
+        id="archer_01",
+        name="정예 저격수",
+        description="노련한 활잡이",
+        location="loc1",
+        health=50,
+        max_health=50,
+        strength=18,
+        agility=16,
+        disposition="hostile"
+    )
+    npc.equipment = EquipmentSlots(weapon="composite_bow")
+    state.npcs["archer_01"] = npc
+
+    # 60 lbs 활 (근력 18의 90 lbs 대비 여유 있으므로 오버드로우 시 ratio = min(1.2, 90/60) = 1.2)
+    bow = Item(
+        id="composite_bow",
+        name="강화 합성궁",
+        description="강력한 활",
+        location="equipment",
+        damage=8,
+        draw_weight_lbs=60.0,
+        physics_tags=["projectile"]
+    )
+    state.items["composite_bow"] = bow
+
+    # 1. 강궁 스킬 사용 시 -> allow_overdraw=True 적용되어 1.2x 오버드로우 발동
+    strong_skill = Skill(
+        id="overdraw_shot",
+        name="강궁 저격 사격",
+        role_type="single_attack",
+        resource_type="none",
+        resource_cost=0,
+        cooldown_turns=2,
+    )
+    state.skills_db["overdraw_shot"] = strong_skill
+    npc.skills = ["overdraw_shot"]
+
+    res_overdraw = NPCSkillEngine.process_npc_combat_turn(npc, state, player_ac=10)
+    assert "오버드로우" in res_overdraw["summary_ko"]
+    assert "1.20x" in res_overdraw["summary_ko"] or "배율" in res_overdraw["summary_ko"]
+
+    # 2. 일반 사격 스킬 사용 시 -> 기본 만작(1.0x) 유지
+    normal_skill = Skill(
+        id="normal_shot",
+        name="일반 화살 사격",
+        role_type="single_attack",
+        resource_type="none",
+        resource_cost=0,
+        cooldown_turns=0,
+    )
+    state.skills_db["normal_shot"] = normal_skill
+    npc.skills = ["normal_shot"]
+
+    res_normal = NPCSkillEngine.process_npc_combat_turn(npc, state, player_ac=10)
+    assert "완전 만작" in res_normal["summary_ko"]
+    assert "오버드로우" not in res_normal["summary_ko"]
+
+

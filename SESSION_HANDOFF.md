@@ -42,9 +42,9 @@
 - [x] **🔧 [P0-0-7] LLM 쿼터 고갈 시 영문 예외 문자열 서사 유출 방어 (QT-F08)**:
   - **수정**: `game_master.py`의 `process_turn()` 예외 블록에서 `repair_and_parse(str(e))` 호출 완전 제거 및 한국어 서사 폴백 딕셔너리 직접 반환. `resilience.py`의 `JSONRepairEngine`에 `is_technical_error()` 정적 메서드를 구축하여 JSON 파싱 실패/폴백 시 영문 기술적 예외(429, exhausted, traceback 등)가 서사로 유출되는 것을 2중 원천 차단.
   - **검증 파일/테스트**: `src/agents/game_master.py`, `src/llm/resilience.py` | `tests/test_p0_p2_fixes.py::test_llm_quota_exhausted_fallback_korean`, `tests/test_p0_p2_fixes.py::test_game_master_process_turn_llm_exception_safe_korean_narration` (통과), `pytest tests/` 607 passed | commit `33cfd11`
-- [ ] **🔧 [P0-0-8] 잔여 결함 디테일 보강 (P0-1, P2-7)**:
-  - `player_bot.py:137`: 미사용 죽은 `Item` import 청소.
-  - `attack_physics_engine.py`: `can_draw_bow` 호출부(`npc_skill_engine.py` 등)에 `allow_overdraw=True` 전달 진입점 마련.
+- [x] **🔧 [P0-0-8] 잔여 결함 디테일 보강 (P0-1, P2-7)**:
+  - **수정**: `src/agents/player_bot.py`의 미사용 죽은 `Item` import 정리 및 typing 정리. `src/world/attack_physics_engine.py`의 `evaluate_attack_physics()` 및 `src/world/npc_skill_engine.py:168`에 `allow_overdraw=True` 전달 진입점 연결(강궁/저격/과인장 스킬 또는 명시적 플래그 시 최대 1.2x 오버드로우 및 서사 반영). 미사용 import 정리.
+  - **검증 파일/테스트**: `src/agents/player_bot.py`, `src/world/attack_physics_engine.py`, `src/world/npc_skill_engine.py` | `tests/test_p0_p2_fixes.py::test_player_bot_no_dead_item_import`, `tests/test_p0_p2_fixes.py::test_npc_skill_engine_overdraw_wiring` (통과), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 615 passed | commit 대기
 
 #### [P0 — CONFIRMED CRASH BUGS (최우선 긴급 수정 — 1차 완료)]
 - [x] **🔥 [P0-1] `src/agents/player_bot.py:137` `Item` import 누락으로 인한 NameError 크래시 해결**:

@@ -4,8 +4,7 @@ Calculates kinetic energy, charge momentum, bow tension draw mechanics,
 armor penetration, poise stagger, and action interrupts without hardcoding individual skills.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Tuple
-import math
+from typing import Any, Optional, List, Tuple
 
 from src.world.stat_engine import StatEngine
 
@@ -88,7 +87,8 @@ class AttackPhysicsEngine:
         weapon: Optional[Any] = None,
         attack_tags: Optional[List[str]] = None,
         distance_charge_m: float = 0.0,
-        target_current_action: str = ""
+        target_current_action: str = "",
+        allow_overdraw: bool = False,
     ) -> AttackPhysicsResult:
         """
         태그 기반 물리 공격 연산.
@@ -126,8 +126,9 @@ class AttackPhysicsEngine:
 
         # 1. Projectile (원거리/투사체)
         if "projectile" in tags:
+            is_overdraw = allow_overdraw or ("overdraw" in tags)
             draw_lbs = getattr(weapon, "draw_weight_lbs", 50.0) if weapon else 50.0
-            can_full, draw_ratio, draw_msg = cls.can_draw_bow(attacker_str, draw_lbs)
+            can_full, draw_ratio, draw_msg = cls.can_draw_bow(attacker_str, draw_lbs, allow_overdraw=is_overdraw)
             effective_lbs = draw_lbs * draw_ratio
             physics_bonus += (effective_lbs - 40.0) * 0.12
             armor_pen_pct += min(0.5, effective_lbs * 0.003)

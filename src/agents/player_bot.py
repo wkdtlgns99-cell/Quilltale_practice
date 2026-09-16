@@ -5,8 +5,8 @@ Emulates human player decision-making with distinct archetypes/personas:
 """
 import random
 import logging
-from typing import Optional, Dict, Any, List
-from src.world.state import WorldState, Item
+from typing import Optional
+from src.world.state import WorldState
 from src.llm.base import BaseLLM
 
 logger = logging.getLogger(__name__)
