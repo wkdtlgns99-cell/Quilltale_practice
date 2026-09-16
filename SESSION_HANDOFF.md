@@ -21,9 +21,9 @@
 ### [🏛️ 시스템 결함 수정 & 6계층 인프라 실전 결합 — 2026-09-15 분석 기반]
 
 #### [P0-0 — 2026-09-15 교차 검증 기반 0순위 긴급 과제 (Backlog 0순위)]
-- [ ] **🔥 [P0-0-1] `src/llm/claude.py` 퇴역 모델 교체 및 다중 모델 폴백 체인 구축**:
-  - **위험**: `claude-3-5-sonnet-latest`는 2026년 2월 19일 완전 퇴역(retired)되어 provider 전환 시 100% 호출 실패. 현재 단일 모델 재시도만 존재하여 Gemini 수준 다중 모델 폴백 부재.
-  - **처방**: 최신 활성 모델(`claude-3-7-sonnet-latest` 등)로 하드코딩 교체, `gemini.py`처럼 후보 모델 리스트(`candidate_models`) 순차 폴백 구조 구축.
+- [x] **🔥 [P0-0-1] `src/llm/claude.py` 퇴역 모델 교체 및 다중 모델 폴백 체인 구축**:
+  - **수정**: 퇴역된 `claude-3-5-sonnet-latest` 제거하고 최신 활성 모델 `claude-sonnet-4-6`을 기본값으로 지정. `ANTHROPIC_MODEL` 환경변수 우선 적용 및 `candidate_models` 순차 폴백 체인(`claude-sonnet-4-6` -> `claude-3-7-sonnet-20250219` -> `claude-3-5-sonnet-20241022` -> `claude-3-5-haiku-20241022`) 구축. 404/not_found/retired/overloaded/429 발생 시 즉시 다음 후보 모델로 자동 전환.
+  - **검증 파일/테스트**: `src/llm/claude.py` | `tests/test_p0_p2_fixes.py::test_claude_llm_without_api_key_no_crash`, `test_claude_llm_model_env_override`, `test_claude_llm_fallback_chain_on_error` (통과), `pytest tests/` 608 passed | commit `3af42b3`
 - [ ] **🔥 [P0-0-2] `src/world/two_pass_engine.py` 무효 행동 선행 변이 차단 (QT-F01)**:
   - **위험**: `compute_pass1()`에서 `ActionValidator.pre_validate_action()` 전에 상태이상 피해, 저체온증, 감염, 식량 부패, 수면 피로, 퀘스트 시간 차감, 쿨다운, 세계 시뮬레이션이 인플레이스로 먼저 반영된 후 기각 시 롤백 없이 DB에 영구 저장됨.
   - **처방**: 딥카피 오버헤드 없이 `ActionValidator.pre_validate_action()`을 `compute_pass1()` 최상단(모든 환경/상태 틱 이전)으로 순서 재배치하여 무효 행동 시 0-변이 보장.
