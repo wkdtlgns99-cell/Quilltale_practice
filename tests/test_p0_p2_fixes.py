@@ -41,13 +41,14 @@ def test_player_bot_low_hp_without_potion_safe():
 
 
 def test_claude_llm_without_api_key_no_crash(monkeypatch):
-    """P0-2: ANTHROPIC_API_KEY 환경변수가 없을 때 KeyError 없이 초기화되고 에러 응답 반환 검증."""
+    """P0-2, P0-0-1: ANTHROPIC_API_KEY 환경변수가 없을 때 KeyError 없이 초기화되고 에러 응답 반환 검증."""
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_MODEL", raising=False)
 
     claude = ClaudeLLM()
-    assert claude._model == "claude-3-5-sonnet-latest"
+    assert claude._model == "claude-sonnet-4-6"
     assert claude._client is None
+    assert "claude-sonnet-4-6" in claude.candidate_models
 
     resp = claude.generate("안녕")
     assert "[오류:" in resp.text
@@ -55,10 +56,43 @@ def test_claude_llm_without_api_key_no_crash(monkeypatch):
 
 
 def test_claude_llm_model_env_override(monkeypatch):
-    """P0-2: ANTHROPIC_MODEL 환경변수로 기본 모델 오버라이드 지원 검증."""
+    """P0-2, P0-0-1: ANTHROPIC_MODEL 환경변수로 기본 모델 오버라이드 지원 및 candidate_models 선두 배치 검증."""
     monkeypatch.setenv("ANTHROPIC_MODEL", "claude-3-7-sonnet-custom")
     claude = ClaudeLLM()
     assert claude._model == "claude-3-7-sonnet-custom"
+    assert claude.candidate_models[0] == "claude-3-7-sonnet-custom"
+    assert len(claude.candidate_models) >= 4
+
+
+def test_claude_llm_fallback_chain_on_error(monkeypatch):
+    """P0-0-1: 첫 번째 모델이 404/not_found 등으로 실패할 때 다음 후보 모델로 자동 폴백 검증."""
+    from unittest.mock import MagicMock
+
+    claude = ClaudeLLM(api_key="dummy-key")
+    assert claude._client is not None
+
+    call_history = []
+
+    def mock_create(**kwargs):
+        model = kwargs.get("model")
+        call_history.append(model)
+        if model == "claude-sonnet-4-6":
+            raise RuntimeError("404 model not_found: model is retired")
+        # 두 번째 모델(claude-3-7-sonnet-20250219)에서 성공
+        mock_msg = MagicMock()
+        mock_content = MagicMock()
+        mock_content.text = "폴백 성공"
+        mock_msg.content = [mock_content]
+        return mock_msg
+
+    claude._client.messages.create = mock_create
+
+    resp = claude.generate("테스트 프롬프트")
+    assert resp.text == "폴백 성공"
+    assert resp.model == "claude-3-7-sonnet-20250219"
+    assert call_history[0] == "claude-sonnet-4-6"
+    assert call_history[1] == "claude-3-7-sonnet-20250219"
+
 
 
 def test_app_take_action_none_state_guarded():
