@@ -30,9 +30,9 @@
 - [ ] **🚨 [P0-0-3] `src/world/state.py` 토큰 폭발 방지 world_facts 프롬프트 슬라이싱 & 원본 리스트 상한 (QT-F03)**:
   - **위험**: `state.world_facts`가 슬라이싱 없이 매 턴 전체가 LLM 프롬프트에 통째로 주입됨. `npc.off_screen_logs`, `location.physical_traces`, `state.history`의 상한 부재로 세이브 파일 비대화.
   - **처방**: `to_narrative_context()`에서 `world_facts[-10:]` 슬라이싱 적용. `off_screen_logs` 10개 캡, `physical_traces` 10개 캡/15턴 감쇄, `history` 활성 50턴 캡 및 별도 SQLite 아카이브 분리.
-- [ ] **🚨 [P0-0-4] 보조 LLM JSON 출력 파싱 시 raw `json.loads`의 `JSONRepairEngine` 통일 (QT-F04)**:
-  - **위험**: `game_master.py:643`(세계 뉴스), `chronicle.py:105`(연대기), `generator.py:850`(동적 지역)에서 마크다운 코드 블록(```json)이나 trailing comma 출력 시 JSONDecodeError로 조용한 기능 실패/유실.
-  - **처방**: `JSONRepairEngine.repair_json(raw)` 공통 헬퍼 메서드로 파싱 통일.
+- [x] **🚨 [P0-0-4] 보조 LLM JSON 출력 파싱 시 raw `json.loads`의 `JSONRepairEngine` 통일 (QT-F04)**:
+  - **수정**: `src/llm/resilience.py`에 `JSONRepairEngine.repair_json(raw_text)` 범용 정적 메서드 추가(마크다운 코드펜스, outer JSON 추출, trailing comma, unescaped 줄바꿈 복구). `game_master.py:643`(세계 뉴스), `chronicle.py:105`(연대기), `generator.py:850`(동적 지역)의 raw `json.loads`를 `repair_json`으로 전면 교체.
+  - **검증 파일/테스트**: `src/llm/resilience.py`, `src/agents/game_master.py`, `src/world/chronicle.py`, `src/world/generator.py` | `tests/test_p0_p2_fixes.py::test_json_repair_engine_auxiliary_repair` (통과), `pytest tests/` 605 passed | commit `7cc4b8d`
 - [x] **🔧 [P0-0-5] 8개 파일 UTF-8 BOM (`\ufeff`) 제거 및 정적 분석 정상화 (QT-F05)**:
   - **수정**: 8개 파일 BOM 제거. `reachability_audit.py`를 `utf-8-sig` 인코딩 + AST `ast.Call` 노드 기반 내부 호출 탐지 방식으로 전면 수정 (기존 `if f != w_resolved` 오판 버그 근본 수정).
   - **결과**: `two_pass_engine.py` never-called 6→0 (campsite/stealth/harvest/eavesdrop 4종 `called-from-live-path` 정상 분류). 전체 never-called 84→31. `event_perspective.py`/`scenario_manager.py` 0메서드→정상 집계.
