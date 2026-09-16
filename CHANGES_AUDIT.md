@@ -44,7 +44,7 @@
 | `party_engine.py` | ✅ Yes | 11 | 10 | 1 | 0 |
 | `party_sanity_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `perception_engine.py` | ✅ Yes | 6 | 4 | 1 | 1 |
-| `persistence.py` | ✅ Yes | 6 | 6 | 0 | 0 |
+| `persistence.py` | ✅ Yes | 9 | 8 | 1 | 0 |
 | `physics_matrix.py` | ✅ Yes | 3 | 2 | 1 | 0 |
 | `poise_engine.py` | ✅ Yes | 12 | 6 | 5 | 1 |
 | `psychology_engine.py` | ✅ Yes | 21 | 17 | 4 | 0 |
@@ -59,7 +59,7 @@
 | `sleep_engine.py` | ✅ Yes | 7 | 5 | 1 | 1 |
 | `stamina_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `stat_engine.py` | ✅ Yes | 14 | 11 | 3 | 0 |
-| `state.py` | ✅ Yes | 108 | 81 | 15 | 12 |
+| `state.py` | ✅ Yes | 109 | 82 | 15 | 12 |
 | `status_engine.py` | ✅ Yes | 11 | 11 | 0 | 0 |
 | `stealth_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `thermal_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
@@ -71,7 +71,7 @@
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
-| **TOTAL** | - | **583** | **453** | **99** | **31** |
+| **TOTAL** | - | **587** | **456** | **100** | **31** |
 
 ### Unreachable Modules (3/64)
 
@@ -190,6 +190,9 @@
 ### `perception_engine.py` (Reachable: True)
 - `evaluate_sensory_awareness`: **never-called**
 - `evaluate_combat_threat_perception`: **called-from-tests-only**
+
+### `persistence.py` (Reachable: True)
+- `get_full_history`: **called-from-tests-only**
 
 ### `physics_matrix.py` (Reachable: True)
 - `format_reactions_for_prompt`: **called-from-tests-only**

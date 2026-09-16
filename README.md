@@ -87,14 +87,14 @@ Quilltale의 세계관은 단순 텍스트가 아니라 **수천 개의 정밀 J
 Quilltale은 코드의 안정성을 위해 회귀 결함 0건 원칙을 엄격히 준수합니다.
 
 ```bash
-# 전체 단위 테스트 실행 (544개 테스트 100% 무결점 통과)
+# 전체 단위 테스트 실행 (615개 테스트 100% 무결점 통과)
 python -m pytest tests/
 
 # 20턴 자동화 시나리오 무효 전이율 검증
 python eval_runner.py --no-judge
 ```
 
-- **단위 테스트**: `544 passed` (0 failed)
+- **단위 테스트**: `615 passed` (0 failed, 100% 회귀 방어)
 - **무효 상태 전이율 (Invalid Transition Rate)**: `0.0%` 달성
 
 ---

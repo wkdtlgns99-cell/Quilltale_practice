@@ -23,60 +23,39 @@
   - Unwired Real-unit Physics:
     - `stat_engine.py`: Calculates human-peak anchored attributes, maximum draw weight (lbs), sprint speed (m/s), reaction time (s).
     - `attack_physics_engine.py`: Calculates bow draw weight tension ratio (`can_draw_bow`), arrow flight time (`calculate_flight_time`), kinetic penetration, and tag-based physics damage.
-- **Verdict**: **`KEEP_WIRE_NOW` (Narrow Ranged/Bow Integration Only)**
-  - Do NOT attempt a full wholesale replacement of live combat math (risks breaking balance and tests).
-  - Instead, narrowly wire `can_draw_bow`, `calculate_flight_time`, and `evaluate_attack_physics` into ranged bow attacks inside `npc_skill_engine.py` / `two_pass_engine.py` as physics-based damage modifiers and draw strength checks.
 
----
+### 2. Current Classification & True Reachability Status (2026-09-16 Verified)
 
-## 2. Classification of All 16 Unreachable Modules + Tests-Only Priority Modules
-
-### Category A: `KEEP_WIRE_NOW` (Priority for this cycle: Phase C & D)
-These modules are directly relevant to current priorities (NPC cognition/psychology engine, physics engine):
-1. **`cognitive_engine.py`** (Reachable, but 4/8 public methods tests-only):
-   - Methods: `evaluate_player_hypothesis`, `predict_autonomous_next_intent`, `check_micro_leakage`, `generate_external_llm_prompt`.
-   - Action: Wire in Phase C1, C2, C3.
-2. **`attack_physics_engine.py`** (Unreachable):
-   - Action: Wire bow draw weight / flight time into ranged combat in Phase D1.
-3. **`stat_engine.py`** (Unreachable):
-   - Action: Wire `calculate_max_draw_weight` for bow tension check in Phase D1.
-4. **`object_physics_engine.py`** (Unreachable):
-   - Action: Wire `UniversalObjectPhysicsEngine` (`damage_object`, `ignite_object`) into object destroy/burn turn actions in Phase D2.
+### Category A: `WIRED_ACTIVE` (Live Path Verified)
+These modules are confirmed fully reachable and active in the live turn execution path:
+1. **`cognitive_engine.py`**: Reachable (`TwoPassEngine` autonomous off-screen NPC next intent prediction).
+2. **`attack_physics_engine.py`**: Reachable (`npc_skill_engine.py` & `two_pass_engine.py` ranged bow draw weight, flight time, overdraw ratio).
+3. **`stat_engine.py`**: Reachable (anchored human-peak attributes, movement speed, draw weight).
+4. **`object_physics_engine.py`**: Reachable (`UniversalObjectPhysicsEngine` object damage and burning).
+5. **`campsite_engine.py`**: Reachable (`TwoPassEngine` campsite safety, rest, sleep recovery).
+6. **`stealth_engine.py`**: Reachable (`TwoPassEngine` stealth infiltration and acoustic eavesdropping).
+7. **`harvest_engine.py`**: Reachable (`TwoPassEngine` anatomy harvest and butchery loop).
+8. **`mana_burn_engine.py`**: Reachable (`TwoPassEngine` ether backlash and mana burn).
+9. **`alcohol_engine.py`**: Reachable (`TwoPassEngine` tavern drinking and drunkenness).
+10. **`botany_engine.py`**: Reachable (`TwoPassEngine` flora foraging).
+11. **`vein_restoration_engine.py`**: Reachable (`TwoPassEngine:2.75 Sub-path B` surgery loop).
+12. **`time_calendar_engine.py`**: Reachable (`TwoPassEngine:compute_pass1` variable turn duration).
 
 ---
 
 ### Category B: `DUPLICATE_DELETE` (Deletion Candidates)
 1. **`save_load_manager.py`**:
-   - Covered completely by `persistence.py`. Redundant JSON file-based persistence engine.
+   - Fully superseded by `persistence.py`. Redundant JSON file-based persistence engine.
 2. **`merchant_barter_engine.py`**:
    - Orphan file (unregistered in `__init__.py`). Slated for complete absorption into `EconomyEngine` under Backlog #21 (`UnifiedCommerceEngine`). Deletion / absorption candidate.
 
 ---
-### Category C: `KEEP_WIRE_LATER` (Needed eventually, defer to subsequent cycles)
-These modules have 100% passing unit tests and clean architectures, but are deferred to preserve the atomic scope of this remediation cycle:
-1. **`alcohol_engine.py`**: Defer until Tavern / Campsite recreation loop expansion.
-2. **`botany_engine.py`**: Defer until wilderness foraging turn actions are wired.
-3. **`campsite_engine.py`**: Defer until long rest / campsite security loop is wired.
-4. **`combat_time_track_engine.py`**: **[공식 보류 SHELVED]** — 미터 단위 거리/초 단위 인터럽트 엔진. 현재 고정 턴제 전투 전면 개편 세션으로 보류 (CombatDistanceManager, ActionTimeTrackEngine).
-5. **`harvest_engine.py`**: Defer until post-combat monster butchery / part severing loop is wired.
-6. **`mana_burn_engine.py`**: Defer until spell overcharge / ether backlash is wired into magic casting.
-7. **`outfit_engine.py`**: Defer until backpack tearing / modular armor layer refit loop is wired.
-8. **`siege_engine.py`**: **[공식 보류 SHELVED]** — 1,065줄 요새 공성전/군단 전술 엔진. 독립 공성 시나리오 설계 세션까지 분리 보류.
-9. **`stealth_engine.py`**: Defer until dedicated infiltration / eavesdropping turn action is wired.
 
-### Wired in This Session (previously Category C → now WIRED_ACTIVE):
-- ✅ **`vein_restoration_engine.py`** → `two_pass_engine.py:2.75 Sub-path B`: `ManaVeinRestorationEngine.perform_surgery()` 연결 완료. 통합 테스트: `tests/test_vein_restoration_wiring.py`.
-- ✅ **`time_calendar_engine.py`** → `two_pass_engine.py:compute_pass1()`: `TimeCalendarEngine.determine_action_duration()` 기반 가변 소요 시간 연결 완료. 통합 테스트: `tests/test_time_economy_wiring.py`.
-
----
-
-### Category B: `DUPLICATE_DELETE` (Deletion Candidates)
-1. **`save_load_manager.py`**:
-   - Covered completely by `persistence.py`. Redundant JSON file-based persistence engine.
-2. **`merchant_barter_engine.py`**:
-   - **[공식 보류 SHELVED - 통합 대기]** Orphan file (unregistered in `__init__.py`). Slated for complete absorption into `EconomyEngine` under Backlog #21 (`UnifiedCommerceEngine`). Deletion / absorption candidate.
-
----
+### Category C: `SHELVED / P1-2 BACKLOG` (Unreachable: 3/64 modules)
+Current unreachable modules identified by `reachability_audit.py` (3 of 64):
+1. **`combat_time_track_engine.py`**: **[공식 보류 SHELVED]** — 미터 단위 거리/초 단위 인터럽트 엔진. 현재 고정 턴제 전투 전면 개편 세션으로 보류 (CombatDistanceManager, ActionTimeTrackEngine).
+2. **`merchant_barter_engine.py`**: **[공식 보류 SHELVED - 통합 대기]** — `EconomyEngine` 흡수 대기.
+3. **`siege_engine.py`**: **[공식 보류 SHELVED]** — 1,065줄 요새 공성전/군단 전술 엔진. 독립 공성 시나리오 설계 세션까지 분리 보류.
 
 ### Category D: `UNCLEAR` (Needs Human Judgment)
 - None. All 16 modules and priority methods have unambiguous roles and clean triage categorizations.
