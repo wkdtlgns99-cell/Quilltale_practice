@@ -72,7 +72,12 @@
   - **검증 파일/테스트**: `src/world/two_pass_engine.py`, `src/world/merchant_barter_engine.py`, `src/world/combat_time_track_engine.py`, `src/world/siege_engine.py` | `tests/test_p1_2_engines_wiring.py::test_merchant_barter_engine_live_pass1`, `test_combat_distance_and_perception_interrupt_live_pass1`, `test_siege_warfare_engine_live_pass1`, `test_game_master_agent_process_turn_p1_2_integration` (4 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 622 passed in 232.54s (0 failed)
 
 #### [P2 — CODE QUALITY, CI & REFACTORING (품질 / CI / 유지보수)]
-- [ ] **🔧 [P2-1] God 메서드 분할 (`apply_update` 797줄, `pre_validate_action` 870줄)**: 업데이트/액션 타입별 디스패치 핸들러로 모듈화 분할.
+- [x] **🔧 [P2-1] God 메서드 분할 (`apply_update` 797줄, `pre_validate_action` 870줄)**:
+  - **수정**:
+    1. `src/world/state.py`의 `WorldState.apply_update()`(802줄)를 5대 도메인 서브 메서드로 분할: `_apply_player_updates`, `_apply_inventory_and_equipment_updates`, `_apply_npc_updates`, `_apply_world_environment_updates`, `_apply_subsystem_engine_deltas`. 메인 `apply_update()`는 15줄의 가독성 높은 오케스트레이터로 경량화.
+    2. `src/world/validator.py`의 `ActionValidator.pre_validate_action()`(873줄)을 5대 서브 검증기로 분할: `_validate_physical_blocks`, `_validate_inventory_and_equipment`, `_validate_target_and_interaction`, `_validate_spatial_and_physical_limits`, `_dispatch_action_challenges`. 메인 `pre_validate_action()`은 간결한 오케스트레이터로 경량화.
+    3. 외부 API 시그니처 및 반환 튜플 규격 100% 보존.
+  - **검증 파일/테스트**: `src/world/state.py`, `src/world/validator.py` | `tests/test_p2_1_god_methods_refactor.py` (12 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 634 passed in 229.33s (0 failed)
 - [ ] **🔧 [P2-2] God 파일 분할 로드맵 수립 (`state.py` 4,588줄, `infrastructure.py` 3,092줄, `two_pass_engine.py` 2,433줄)**: 데이터클래스/엔티티 스키마와 턴 상태 갱신/전이 로직 분리.
 - [ ] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**: `pytest tests/`, `ruff check --select F,E9`, `python scripts/reachability_audit.py` 자동 검증.
 - [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**: README.md 수치 최신화(604 통과), 배선 변경 시 `reachability_audit.py` 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
@@ -98,49 +103,41 @@
 
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P0-0 8대 과제 100% 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-1 God 메서드 분할 100% 완수)
 
-#### [P0-0 긴급 시스템 결함 8종 전원 해결]
-1. **[P0-0-5] UTF-8 BOM 8개 제거 및 정적 분석 정상화**:
-   - 8개 파일 BOM(`\ufeff`) 제거, `reachability_audit.py` AST `ast.Call` 노드 기반 내부 호출 탐지 수정.
-   - commit `ae32096` | 604 passed
-2. **[P0-0-4] 보조 LLM JSON 출력 파싱 `JSONRepairEngine.repair_json()` 통일**:
-   - `resilience.py` 범용 마크다운 코드펜스/outer JSON/trailing comma 복구 정적 메서드 구현. `game_master.py:643`, `chronicle.py:105`, `generator.py:850` raw `json.loads` 교체.
-   - commit `7cc4b8d` | 605 passed
-3. **[P0-0-7] LLM 쿼터 고갈 시 영문 예외 문자열 서사 유출 원천 차단**:
-   - `game_master.py:process_turn()` 예외 블록 `repair_and_parse(str(e))` 제거 및 한국어 서사 폴백 딕셔너리 반환. `is_technical_error()` 2중 방어 구축.
-   - commit `33cfd11` | 607 passed
-4. **[P0-0-1] Claude 퇴역 모델 교체 및 다중 모델 폴백 체인 구축**:
-   - 퇴역된 `claude-3-5-sonnet-latest` 제거, 최신 활성 모델 `claude-sonnet-4-6` 기본값 지정, `ANTHROPIC_MODEL` 우선 지원, `candidate_models` 4단계 자동 순차 폴백 체인 구축.
-   - commit `3af42b3` | 608 passed
-5. **[P0-0-2] 무효 행동 선행 상태 변이 원천 차단 (QT-F01)**:
-   - `ActionValidator.pre_validate_action()`을 `compute_pass1()` 최상단으로 재배치하여 무효 행동 시 상태이상 틱/피해/쿨다운/시뮬레이션 일체 0-변이 보장.
-   - commit `7029b60` | invalid_transition_rate: 0.0%, 609 passed
-6. **[P0-0-3] 토큰 폭발 방어, 리스트 상한 & SQLite 히스토리 아카이브 (QT-F03)**:
-   - `to_context_summary()` 내 `world_facts[-10:]` 슬라이싱. `off_screen_logs` 10개 캡, `physical_traces` 10개 캡/15턴 감쇄 자동 소멸.
-   - `quilltale.db`에 `turn_history_archive` 테이블 구축, `state.append_history()` 50턴 상한 및 SQLite 자동 이관/복원.
-   - `SaveMigrationEngine.migrate()`를 세이브 로드 시점(`from_dict`)과 결합하여 비대 리스트 트리밍 및 초과 턴 아카이빙 진입점으로 실전 재활용.
-   - commit `3338ed4` | invalid_transition_rate: 0.0%, 613 passed
-7. **[P0-0-8] 잔여 결함 디테일 보강 (P0-1, P2-7)**:
-   - `player_bot.py` 미사용 죽은 `Item` import 정리 및 typing 정리.
-   - `attack_physics_engine.py`의 `evaluate_attack_physics()` 및 `npc_skill_engine.py:168`에 `allow_overdraw=True` 전달 진입점 연결(강궁/저격/과인장 스킬 시 최대 1.2x 오버드로우 및 서사 반영).
-   - commit `aa51314` | invalid_transition_rate: 0.0%, 615 passed
-8. **[P0-0-6] 문서-코드 팩트 정정 및 최종 동기화 (QT-F07)**:
-   - `CHANGES_AUDIT.md` (미도달 3/64개 모듈 최신화), `TRIAGE.md` (Wired Active 12종 최신화), `README.md` (615 passed 갱신), `SESSION_HANDOFF.md` 전면 동기화.
+#### [P2-1 God 메서드 2종 도메인별 서브 메서드 분할 리팩터링]
+1. **`WorldState.apply_update()` (802줄) 5대 서브 도메인 분할**:
+   - `_apply_player_updates(self, update: dict, changes: list[str]) -> None` (플레이어 스탯, 이동, 부상, 상태이상, 위생, 체온 등)
+   - `_apply_inventory_and_equipment_updates(self, update: dict, changes: list[str]) -> None` (아이템 획득, 버리기, 장착, 해제, 파괴 등)
+   - `_apply_npc_updates(self, update: dict, changes: list[str]) -> None` (NPC 상태, 사기, 에피소딕 기억, 호감도, BDI 등)
+   - `_apply_world_environment_updates(self, update: dict, changes: list[str]) -> None` (월드 팩트, 위치 흔적, 비밀/단서, 환경 기믹 등)
+   - `_apply_subsystem_engine_deltas(self, update: dict, changes: list[str]) -> None` (퀘스트, 경제, 상점, 제작, 파티, 생태계 붕괴 등)
+   - 메인 `apply_update()`를 15줄의 명쾌한 오케스트레이터로 교체.
+2. **`ActionValidator.pre_validate_action()` (873줄) 5대 서브 검증기 분할**:
+   - `_validate_physical_blocks(cls, action_clean, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (비현실 파워스케일링, 상태이상 행동불가, 신체 부상 행동제약, 시야/거리 제약, 던전 탐색 플래그 등)
+   - `_validate_inventory_and_equipment(cls, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (인벤토리 소유권, 장비 착용/해제 판별, 외과 치료/의사 진료 유효성 등)
+   - `_validate_target_and_interaction(cls, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (사망 NPC 상호작용 차단, 살아있는 몬스터 갈무리 차단, 교전 중 야영 차단, 음주 및 채집/감별 제약 등)
+   - `_validate_spatial_and_physical_limits(cls, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (비좁은 공간 대형 무기 페널티, 수중/유독가스 질식 위험, 무게/소지 한도, 영창 피격 취소 위험 등)
+   - `_dispatch_action_challenges(cls, action_clean, action_lower, state, curr_loc, target_part, parsed, extra_flags) -> Tuple[bool, str, Optional[DiceCheckResult]]` (플레이어 습득 스킬, 마법 영창/언령/직관조형, 일반 물리 공격, 은신/절도, 심리 레버리지 화술/설득, 자물쇠 해제 판정 등)
+   - 메인 `pre_validate_action()`을 간결한 오케스트레이터로 교체.
+3. **외부 API 및 반환 시그니처 100% 호환성 유지**:
+   - `WorldState.apply_update(update) -> list[str]`
+   - `ActionValidator.pre_validate_action(action, state) -> Tuple[bool, str, Optional[DiceCheckResult], Dict[str, Any]]`
+   - 두 메서드 모두 호출자 수정 없이 완벽 호환.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `618 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 615 → 완료 618 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `634 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 622 → 완료 634 (+12 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/64 Unreachable` (100% 도달성 유지).
 - **코드 정적 검사 (pyflakes)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P1-2 미연결 3대 엔진 결합 및 정리]**:
-   - `merchant_barter_engine.py`: `EconomyEngine`과 통합 또는 `compute_pass1` 슬롯 연결.
-   - `combat_time_track_engine.py`, `siege_engine.py`: 시나리오 분리 세션 추진.
-2. **[P2-1 God 메서드 분할]**:
-   - `apply_update` (797줄), `pre_validate_action` (870줄) 모듈화 분할.
+1. **[P2-2 God 파일 분할 로드맵 수립]**:
+   - `state.py` (4,588줄), `infrastructure.py` (3,092줄), `two_pass_engine.py` (2,433줄) 데이터클래스/엔티티 스키마와 턴 상태 갱신/전이 로직 분리 계획.
+2. **[P2-3 GitHub Actions CI 워크플로우 구축]**:
+   - `.github/workflows/ci.yml` 구축 (`pytest tests/`, `pyflakes src/`, `reachability_audit.py` 자동 검증).

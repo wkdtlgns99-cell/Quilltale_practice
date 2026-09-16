@@ -91,54 +91,74 @@ class ActionValidator:
         action_clean = parsed["action"]
         action_lower = action.lower()
         curr_loc = state.current_location()
+        target_part = cls.detect_target_part(action_lower)
         extra_flags: Dict[str, Any] = {
             'incantation_cancel_risk': False,
             'interrupt_counter': False,
-            'target_part': '',
+            'target_part': target_part,
             'parsed_components': parsed,
             'is_no_incantation': False,
             'spatial_jam_risk': False,
             'suffocation_risk': False,
         }
 
+        # 1. Physical state, power scaling, and status/injury blocks
+        err = cls._validate_physical_blocks(action_clean, action_lower, state, curr_loc, extra_flags)
+        if err:
+            return False, err, None, extra_flags
+
+        # 2. Inventory ownership, equipment equip/unequip, and medical treatments
+        err = cls._validate_inventory_and_equipment(action_lower, state, curr_loc, extra_flags)
+        if err:
+            return False, err, None, extra_flags
+
+        # 3. Target NPC interaction, butchering, camping, alcohol, and botany foraging
+        err = cls._validate_target_and_interaction(action_lower, state, curr_loc, extra_flags)
+        if err:
+            return False, err, None, extra_flags
+
+        # 4. Spatial ergonomics, suffocation risks, and weight/bag capacity
+        err = cls._validate_spatial_and_physical_limits(action_lower, state, curr_loc, extra_flags)
+        if err:
+            return False, err, None, extra_flags
+
+        # 5. Dispatch skill attacks, magic incantations, physical combat, stealth, negotiation, and lockpicking
+        success, err_msg, dice_result = cls._dispatch_action_challenges(
+            action_clean, action_lower, state, curr_loc, target_part, parsed, extra_flags
+        )
+        if not success:
+            return False, err_msg, None, extra_flags
+
+        return True, "", dice_result, extra_flags
+
+    @classmethod
+    def _validate_physical_blocks(
+        cls,
+        action_clean: str,
+        action_lower: str,
+        state: WorldState,
+        curr_loc: Optional[Any],
+        extra_flags: Dict[str, Any],
+    ) -> Optional[str]:
+        """Validates status effects, physical injuries, line of sight, and reality constraints."""
         # 1. Anti-Yes-Man Reality Check: Reject power-scaling absurdity
         for pattern in IMPOSSIBLE_POWER_PATTERNS:
             if re.search(pattern, action_lower):
-                return (
-                    False,
-                    "인간의 한계를 벗어난 불가능한 행동입니다. 거대한 힘에 짓눌려 행동이 무위로 돌아갑니다.",
-                    None,
-                    extra_flags
-                )
+                return "인간의 한계를 벗어난 불가능한 행동입니다. 거대한 힘에 짓눌려 행동이 무위로 돌아갑니다."
 
         # 1.5 Status Effect Action Block Check (Stun, Freeze, Paralysis)
         from src.world.status_engine import StatusEffectEngine
         can_act, block_reason = StatusEffectEngine.can_act(state.player)
         if not can_act and action_clean:
-            return (
-                False,
-                f"⚠️ {block_reason}",
-                None,
-                extra_flags
-            )
+            return f"⚠️ {block_reason}"
 
         # 1.6 Physical Injury Action Block Check (Fractures, Arm/Leg Disabilities)
         if state.player.injuries and action_clean:
             injuries_text = " ".join(state.player.injuries)
             if any(k in injuries_text for k in ["팔", "손목", "어깨"]) and any(k in action_lower for k in ["양손검", "대검", "활을", "장궁", "암벽", "매달려"]):
-                return (
-                    False,
-                    f"신체 부상({injuries_text})으로 인해 양손을 사용하는 무리한 행동을 할 수 없습니다.",
-                    None,
-                    extra_flags
-                )
+                return f"신체 부상({injuries_text})으로 인해 양손을 사용하는 무리한 행동을 할 수 없습니다."
             if any(k in injuries_text for k in ["다리", "발목", "무릎"]) and any(k in action_lower for k in ["전력 질주", "도약", "높이 뛰어", "달려"]):
-                return (
-                    False,
-                    f"신체 부상({injuries_text})으로 인해 무리하게 질주하거나 도약할 수 없습니다.",
-                    None,
-                    extra_flags
-                )
+                return f"신체 부상({injuries_text})으로 인해 무리하게 질주하거나 도약할 수 없습니다."
 
         # 1.7 Distance & Line-of-Sight Check (Cannot interact/attack across rooms/walls)
         combat_or_social_verbs = ["공격", "찌르", "베", "대화", "말을", "물어", "훔치", "소매치기", "attack", "talk", "steal"]
@@ -146,12 +166,7 @@ class ActionValidator:
             for npc_id, npc in state.npcs.items():
                 if (npc.name.lower() in action_lower or npc_id in action_lower):
                     if curr_loc and npc_id not in curr_loc.npcs and npc.location != curr_loc.id:
-                        return (
-                            False,
-                            f"[{npc.name}]은(는) 현재 장소({curr_loc.name})의 시야 내에 없습니다. 다른 방이나 벽 너머의 대상을 조작할 수 없습니다.",
-                            None,
-                            extra_flags
-                        )
+                        return f"[{npc.name}]은(는) 현재 장소({curr_loc.name})의 시야 내에 없습니다. 다른 방이나 벽 너머의 대상을 조작할 수 없습니다."
 
         # 1.8 Social/Recruitment Context Flag (Passed down to dynamic DC check rather than hard-blocking)
         recruitment_verbs = ["동료가", "파티에", "합류", "따라와", "recruit", "join party"]
@@ -171,6 +186,18 @@ class ActionValidator:
         if any(v in action_lower for v in dungeon_nav_verbs):
             extra_flags['is_dungeon_nav'] = True
 
+
+        return None
+
+    @classmethod
+    def _validate_inventory_and_equipment(
+        cls,
+        action_lower: str,
+        state: WorldState,
+        curr_loc: Optional[Any],
+        extra_flags: Dict[str, Any],
+    ) -> Optional[str]:
+        """Validates inventory ownership, equipment equip/unequip, and medical treatment legality."""
         # 2. Inventory check: Cannot use or drop items not owned
         equipped_ids = set()
         if hasattr(state.player, "equipment") and state.player.equipment:
@@ -186,12 +213,7 @@ class ActionValidator:
             for item_id, item in state.items.items():
                 if item.name.lower() in action_lower or item_id in action_lower:
                     if item.name.lower() not in accessible_item_names and item_id not in accessible_item_ids:
-                        return (
-                            False,
-                            f"가방이나 주변에 존재하지 않는 [{item.name}]을(를) 착용하거나 사용할 수 없습니다.",
-                            None,
-                            extra_flags
-                        )
+                        return f"가방이나 주변에 존재하지 않는 [{item.name}]을(를) 착용하거나 사용할 수 없습니다."
 
         # 2.5 Equipment Equip / Unequip Intent Detection
         equip_verbs = ["착용", "장착", "입는", "입어", "쓴다", "써", "낀다", "끼어", "차다", "찬다", "쥔다", "equip", "wield", "wear"]
@@ -299,12 +321,7 @@ class ActionValidator:
             if med_item and target_injury:
                 can_treat, reject_msg = InjuryEngine.can_treat_with_item(target_injury, med_item)
                 if not can_treat:
-                    return (
-                        False,
-                        reject_msg,
-                        None,
-                        extra_flags
-                    )
+                    return reject_msg
                 extra_flags["treatment_intent"] = {
                     "type": "item",
                     "item_id": med_item.id,
@@ -329,28 +346,30 @@ class ActionValidator:
                         "fee": 50
                     }
 
+
+        return None
+
+    @classmethod
+    def _validate_target_and_interaction(
+        cls,
+        action_lower: str,
+        state: WorldState,
+        curr_loc: Optional[Any],
+        extra_flags: Dict[str, Any],
+    ) -> Optional[str]:
+        """Validates dead NPC interaction, living monster harvesting, combat rest, alcohol, and botany."""
         # 3. Dead NPC check
         for npc_id, npc in state.npcs.items():
             if (npc.name.lower() in action_lower or npc_id in action_lower) and not npc.alive:
                 if any(v in action_lower for v in ["대화", "말을", "물어", "talk", "ask", "speak"]):
-                    return (
-                        False,
-                        f"이미 싸늘하게 식어버린 [{npc.name}]의 시신은 대답하지 않습니다.",
-                        None,
-                        extra_flags
-                    )
+                    return f"이미 싸늘하게 식어버린 [{npc.name}]의 시신은 대답하지 않습니다."
 
         # 3.1 Living Monster Butchering/Harvesting Prevention
         is_harvest_action = any(v in action_lower for v in ["갈무리", "도축", "해체", "carve", "harvest", "가죽을 벗", "살점을 베", "살점을 발라"])
         if is_harvest_action:
             for npc_id, npc in state.npcs.items():
                 if (npc.name.lower() in action_lower or npc_id in action_lower) and npc.alive:
-                    return (
-                        False,
-                        f"아직 숨이 붙어 날뛰는 [{npc.name}]을(를) 살아있는 채로 해체하거나 갈무리할 수는 없습니다.",
-                        None,
-                        extra_flags
-                    )
+                    return f"아직 숨이 붙어 날뛰는 [{npc.name}]을(를) 살아있는 채로 해체하거나 갈무리할 수는 없습니다."
 
         # 3.2 Combat Campsite / Rest / Campfire Prevention
         camp_actions = [
@@ -362,12 +381,7 @@ class ActionValidator:
                 loc_npcs = state.npcs_in_location(curr_loc.id)
                 has_hostile = any(n.alive and getattr(n, "disposition", "") == "hostile" for n in loc_npcs)
                 if has_hostile:
-                    return (
-                        False,
-                        "⚠️ 적이 눈앞에서 무기를 겨누고 있는 교전 중에는 야영지를 구축하거나 잠에 들 수 없습니다.",
-                        None,
-                        extra_flags
-                    )
+                    return "⚠️ 적이 눈앞에서 무기를 겨누고 있는 교전 중에는 야영지를 구축하거나 잠에 들 수 없습니다."
 
         # 3.3 Alcohol Drinking Intent Pre-validation
         non_alc_words = ["수술", "기술", "전술", "마술", "예술", "요술", "학술", "서술", "상술", "주술", "시술", "권술", "검술", "창술", "궁술", "의술", "인술", "화술"]
@@ -385,12 +399,7 @@ class ActionValidator:
         if is_alcohol_action:
             alc_dict = getattr(state.player, "alcohol_state", {})
             if isinstance(alc_dict, dict) and alc_dict.get("intoxication_stage", 0) >= 3:
-                return (
-                    False,
-                    "😵 이미 인사불성으로 정신을 잃고 쓰러진 상태에서는 술을 더 마실 수 없습니다.",
-                    None,
-                    extra_flags
-                )
+                return "😵 이미 인사불성으로 정신을 잃고 쓰러진 상태에서는 술을 더 마실 수 없습니다."
 
             has_alc_item = False
             for i_id in state.player.inventory:
@@ -408,29 +417,14 @@ class ActionValidator:
 
             from_bag = any(k in action_lower for k in ["가방", "인벤토리", "소지품", "배낭", "backpack", "inventory"])
             if from_bag and not has_alc_item:
-                return (
-                    False,
-                    "소지품(가방)에 보유 중인 주류가 없습니다.",
-                    None,
-                    extra_flags
-                )
+                return "소지품(가방)에 보유 중인 주류가 없습니다."
 
             if not has_alc_item and not is_tavern:
-                return (
-                    False,
-                    "마실 수 있는 주류를 소지하고 있지 않으며, 현재 위치는 주류를 판매하는 선술집이나 주점이 아닙니다.",
-                    None,
-                    extra_flags
-                )
+                return "마실 수 있는 주류를 소지하고 있지 않으며, 현재 위치는 주류를 판매하는 선술집이나 주점이 아닙니다."
 
             if not has_alc_item and is_tavern:
                 if getattr(state.player, "gold", 0) < 1:
-                    return (
-                        False,
-                        "❌ [소지금 부족] 주점에서 술을 주문하여 마실 골드가 부족합니다. (최소 1 골드 필요)",
-                        None,
-                        extra_flags
-                    )
+                    return "❌ [소지금 부족] 주점에서 술을 주문하여 마실 골드가 부족합니다. (최소 1 골드 필요)"
 
         # 3.4 Wild Botany & Herb Foraging / Identification Pre-validation
         forage_keywords = [
@@ -446,23 +440,13 @@ class ActionValidator:
                     n.alive and getattr(n, "disposition", "") == "hostile" and n.location == curr_loc.id for n in state.npcs.values()
                 )
                 if has_hostile:
-                    return (
-                        False,
-                        "⚠️ 적이 눈앞에서 무기를 겨누고 있는 교전 중에는 약초나 식물을 한가롭게 채집할 수 없습니다.",
-                        None,
-                        extra_flags
-                    )
+                    return "⚠️ 적이 눈앞에서 무기를 겨누고 있는 교전 중에는 약초나 식물을 한가롭게 채집할 수 없습니다."
                 loc_traits = getattr(curr_loc, "traits", [])
                 loc_text = (curr_loc.name + " " + curr_loc.description).lower()
                 is_sterile_indoor = any(k in loc_text for k in ["선술집", "주점", "감옥", "지하감옥", "밀실"]) or any(k in loc_traits for k in ["tavern", "jail", "dungeon_jail"])
                 has_vegetation = any(k in loc_text for k in ["숲", "정원", "화단", "온실", "약초", "이끼", "버섯", "풀밭"]) or any(k in loc_traits for k in ["forest", "mountain", "swamp", "garden", "cave", "wild"])
                 if is_sterile_indoor and not has_vegetation:
-                    return (
-                        False,
-                        "석벽과 인공 바닥으로 둘러싸인 실내에서는 야생 약초나 식물을 채집할 수 없습니다.",
-                        None,
-                        extra_flags
-                    )
+                    return "석벽과 인공 바닥으로 둘러싸인 실내에서는 야생 약초나 식물을 채집할 수 없습니다."
 
         id_keywords = ["약초 감별", "식물 감별", "버섯 감별", "감별한다", "정밀 감별", "약초를 조사", "버섯을 조사", "식물을 조사", "identify plant", "identify herb"]
         if any(k in action_lower for k in id_keywords):
@@ -474,13 +458,20 @@ class ActionValidator:
                         has_plant = True
                         break
             if not has_plant:
-                return (
-                    False,
-                    "소지품에 정밀 감별할 수 있는 야생 식물이나 약초 표본이 없습니다.",
-                    None,
-                    extra_flags
-                )
+                return "소지품에 정밀 감별할 수 있는 야생 식물이나 약초 표본이 없습니다."
 
+
+        return None
+
+    @classmethod
+    def _validate_spatial_and_physical_limits(
+        cls,
+        action_lower: str,
+        state: WorldState,
+        curr_loc: Optional[Any],
+        extra_flags: Dict[str, Any],
+    ) -> Optional[str]:
+        """Validates narrow space ergonomics, suffocation risks, weight capacity, and incantation risks."""
         # 4.1 Spatial Ergonomics Check (Narrow Space & Long Weapons)
         loc_desc = (curr_loc.name + " " + curr_loc.description).lower() if curr_loc else ""
         if any(k in loc_desc for k in ["동굴", "석실", "환풍구", "비좁은", "밀실", "통로"]):
@@ -500,20 +491,10 @@ class ActionValidator:
                     if curr_loc and item_id in curr_loc.items:
                         # Strength requirement check
                         if state.player.strength < item.required_strength:
-                            return (
-                                False,
-                                f"[{item.name}]은(는) 너무 무겁습니다. (요구 근력: {item.required_strength}, 현재 근력: {state.player.strength})",
-                                None,
-                                extra_flags
-                            )
+                            return f"[{item.name}]은(는) 너무 무겁습니다. (요구 근력: {item.required_strength}, 현재 근력: {state.player.strength})"
                         # Bag storage vs Hand-held check
                         if not item.can_store_in_bag and any(v in action_lower for v in ["가방에", "인벤토리에", "넣"]):
-                            return (
-                                False,
-                                f"[{item.name}]은(는) 부피가 너무 커서 가방에 들어가지 않습니다. 대신 손에 들거나 즉석 무기로 사용할 수 있습니다.",
-                                None,
-                                extra_flags
-                            )
+                            return f"[{item.name}]은(는) 부피가 너무 커서 가방에 들어가지 않습니다. 대신 손에 들거나 즉석 무기로 사용할 수 있습니다."
 
 
         target_part = cls.detect_target_part(action_lower)
@@ -528,6 +509,22 @@ class ActionValidator:
                     extra_flags['incantation_cancel_risk'] = True
                     break
 
+
+        return None
+
+    @classmethod
+    def _dispatch_action_challenges(
+        cls,
+        action_clean: str,
+        action_lower: str,
+        state: WorldState,
+        curr_loc: Optional[Any],
+        target_part: str,
+        parsed: Dict[str, Any],
+        extra_flags: Dict[str, Any],
+    ) -> Tuple[bool, str, Optional[DiceCheckResult]]:
+        """Dispatches skill attacks, magic incantations, physical combat, stealth, negotiation, and lockpicking."""
+        recruitment_verbs = ["동료가", "파티에", "합류", "따라와", "recruit", "join party"]
         # 4. Trigger Deterministic Dice Rolls for Challenges with Fatigue Modifiers
         dice_result = None
         fatigue_val = state.player.fatigue
@@ -569,22 +566,12 @@ class ActionValidator:
         # S. Player Specific Skill Execution Branch
         if matched_player_skill:
             if getattr(matched_player_skill, "current_cooldown", 0) > 0:
-                return (
-                    False,
-                    f"[{matched_player_skill.name}]은(는) 아직 재사용 대기시간입니다. (남은 쿨다운: {matched_player_skill.current_cooldown}턴)",
-                    None,
-                    extra_flags
-                )
+                return False, f"[{matched_player_skill.name}]은(는) 아직 재사용 대기시간입니다. (남은 쿨다운: {matched_player_skill.current_cooldown}턴)", None
             if matched_player_skill.resource_type == "mana":
                 from src.world.mana_burn_engine import ManaBurnEngine
                 circuit = ManaBurnEngine.get_circuit_state(state.player)
                 if circuit.burnout_turns > 0:
-                    return (
-                        False,
-                        f"⚠️ [마나 회로 과열] 마나 회로가 까맣게 타버려 영창할 수 없습니다! (잔여 침묵: {circuit.burnout_turns}턴)",
-                        None,
-                        extra_flags
-                    )
+                    return False, f"⚠️ [마나 회로 과열] 마나 회로가 까맣게 타버려 영창할 수 없습니다! (잔여 침묵: {circuit.burnout_turns}턴)", None
                 if state.player.mana < matched_player_skill.resource_cost:
                     overchannel_eval = ManaBurnEngine.evaluate_overchannel(
                         state.player,
@@ -594,30 +581,15 @@ class ActionValidator:
                     )
                     if not overchannel_eval.get("success"):
                         err_reason = overchannel_eval.get("message_ko", "")
-                        return (
-                            False,
-                            f"마나가 부족하여 [{matched_player_skill.name}]을(를) 시전할 수 없습니다. (필요: {matched_player_skill.resource_cost}, 현재: {state.player.mana}) {err_reason}",
-                            None,
-                            extra_flags
-                        )
+                        return False, f"마나가 부족하여 [{matched_player_skill.name}]을(를) 시전할 수 없습니다. (필요: {matched_player_skill.resource_cost}, 현재: {state.player.mana}) {err_reason}", None
                     extra_flags["overchannel"] = overchannel_eval
             if matched_player_skill.resource_type == "hp" and state.player.health <= matched_player_skill.resource_cost:
-                return (
-                    False,
-                    f"체력이 부족하여 [{matched_player_skill.name}]의 생명력 대가를 감당할 수 없습니다. (필요: {matched_player_skill.resource_cost}, 현재: {state.player.health})",
-                    None,
-                    extra_flags
-                )
+                return False, f"체력이 부족하여 [{matched_player_skill.name}]의 생명력 대가를 감당할 수 없습니다. (필요: {matched_player_skill.resource_cost}, 현재: {state.player.health})", None
             if matched_player_skill.resource_type == "stamina":
                 from src.world.stamina_engine import StaminaEngine
                 can_cast, reason = StaminaEngine.can_afford(state.player, matched_player_skill.resource_cost)
                 if not can_cast:
-                    return (
-                        False,
-                        f"[{matched_player_skill.name}]을(를) 펼칠 수 없습니다: {reason}",
-                        None,
-                        extra_flags
-                    )
+                    return False, f"[{matched_player_skill.name}]을(를) 펼칠 수 없습니다: {reason}", None
 
             stat_key = matched_player_skill.scaling_stat
             stat_val = state.player.str_stat
@@ -711,12 +683,7 @@ class ActionValidator:
             from src.world.mana_burn_engine import ManaBurnEngine
             circuit = ManaBurnEngine.get_circuit_state(state.player)
             if circuit.burnout_turns > 0:
-                return (
-                    False,
-                    f"⚠️ [마나 회로 과열] 마나 회로가 까맣게 타버려 마법을 영창할 수 없습니다! (잔여 침묵: {circuit.burnout_turns}턴)",
-                    None,
-                    extra_flags
-                )
+                return False, f"⚠️ [마나 회로 과열] 마나 회로가 까맣게 타버려 마법을 영창할 수 없습니다! (잔여 침묵: {circuit.burnout_turns}턴)", None
 
             has_incant_speech = bool(parsed["dialogue"]) or ("영창" in action_lower)
             is_no_incant = not has_incant_speech
@@ -949,5 +916,6 @@ class ActionValidator:
                 fatigue=fatigue_val,
             )
 
-        return True, "", dice_result, extra_flags
+        return True, "", dice_result
+
 

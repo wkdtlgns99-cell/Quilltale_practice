@@ -3429,15 +3429,25 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         return logs
 
     def apply_update(self, update: dict) -> list[str]:
-
         """
         Applies a validated delta update to the WorldState.
         Enforces balance thresholds, stat caps, and reveals NPC stats when requested.
+        Orchestrates domain-specific handlers for modular state mutations.
         """
-        changes = []
+        changes: list[str] = []
+        if not update or not isinstance(update, dict):
+            return changes
 
+        self._apply_player_updates(update, changes)
+        self._apply_inventory_and_equipment_updates(update, changes)
+        self._apply_npc_updates(update, changes)
+        self._apply_world_environment_updates(update, changes)
+        self._apply_subsystem_engine_deltas(update, changes)
 
-        # 1. Player movement
+        return changes
+
+    def _apply_player_updates(self, update: dict, changes: list[str]) -> None:
+        """Applies player stats, movement, injuries, status effects, and attributes."""
         if "move_player" in update:
             dest = update["move_player"]
             directions = dest if isinstance(dest, list) else [dest]
@@ -3516,6 +3526,173 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 changes.append(f"REJECTED stat allocation to {s_name} — insufficient points or cap reached ({preset.stat_cap})")
 
         # 2. Item pickup
+        if "player_health" in update:
+            delta = update["player_health"]
+            self.player.health = max(0, min(self.player.max_health, self.player.health + delta))
+            changes.append(f"Player health changed by {delta} (Now: {self.player.health}/{self.player.max_health})")
+
+        # 9. Gold and EXP (with Stat Cap check)
+        if "add_gold" in update:
+            self.player.gold = max(0, self.player.gold + update["add_gold"])
+            changes.append(f"Gold changed: {self.player.gold}")
+
+        if "add_exp" in update:
+            self.player.exp += update["add_exp"]
+            while self.player.exp >= 100:
+                self.player.exp -= 100
+                self.player.level += 1
+                self.player.max_health += 10
+                self.player.health = self.player.max_health
+                
+                # Gain 1 to 2 stat points, clamped to MAX_STAT_VALUE
+                stat_gain = min(MAX_LEVELUP_STAT_GAIN, 1)
+                self.player.strength = min(MAX_STAT_VALUE, self.player.strength + stat_gain)
+                self.player.constitution = min(MAX_STAT_VALUE, self.player.constitution + stat_gain)
+                
+                self.player.stat_points += 2
+                changes.append(f"LEVEL UP! Player is now Level {self.player.level}")
+
+        # 10. Reputation delta (Clamped between MIN_REPUTATION_DELTA and MAX_REPUTATION_DELTA)
+        if "reputation_delta" in update:
+            raw_delta = update["reputation_delta"]
+            clamped_delta = max(MIN_REPUTATION_DELTA, min(MAX_REPUTATION_DELTA, raw_delta))
+            self.player.reputation = max(
+                MIN_REPUTATION_TOTAL,
+                min(MAX_REPUTATION_TOTAL, self.player.reputation + clamped_delta)
+            )
+            changes.append(f"Player reputation changed by {clamped_delta} to {self.player.reputation}")
+
+        # 11. World fact learned
+        if "grant_skill" in update:
+            for target_id, skill_id in update["grant_skill"].items():
+                if target_id == "player":
+                    if skill_id not in self.player.skills:
+                        self.player.skills.append(skill_id)
+                        changes.append(f"Player acquired skill: {skill_id}")
+                elif target_id in self.npcs:
+                    if skill_id not in self.npcs[target_id].skills:
+                        self.npcs[target_id].skills.append(skill_id)
+                        changes.append(f"NPC {self.npcs[target_id].name} acquired skill: {skill_id}")
+                        
+        # Grant title
+        if "grant_title" in update:
+            for target_id, title_id in update["grant_title"].items():
+                if target_id == "player":
+                    if title_id not in self.player.titles:
+                        self.player.titles.append(title_id)
+                        changes.append(f"Player acquired title: {title_id}")
+                elif target_id in self.npcs:
+                    if title_id not in self.npcs[target_id].titles:
+                        self.npcs[target_id].titles.append(title_id)
+                        changes.append(f"NPC {self.npcs[target_id].name} acquired title: {title_id}")
+                        
+        # Add magic word
+        if "add_magic_word" in update:
+            word = update["add_magic_word"]
+            if word not in self.player.known_magic_words:
+                self.player.known_magic_words.append(word)
+                changes.append(f"Player learned magic word: {word}")
+
+        # Fatigue updates
+        if "fatigue_delta" in update:
+            delta = int(update["fatigue_delta"])
+            self.player.fatigue = max(0, min(100, self.player.fatigue + delta))
+            changes.append(f"Player fatigue updated: {self.player.fatigue}/100")
+            if delta < 0:
+                from src.world.injury_engine import InjuryEngine
+                r_logs = InjuryEngine.progress_rest_healing(self, self.player, rest_turns=1)
+                changes.extend(r_logs)
+
+        # Time advanced updates
+        if "time_minutes" in update:
+            mins = int(update["time_minutes"])
+            self.player.time_elapsed_minutes += mins
+            changes.append(f"Time advanced by {mins} minutes (Total: {self.player.time_elapsed_minutes}m)")
+
+        # 12. Dynamic Entity Registration & Persistence (Zero Evaporation)
+        if "add_player_injury" in update:
+            inj = update["add_player_injury"]
+            if inj and inj not in self.player.injuries:
+                self.player.injuries.append(inj)
+                changes.append(f"플레이어 신체 부상: {inj}")
+
+        if "add_player_trauma" in update:
+            tra = update["add_player_trauma"]
+            if tra and tra not in self.player.traumas:
+                self.player.traumas.append(tra)
+                changes.append(f"플레이어 트라우마 획득: {tra}")
+
+        if "remove_player_injury" in update:
+            rem_inj = str(update["remove_player_injury"]).strip()
+            to_remove = [inj for inj in self.player.injuries if rem_inj in inj or inj in rem_inj]
+            for inj in to_remove:
+                self.player.injuries.remove(inj)
+                if inj in self.player.splinted_injuries:
+                    del self.player.splinted_injuries[inj]
+                changes.append(f"플레이어 신체 부상 완치: {inj}")
+
+        if "splint_player_injury" in update:
+            s_data = update["splint_player_injury"]
+            inj_name = s_data.get("injury_name")
+            turns = s_data.get("turns_needed", 2)
+            if inj_name:
+                self.player.splinted_injuries[inj_name] = turns
+                changes.append(f"플레이어 부목 고정: {inj_name} (완치까지 휴식 {turns}회 필요)")
+
+        if "progress_rest_healing" in update:
+            from src.world.injury_engine import InjuryEngine
+            rest_turns = int(update["progress_rest_healing"])
+            r_logs = InjuryEngine.progress_rest_healing(self, self.player, rest_turns=rest_turns)
+            changes.extend(r_logs)
+
+        # 17. Status Effects (Status Effect Engine)
+        if "apply_status" in update:
+            from src.world.status_engine import StatusEffectEngine
+            status_data = update["apply_status"]
+            if isinstance(status_data, dict):
+                for target_key, s_info in status_data.items():
+                    target = self.player if target_key == "player" else self.npcs.get(target_key)
+                    if target:
+                        if isinstance(s_info, str):
+                            msg = StatusEffectEngine.apply_status(target, s_info)
+                        elif isinstance(s_info, dict):
+                            msg = StatusEffectEngine.apply_status(
+                                target,
+                                s_info.get("status_id", "poison"),
+                                duration=s_info.get("duration"),
+                                potency=s_info.get("potency"),
+                                stacks=s_info.get("stacks", 1)
+                            )
+                        else:
+                            msg = ""
+                        if msg:
+                            changes.append(msg)
+
+        if "remove_status" in update:
+            from src.world.status_engine import StatusEffectEngine
+            status_data = update["remove_status"]
+            if isinstance(status_data, dict):
+                for target_key, s_ids in status_data.items():
+                    target = self.player if target_key == "player" else self.npcs.get(target_key)
+                    if target:
+                        s_list = s_ids if isinstance(s_ids, list) else [s_ids]
+                        for s_id in s_list:
+                            if StatusEffectEngine.remove_status(target, str(s_id)):
+                                changes.append(f"상태이상 해제: [{getattr(target, 'name', target_key)}] {s_id}")
+
+        # Update Environmental Metrics
+        if "update_hygiene" in update:
+            self.player.hygiene_level = max(0, min(100, self.player.hygiene_level + int(update["update_hygiene"])))
+            changes.append(f"🧼 플레이어 위생 상태: {self.player.hygiene_level}/100")
+
+        if "update_body_temperature" in update:
+            self.player.body_temperature = round(self.player.body_temperature + float(update["update_body_temperature"]), 1)
+            changes.append(f"🌡️ 플레이어 체온: {self.player.body_temperature}°C")
+
+        # 21. Active Campsite State
+
+    def _apply_inventory_and_equipment_updates(self, update: dict, changes: list[str]) -> None:
+        """Applies item pickup, drop, equip, unequip, and destruction."""
         if "pickup_item" in update:
             item_id = update["pickup_item"]
             loc = self.current_location()
@@ -3661,6 +3838,9 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     changes.append(f"Item {it.name} destroyed")
 
         # 5. NPC state updates (alive, disposition, health, stats_revealed)
+
+    def _apply_npc_updates(self, update: dict, changes: list[str]) -> None:
+        """Applies NPC state, personality, schedule, episodic memory, attitude, and BDI."""
         if "npc_state" in update:
             for npc_id, new_state in update["npc_state"].items():
                 if npc_id in self.npcs:
@@ -3721,25 +3901,6 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     changes.append(f"NPC {self.npcs[npc_id].name} schedule modified")
 
         # Add physical traces to location
-        if "add_location_trace" in update:
-            trace_info = update["add_location_trace"]
-            target_lid = trace_info.get("location_id", self.player.location)
-            if target_lid in self.locations:
-                loc_obj = self.locations[target_lid]
-                loc_obj.physical_traces.append({
-                    "trace": trace_info.get("trace", ""),
-                    "turn": self.turn,
-                    "npc_name": trace_info.get("npc_name", "미상")
-                })
-                loc_obj.physical_traces = [
-                    t for t in loc_obj.physical_traces
-                    if isinstance(t, dict) and (self.turn - t.get("turn", self.turn)) <= 15
-                ][-10:]
-                changes.append(f"Physical trace left at {loc_obj.name}")
-
-
-
-        # 7. NPC episodic memories (significance 1-5)
         if "npc_memory" in update:
             for npc_id, memory_data in update["npc_memory"].items():
                 if npc_id in self.npcs:
@@ -3764,43 +3925,69 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     )
 
         # 8. Player health delta
-        if "player_health" in update:
-            delta = update["player_health"]
-            self.player.health = max(0, min(self.player.max_health, self.player.health + delta))
-            changes.append(f"Player health changed by {delta} (Now: {self.player.health}/{self.player.max_health})")
+        if "update_npc_attitude" in update:
+            att_updates = update["update_npc_attitude"]
+            if isinstance(att_updates, dict):
+                for npc_id, att_delta in att_updates.items():
+                    if npc_id in self.npcs and isinstance(att_delta, dict):
+                        npc = self.npcs[npc_id]
+                        if "affinity" in att_delta:
+                            npc.affinity = max(0, min(100, npc.affinity + att_delta["affinity"]))
+                        if "fear" in att_delta:
+                            npc.fear = max(0, min(100, npc.fear + att_delta["fear"]))
+                        if "debt" in att_delta:
+                            npc.debt = max(-100, min(100, npc.debt + att_delta["debt"]))
+                        changes.append(f"NPC [{npc.name}] 태도 변화: 친밀도({npc.affinity}), 공포({npc.fear}), 부채({npc.debt})")
 
-        # 9. Gold and EXP (with Stat Cap check)
-        if "add_gold" in update:
-            self.player.gold = max(0, self.player.gold + update["add_gold"])
-            changes.append(f"Gold changed: {self.player.gold}")
+        # Add NPC Belief (BDI)
+        if "add_npc_belief" in update:
+            b_updates = update["add_npc_belief"]
+            if isinstance(b_updates, dict):
+                for npc_id, belief_text in b_updates.items():
+                    if npc_id in self.npcs and belief_text:
+                        self.npcs[npc_id].beliefs.append(str(belief_text))
+                    changes.append(f"NPC [{self.npcs[npc_id].name}] 인지 갱신: '{belief_text}'")
 
-        if "add_exp" in update:
-            self.player.exp += update["add_exp"]
-            while self.player.exp >= 100:
-                self.player.exp -= 100
-                self.player.level += 1
-                self.player.max_health += 10
-                self.player.health = self.player.max_health
-                
-                # Gain 1 to 2 stat points, clamped to MAX_STAT_VALUE
-                stat_gain = min(MAX_LEVELUP_STAT_GAIN, 1)
-                self.player.strength = min(MAX_STAT_VALUE, self.player.strength + stat_gain)
-                self.player.constitution = min(MAX_STAT_VALUE, self.player.constitution + stat_gain)
-                
-                self.player.stat_points += 2
-                changes.append(f"LEVEL UP! Player is now Level {self.player.level}")
+        # Update NPC BDI intention/desire
+        if "update_npc_bdi" in update:
+            for npc_id, bdi_data in update["update_npc_bdi"].items():
+                if npc_id in self.npcs and isinstance(bdi_data, dict):
+                    npc = self.npcs[npc_id]
+                    if "desire" in bdi_data:
+                        npc.desire = bdi_data["desire"]
+                    if "intention" in bdi_data:
+                        npc.intention = bdi_data["intention"]
 
-        # 10. Reputation delta (Clamped between MIN_REPUTATION_DELTA and MAX_REPUTATION_DELTA)
-        if "reputation_delta" in update:
-            raw_delta = update["reputation_delta"]
-            clamped_delta = max(MIN_REPUTATION_DELTA, min(MAX_REPUTATION_DELTA, raw_delta))
-            self.player.reputation = max(
-                MIN_REPUTATION_TOTAL,
-                min(MAX_REPUTATION_TOTAL, self.player.reputation + clamped_delta)
-            )
-            changes.append(f"Player reputation changed by {clamped_delta} to {self.player.reputation}")
+        # Player Injuries and Traumas
+        if "update_npc_morale" in update:
+            for nid, m_delta in update["update_npc_morale"].items():
+                if nid in self.npcs:
+                    self.npcs[nid].morale = max(0, min(100, self.npcs[nid].morale + int(m_delta)))
+                    changes.append(f"⚔️ NPC [{self.npcs[nid].name}] 사기 갱신: {self.npcs[nid].morale}/100")
 
-        # 11. World fact learned
+        # 20. Hygiene & Body Temperature
+
+    def _apply_world_environment_updates(self, update: dict, changes: list[str]) -> None:
+        """Applies world facts, dynamic entities, hazards, clues, environment metrics, and campsite."""
+        if "add_location_trace" in update:
+            trace_info = update["add_location_trace"]
+            target_lid = trace_info.get("location_id", self.player.location)
+            if target_lid in self.locations:
+                loc_obj = self.locations[target_lid]
+                loc_obj.physical_traces.append({
+                    "trace": trace_info.get("trace", ""),
+                    "turn": self.turn,
+                    "npc_name": trace_info.get("npc_name", "미상")
+                })
+                loc_obj.physical_traces = [
+                    t for t in loc_obj.physical_traces
+                    if isinstance(t, dict) and (self.turn - t.get("turn", self.turn)) <= 15
+                ][-10:]
+                changes.append(f"Physical trace left at {loc_obj.name}")
+
+
+
+        # 7. NPC episodic memories (significance 1-5)
         if "add_fact" in update:
             fact = update["add_fact"]
             if fact not in self.player.known_facts:
@@ -3810,53 +3997,6 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
             changes.append(f"New world fact recorded: {fact}")
             
         # Grant skill
-        if "grant_skill" in update:
-            for target_id, skill_id in update["grant_skill"].items():
-                if target_id == "player":
-                    if skill_id not in self.player.skills:
-                        self.player.skills.append(skill_id)
-                        changes.append(f"Player acquired skill: {skill_id}")
-                elif target_id in self.npcs:
-                    if skill_id not in self.npcs[target_id].skills:
-                        self.npcs[target_id].skills.append(skill_id)
-                        changes.append(f"NPC {self.npcs[target_id].name} acquired skill: {skill_id}")
-                        
-        # Grant title
-        if "grant_title" in update:
-            for target_id, title_id in update["grant_title"].items():
-                if target_id == "player":
-                    if title_id not in self.player.titles:
-                        self.player.titles.append(title_id)
-                        changes.append(f"Player acquired title: {title_id}")
-                elif target_id in self.npcs:
-                    if title_id not in self.npcs[target_id].titles:
-                        self.npcs[target_id].titles.append(title_id)
-                        changes.append(f"NPC {self.npcs[target_id].name} acquired title: {title_id}")
-                        
-        # Add magic word
-        if "add_magic_word" in update:
-            word = update["add_magic_word"]
-            if word not in self.player.known_magic_words:
-                self.player.known_magic_words.append(word)
-                changes.append(f"Player learned magic word: {word}")
-
-        # Fatigue updates
-        if "fatigue_delta" in update:
-            delta = int(update["fatigue_delta"])
-            self.player.fatigue = max(0, min(100, self.player.fatigue + delta))
-            changes.append(f"Player fatigue updated: {self.player.fatigue}/100")
-            if delta < 0:
-                from src.world.injury_engine import InjuryEngine
-                r_logs = InjuryEngine.progress_rest_healing(self, self.player, rest_turns=1)
-                changes.extend(r_logs)
-
-        # Time advanced updates
-        if "time_minutes" in update:
-            mins = int(update["time_minutes"])
-            self.player.time_elapsed_minutes += mins
-            changes.append(f"Time advanced by {mins} minutes (Total: {self.player.time_elapsed_minutes}m)")
-
-        # 12. Dynamic Entity Registration & Persistence (Zero Evaporation)
         if "create_npc" in update:
             npc_data = update["create_npc"]
             new_npc = self.register_dynamic_npc(npc_data)
@@ -3936,111 +4076,6 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                     changes.extend(ripple_logs)
 
         # Update NPC Attitude Matrix (affinity, fear, debt)
-        if "update_npc_attitude" in update:
-            att_updates = update["update_npc_attitude"]
-            if isinstance(att_updates, dict):
-                for npc_id, att_delta in att_updates.items():
-                    if npc_id in self.npcs and isinstance(att_delta, dict):
-                        npc = self.npcs[npc_id]
-                        if "affinity" in att_delta:
-                            npc.affinity = max(0, min(100, npc.affinity + att_delta["affinity"]))
-                        if "fear" in att_delta:
-                            npc.fear = max(0, min(100, npc.fear + att_delta["fear"]))
-                        if "debt" in att_delta:
-                            npc.debt = max(-100, min(100, npc.debt + att_delta["debt"]))
-                        changes.append(f"NPC [{npc.name}] 태도 변화: 친밀도({npc.affinity}), 공포({npc.fear}), 부채({npc.debt})")
-
-        # Add NPC Belief (BDI)
-        if "add_npc_belief" in update:
-            b_updates = update["add_npc_belief"]
-            if isinstance(b_updates, dict):
-                for npc_id, belief_text in b_updates.items():
-                    if npc_id in self.npcs and belief_text:
-                        self.npcs[npc_id].beliefs.append(str(belief_text))
-                    changes.append(f"NPC [{self.npcs[npc_id].name}] 인지 갱신: '{belief_text}'")
-
-        # Update NPC BDI intention/desire
-        if "update_npc_bdi" in update:
-            for npc_id, bdi_data in update["update_npc_bdi"].items():
-                if npc_id in self.npcs and isinstance(bdi_data, dict):
-                    npc = self.npcs[npc_id]
-                    if "desire" in bdi_data:
-                        npc.desire = bdi_data["desire"]
-                    if "intention" in bdi_data:
-                        npc.intention = bdi_data["intention"]
-
-        # Player Injuries and Traumas
-        if "add_player_injury" in update:
-            inj = update["add_player_injury"]
-            if inj and inj not in self.player.injuries:
-                self.player.injuries.append(inj)
-                changes.append(f"플레이어 신체 부상: {inj}")
-
-        if "add_player_trauma" in update:
-            tra = update["add_player_trauma"]
-            if tra and tra not in self.player.traumas:
-                self.player.traumas.append(tra)
-                changes.append(f"플레이어 트라우마 획득: {tra}")
-
-        if "remove_player_injury" in update:
-            rem_inj = str(update["remove_player_injury"]).strip()
-            to_remove = [inj for inj in self.player.injuries if rem_inj in inj or inj in rem_inj]
-            for inj in to_remove:
-                self.player.injuries.remove(inj)
-                if inj in self.player.splinted_injuries:
-                    del self.player.splinted_injuries[inj]
-                changes.append(f"플레이어 신체 부상 완치: {inj}")
-
-        if "splint_player_injury" in update:
-            s_data = update["splint_player_injury"]
-            inj_name = s_data.get("injury_name")
-            turns = s_data.get("turns_needed", 2)
-            if inj_name:
-                self.player.splinted_injuries[inj_name] = turns
-                changes.append(f"플레이어 부목 고정: {inj_name} (완치까지 휴식 {turns}회 필요)")
-
-        if "progress_rest_healing" in update:
-            from src.world.injury_engine import InjuryEngine
-            rest_turns = int(update["progress_rest_healing"])
-            r_logs = InjuryEngine.progress_rest_healing(self, self.player, rest_turns=rest_turns)
-            changes.extend(r_logs)
-
-        # 17. Status Effects (Status Effect Engine)
-        if "apply_status" in update:
-            from src.world.status_engine import StatusEffectEngine
-            status_data = update["apply_status"]
-            if isinstance(status_data, dict):
-                for target_key, s_info in status_data.items():
-                    target = self.player if target_key == "player" else self.npcs.get(target_key)
-                    if target:
-                        if isinstance(s_info, str):
-                            msg = StatusEffectEngine.apply_status(target, s_info)
-                        elif isinstance(s_info, dict):
-                            msg = StatusEffectEngine.apply_status(
-                                target,
-                                s_info.get("status_id", "poison"),
-                                duration=s_info.get("duration"),
-                                potency=s_info.get("potency"),
-                                stacks=s_info.get("stacks", 1)
-                            )
-                        else:
-                            msg = ""
-                        if msg:
-                            changes.append(msg)
-
-        if "remove_status" in update:
-            from src.world.status_engine import StatusEffectEngine
-            status_data = update["remove_status"]
-            if isinstance(status_data, dict):
-                for target_key, s_ids in status_data.items():
-                    target = self.player if target_key == "player" else self.npcs.get(target_key)
-                    if target:
-                        s_list = s_ids if isinstance(s_ids, list) else [s_ids]
-                        for s_id in s_list:
-                            if StatusEffectEngine.remove_status(target, str(s_id)):
-                                changes.append(f"상태이상 해제: [{getattr(target, 'name', target_key)}] {s_id}")
-
-        # Update Environmental Metrics
         if "update_environment_metrics" in update:
             env_delta = update["update_environment_metrics"]
             if isinstance(env_delta, dict):
@@ -4063,6 +4098,29 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
 
 
         # Quest Engine Deltas
+        if "active_campsite" in update:
+            from src.world.campsite_engine import CampsiteState
+            c_val = update["active_campsite"]
+            if isinstance(c_val, dict):
+                self.active_campsite = CampsiteState.from_dict(c_val)
+            elif isinstance(c_val, CampsiteState) or c_val is None:
+                self.active_campsite = c_val
+            changes.append("⛺ 야영지 상태 동기화")
+
+        # World ended
+        if "world_ended" in update:
+            self.active_world_ended = update["world_ended"]
+            changes.append(f"World ended state set to: {self.active_world_ended}")
+
+        self.turn += 1
+        return changes
+
+
+
+
+
+    def _apply_subsystem_engine_deltas(self, update: dict, changes: list[str]) -> None:
+        """Applies quest, economy, shop, crafting, party, and ecological cascade deltas."""
         if "accept_quest" in update:
             from src.world.quest_engine import QuestEngine
             q_id = update["accept_quest"]
@@ -4188,47 +4246,11 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         if "ecological_collapse" in update:
             eco_data = update["ecological_collapse"]
             if isinstance(eco_data, dict) and eco_data.get("hazard_mutation"):
-                loc_id = eco_data.get("location_id", self.player.location)
                 self.world_facts.append(f"[생태계 진공 붕괴] {eco_data['hazard_mutation']}")
                 changes.append(f"☣️ [생태계 연쇄 붕괴] {eco_data['hazard_mutation']}")
 
 
         # 19. Morale & Surrender Threshold
-        if "update_npc_morale" in update:
-            for nid, m_delta in update["update_npc_morale"].items():
-                if nid in self.npcs:
-                    self.npcs[nid].morale = max(0, min(100, self.npcs[nid].morale + int(m_delta)))
-                    changes.append(f"⚔️ NPC [{self.npcs[nid].name}] 사기 갱신: {self.npcs[nid].morale}/100")
-
-        # 20. Hygiene & Body Temperature
-        if "update_hygiene" in update:
-            self.player.hygiene_level = max(0, min(100, self.player.hygiene_level + int(update["update_hygiene"])))
-            changes.append(f"🧼 플레이어 위생 상태: {self.player.hygiene_level}/100")
-
-        if "update_body_temperature" in update:
-            self.player.body_temperature = round(self.player.body_temperature + float(update["update_body_temperature"]), 1)
-            changes.append(f"🌡️ 플레이어 체온: {self.player.body_temperature}°C")
-
-        # 21. Active Campsite State
-        if "active_campsite" in update:
-            from src.world.campsite_engine import CampsiteState
-            c_val = update["active_campsite"]
-            if isinstance(c_val, dict):
-                self.active_campsite = CampsiteState.from_dict(c_val)
-            elif isinstance(c_val, CampsiteState) or c_val is None:
-                self.active_campsite = c_val
-            changes.append("⛺ 야영지 상태 동기화")
-
-        # World ended
-        if "world_ended" in update:
-            self.active_world_ended = update["world_ended"]
-            changes.append(f"World ended state set to: {self.active_world_ended}")
-
-        self.turn += 1
-        return changes
-
-
-
 
     def append_history(self, entry: dict) -> None:
         """Append a turn entry to history, auto-archiving turns beyond the 50-turn cap to SQLite."""
