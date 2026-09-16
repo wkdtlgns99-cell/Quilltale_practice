@@ -78,7 +78,13 @@
     2. `src/world/validator.py`의 `ActionValidator.pre_validate_action()`(873줄)을 5대 서브 검증기로 분할: `_validate_physical_blocks`, `_validate_inventory_and_equipment`, `_validate_target_and_interaction`, `_validate_spatial_and_physical_limits`, `_dispatch_action_challenges`. 메인 `pre_validate_action()`은 간결한 오케스트레이터로 경량화.
     3. 외부 API 시그니처 및 반환 튜플 규격 100% 보존.
   - **검증 파일/테스트**: `src/world/state.py`, `src/world/validator.py` | `tests/test_p2_1_god_methods_refactor.py` (12 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 634 passed in 229.33s (0 failed)
-- [ ] **🔧 [P2-2] God 파일 분할 로드맵 수립 (`state.py` 4,588줄, `infrastructure.py` 3,092줄, `two_pass_engine.py` 2,433줄)**: 데이터클래스/엔티티 스키마와 턴 상태 갱신/전이 로직 분리.
+- [x] **🔧 [P2-2] God 파일 분할 로드맵 수립 및 1단계(엔티티 모델 분리) 완수**:
+  - **수정**:
+    1. `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` 작성: 3대 God 파일(`state.py`, `infrastructure.py`, `two_pass_engine.py`)의 책임 분석, re-export 하위 호환 전략, 3단계 마이그레이션 로드맵 확정.
+    2. Phase 1 실천: `src/world/state.py`의 상단 데이터 모델 19종(L40~L1937, 약 1,900줄)을 순수 도메인 모듈 `src/world/entities.py`로 분리.
+    3. `src/world/state.py`에서 `from .entities import (...)`로 re-export하여 기존 모든 모듈/테스트의 import 경로 100% 무회귀 하위 호환성 보장.
+    4. `state.py` 줄 수 4,641줄 → 2,752줄로 약 1,900줄 대폭 경량화.
+  - **검증 파일/테스트**: `src/world/entities.py`, `src/world/state.py`, `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` | `tests/test_p2_2_god_files_decomposition.py` (3 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 637 passed in 228.75s (0 failed)
 - [ ] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**: `pytest tests/`, `ruff check --select F,E9`, `python scripts/reachability_audit.py` 자동 검증.
 - [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**: README.md 수치 최신화(604 통과), 배선 변경 시 `reachability_audit.py` 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
 - [ ] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**: `game_master.py:638` raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일.
@@ -103,41 +109,34 @@
 
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-1 God 메서드 분할 100% 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-2 God 파일 분할 로드맵 및 1단계 완수)
 
-#### [P2-1 God 메서드 2종 도메인별 서브 메서드 분할 리팩터링]
-1. **`WorldState.apply_update()` (802줄) 5대 서브 도메인 분할**:
-   - `_apply_player_updates(self, update: dict, changes: list[str]) -> None` (플레이어 스탯, 이동, 부상, 상태이상, 위생, 체온 등)
-   - `_apply_inventory_and_equipment_updates(self, update: dict, changes: list[str]) -> None` (아이템 획득, 버리기, 장착, 해제, 파괴 등)
-   - `_apply_npc_updates(self, update: dict, changes: list[str]) -> None` (NPC 상태, 사기, 에피소딕 기억, 호감도, BDI 등)
-   - `_apply_world_environment_updates(self, update: dict, changes: list[str]) -> None` (월드 팩트, 위치 흔적, 비밀/단서, 환경 기믹 등)
-   - `_apply_subsystem_engine_deltas(self, update: dict, changes: list[str]) -> None` (퀘스트, 경제, 상점, 제작, 파티, 생태계 붕괴 등)
-   - 메인 `apply_update()`를 15줄의 명쾌한 오케스트레이터로 교체.
-2. **`ActionValidator.pre_validate_action()` (873줄) 5대 서브 검증기 분할**:
-   - `_validate_physical_blocks(cls, action_clean, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (비현실 파워스케일링, 상태이상 행동불가, 신체 부상 행동제약, 시야/거리 제약, 던전 탐색 플래그 등)
-   - `_validate_inventory_and_equipment(cls, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (인벤토리 소유권, 장비 착용/해제 판별, 외과 치료/의사 진료 유효성 등)
-   - `_validate_target_and_interaction(cls, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (사망 NPC 상호작용 차단, 살아있는 몬스터 갈무리 차단, 교전 중 야영 차단, 음주 및 채집/감별 제약 등)
-   - `_validate_spatial_and_physical_limits(cls, action_lower, state, curr_loc, extra_flags) -> Optional[str]` (비좁은 공간 대형 무기 페널티, 수중/유독가스 질식 위험, 무게/소지 한도, 영창 피격 취소 위험 등)
-   - `_dispatch_action_challenges(cls, action_clean, action_lower, state, curr_loc, target_part, parsed, extra_flags) -> Tuple[bool, str, Optional[DiceCheckResult]]` (플레이어 습득 스킬, 마법 영창/언령/직관조형, 일반 물리 공격, 은신/절도, 심리 레버리지 화술/설득, 자물쇠 해제 판정 등)
-   - 메인 `pre_validate_action()`을 간결한 오케스트레이터로 교체.
-3. **외부 API 및 반환 시그니처 100% 호환성 유지**:
-   - `WorldState.apply_update(update) -> list[str]`
-   - `ActionValidator.pre_validate_action(action, state) -> Tuple[bool, str, Optional[DiceCheckResult], Dict[str, Any]]`
-   - 두 메서드 모두 호출자 수정 없이 완벽 호환.
+#### [P2-2 God 파일 분할 로드맵 및 엔티티 모델 분리 100% 완수]
+1. **로드맵 수립 문서화 (`docs/ROADMAP_GOD_FILE_DECOMPOSITION.md`)**:
+   - 3대 God 파일(`state.py`, `infrastructure.py`, `two_pass_engine.py`)의 책임 분석 및 문제점 진단.
+   - Re-export 패턴을 통한 외부 호출자 100% 무회귀 하위 호환 전략 확립.
+   - Phase 1 (엔티티 분리), Phase 2 (인프라 3단 분리), Phase 3 (액션 리졸버 분리) 로드맵 확정.
+2. **Phase 1 실천적 분리 (`src/world/entities.py`)**:
+   - `state.py`의 상단 데이터 모델 19종(L40~L1937, 약 1,900줄)을 순수 도메인 모듈 `src/world/entities.py`로 분리.
+   - `EquipmentSlots`, `CombatProfile`, `NPCPersonality`, `Skill`, `Title`, `ItemVisualProfile`, `Item`, `MemoryEntry`, `Faction`, `FacialDetails`, `BodyMeasurements`, `ClothingLayer`, `NPCVisualDetails`, `NPCNeeds`, `NPC`, `Location`, `EnvironmentalMetrics`, `PendingInformation`, `Player`, `DISPOSITION_KO_MAP`
+   - `src/world/state.py`에서 `from .entities import (...)`로 re-export하여 기존 전역 import와 100% 심볼 동일성 유지.
+   - `state.py` 크기 4,641줄 → 2,752줄로 약 1,900줄 대폭 경량화.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `634 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 622 → 완료 634 (+12 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `637 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 634 → 완료 637 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/64 Unreachable` (100% 도달성 유지).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/65 Unreachable` (신규 모듈 포함 100% 도달성 유지).
 - **코드 정적 검사 (pyflakes)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P2-2 God 파일 분할 로드맵 수립]**:
-   - `state.py` (4,588줄), `infrastructure.py` (3,092줄), `two_pass_engine.py` (2,433줄) 데이터클래스/엔티티 스키마와 턴 상태 갱신/전이 로직 분리 계획.
-2. **[P2-3 GitHub Actions CI 워크플로우 구축]**:
+1. **[P2-3 GitHub Actions CI 워크플로우 구축]**:
    - `.github/workflows/ci.yml` 구축 (`pytest tests/`, `pyflakes src/`, `reachability_audit.py` 자동 검증).
+2. **[P2-4 문서-코드 드리프트 최신화 및 자동화]**:
+   - README.md 수치 최신화 및 CHANGES_AUDIT 자동 동기화.
+3. **[P2-5 LLM JSON 출력 파싱 파이프라인 일원화]**:
+   - 잔여 raw `json.loads` 점검 및 `JSONRepairEngine`으로 통일.

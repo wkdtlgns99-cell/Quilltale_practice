@@ -1,7 +1,7 @@
 # CHANGES_AUDIT: Static Reachability and Call Analysis
 
 **Entrypoints**: `app.py`, `src/agents/game_master.py`  
-**Total `src/world/` modules analyzed**: 64  
+**Total `src/world/` modules analyzed**: 65  
 
 ## Summary Table
 
@@ -25,6 +25,7 @@
 | `dungeon_engine.py` | ✅ Yes | 4 | 2 | 1 | 1 |
 | `economy_engine.py` | ✅ Yes | 15 | 14 | 1 | 0 |
 | `enchant_engine.py` | ✅ Yes | 5 | 3 | 2 | 0 |
+| `entities.py` | ✅ Yes | 54 | 44 | 4 | 6 |
 | `equipment.py` | ✅ Yes | 5 | 4 | 0 | 1 |
 | `event_perspective.py` | ✅ Yes | 2 | 2 | 0 | 0 |
 | `generator.py` | ✅ Yes | 2 | 2 | 0 | 0 |
@@ -59,7 +60,7 @@
 | `sleep_engine.py` | ✅ Yes | 7 | 5 | 1 | 1 |
 | `stamina_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `stat_engine.py` | ✅ Yes | 14 | 11 | 3 | 0 |
-| `state.py` | ✅ Yes | 109 | 83 | 14 | 12 |
+| `state.py` | ✅ Yes | 55 | 45 | 6 | 4 |
 | `status_engine.py` | ✅ Yes | 11 | 11 | 0 | 0 |
 | `stealth_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `thermal_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
@@ -71,9 +72,9 @@
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
-| **TOTAL** | - | **590** | **478** | **84** | **28** |
+| **TOTAL** | - | **590** | **484** | **80** | **26** |
 
-### Unreachable Modules (0/64)
+### Unreachable Modules (0/65)
 
 
 ## Detailed Method Breakdown
@@ -116,6 +117,18 @@
 ### `enchant_engine.py` (Reachable: True)
 - `socket_rune`: **called-from-tests-only**
 - `repair_item`: **called-from-tests-only**
+
+### `entities.py` (Reachable: True)
+- `display_weight`: **never-called**
+- `appraisal_text`: **never-called**
+- `to_korean_visual_summary`: **called-from-tests-only**
+- `to_image_prompt_keywords`: **called-from-tests-only**
+- `stamina_regen_effective`: **never-called**
+- `get_recent_off_screen_logs`: **called-from-tests-only**
+- `stamina_status_ko`: **never-called**
+- `movement_speed_mps`: **called-from-tests-only**
+- `max_draw_weight_lbs`: **never-called**
+- `incantation_speed_multiplier`: **never-called**
 
 ### `equipment.py` (Reachable: True)
 - `get_active_set_bonuses`: **never-called**
@@ -225,22 +238,6 @@
 - `format_stat_sheet_ko`: **called-from-tests-only**
 
 ### `state.py` (Reachable: True)
-- `display_weight`: **never-called**
-- `tooltip_text`: **called-from-tests-only**
-- `appraisal_text`: **never-called**
-- `to_korean_visual_summary`: **called-from-tests-only**
-- `to_image_prompt_keywords`: **called-from-tests-only**
-- `str_mod`: **called-from-tests-only**
-- `stamina_regen_effective`: **never-called**
-- `display_name_ko`: **never-called**
-- `disposition_ko`: **never-called**
-- `impression_ko`: **called-from-tests-only**
-- `get_recent_off_screen_logs`: **called-from-tests-only**
-- `fatigue_status_ko`: **called-from-tests-only**
-- `stamina_status_ko`: **never-called**
-- `movement_speed_mps`: **called-from-tests-only**
-- `max_draw_weight_lbs`: **never-called**
-- `incantation_speed_multiplier`: **never-called**
 - `current_minute`: **called-from-tests-only**
 - `current_week`: **never-called**
 - `day_of_week_ko`: **called-from-tests-only**
