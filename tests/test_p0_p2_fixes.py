@@ -108,3 +108,30 @@ def test_attack_physics_can_draw_bow_overdraw_ratio():
     assert can_draw_od is True
     assert ratio_od == 1.2
     assert "오버드로우 만작" in msg_od
+
+
+def test_json_repair_engine_auxiliary_repair():
+    """P0-0-4: 보조 LLM 응답 복구 repair_json 검증 (마크다운 코드블록, trailing comma, plain dict 반환)."""
+    from src.llm.resilience import JSONRepairEngine
+
+    # 1. 일반 JSON
+    res = JSONRepairEngine.repair_json('{"news": "새로운 소문"}')
+    assert res == {"news": "새로운 소문"}
+
+    # 2. 마크다운 코드블록 감싸진 JSON
+    res_md = JSONRepairEngine.repair_json('```json\n{"news": "광산에서 괴수 출현"}\n```')
+    assert res_md == {"news": "광산에서 괴수 출현"}
+
+    # 3. Trailing comma 복구
+    res_comma = JSONRepairEngine.repair_json('{"chronicle": "영웅의 여정이 끝났다",}')
+    assert res_comma == {"chronicle": "영웅의 여정이 끝났다"}
+
+    # 4. 문자열 내 줄바꿈 unescaped 처리
+    res_newline = JSONRepairEngine.repair_json('{"narrative": "첫 줄\n둘째 줄"}')
+    assert res_newline is not None
+    assert "첫 줄" in res_newline.get("narrative", "")
+
+    # 5. 완전한 비JSON 텍스트 입력 시 None 반환 (크래시 없음)
+    res_none = JSONRepairEngine.repair_json("일반 텍스트 에러 메시지")
+    assert res_none is None
+

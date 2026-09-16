@@ -846,8 +846,9 @@ class WorldGenerator:
         )
 
         try:
+            from src.llm.resilience import JSONRepairEngine
             raw = self._llm.generate_json(prompt, DYNAMIC_REGION_SYSTEM_PROMPT)
-            loc_data = json.loads(raw)
+            loc_data = JSONRepairEngine.repair_json(raw)
             return loc_data
         except Exception as e:
             logger.error(f"Dynamic region generation failed: {e}")

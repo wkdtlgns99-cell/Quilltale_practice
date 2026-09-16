@@ -110,6 +110,44 @@ class JSONRepairEngine:
             "scene_changed": False
         }
 
+    @staticmethod
+    def repair_json(raw_text: str) -> dict | None:
+        """Repair and parse a raw LLM JSON string into a plain dict.
+
+        Unlike repair_and_parse(), this method returns the raw parsed dict
+        (or None on failure) without wrapping into a narration/state_update
+        structure. Use this for auxiliary LLM calls (news, chronicle, generator)
+        that need their own key extraction logic.
+        """
+        if not raw_text:
+            return None
+        text = raw_text.strip()
+        # 1. Strip markdown code fences (```json ... ``` or ``` ... ```)
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.MULTILINE)
+        text = re.sub(r"\s*```$", "", text, flags=re.MULTILINE)
+
+        # 2. Extract outermost JSON object
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1:
+            text = text[start:end + 1]
+
+        # 3. Fix trailing commas before closing braces/brackets
+        text = re.sub(r",\s*([\]}])", r"\1", text)
+
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # Try escaping bare newlines inside strings
+            text_cleaned = re.sub(r'(?<!\\)\n', r'\\n', text)
+            try:
+                return json.loads(text_cleaned)
+            except Exception:
+                pass
+
+        logger.warning("JSONRepairEngine.repair_json: could not parse LLM output: %.120s", raw_text)
+        return None
+
 
 class ResilientLLMRunner:
     """Executes LLM calls with exponential backoff retry and repair."""

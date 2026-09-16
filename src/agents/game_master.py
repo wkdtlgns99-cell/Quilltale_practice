@@ -640,7 +640,10 @@ JSON 형식: {{"news": "요약된 소식"}}"""
 
         try:
             raw = self._llm.generate_json(prompt, "당신은 TRPG 세계관의 소식통입니다. 흥미롭고 생생한 1~2줄 소문을 작성합니다.")
-            result = json.loads(raw)
+            from src.llm.resilience import JSONRepairEngine
+            result = JSONRepairEngine.repair_json(raw)
+            if not result:
+                return None
             news = result.get("news", "")
             if news:
                 state.world_news_feed.append(f"(턴 {state.turn}) {news}")

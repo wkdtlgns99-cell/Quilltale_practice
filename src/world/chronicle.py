@@ -100,10 +100,10 @@ class ChronicleManager:
         )
         
         try:
-            import json
+            from src.llm.resilience import JSONRepairEngine
             raw = llm.generate_json(prompt, CHRONICLE_SYSTEM_PROMPT)
-            result = json.loads(raw)
-            chronicle_text = result.get('chronicle', '')
+            result = JSONRepairEngine.repair_json(raw)
+            chronicle_text = result.get('chronicle', '') if result else ''
         except Exception as e:
             logger.error(f'Chronicle generation failed: {e}')
             chronicle_text = (
