@@ -31,7 +31,7 @@ def extract_imports(file_path: Path) -> set[Path]:
     """Parse a python file and extract all imported file paths within ROOT_DIR."""
     imported_files = set()
     try:
-        content = file_path.read_text(encoding='utf-8', errors='ignore')
+        content = file_path.read_text(encoding='utf-8-sig', errors='ignore')
         tree = ast.parse(content, filename=str(file_path))
     except Exception:
         return imported_files
@@ -80,7 +80,7 @@ def get_reachable_files(entrypoints: list[Path]) -> set[Path]:
 def get_public_definitions(file_path: Path) -> list[str]:
     """Get public function and method names defined in a file."""
     try:
-        content = file_path.read_text(encoding='utf-8', errors='ignore')
+        content = file_path.read_text(encoding='utf-8-sig', errors='ignore')
         tree = ast.parse(content, filename=str(file_path))
     except Exception:
         return []
@@ -97,16 +97,40 @@ def get_public_definitions(file_path: Path) -> list[str]:
                         names.append(item.name)
     return list(dict.fromkeys(names))
 
+def extract_called_method_names(file_path: Path) -> set[str]:
+    """Extract all method/function names that are *called* (ast.Call) within a file.
+
+    Uses AST Call node traversal to avoid confusing definition sites (def m_name)
+    with actual invocation sites (self.m_name(), cls.m_name(), m_name()).
+    """
+    try:
+        content = file_path.read_text(encoding='utf-8-sig', errors='ignore')
+        tree = ast.parse(content, filename=str(file_path))
+    except Exception:
+        return set()
+
+    called: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            # Plain call: m_name(...)
+            if isinstance(func, ast.Name):
+                called.add(func.id)
+            # Attribute call: self.m_name(...), cls.m_name(...), obj.m_name(...)
+            elif isinstance(func, ast.Attribute):
+                called.add(func.attr)
+    return called
+
 def classify_methods(world_files: list[Path], reachable_files: set[Path]):
     all_py_files = list(ROOT_DIR.glob("**/*.py"))
-    
+
     test_files = [f.resolve() for f in all_py_files if 'tests' in f.parts]
     live_files = [f.resolve() for f in all_py_files if 'tests' not in f.parts and f.resolve() in reachable_files]
     non_test_files = [f.resolve() for f in all_py_files if 'tests' not in f.parts]
 
-    live_contents = [(f, f.read_text(encoding='utf-8', errors='ignore')) for f in live_files]
-    test_contents = [(f, f.read_text(encoding='utf-8', errors='ignore')) for f in test_files]
-    non_test_contents = [(f, f.read_text(encoding='utf-8', errors='ignore')) for f in non_test_files]
+    # String-based cross-file checks (fast, good enough for other-file detection)
+    live_contents = [(f, f.read_text(encoding='utf-8-sig', errors='ignore')) for f in live_files]
+    test_contents = [(f, f.read_text(encoding='utf-8-sig', errors='ignore')) for f in test_files]
 
     results = {}
 
@@ -114,22 +138,29 @@ def classify_methods(world_files: list[Path], reachable_files: set[Path]):
         w_resolved = w_file.resolve()
         is_reachable = w_resolved in reachable_files
         public_methods = get_public_definitions(w_file)
-        
+
+        # AST-based internal call set for this module (avoids def-site confusion)
+        internal_called = extract_called_method_names(w_file)
+
         live_count = 0
         tests_only_count = 0
         never_called_count = 0
-        
+
         method_details = []
 
         for m_name in public_methods:
-            called_in_live = any(
+            # 1. Check if called from a DIFFERENT live file (string search is fine)
+            called_in_other_live = any(
                 m_name in content for f, content in live_contents if f != w_resolved
             )
+            # 2. Check if called internally within the SAME file via AST Call nodes
+            #    (accurately excludes the definition line 'def m_name(...)')
+            called_internally = m_name in internal_called
+
+            called_in_live = called_in_other_live or called_internally
+
             called_in_tests = any(
                 m_name in content for f, content in test_contents
-            )
-            called_in_non_test = any(
-                m_name in content for f, content in non_test_contents if f != w_resolved
             )
 
             if called_in_live:

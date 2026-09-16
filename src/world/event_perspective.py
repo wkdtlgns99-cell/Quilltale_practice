@@ -1,4 +1,4 @@
-﻿"""
+"""
 Event Perspective Engine for Quilltale TRPG Engine.
 Implements the 12-Axis Hyper-Realistic Perspective Matrix.
 Enables NPCs to perceive, remember, and interpret world historical events differently

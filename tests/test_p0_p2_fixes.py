@@ -1,4 +1,4 @@
-﻿import os
+import os
 import pytest
 from src.world.state import WorldState, Player, Location, Item
 from src.agents.player_bot import PlayerBotAgent

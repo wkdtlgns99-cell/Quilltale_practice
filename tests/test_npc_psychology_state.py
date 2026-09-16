@@ -1,4 +1,4 @@
-﻿"""
+"""
 Unit tests for NPC Psychology State Data Models (Phase 0-3 DoD Verification)
 Validates:
 1. MemoryEntry psychological extensions and default safety

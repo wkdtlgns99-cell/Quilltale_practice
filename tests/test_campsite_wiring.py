@@ -1,4 +1,4 @@
-﻿"""
+"""
 Integration tests for CampsiteRestEngine wiring into TwoPassEngine and WorldState.
 Verifies campsite setup, campfire lighting, sentry shifts, peaceful sleep recovery,
 night ambush enemy spawning, and combat prevention.

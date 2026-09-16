@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import ctypes.wintypes
 from pathlib import Path
 import subprocess
