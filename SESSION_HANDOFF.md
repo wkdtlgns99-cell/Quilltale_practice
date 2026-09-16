@@ -39,9 +39,9 @@
   - **검증 파일/테스트**: `scripts/reachability_audit.py`, 8개 파일 | BOM 0건 확인, AST 전체 파싱 통과, `pytest tests/` 604 passed | commit `ae32096`
 - [ ] **🔧 [P0-0-6] 문서-코드 팩트 정정 및 동기화 (QT-F07)**:
   - **처방**: P0-0-5 audit 결과로 campsite/stealth/harvest/eavesdrop 4종 배선이 이미 정상으로 자동 정정됨. `TRIAGE.md` 배선 상태 반영 및 `README.md` 테스트 수치(604개) 갱신은 8순위(최종 문서 동기화)에서 일괄 처리.
-- [ ] **🔧 [P0-0-7] LLM 쿼터 고갈 시 영문 예외 문자열 서사 유출 방어 (QT-F08)**:
-  - **위험**: API 고갈 시 `repair_and_parse(str(e))`가 영문 예외 메시지를 그대로 나레이션으로 플레이어에게 노출 (100% 한국어 유저 페이싱 위반).
-  - **처방**: 예외 발생 시 자연스러운 한국어 시스템 안내 메시지로 폴백.
+- [x] **🔧 [P0-0-7] LLM 쿼터 고갈 시 영문 예외 문자열 서사 유출 방어 (QT-F08)**:
+  - **수정**: `game_master.py`의 `process_turn()` 예외 블록에서 `repair_and_parse(str(e))` 호출 완전 제거 및 한국어 서사 폴백 딕셔너리 직접 반환. `resilience.py`의 `JSONRepairEngine`에 `is_technical_error()` 정적 메서드를 구축하여 JSON 파싱 실패/폴백 시 영문 기술적 예외(429, exhausted, traceback 등)가 서사로 유출되는 것을 2중 원천 차단.
+  - **검증 파일/테스트**: `src/agents/game_master.py`, `src/llm/resilience.py` | `tests/test_p0_p2_fixes.py::test_llm_quota_exhausted_fallback_korean`, `tests/test_p0_p2_fixes.py::test_game_master_process_turn_llm_exception_safe_korean_narration` (통과), `pytest tests/` 607 passed | commit `33cfd11`
 - [ ] **🔧 [P0-0-8] 잔여 결함 디테일 보강 (P0-1, P2-7)**:
   - `player_bot.py:137`: 미사용 죽은 `Item` import 청소.
   - `attack_physics_engine.py`: `can_draw_bow` 호출부(`npc_skill_engine.py` 등)에 `allow_overdraw=True` 전달 진입점 마련.
