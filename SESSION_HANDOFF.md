@@ -33,11 +33,12 @@
 - [ ] **🚨 [P0-0-4] 보조 LLM JSON 출력 파싱 시 raw `json.loads`의 `JSONRepairEngine` 통일 (QT-F04)**:
   - **위험**: `game_master.py:643`(세계 뉴스), `chronicle.py:105`(연대기), `generator.py:850`(동적 지역)에서 마크다운 코드 블록(```json)이나 trailing comma 출력 시 JSONDecodeError로 조용한 기능 실패/유실.
   - **처방**: `JSONRepairEngine.repair_json(raw)` 공통 헬퍼 메서드로 파싱 통일.
-- [ ] **🔧 [P0-0-5] 8개 파일 UTF-8 BOM (`\ufeff`) 제거 및 정적 분석 정상화 (QT-F05)**:
-  - **위험**: `event_perspective.py`, `scenario_manager.py` 등 8개 파일에 잔존하는 `\xef\xbb\xbf`로 인해 Python `ast.parse`가 SyntaxError를 던지고 `reachability_audit.py`가 메서드 수를 0으로 오판.
-  - **처방**: 8개 파일 UTF-8 no-BOM 재저장 및 `reachability_audit.py`에 `utf-8-sig` 적용.
+- [x] **🔧 [P0-0-5] 8개 파일 UTF-8 BOM (`\ufeff`) 제거 및 정적 분석 정상화 (QT-F05)**:
+  - **수정**: 8개 파일 BOM 제거. `reachability_audit.py`를 `utf-8-sig` 인코딩 + AST `ast.Call` 노드 기반 내부 호출 탐지 방식으로 전면 수정 (기존 `if f != w_resolved` 오판 버그 근본 수정).
+  - **결과**: `two_pass_engine.py` never-called 6→0 (campsite/stealth/harvest/eavesdrop 4종 `called-from-live-path` 정상 분류). 전체 never-called 84→31. `event_perspective.py`/`scenario_manager.py` 0메서드→정상 집계.
+  - **검증 파일/테스트**: `scripts/reachability_audit.py`, 8개 파일 | BOM 0건 확인, AST 전체 파싱 통과, `pytest tests/` 604 passed | commit `ae32096`
 - [ ] **🔧 [P0-0-6] 문서-코드 팩트 정정 및 동기화 (QT-F07)**:
-  - **처방**: `TRIAGE.md`에서 배선 완료된 4종(`alcohol`, `botany`, `harvest`, `mana_burn`)만 배선 완료로 갱신. 실전 미호출인 `campsite`, `stealth` 2종은 '차기 보류' 상태 유지(거짓 정보화 방지). 삭제 완료된 `save_load_manager.py` 항목 정리, `README.md` 테스트 수치(604개) 갱신.
+  - **처방**: P0-0-5 audit 결과로 campsite/stealth/harvest/eavesdrop 4종 배선이 이미 정상으로 자동 정정됨. `TRIAGE.md` 배선 상태 반영 및 `README.md` 테스트 수치(604개) 갱신은 8순위(최종 문서 동기화)에서 일괄 처리.
 - [ ] **🔧 [P0-0-7] LLM 쿼터 고갈 시 영문 예외 문자열 서사 유출 방어 (QT-F08)**:
   - **위험**: API 고갈 시 `repair_and_parse(str(e))`가 영문 예외 메시지를 그대로 나레이션으로 플레이어에게 노출 (100% 한국어 유저 페이싱 위반).
   - **처방**: 예외 발생 시 자연스러운 한국어 시스템 안내 메시지로 폴백.
