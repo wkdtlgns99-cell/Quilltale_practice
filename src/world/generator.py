@@ -9,7 +9,7 @@ import uuid
 import random
 import logging
 from typing import Optional, List, Dict
-from src.core.config import BASE_DIR, TEMPLATES_DIR
+from src.core.config import TEMPLATES_DIR
 from src.world.skills import SkillSystem
 
 logger = logging.getLogger(__name__)
@@ -756,6 +756,114 @@ class WorldGenerator:
         if forbidden_mag:
             world_facts_list.append(f"[금지 마법] {forbidden_mag}")
 
+        # 6-Tier Realistic World Infrastructure Assembly
+        from src.world.infrastructure import InfrastructureTemplateLoader, InfrastructureRegistry
+        from src.world.state import WorldState
+
+        infra_ws = WorldState()
+        cosmo_id = chosen_cosmology.get("id")
+        continent_id = chosen_continent.get("id")
+
+        try:
+            infra_reg = InfrastructureTemplateLoader.assemble_full_world(
+                infra_ws,
+                cosmo_id=cosmo_id,
+                continent_id=continent_id,
+                settlements_per_nation=2,
+                include_facilities=True,
+                bind_entities=True,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to assemble full infrastructure: {e}")
+            infra_reg = InfrastructureRegistry()
+
+        # Merge Infrastructure Nations into Factions DB
+        for nat_id, nat in infra_reg.nations.items():
+            if nat_id not in factions_dict:
+                factions_dict[nat_id] = {
+                    "id": nat.id,
+                    "name": nat.name,
+                    "system": getattr(nat, "ruling_system", "국가"),
+                    "power_level": "주요 국가",
+                    "ruling_race": getattr(nat, "ruling_race", "인간") or "인간",
+                    "taboos": list(getattr(nat, "contraband", getattr(nat, "taboos", []))),
+                    "relations": dict(getattr(nat, "diplomatic_relations", {})),
+                    "emblem_animal": getattr(nat, "flag_symbol", "사자") or "사자",
+                    "flag_colors": ["금색", "청색"],
+                    "flag_symbol": getattr(nat, "flag_symbol", "국가 인장") or "국가 인장",
+                    "motto": getattr(nat, "motto", ""),
+                    "traits": list(getattr(nat, "traits", [])),
+                }
+
+        # Merge resident NPCs and monsters from infra_ws into npcs_dict
+        from dataclasses import asdict, is_dataclass
+
+        for nid, npc_obj in infra_ws.npcs.items():
+            if nid not in npcs_dict:
+                if is_dataclass(npc_obj):
+                    npcs_dict[nid] = asdict(npc_obj)
+                elif hasattr(npc_obj, "to_dict"):
+                    npcs_dict[nid] = npc_obj.to_dict()
+                else:
+                    npcs_dict[nid] = dict(npc_obj.__dict__)
+
+        # Merge facility stocked items into items_dict
+        for iid, item_obj in infra_ws.items.items():
+            if iid not in items_dict:
+                if is_dataclass(item_obj):
+                    items_dict[iid] = asdict(item_obj)
+                elif hasattr(item_obj, "to_dict"):
+                    items_dict[iid] = item_obj.to_dict()
+                else:
+                    items_dict[iid] = dict(item_obj.__dict__)
+
+        # Quests from infra_ws
+        quests_dict = {}
+        for qid, q_obj in getattr(infra_ws, "quests", {}).items():
+            if is_dataclass(q_obj):
+                quests_dict[qid] = asdict(q_obj)
+            elif hasattr(q_obj, "to_dict"):
+                quests_dict[qid] = q_obj.to_dict()
+            else:
+                quests_dict[qid] = dict(q_obj.__dict__)
+
+        # Register Facilities as playable/explorable Locations so player can visit them
+        for fac_id, fac in infra_reg.facilities.items():
+            if fac_id not in locations_dict:
+                locations_dict[fac_id] = {
+                    "id": fac_id,
+                    "name": fac.name,
+                    "description": fac.description or f"{fac.name} 시설이다.",
+                    "exits": dict(fac.exits),
+                    "items": list(fac.items),
+                    "npcs": list(fac.npcs),
+                    "danger_level": 1 if "dungeon" not in getattr(fac, "facility_type", "") else 15,
+                    "facility_id": fac_id,
+                    "settlement_id": fac.settlement_id,
+                }
+
+        # Connect start location (loc_1) to starter settlement facilities
+        if infra_reg.settlements:
+            first_settlement = next(iter(infra_reg.settlements.values()))
+            if first_settlement.facility_ids:
+                first_fac_id = first_settlement.facility_ids[0]
+                locations_dict[start_loc_id]["exits"]["마을시설"] = first_fac_id
+                if first_fac_id in locations_dict:
+                    locations_dict[first_fac_id]["exits"]["선술집입구"] = start_loc_id
+                for f_id in first_settlement.facility_ids:
+                    if f_id in locations_dict:
+                        locations_dict[f_id]["exits"]["전초기지선술집"] = start_loc_id
+
+        # Infrastructure Facts
+        if infra_reg.continents:
+            main_cont = next(iter(infra_reg.continents.values()))
+            world_facts_list.append(f"[주요 대륙] {main_cont.name} (통용 언어: {main_cont.common_language})")
+        if infra_reg.nations:
+            nat_names = ", ".join(n.name for n in list(infra_reg.nations.values())[:3])
+            world_facts_list.append(f"[인프라 판도] {nat_names} 등 {len(infra_reg.nations)}개국 체제")
+        if infra_reg.settlements:
+            world_facts_list.append(f"[정주지 네트워크] 총 {len(infra_reg.settlements)}개 정주지 및 2D 도로망 연계")
+
         world_data = {
             "session_id": f"world_{uuid.uuid4().hex[:8]}",
             "world_id": f"world_{uuid.uuid4().hex[:8]}",
@@ -800,13 +908,17 @@ class WorldGenerator:
             "npcs": npcs_dict,
             "items": items_dict,
             "factions": factions_dict,
-            "quests": {},
+            "quests": quests_dict,
             "shops": {},
             "skills_db": {
                 sid: {k: v for k, v in sk.__dict__.items()}
                 for sid, sk in SkillSystem.load_skill_templates().items()
             } if hasattr(SkillSystem, "load_skill_templates") else {},
             "titles_db": {},
+            "infrastructure": infra_reg.to_dict(),
+            "total_population": infra_ws.total_population,
+            "founded_religions": list(getattr(infra_ws, "founded_religions", [])),
+            "pantheon_deities": list(getattr(infra_ws, "pantheon_deities", [])),
             "cosmology_template": full_cosmo,
             "world_lore": full_cosmo,
             "power_scale_preset_id": full_cosmo.get("power_scale", "standard_fantasy"),

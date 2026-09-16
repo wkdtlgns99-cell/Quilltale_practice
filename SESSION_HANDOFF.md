@@ -59,10 +59,10 @@
   - **검증 파일/테스트**: `app.py` | `tests/test_p0_p2_fixes.py::test_app_take_action_none_state_guarded` (통과)
 
 #### [P1 — ENGINE WIRING GAPS (엔진 미연결 & 6계층 인프라 실전 결합)]
-- [ ] **🔥 [P1-1] 6계층 인프라 시스템(5.3MB 템플릿/infrastructure.py)과 `WorldGenerator.generate_new_world` 실전 결합**:
-  - **증상**: 6계층 인프라의 대륙/국가/정주지/시설 데이터와 도로망 그래프가 실전 게임플레이에서 미호출 상태.
-  - **선택 및 처방**: `generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world` 호출로 계층 조립 결합.
-- [ ] **🔧 [P1-2] 미연결 5대 엔진 게임 루프(`TwoPassEngine`/`process_turn`) 연결**:
+- [x] **🔥 [P1-1] 6계층 인프라 시스템(5.3MB 템플릿/infrastructure.py)과 `WorldGenerator.generate_new_world` 실전 결합**:
+  - **수정**: `generate_new_world()`에서 `InfrastructureTemplateLoader.assemble_full_world(..., bind_entities=True)`를 직접 호출하여 6계층(대륙/권역/국가/정주지/시설) 및 거주민 NPC, 상점 아이템, 퀘스트, 2D 도로망을 실전 턴 루프에 완전 바인딩. 시설(Facility)들을 탐험 가능한 `Location`으로 자동 등록하고 시작 위치(`loc_1`)와 상호 연결. `two_pass_engine.py`의 이동 액션 방향 키워드('이동' 단어 포함 시 'east' 오인식) 버그 수정.
+  - **검증 파일/테스트**: `src/world/generator.py`, `src/world/two_pass_engine.py` | `tests/test_infrastructure_generator_wiring.py::test_world_generator_assembles_6_tier_infrastructure`, `test_world_generator_infrastructure_live_turn_navigation`, `test_world_generator_full_serialization_roundtrip` (통과), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 618 passed
+- [ ] **🔧 [P1-2] 미연결 3대 엔진 게임 루프(`TwoPassEngine`/`process_turn`) 연결**:
   - **대상 엔진**: `siege_engine.py`, `merchant_barter_engine.py`, `combat_time_track_engine.py`, `time_calendar_engine.py`, `vein_restoration_engine.py` (상세는 [TRIAGE.md](file:///c:/Quilltale/TRIAGE.md) 참조).
   - **처방**: `TwoPassEngine.compute_pass1` / `DeterministicFactSheet` 슬롯에 순차 연결 또는 기존 엔진 통합.
 
@@ -126,16 +126,16 @@
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `615 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 604 → 완료 615 (+11 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `618 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 615 → 완료 618 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
 - **코드 정적 검사 (pyflakes)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P1-1 6계층 인프라 시스템과 WorldGenerator 실전 결합]**:
-   - 6계층 인프라(대륙/국가/정주지/시설 및 2D 도로망 그래프, 5.3MB 템플릿)를 `WorldGenerator.generate_new_world()`에서 `InfrastructureRegistry` 및 `assemble_full_world()`를 통해 게임 시작 시점에 결합.
-2. **[P1-2 미연결 3대 엔진 결합 및 정리]**:
-   - `merchant_barter_engine.py`: `EconomyEngine`과 통합.
+1. **[P1-2 미연결 3대 엔진 결합 및 정리]**:
+   - `merchant_barter_engine.py`: `EconomyEngine`과 통합 또는 `compute_pass1` 슬롯 연결.
    - `combat_time_track_engine.py`, `siege_engine.py`: 시나리오 분리 세션 추진.
+2. **[P2-1 God 메서드 분할]**:
+   - `apply_update` (797줄), `pre_validate_action` (870줄) 모듈화 분할.

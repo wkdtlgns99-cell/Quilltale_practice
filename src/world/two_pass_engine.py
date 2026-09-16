@@ -299,20 +299,23 @@ class TwoPassEngine:
 
         # Case 1: Check direct exits (1-hop)
         direction_keywords = {
-            "north": ["북쪽", "북", "north", "앞으로", "정면"],
-            "south": ["남쪽", "남", "south", "뒤로", "남문"],
-            "east": ["동쪽", "동", "east", "오른쪽"],
-            "west": ["서쪽", "서", "west", "왼쪽"],
+            "north": ["북쪽", "북으로", "북편", "north", "앞으로", "정면"],
+            "south": ["남쪽", "남으로", "남편", "south", "뒤로", "남문"],
+            "east": ["동쪽", "동으로", "동편", "east", "오른쪽"],
+            "west": ["서쪽", "서로", "서편", "west", "왼쪽"],
             "upstairs": ["2층", "계단", "위층", "upstairs", "올라"],
             "downstairs": ["지하", "아래층", "지하실", "downstairs", "내려"]
         }
+
+        # Strip common action suffix verbs like '이동' for direction keyword matching
+        action_for_dir = re.sub(r'[이|기|작|변|율]동', ' ', action_lower)
 
         if hasattr(curr_loc, "exits") and curr_loc.exits:
             for exit_dir, target_loc_id in curr_loc.exits.items():
                 keywords = direction_keywords.get(exit_dir.lower(), [exit_dir.lower()])
                 target_loc = state.locations.get(target_loc_id)
                 loc_name_match = bool(target_loc and target_loc.name.lower() in action_lower)
-                dir_match = any(k in action_lower for k in keywords)
+                dir_match = any(k in action_for_dir for k in keywords)
 
                 # Contextual match: if player mentions '수문' or '운하' and exit is north/subterranean
                 context_match = False
