@@ -1116,7 +1116,19 @@ class TwoPassEngine:
         fact_sheet = DeterministicFactSheet(action=action)
         state_delta: Dict[str, Any] = {}
 
-        # 0. Pre-evaluate Travel Duration for Time-Scaled Survival Ticks
+        # 0. Action Pre-validation & Legality Check (QT-F01: Fail-Early before any state tick or simulation)
+        is_valid, error_msg, dice_res, extra_flags = ActionValidator.pre_validate_action(action, state)
+        fact_sheet.is_valid = is_valid
+        fact_sheet.rejection_reason = error_msg
+        fact_sheet.extra_flags = extra_flags or {}
+        if dice_res:
+            fact_sheet.dice_result = dice_res.to_dict() if hasattr(dice_res, "to_dict") else dice_res
+
+        if not is_valid:
+            fact_sheet.pre_computed_state_delta = {}
+            return fact_sheet
+
+        # 0.1 Pre-evaluate Travel Duration for Time-Scaled Survival Ticks
         curr_loc = state.current_location()
         travel_info = cls.resolve_action_movement(action, state)
         if travel_info:
@@ -1248,15 +1260,7 @@ class TwoPassEngine:
         state.advance_information_waves()
         state.check_and_publish_periodicals()
 
-        # 2. Action Pre-validation & Dice check
-        is_valid, error_msg, dice_res, extra_flags = ActionValidator.pre_validate_action(action, state)
-        fact_sheet.is_valid = is_valid
-        fact_sheet.rejection_reason = error_msg
-        fact_sheet.extra_flags = extra_flags or {}
-
-        if not is_valid:
-            fact_sheet.pre_computed_state_delta = {}
-            return fact_sheet
+        # 2. Action Pre-validation & Dice check (Completed at entry step 0)
 
         # 2.2 Delayed Theft Discovery Check (PerceptionEngine)
         from src.world.perception_engine import PerceptionEngine

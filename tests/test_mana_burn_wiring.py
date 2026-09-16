@@ -50,8 +50,10 @@ def test_mana_burnout_silence_blocks_magic():
 
     assert not fact_sheet.is_valid
     assert "마나 회로 과열" in fact_sheet.rejection_reason
-    # Turn tick reduces 2 -> 1
-    assert "잔여 침묵: 1턴" in fact_sheet.rejection_reason
+    # QT-F01: 무효 행동 기각 시 선행 틱이 돌지 않으므로 침묵 턴 2턴 유지 (0-변이)
+    assert "잔여 침묵: 2턴" in fact_sheet.rejection_reason
+    updated_circuit = ManaBurnEngine.get_circuit_state(state.player)
+    assert updated_circuit.burnout_turns == 2
 
 
 def test_unqualified_caster_cannot_overchannel():

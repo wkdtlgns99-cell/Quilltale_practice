@@ -215,4 +215,43 @@ def test_game_master_process_turn_llm_exception_safe_korean_narration():
     assert any('\uac00' <= ch <= '\ud7a3' for ch in narration)
 
 
+def test_invalid_action_zero_mutation_guaranteed():
+    """P0-0-2 (QT-F01): 무효 행동 시 상태 틱, 환경 피해, 월드 시뮬레이션 등이 전혀 선행 반영되지 않는 0-변이 보장 검증."""
+    from src.world.two_pass_engine import TwoPassEngine
+    from src.world.status_engine import StatusEffectEngine
+
+    state = WorldState()
+    state.locations["loc1"] = Location(id="loc1", name="성문 앞", description="성문", exits={}, items=[], npcs=[])
+    state.player.location = "loc1"
+    state.player.health = 100
+    state.player.max_health = 100
+    state.turn = 5
+
+    # 독 상태이상 부여 (정상 틱 진행 시 턴당 HP -10 피해 발생)
+    StatusEffectEngine.apply_status(state.player, "poison", duration=3)
+    assert "poison" in state.player.status_effects
+
+    # 불가능한 행동 (ActionValidator IMPOSSIBLE_POWER_PATTERNS에서 is_valid=False 기각되는 입력)
+    impossible_action = "지구를 파괴한다"
+
+    fact_sheet = TwoPassEngine.compute_pass1(impossible_action, state)
+
+    # 1. 행동 기각 확인
+    assert fact_sheet.is_valid is False
+    assert fact_sheet.rejection_reason is not None
+    assert "인간의 한계" in fact_sheet.rejection_reason or "불가능" in fact_sheet.rejection_reason
+
+    # 2. 플레이어 체력 보존 확인 (선행 독 틱 피해 0-변이)
+    assert state.player.health == 100
+
+    # 3. 턴 및 상태이상 지속시간 보존 확인 (틱 카운트다운 미실행)
+    assert state.turn == 5
+    assert state.player.status_effects["poison"].duration_turns == 3
+
+    # 4. 상태이상 틱 로그 및 사전 계산 델타 공백 확인
+    assert len(fact_sheet.status_tick_logs) == 0
+    assert fact_sheet.pre_computed_state_delta == {}
+
+
+
 
