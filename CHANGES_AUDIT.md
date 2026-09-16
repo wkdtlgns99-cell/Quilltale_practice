@@ -11,13 +11,13 @@
 | `attack_physics_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `audio_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `botany_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
-| `bounty_engine.py` | ✅ Yes | 4 | 2 | 1 | 1 |
+| `bounty_engine.py` | ✅ Yes | 4 | 3 | 0 | 1 |
 | `campsite_engine.py` | ✅ Yes | 7 | 7 | 0 | 0 |
 | `cave_in_engine.py` | ✅ Yes | 8 | 7 | 0 | 1 |
 | `celestial_engine.py` | ✅ Yes | 4 | 2 | 1 | 1 |
 | `chronicle.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `cognitive_engine.py` | ✅ Yes | 8 | 7 | 1 | 0 |
-| `combat_time_track_engine.py` | ❌ No | 8 | 3 | 2 | 3 |
+| `combat_time_track_engine.py` | ✅ Yes | 8 | 8 | 0 | 0 |
 | `corpse_ecology_engine.py` | ✅ Yes | 6 | 4 | 2 | 0 |
 | `crafting_engine.py` | ✅ Yes | 11 | 10 | 1 | 0 |
 | `dice.py` | ✅ Yes | 7 | 5 | 1 | 1 |
@@ -33,11 +33,11 @@
 | `harvest_engine.py` | ✅ Yes | 8 | 7 | 1 | 0 |
 | `hidden_encounter_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `incantation.py` | ✅ Yes | 6 | 3 | 2 | 1 |
-| `infrastructure.py` | ✅ Yes | 39 | 30 | 9 | 0 |
+| `infrastructure.py` | ✅ Yes | 39 | 31 | 8 | 0 |
 | `injury_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `legacy.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `mana_burn_engine.py` | ✅ Yes | 9 | 9 | 0 | 0 |
-| `merchant_barter_engine.py` | ❌ No | 8 | 0 | 8 | 0 |
+| `merchant_barter_engine.py` | ✅ Yes | 8 | 8 | 0 | 0 |
 | `npc_skill_engine.py` | ✅ Yes | 4 | 3 | 1 | 0 |
 | `object_physics_engine.py` | ✅ Yes | 7 | 5 | 2 | 0 |
 | `outfit_engine.py` | ✅ Yes | 15 | 6 | 9 | 0 |
@@ -54,35 +54,31 @@
 | `ration_engine.py` | ✅ Yes | 8 | 6 | 2 | 0 |
 | `rumor_diffusion_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `scenario_manager.py` | ✅ Yes | 3 | 3 | 0 | 0 |
-| `siege_engine.py` | ❌ No | 23 | 17 | 3 | 3 |
+| `siege_engine.py` | ✅ Yes | 23 | 20 | 0 | 3 |
 | `skills.py` | ✅ Yes | 10 | 8 | 1 | 1 |
 | `sleep_engine.py` | ✅ Yes | 7 | 5 | 1 | 1 |
 | `stamina_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `stat_engine.py` | ✅ Yes | 14 | 11 | 3 | 0 |
-| `state.py` | ✅ Yes | 109 | 82 | 15 | 12 |
+| `state.py` | ✅ Yes | 109 | 83 | 14 | 12 |
 | `status_engine.py` | ✅ Yes | 11 | 11 | 0 | 0 |
 | `stealth_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `thermal_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `time_calendar_engine.py` | ✅ Yes | 3 | 2 | 1 | 0 |
 | `toxicology_engine.py` | ✅ Yes | 7 | 6 | 1 | 0 |
 | `trap_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
-| `two_pass_engine.py` | ✅ Yes | 11 | 11 | 0 | 0 |
+| `two_pass_engine.py` | ✅ Yes | 14 | 14 | 0 | 0 |
 | `validator.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
-| **TOTAL** | - | **587** | **456** | **100** | **31** |
+| **TOTAL** | - | **590** | **478** | **84** | **28** |
 
-### Unreachable Modules (3/64)
+### Unreachable Modules (0/64)
 
-- ❌ `combat_time_track_engine.py`
-- ❌ `merchant_barter_engine.py`
-- ❌ `siege_engine.py`
 
 ## Detailed Method Breakdown
 
 ### `bounty_engine.py` (Reachable: True)
-- `add_bounty`: **called-from-tests-only**
 - `format_bounty_context_for_prompt`: **never-called**
 
 ### `cave_in_engine.py` (Reachable: True)
@@ -94,13 +90,6 @@
 
 ### `cognitive_engine.py` (Reachable: True)
 - `update_attitude`: **called-from-tests-only**
-
-### `combat_time_track_engine.py` (Reachable: False)
-- `get_distance_zone_ko`: **called-from-tests-only**
-- `move_towards`: **called-from-tests-only**
-- `move_away`: **never-called**
-- `end_second`: **never-called**
-- `check_perception_interrupt`: **never-called**
 
 ### `corpse_ecology_engine.py` (Reachable: True)
 - `loot_corpse`: **called-from-tests-only**
@@ -151,17 +140,6 @@
 - `register_inter_tier_route`: **called-from-tests-only**
 - `find_inter_tier_routes`: **called-from-tests-only**
 - `audit_settlement_resilience`: **called-from-tests-only**
-- `assemble_full_world`: **called-from-tests-only**
-
-### `merchant_barter_engine.py` (Reachable: False)
-- `get_regional_price`: **called-from-tests-only**
-- `calculate_barter_exchange`: **called-from-tests-only**
-- `check_smuggling_checkpoint`: **called-from-tests-only**
-- `sell_to_black_market`: **called-from-tests-only**
-- `record_merchant_debt`: **called-from-tests-only**
-- `check_debt_default`: **called-from-tests-only**
-- `appraise_unidentified_item`: **called-from-tests-only**
-- `attempt_coin_clipping`: **called-from-tests-only**
 
 ### `npc_skill_engine.py` (Reachable: True)
 - `process_npc_opportunistic_turn`: **called-from-tests-only**
@@ -228,13 +206,10 @@
 - `preserve_food`: **called-from-tests-only**
 - `consume_ration`: **called-from-tests-only**
 
-### `siege_engine.py` (Reachable: False)
+### `siege_engine.py` (Reachable: True)
 - `casualty_count`: **never-called**
 - `casualty_rate`: **never-called**
 - `morale_tier`: **never-called**
-- `initialize_siege`: **called-from-tests-only**
-- `advance_siege_turn`: **called-from-tests-only**
-- `execute_commando_action`: **called-from-tests-only**
 
 ### `skills.py` (Reachable: True)
 - `apply_passive_bonuses`: **called-from-tests-only**
@@ -273,7 +248,6 @@
 - `current_year`: **called-from-tests-only**
 - `current_month`: **called-from-tests-only**
 - `current_day_of_month`: **never-called**
-- `get_distance`: **called-from-tests-only**
 - `time_display_ko`: **called-from-tests-only**
 - `generate_news_poster`: **called-from-tests-only**
 - `to_audio_html`: **never-called**

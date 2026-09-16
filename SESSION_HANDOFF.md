@@ -62,9 +62,14 @@
 - [x] **🔥 [P1-1] 6계층 인프라 시스템(5.3MB 템플릿/infrastructure.py)과 `WorldGenerator.generate_new_world` 실전 결합**:
   - **수정**: `generate_new_world()`에서 `InfrastructureTemplateLoader.assemble_full_world(..., bind_entities=True)`를 직접 호출하여 6계층(대륙/권역/국가/정주지/시설) 및 거주민 NPC, 상점 아이템, 퀘스트, 2D 도로망을 실전 턴 루프에 완전 바인딩. 시설(Facility)들을 탐험 가능한 `Location`으로 자동 등록하고 시작 위치(`loc_1`)와 상호 연결. `two_pass_engine.py`의 이동 액션 방향 키워드('이동' 단어 포함 시 'east' 오인식) 버그 수정.
   - **검증 파일/테스트**: `src/world/generator.py`, `src/world/two_pass_engine.py` | `tests/test_infrastructure_generator_wiring.py::test_world_generator_assembles_6_tier_infrastructure`, `test_world_generator_infrastructure_live_turn_navigation`, `test_world_generator_full_serialization_roundtrip` (통과), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 618 passed
-- [ ] **🔧 [P1-2] 미연결 3대 엔진 게임 루프(`TwoPassEngine`/`process_turn`) 연결**:
-  - **대상 엔진**: `siege_engine.py`, `merchant_barter_engine.py`, `combat_time_track_engine.py`, `time_calendar_engine.py`, `vein_restoration_engine.py` (상세는 [TRIAGE.md](file:///c:/Quilltale/TRIAGE.md) 참조).
-  - **처방**: `TwoPassEngine.compute_pass1` / `DeterministicFactSheet` 슬롯에 순차 연결 또는 기존 엔진 통합.
+- [x] **🔧 [P1-2] 미연결 3대 엔진 게임 루프(`TwoPassEngine`/`process_turn`) 실전 결합**:
+  - **수정**:
+    1. `merchant_barter_engine.py`: 물물교환(barter), 유물 감정(appraisal), 금화 깎기(coin clipping), 밀수 검문(smuggling checkpoint), 지역 물가 시세(regional arbitrage), 암시장 금융(black market debt)을 `TwoPassEngine.resolve_action_barter()`로 라이브 턴 결합.
+    2. `combat_time_track_engine.py`: 미터 기반 상대 교전 거리 계산, 5대 사거리 존(초근접/근거리/중거리/원거리/초장거리), 접근(move_towards)/후퇴(move_away) 기동, 감각(PER) 기반 A안 위기 인지 인터럽트(perception interrupt)를 `TwoPassEngine.resolve_action_combat_distance_and_timing()`으로 결합.
+    3. `siege_engine.py`: 요새 다층 방호(성벽/성문/해자/흉벽/마도결계), 포격/접근/성벽돌파 백병전/사기결산 턴 시뮬레이션 및 별동대 침투 특공(commando action), 외부 LLM 서사 프롬프트 연동을 `TwoPassEngine.resolve_action_siege()`로 결합.
+    4. `two_pass_engine.py`: `DeterministicFactSheet`에 `barter_summary`, `combat_distance_summary`, `interrupt_event`, `siege_summary` 필드 및 `to_prompt_context()` 서사 지침 직렬화 추가. `compute_pass1()` 루프에서 2.496, 2.497, 2.498 순차 연산 및 `state_delta` 완전 반영.
+  - **정적 도달성 결과**: `scripts/reachability_audit.py` 실행 시 미도달 모듈 **`3/64` -> `0/64` (100% Reachable)** 달성.
+  - **검증 파일/테스트**: `src/world/two_pass_engine.py`, `src/world/merchant_barter_engine.py`, `src/world/combat_time_track_engine.py`, `src/world/siege_engine.py` | `tests/test_p1_2_engines_wiring.py::test_merchant_barter_engine_live_pass1`, `test_combat_distance_and_perception_interrupt_live_pass1`, `test_siege_warfare_engine_live_pass1`, `test_game_master_agent_process_turn_p1_2_integration` (4 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 622 passed in 232.54s (0 failed)
 
 #### [P2 — CODE QUALITY, CI & REFACTORING (품질 / CI / 유지보수)]
 - [ ] **🔧 [P2-1] God 메서드 분할 (`apply_update` 797줄, `pre_validate_action` 870줄)**: 업데이트/액션 타입별 디스패치 핸들러로 모듈화 분할.

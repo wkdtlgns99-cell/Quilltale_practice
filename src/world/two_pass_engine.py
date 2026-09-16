@@ -33,6 +33,11 @@ from src.world.alcohol_engine import AlcoholIntoxicationEngine, ALCOHOL_DRINK_RE
 from src.world.botany_engine import HerbalismBotanyEngine, PLANT_REGISTRY
 from src.world.vein_restoration_engine import ManaVeinRestorationEngine, VEIN_SURGERY_REGISTRY
 from src.world.time_calendar_engine import TimeCalendarEngine
+from src.world.dice import DiceEngine
+from src.world.infrastructure import Settlement
+from src.world.merchant_barter_engine import MerchantBarterEngine, ContrabandTier
+from src.world.combat_time_track_engine import CombatDistanceManager, ActionTimeTrackEngine, CombatAction
+from src.world.siege_engine import SiegeWarfareEngine
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +93,10 @@ class DeterministicFactSheet:
     alcohol_summary: Optional[str] = None
     botany_summary: Optional[str] = None
     vein_restoration_summary: Optional[str] = None
+    barter_summary: Optional[str] = None
+    combat_distance_summary: Optional[str] = None
+    interrupt_event: Optional[Dict[str, Any]] = None
+    siege_summary: Optional[str] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -231,6 +240,32 @@ class DeterministicFactSheet:
             lines.append("🩺 [마나 혈맥 수술 및 회로 복구 (Mana Vein Restoration Surgery)]")
             lines.append(f"- {self.vein_restoration_summary}")
             lines.append("*GM 서사 지침*: 집도의의 섬세한 손끝에서 전해지는 긴장감, 은침의 냉기 혹은 비전 수술 도구의 빛 튐, 수술 성공 시 막혔던 마나 회로가 뚫리는 황홀한 해방감 또는 실패 시 에테르 역류로 인한 전신 경련과 신경 타는 고통을 처절하고 생생하게 서술하십시오.")
+
+        if self.barter_summary:
+            lines.append("⚖️ [물물교환 / 유물 감정 / 암시장 금융 판정 (Barter & Trade)]")
+            lines.append(f"- {self.barter_summary}")
+            lines.append("*GM 서사 지침*: 상인과의 가치 절충, 감정된 유물의 진정한 품격, 금화 깎기 성공/발각, 혹은 밀수 검문 통과/적발 상황을 생생하게 서술하십시오.")
+
+        if self.combat_distance_summary:
+            lines.append("📏 [미터 기반 상대 교전 거리 (Combat Distance Zone)]")
+            lines.append(f"- {self.combat_distance_summary}")
+
+        if self.interrupt_event:
+            ie = self.interrupt_event
+            lines.append("⚡⚠️ [A안 위기 인지 인터럽트 (Perception Interrupt Reaction)]")
+            lines.append(f"- 서사: {ie.get('narrative_ko', '')}")
+            lines.append(f"- 남은 대응 여유 시간: {ie.get('time_remaining_seconds', 0.0):.2f}초 (인지 시점 거리: {ie.get('distance_at_perception_m', 0.0):.1f}m)")
+            opts = ie.get('options_ko', [])
+            if opts:
+                lines.append("- 긴급 대응 선택지:")
+                for opt in opts:
+                    lines.append(f"  * {opt}")
+            lines.append("*GM 서사 지침*: 시간이 슬로우 모션처럼 늘어나는 찰나의 순간, 적의 기습/공격을 포착하고 반응하려는 긴박한 0.1초의 심리 묘사를 작성하십시오.")
+
+        if self.siege_summary:
+            lines.append("🏰💥 [대규모 공성전 및 요새 방호 시뮬레이션 (Siege Warfare)]")
+            lines.append(f"- {self.siege_summary}")
+            lines.append("*GM 서사 지침*: 포격, 성벽과 성문의 파괴, 해자 도하 및 백병전 충돌의 비장미를 결정론적 수치에 입각해 생생하게 서술하십시오.")
 
         lines.append("=================================================================")
         return "\n".join(lines)
@@ -1112,6 +1147,367 @@ class TwoPassEngine:
         return None
 
     @classmethod
+    def resolve_action_barter(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses barter, arbitrage, smuggling checkpoint, appraisal, coin-clipping and debt actions.
+        Invokes MerchantBarterEngine deterministic mechanics.
+        """
+        act_lower = action.lower()
+        curr_loc = state.current_location()
+        terrain = getattr(curr_loc, "terrain", getattr(curr_loc, "biome", "plains_farm")) if curr_loc else "plains_farm"
+
+        # 1. Coin Clipping & Gold Dust Skimming
+        if any(k in act_lower for k in ["금화 깎기", "동전 깎기", "금가루", "주화 훼손", "coin clip"]):
+            sleight = (state.player.stats.get("dexterity", 10) - 10) // 2
+            res = MerchantBarterEngine.attempt_coin_clipping(
+                payment_amount=100,
+                merchant_perception=12,
+                player_sleight_mod=sleight
+            )
+            gold_gain = res.get("gold_dust_value", 0)
+            if gold_gain > 0:
+                state.player.gold += gold_gain
+            bounty = res.get("bounty_added", 0)
+            if bounty > 0:
+                BountyEngine.add_bounty(state, "local_guards", bounty, "금화 훼손 및 사기죄")
+            return {
+                "type": "coin_clip",
+                "success": res.get("success", False),
+                "gold_change": gold_gain,
+                "summary": res.get("summary_ko", ""),
+                "result": res
+            }
+
+        # 2. Relic & Artifact Appraisal
+        if any(k in act_lower for k in ["감정", "appraise", "유물 감정", "식별"]):
+            fee = 30
+            if state.player.gold < fee:
+                return {
+                    "type": "appraise",
+                    "success": False,
+                    "summary": f"감정 실패: 수수료 {fee}G가 부족합니다 (현재 골드: {state.player.gold}G).",
+                    "gold_change": 0
+                }
+            state.player.gold -= fee
+            # Check for unappraised item in inventory
+            unappraised_item = next(
+                (item for item_id, item in state.items.items()
+                 if item_id in state.player.inventory and (
+                     not getattr(item, "is_identified", True) or
+                     "unidentified" in getattr(item, "traits", []) or
+                     "미감정" in item.name
+                 )),
+                None
+            )
+            raw_name = unappraised_item.name if unappraised_item else "흙 묻은 고대 쇠붙이"
+            res = MerchantBarterEngine.appraise_unidentified_item(
+                raw_name=raw_name,
+                true_name="고대 성자의 축복받은 은장도",
+                true_price=350,
+                fee_paid=fee,
+                required_fee=fee,
+                is_cursed=False
+            )
+            if unappraised_item and res.get("success"):
+                unappraised_item.name = res["revealed_name"]
+                unappraised_item.value = res["price"]
+                unappraised_item.is_identified = True
+                if hasattr(unappraised_item, "traits") and "unidentified" in unappraised_item.traits:
+                    unappraised_item.traits.remove("unidentified")
+            return {
+                "type": "appraise",
+                "success": res.get("success", False),
+                "gold_change": -fee,
+                "summary": res.get("summary_ko", ""),
+                "result": res
+            }
+
+        # 3. Smuggling Checkpoint Inspection
+        if any(k in act_lower for k in ["밀수", "검문", "밀반입", "밀수품", "smuggle"]):
+            contraband_items = []
+            for iid in state.player.inventory:
+                it = state.items.get(iid)
+                if it:
+                    tier = getattr(it, "contraband_tier", 0)
+                    if any(t in getattr(it, "traits", []) for t in ["contraband", "illicit", "darkweed"]):
+                        tier = ContrabandTier.ILLICIT
+                    elif any(t in getattr(it, "traits", []) for t in ["restricted", "poached"]):
+                        tier = ContrabandTier.RESTRICTED
+                    if tier > 0:
+                        contraband_items.append({
+                            "id": it.id,
+                            "name_ko": it.name,
+                            "contraband_tier": tier
+                        })
+            stealth_mod = (state.player.stats.get("dexterity", 10) - 10) // 2
+            res = MerchantBarterEngine.check_smuggling_checkpoint(
+                contraband_items=contraband_items,
+                guard_perception=12,
+                player_stealth_mod=stealth_mod
+            )
+            if not res.get("passed", True):
+                bounty = res.get("bounty_added", 0)
+                if bounty > 0:
+                    BountyEngine.add_bounty(state, "local_guards", bounty, "금지품 밀수 혐의")
+                # Confiscate items
+                confiscated_names = res.get("confiscated_items", [])
+                for iid in list(state.player.inventory):
+                    it = state.items.get(iid)
+                    if it and (it.name in confiscated_names or it.id in confiscated_names):
+                        state.player.inventory.remove(iid)
+            return {
+                "type": "smuggle",
+                "success": res.get("passed", True),
+                "summary": res.get("summary_ko", ""),
+                "result": res
+            }
+
+        # 4. Regional Price / Market Arbitrage
+        if any(k in act_lower for k in ["시세", "물가", "마진", "차익", "arbitrage"]):
+            price_salt = MerchantBarterEngine.get_regional_price("salt", 20, terrain)
+            price_grain = MerchantBarterEngine.get_regional_price("grain", 15, terrain)
+            price_ore = MerchantBarterEngine.get_regional_price("ore", 30, terrain)
+            summary = (
+                f"[{terrain}] 지역 시세표: 소금 {price_salt}G (기준 20G), "
+                f"곡물 {price_grain}G (기준 15G), 광석 {price_ore}G (기준 30G)"
+            )
+            return {
+                "type": "price_check",
+                "success": True,
+                "summary": summary,
+                "prices": {"salt": price_salt, "grain": price_grain, "ore": price_ore}
+            }
+
+        # 5. Merchant Credit Ledger / Black Market / Debt Check
+        if any(k in act_lower for k in ["외상", "차용", "사채", "대출", "ledger", "black market", "암시장"]):
+            bm_price = MerchantBarterEngine.sell_to_black_market(base_price=100, contraband_tier=ContrabandTier.RESTRICTED)
+            entry = MerchantBarterEngine.record_merchant_debt(
+                shop_id=f"shop_{terrain}",
+                principal=100,
+                current_turn=state.turn,
+                duration_turns=30,
+                interest_rate=0.20
+            )
+            debt_res = MerchantBarterEngine.check_debt_default(entry, state.turn)
+            summary = (
+                f"금융 거래: 암시장 매입가 {bm_price}G. {debt_res['summary_ko']}"
+            )
+            return {
+                "type": "credit_debt",
+                "success": True,
+                "summary": summary,
+                "entry": entry,
+                "black_market_price": bm_price
+            }
+
+        # 6. Direct Barter / Item Swap
+        if any(k in act_lower for k in ["물물교환", "맞바꾸", "교환", "물물 교환", "barter"]):
+            offered_vals = [
+                getattr(state.items[iid], "value", 20)
+                for iid in state.player.inventory[:2]
+                if iid in state.items
+            ]
+            if not offered_vals:
+                offered_vals = [30]
+            wanted_vals = [50]
+            cha_mod = (state.player.stats.get("charisma", 10) - 10) // 2
+            roll = DiceEngine.roll_d20() + cha_mod
+            res = MerchantBarterEngine.calculate_barter_exchange(
+                offered_item_values=offered_vals,
+                wanted_item_values=wanted_vals,
+                persuasion_roll=roll,
+                terrain=terrain
+            )
+            gold_gain = res.get("change_gold_due", 0)
+            if res.get("is_possible"):
+                state.player.gold += gold_gain
+            return {
+                "type": "barter",
+                "success": res.get("is_possible", False),
+                "gold_change": gold_gain,
+                "summary": res.get("summary_ko", ""),
+                "result": res
+            }
+
+        return None
+
+    @classmethod
+    def resolve_action_combat_distance_and_timing(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses meter-based combat distance movement (charge/retreat) and Perception-gated
+        Option A reaction interrupt events.
+        Invokes CombatDistanceManager and ActionTimeTrackEngine.
+        """
+        act_lower = action.lower()
+        player_id = getattr(state.player, "id", getattr(state.player, "name", "player"))
+
+        # Determine target enemy NPC
+        target_npc = None
+        curr_loc = state.current_location()
+        npc_list = getattr(curr_loc, "npcs", getattr(curr_loc, "npc_ids", [])) if curr_loc else []
+        for nid in npc_list:
+            npc = state.npcs.get(nid)
+            if npc and (getattr(npc, "disposition", "") == "hostile" or getattr(npc, "is_hostile", False)):
+                target_npc = npc
+                break
+        if not target_npc and npc_list:
+            target_npc = state.npcs.get(npc_list[0])
+
+        target_id = target_npc.id if target_npc else "target_enemy"
+        target_name = target_npc.name if target_npc else "적대적 적수"
+
+        is_move_towards = any(k in act_lower for k in [
+            "돌진", "접근", "달려들어", "다가가", "간격을 좁", "파고들", "charge", "approach", "육박"
+        ])
+        is_move_away = any(k in act_lower for k in [
+            "거리 벌리기", "뒤로 물러나", "후퇴", "백스텝", "간격 벌", "거리 유지", "물러서", "backstep", "retreat"
+        ])
+        is_combat_intent = any(k in act_lower for k in [
+            "전투", "공격", "베기", "찌르기", "기습", "화살", "사격", "방어", "패링", "회피", "strike", "attack"
+        ])
+
+        if not (is_move_towards or is_move_away or is_combat_intent):
+            return None
+
+        # 1. Update Distance
+        if is_move_towards:
+            new_dist = CombatDistanceManager.move_towards(
+                state, mover_id=player_id, target_id=target_id, speed_mps=5.0, seconds=1.0
+            )
+            move_type = "approach"
+        elif is_move_away:
+            new_dist = CombatDistanceManager.move_away(
+                state, mover_id=player_id, target_id=target_id, speed_mps=4.0, seconds=1.0
+            )
+            move_type = "retreat"
+        else:
+            cur_dist = CombatDistanceManager.get_distance(state, player_id, target_id, default=5.0)
+            new_dist = cur_dist
+            CombatDistanceManager.set_distance(state, player_id, target_id, new_dist)
+            move_type = "stand"
+
+        zone_key = CombatDistanceManager.get_distance_zone(new_dist)
+        zone_ko = CombatDistanceManager.get_distance_zone_ko(new_dist)
+
+        # 2. Check Option A Perception Interrupt on incoming threat
+        combat_act = CombatAction(
+            entity_id=target_id,
+            action_name="급습 참격",
+            start_second=0.0,
+            duration_seconds=1.2,
+            target_id=player_id,
+            is_interruptible=True
+        )
+        _ = combat_act.end_second
+
+        is_surprise = "기습" in act_lower or "암살" in act_lower
+        interrupt = ActionTimeTrackEngine.check_perception_interrupt(
+            state=state,
+            victim=state.player,
+            threat_source=target_npc or target_id,
+            action=combat_act,
+            distance_m=new_dist,
+            is_surprise=is_surprise
+        )
+
+        summary = f"대치 거리 {new_dist:.1f}m [{zone_ko}] - {target_name}과의 상대 간격 유지."
+        if interrupt:
+            summary += f" ⚡ {interrupt.narrative_ko}"
+
+        return {
+            "type": move_type,
+            "distance_m": new_dist,
+            "zone_key": zone_key,
+            "zone_ko": zone_ko,
+            "interrupt": interrupt,
+            "summary": summary
+        }
+
+    @classmethod
+    def resolve_action_siege(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses fortress assault, artillery bombardment, moat clearing, ram breach,
+        and commando night infiltration.
+        Invokes SiegeWarfareEngine deterministic simulation.
+        """
+        act_lower = action.lower()
+        is_siege_keyword = any(k in act_lower for k in [
+            "공성", "성벽 공격", "성문 돌파", "투석기", "트레뷰셋", "공성추", "포격", "발리스타", "공성탑", "siege"
+        ])
+        is_commando_keyword = any(k in act_lower for k in [
+            "별동대", "특공", "침투", "성문 열", "투석기 방화", "군량고 파괴", "지휘관 저격", "commando", "infiltrate"
+        ])
+
+        if not (is_siege_keyword or is_commando_keyword):
+            return None
+
+        # Resolve Settlement
+        settlement = None
+        curr_loc = state.current_location()
+        if hasattr(state, "infrastructure") and state.infrastructure and state.infrastructure.settlements:
+            if curr_loc and hasattr(curr_loc, "settlement_id") and curr_loc.settlement_id:
+                settlement = state.infrastructure.settlements.get(curr_loc.settlement_id)
+            if not settlement:
+                settlement = next(iter(state.infrastructure.settlements.values()), None)
+
+        if not settlement:
+            settlement = Settlement(
+                id="fortress_frontier",
+                name="변경의 국경 요새",
+                nation_id="nat_frontier",
+                region_id="reg_frontier",
+                wall_defense_tier=2
+            )
+
+        siege_id = f"siege_{settlement.id}"
+        siege_state = state.active_sieges.get(siege_id)
+        if not siege_state:
+            _ = SiegeWarfareEngine.initialize_fortress_defense(settlement)
+            _ = SiegeWarfareEngine.create_siege_engine("trebuchet", "atk_treb_1")
+            siege_state = SiegeWarfareEngine.initialize_siege(siege_id=siege_id, settlement=settlement)
+            state.active_sieges[siege_id] = siege_state
+
+        # Commando Infiltration Action
+        if is_commando_keyword:
+            if "투석기" in act_lower or "방화" in act_lower:
+                c_action = "burn_catapult"
+            elif "군량" in act_lower:
+                c_action = "sabotage_supplies"
+            elif "저격" in act_lower or "지휘관" in act_lower:
+                c_action = "snipe_commander"
+            else:
+                c_action = "open_gate"
+
+            stealth_mod = (state.player.stats.get("dexterity", 10) - 10) // 2
+            commando_res = SiegeWarfareEngine.execute_commando_action(
+                state=siege_state,
+                action_type=c_action,
+                infiltrator_stealth_mod=stealth_mod
+            )
+            summary = commando_res.get("log", "특공 작전 실행 완료.")
+            return {
+                "action_type": "commando",
+                "siege_id": siege_id,
+                "siege_state": siege_state,
+                "commando_result": commando_res,
+                "summary": summary
+            }
+
+        # Regular Siege Turn Advance
+        logs = SiegeWarfareEngine.advance_siege_turn(siege_state)
+        ext_prompt = SiegeWarfareEngine.generate_external_llm_prompt(siege_state, logs)
+        summary = "\n".join(logs[:4]) if logs else "공성전 작전 전개 완료."
+
+        return {
+            "action_type": "turn",
+            "siege_id": siege_id,
+            "siege_state": siege_state,
+            "logs": logs,
+            "summary": summary,
+            "ext_prompt": ext_prompt
+        }
+
+    @classmethod
     def compute_pass1(cls, action: str, state: WorldState) -> DeterministicFactSheet:
         """
         Pass 1: Computes all deterministic mechanics in strict logical order.
@@ -1454,6 +1850,36 @@ class TwoPassEngine:
                 state_delta["player"]["mana"] = state.player.mana
 
             QuestEngine.progress_event(state, "botany", b_type)
+
+        # 2.496 Deterministic Barter & Trade Resolution (MerchantBarterEngine)
+        barter_info = cls.resolve_action_barter(action, state)
+        if barter_info:
+            fact_sheet.barter_summary = barter_info["summary"]
+            fact_sheet.quest_progress_logs.append(f"⚖️ {barter_info['summary']}")
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            if "gold_change" in barter_info:
+                state_delta["player"]["gold"] = state.player.gold
+            state_delta["player"]["inventory"] = list(state.player.inventory)
+            QuestEngine.progress_event(state, "barter", barter_info.get("type", "trade"))
+
+        # 2.497 Combat Distance & Action Timing Resolution (CombatDistanceManager & ActionTimeTrackEngine)
+        combat_timing_info = cls.resolve_action_combat_distance_and_timing(action, state)
+        if combat_timing_info:
+            fact_sheet.combat_distance_summary = combat_timing_info["summary"]
+            if combat_timing_info.get("interrupt"):
+                fact_sheet.interrupt_event = combat_timing_info["interrupt"].__dict__
+                fact_sheet.quest_progress_logs.append(f"⚡ {combat_timing_info['interrupt'].narrative_ko}")
+            state_delta["distances"] = dict(state.distances)
+            QuestEngine.progress_event(state, "combat_distance", combat_timing_info.get("zone_ko", "melee"))
+
+        # 2.498 Siege Warfare & Fortress Assault Resolution (SiegeWarfareEngine)
+        siege_info = cls.resolve_action_siege(action, state)
+        if siege_info:
+            fact_sheet.siege_summary = siege_info["summary"]
+            fact_sheet.quest_progress_logs.append(f"🏰 {siege_info['summary']}")
+            state_delta["active_sieges"] = {k: v for k, v in state.active_sieges.items()}
+            QuestEngine.progress_event(state, "siege", siege_info.get("action_type", "turn"))
 
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         if travel_info:

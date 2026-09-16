@@ -6,11 +6,9 @@ morale rout cascades, and external AI narrative generation.
 """
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Tuple
-import math
 import random
 import logging
 
-from src.world.state import WorldState
 from src.world.infrastructure import Settlement, Nation
 from src.world.dice import DiceEngine
 
@@ -655,7 +653,7 @@ class SiegeWarfareEngine:
                     w_loss, breached = fort.damage_wall(base_dmg * 2.5)
                     logs.append(f"💣 [성벽 기초 대붕괴] 지하 갱도 지지목 소각으로 성벽 기저가 붕괴되었습니다! (내구도 -{w_loss:.1f})")
                     if breached:
-                        logs.append(f"🚨🚨 [성벽 외벽 전면 돌파!] 거대한 석벽이 굉음과 함께 무너지며 전열 진입로가 열렸습니다!")
+                        logs.append("🚨🚨 [성벽 외벽 전면 돌파!] 거대한 석벽이 굉음과 함께 무너지며 전열 진입로가 열렸습니다!")
                         state.defender_morale.adjust_morale(-25)
                 continue
 
