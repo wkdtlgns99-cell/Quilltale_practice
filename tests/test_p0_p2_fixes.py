@@ -135,3 +135,50 @@ def test_json_repair_engine_auxiliary_repair():
     res_none = JSONRepairEngine.repair_json("일반 텍스트 에러 메시지")
     assert res_none is None
 
+
+def test_llm_quota_exhausted_fallback_korean():
+    """P0-0-7: repair_and_parse에 영문 예외/쿼터 고갈 에러 주입 시 영문 메시지 서사 유출 차단 및 한국어 폴백 검증."""
+    from src.llm.resilience import JSONRepairEngine
+
+    error_msg = "All Gemini models and API keys exhausted. Last error: 429 RESOURCE_EXHAUSTED"
+    result = JSONRepairEngine.repair_and_parse(error_msg)
+
+    narration = result.get("narration", "")
+    assert "Gemini" not in narration
+    assert "exhausted" not in narration
+    assert "429" not in narration
+    assert "RESOURCE_EXHAUSTED" not in narration
+    assert "어지럽게 요동치며" in narration or "상황을" in narration
+
+
+def test_game_master_process_turn_llm_exception_safe_korean_narration():
+    """P0-0-7: GameMasterAgent.process_turn 실행 중 LLM 예외 발생 시 영문 에러 유출 없이 한국어 서사 반환 검증."""
+    from src.agents.game_master import GameMasterAgent
+    from src.llm.base import BaseLLM, LLMResponse
+
+    class BrokenLLM(BaseLLM):
+        def generate(self, prompt: str, system: str = "") -> LLMResponse:
+            raise RuntimeError("All Gemini models and API keys exhausted. Last error: 429 RESOURCE_EXHAUSTED")
+
+        def generate_json(self, prompt: str, system: str = "") -> str:
+            raise RuntimeError("All Gemini models and API keys exhausted. Last error: 429 RESOURCE_EXHAUSTED")
+
+    gm = GameMasterAgent(llm=BrokenLLM())
+    state = WorldState()
+    state.locations["loc1"] = Location(id="loc1", name="성문 앞", description="성문", exits={}, items=[], npcs=[])
+    state.player.location = "loc1"
+
+    # process_turn 실행 시 크래시 없이 100% 한국어 서사가 반환되어야 함
+    result_turn = gm.process_turn("주변을 둘러본다", state)
+    narration = result_turn.get("narration", "")
+
+    assert "Gemini" not in narration
+    assert "exhausted" not in narration
+    assert "429" not in narration
+    assert "RESOURCE_EXHAUSTED" not in narration
+    assert len(narration) > 0
+    # 한국어 포함 확인
+    assert any('\uac00' <= ch <= '\ud7a3' for ch in narration)
+
+
+

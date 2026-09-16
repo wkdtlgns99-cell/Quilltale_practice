@@ -66,6 +66,21 @@ class JSONRepairEngine:
         return s
 
     @staticmethod
+    def is_technical_error(text: str) -> bool:
+        """Check if a string represents a technical system/API error message rather than creative prose."""
+        if not text:
+            return False
+        lower = text.lower()
+        error_keywords = [
+            "exhausted", "quota", "traceback", "exception", "error:",
+            "rate limit", "429", "503", "502", "500", "api key",
+            "unauthorized", "forbidden", "connection error", "timeout",
+            "resourcerror", "resource_exhausted", "all gemini models",
+            "cannot connect", "service unavailable", "failed to parse"
+        ]
+        return any(kw in lower for kw in error_keywords)
+
+    @staticmethod
     def repair_and_parse(raw_text: str) -> Dict[str, Any]:
         text = raw_text.strip()
         # 1. Strip markdown code fences
@@ -92,10 +107,14 @@ class JSONRepairEngine:
             except Exception:
                 pass
 
+        default_korean_fallback = "주변의 기운이 어지럽게 요동치며 상황을 명확히 분간하기 어렵습니다. 당신은 잠시 숨을 고르고 다음 행동을 준비합니다."
+
         if parsed_dict and isinstance(parsed_dict, dict):
             clean_narration = JSONRepairEngine.extract_clean_prose(parsed_dict)
+            if not clean_narration or JSONRepairEngine.is_technical_error(clean_narration):
+                clean_narration = default_korean_fallback
             return {
-                "narration": clean_narration or "주변의 공기가 무겁게 내려앉으며, 당신은 상황을 면밀히 살핍니다.",
+                "narration": clean_narration,
                 "state_update": parsed_dict.get("state_update", {}) if isinstance(parsed_dict.get("state_update"), dict) else {},
                 "scene_changed": bool(parsed_dict.get("scene_changed", False)),
                 "image_prompt": parsed_dict.get("image_prompt"),
@@ -104,8 +123,10 @@ class JSONRepairEngine:
 
         # Fallback if json parsing completely failed
         clean_narration = JSONRepairEngine.extract_clean_prose(raw_text)
+        if not clean_narration or JSONRepairEngine.is_technical_error(clean_narration):
+            clean_narration = default_korean_fallback
         return {
-            "narration": clean_narration or "주변의 공기가 무겁게 내려앉으며, 당신은 상황을 면밀히 살핍니다.",
+            "narration": clean_narration,
             "state_update": {},
             "scene_changed": False
         }

@@ -246,10 +246,11 @@ class GameMasterAgent:
 
         except Exception as e:
             logger.error(f"GM Generation/Parse error: {e}")
-            from src.llm.resilience import JSONRepairEngine
-            raw_result = JSONRepairEngine.repair_and_parse(str(e))
-            if not raw_result.get("narration"):
-                raw_result["narration"] = "당신은 주변을 둘러보며 다음 행동을 신중하게 가늠합니다."
+            raw_result = {
+                "narration": "주변의 기운이 어지럽게 요동치며 상황을 명확히 분간하기 어렵습니다. 당신은 잠시 숨을 고르고 다음 행동을 신중하게 가늠합니다.",
+                "state_update": {},
+                "scene_changed": False,
+            }
 
         # Sanitize and reconcile Pass 2 output with Pass 1 deterministic truth
         result = TwoPassEngine.sanitize_pass2_result(raw_result, fact_sheet, state)
