@@ -24,9 +24,9 @@
 - [x] **🔥 [P0-0-1] `src/llm/claude.py` 퇴역 모델 교체 및 다중 모델 폴백 체인 구축**:
   - **수정**: 퇴역된 `claude-3-5-sonnet-latest` 제거하고 최신 활성 모델 `claude-sonnet-4-6`을 기본값으로 지정. `ANTHROPIC_MODEL` 환경변수 우선 적용 및 `candidate_models` 순차 폴백 체인(`claude-sonnet-4-6` -> `claude-3-7-sonnet-20250219` -> `claude-3-5-sonnet-20241022` -> `claude-3-5-haiku-20241022`) 구축. 404/not_found/retired/overloaded/429 발생 시 즉시 다음 후보 모델로 자동 전환.
   - **검증 파일/테스트**: `src/llm/claude.py` | `tests/test_p0_p2_fixes.py::test_claude_llm_without_api_key_no_crash`, `test_claude_llm_model_env_override`, `test_claude_llm_fallback_chain_on_error` (통과), `pytest tests/` 608 passed | commit `3af42b3`
-- [ ] **🔥 [P0-0-2] `src/world/two_pass_engine.py` 무효 행동 선행 변이 차단 (QT-F01)**:
-  - **위험**: `compute_pass1()`에서 `ActionValidator.pre_validate_action()` 전에 상태이상 피해, 저체온증, 감염, 식량 부패, 수면 피로, 퀘스트 시간 차감, 쿨다운, 세계 시뮬레이션이 인플레이스로 먼저 반영된 후 기각 시 롤백 없이 DB에 영구 저장됨.
-  - **처방**: 딥카피 오버헤드 없이 `ActionValidator.pre_validate_action()`을 `compute_pass1()` 최상단(모든 환경/상태 틱 이전)으로 순서 재배치하여 무효 행동 시 0-변이 보장.
+- [x] **🔥 [P0-0-2] `src/world/two_pass_engine.py` 무효 행동 선행 변이 차단 (QT-F01)**:
+  - **수정**: `ActionValidator.pre_validate_action()`을 `compute_pass1()` 최상단(스텝 0)으로 이동. `is_valid=False` 시 상태이상 틱, 환경 피해, 쿨다운 감소, 월드 시뮬레이션 일체 실행 없이 즉시 반환하여 0-변이 보장. 기존 버그 동작(무효 행동 시 선행 틱으로 쿨다운 감소)을 전제로 하던 `tests/test_mana_burn_wiring.py:54`의 어설션을 0-변이(2턴 유지)로 사용자 승인 하에 정정.
+  - **검증 파일/테스트**: `src/world/two_pass_engine.py`, `tests/test_mana_burn_wiring.py` | `tests/test_p0_p2_fixes.py::test_invalid_action_zero_mutation_guaranteed` (통과), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 609 passed | commit `7029b60`
 - [ ] **🚨 [P0-0-3] `src/world/state.py` 토큰 폭발 방지 world_facts 프롬프트 슬라이싱 & 원본 리스트 상한 (QT-F03)**:
   - **위험**: `state.world_facts`가 슬라이싱 없이 매 턴 전체가 LLM 프롬프트에 통째로 주입됨. `npc.off_screen_logs`, `location.physical_traces`, `state.history`의 상한 부재로 세이브 파일 비대화.
   - **처방**: `to_narrative_context()`에서 `world_facts[-10:]` 슬라이싱 적용. `off_screen_logs` 10개 캡, `physical_traces` 10개 캡/15턴 감쇄, `history` 활성 50턴 캡 및 별도 SQLite 아카이브 분리.
