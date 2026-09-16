@@ -149,7 +149,7 @@ Quilltale/
 ├── data/
 │   ├── templates/                        # 1,000종 이상의 정밀 세계관/시설/몬스터 JSON
 │   └── saves/                            # 세이브/로드 슬롯 데이터
-├── tests/                                # 544개 자동화 테스트 스위트
+├── tests/                                # 615개 자동화 테스트 스위트
 ├── app.py                                # Gradio UI 프론트엔드 (I/O 및 렌더링 전용)
 └── eval_runner.py                        # 20턴 자동 평가 러너
 ```
