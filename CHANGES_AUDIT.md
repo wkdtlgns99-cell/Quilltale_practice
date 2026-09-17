@@ -1,12 +1,13 @@
 # CHANGES_AUDIT: Static Reachability and Call Analysis
 
 **Entrypoints**: `app.py`, `src/agents/game_master.py`  
-**Total `src/world/` modules analyzed**: 67  
+**Total `src/world/` modules analyzed**: 68  
 
 ## Summary Table
 
 | Module | File Reachable? | Total Public Methods | Called-in-Live-Path | Tests-Only | Never-Called |
 |---|:---:|:---:|:---:|:---:|:---:|
+| `action_resolvers.py` | ✅ Yes | 10 | 10 | 0 | 0 |
 | `alcohol_engine.py` | ✅ Yes | 8 | 8 | 0 | 0 |
 | `attack_physics_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `audio_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
@@ -69,14 +70,14 @@
 | `time_calendar_engine.py` | ✅ Yes | 3 | 2 | 1 | 0 |
 | `toxicology_engine.py` | ✅ Yes | 7 | 6 | 1 | 0 |
 | `trap_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
-| `two_pass_engine.py` | ✅ Yes | 14 | 14 | 0 | 0 |
+| `two_pass_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `validator.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
 | **TOTAL** | - | **592** | **486** | **80** | **26** |
 
-### Unreachable Modules (0/67)
+### Unreachable Modules (0/68)
 
 
 ## Detailed Method Breakdown

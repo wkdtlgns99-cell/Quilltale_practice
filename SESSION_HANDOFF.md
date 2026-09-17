@@ -78,13 +78,13 @@
     2. `src/world/validator.py`의 `ActionValidator.pre_validate_action()`(873줄)을 5대 서브 검증기로 분할: `_validate_physical_blocks`, `_validate_inventory_and_equipment`, `_validate_target_and_interaction`, `_validate_spatial_and_physical_limits`, `_dispatch_action_challenges`. 메인 `pre_validate_action()`은 간결한 오케스트레이터로 경량화.
     3. 외부 API 시그니처 및 반환 튜플 규격 100% 보존.
   - **검증 파일/테스트**: `src/world/state.py`, `src/world/validator.py` | `tests/test_p2_1_god_methods_refactor.py` (12 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 634 passed in 229.33s (0 failed)
-- [x] **🔧 [P2-2] God 파일 분할 로드맵 수립 및 1·2단계(entities.py, infrastructure.py) 완수**:
+- [x] **🔧 [P2-2] God 파일 분할 로드맵 수립 및 3단계(entities.py, infrastructure.py, action_resolvers.py) 전면 완수**:
   - **수정**:
     1. `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` 수립: 3대 God 파일(`state.py`, `infrastructure.py`, `two_pass_engine.py`)의 책임 분리 원칙 확립.
     2. Phase 1 완수: `src/world/state.py` 상단 데이터 모델 19종을 `src/world/entities.py`로 분리 (1,900줄 경량화).
     3. Phase 2 완수: `src/world/infrastructure.py` (3,092줄)를 순수 데이터 모델 21종(`src/world/infra_models.py`), 거대 템플릿 로더(`src/world/infra_loader.py`, 1,630줄), 런타임 레지스트리(`src/world/infrastructure.py`, 654줄)로 3단 분할.
-    4. `src/world/infrastructure.py`에서 기존 심볼 100% re-export하여 기존 호출자 및 656개 테스트에 대한 Zero-Breaking 하위 호환성 보장.
-  - **검증 파일/테스트**: `src/world/infra_models.py`, `src/world/infra_loader.py`, `src/world/infrastructure.py` | `tests/test_p2_2_god_files_decomposition.py` (7 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 656 passed in 258.33s (0 failed)
+    4. Phase 3 완수: `src/world/two_pass_engine.py` (2,942줄)에서 10대 서브시스템 액션 리졸버(`resolve_action_*`, 1,228줄)를 4대 도메인 믹스인(`Movement`, `Stealth`, `Survival`, `TacticalCombat`) 및 합성 믹스인(`ActionResolversMixin`)으로 모듈화하여 `src/world/action_resolvers.py` (1,293줄)로 분리. `TwoPassEngine(ActionResolversMixin)` 다중 상속으로 기존 호출자 및 전체 테스트 100% 무회귀 하위 호환성 보장 (`two_pass_engine.py` 줄 수: 2,942줄 → 1,718줄).
+  - **검증 파일/테스트**: `src/world/action_resolvers.py`, `src/world/two_pass_engine.py` | `tests/test_p2_2_god_files_decomposition.py` (11 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 660 passed in 16.94s (0 failed)
 - [x] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**:
   - **수정**:
     1. `.github/workflows/ci.yml` 파이프라인 구축: push 및 pull_request 트리거, Ubuntu 환경, Python 3.12, 의존성 pip 캐싱.
@@ -123,33 +123,40 @@
 
 ---
 
-## 3. 📅 [2026-09-15] 현재 세션 개발 현황
+## 3. 📅 [2026-09-17] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-2 Phase 2 infrastructure.py 분할 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-2 Phase 3 two_pass_engine.py 액션 리졸버 분리 완수)
 
-#### [P2-2 God 파일 분할 Phase 2: `infrastructure.py` 계층 분리 100% 완수]
-1. **순수 데이터 모델 분리 (`src/world/infra_models.py`)**:
-   - 21종의 인프라 데이터클래스 및 Enums 추출 (Continent, Region, Nation, Settlement, Facility 등).
-2. **템플릿 로더 및 계층 조립기 분리 (`src/world/infra_loader.py`)**:
-   - `InfrastructureTemplateLoader` (1,630줄) 독립 모듈화, JSON 템플릿 로딩 및 엔티티/도로망 실전 바인딩 전담.
-3. **인프라 레지스트리 및 무회귀 re-export (`src/world/infrastructure.py`)**:
-   - `InfrastructureRegistry` (654줄) 유지 및 기존 23개 심볼 100% re-export로 Zero-Breaking 하위 호환성 보장.
-   - 3,092줄 God 파일 → 3개 특화 모듈(654줄, 858줄, 1,680줄)로 완전 분할.
-4. **회귀 방어 단위 테스트 고도화 (`tests/test_p2_2_god_files_decomposition.py`)**:
-   - 4개 신규 테스트 추가(총 7 passed), 독립 임포트 및 re-export 완전 동일성 검증.
+#### [P2-2 God 파일 분할 Phase 3: `two_pass_engine.py` 액션 리졸버 모듈화 100% 완수]
+1. **도메인 액션 리졸버 분리 (`src/world/action_resolvers.py`)**:
+   - 10대 서브시스템 `resolve_action_*` 메서드(1,228줄)를 4대 도메인 믹스인 및 합성 믹스인으로 분리:
+     - `MovementResolverMixin`: `resolve_action_movement`
+     - `StealthResolverMixin`: `resolve_action_eavesdrop`, `resolve_action_stealth`
+     - `SurvivalResolverMixin`: `resolve_action_harvest`, `resolve_action_campsite`, `resolve_action_drink`, `resolve_action_botany`
+     - `TacticalCombatResolverMixin`: `resolve_action_barter`, `resolve_action_combat_distance_and_timing`, `resolve_action_siege`
+     - `ActionResolversMixin`: 4대 믹스인 합성 베이스.
+2. **TwoPassEngine 경량화 및 다중 상속 (`src/world/two_pass_engine.py`)**:
+   - `TwoPassEngine(ActionResolversMixin)` 선언으로 모든 리졸버를 클래스 메서드로 100% 호환 상속.
+   - 파일 크기 2,942줄 → 1,718줄 (1,224줄 경량화). 순수 Pass 1 오케스트레이션 및 서사 정제에 집중.
+3. **Zero-Breaking 하위 호환성 및 re-export**:
+   - 기존 외부 호출자(`TwoPassEngine.resolve_action_*`) 및 내부 호출(`cls.resolve_action_*`) 일체 무회귀 보장.
+4. **회귀 방어 단위 테스트 추가 (`tests/test_p2_2_god_files_decomposition.py`)**:
+   - 4개 신규 테스트 추가(총 11 passed), 독립 임포트, 상속 관계, 직접 호출 동등성, 무관 행동 None 반환 검증.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `656 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 652 → 완료 656 (+4 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `660 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 656 → 완료 660 (+4 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/67 Unreachable` (100% 도달성 유지).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/68 Unreachable` (100% 도달성 유지).
 - **문서-코드 드리프트 (scripts/sync_doc_metrics.py --check)**: `Clean (0 drift)`.
 - **코드 정적 검사 (pyflakes & ruff)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[God 파일 분할 Phase 3: `two_pass_engine.py` 액션 리졸버 분리]**:
-   - 2,941줄 `TwoPassEngine`의 10대 서브시스템 액션 리졸버(`movement`, `stealth`, `survival`, `combat`) 도메인별 분리.
+1. **[God 파일 분할 로드맵 완수 후 다음 백로그 탐색]**:
+   - P0~P2 주요 과제(P0-0, P0, P1-1, P1-2, P2-1, P2-2 전 3단계, P2-3, P2-4, P2-5, P2-6, P2-7) 전면 완료 상태.
+   - 잔여 백로그: 플랫폼 UI/런처 로드맵, 미완성 게임플레이 확장(혈통/영지/신앙 등) 순서 확인 및 다음 작업 결정.
+

@@ -46,6 +46,7 @@ These modules are confirmed fully reachable and active in the live turn executio
 16. **`entities.py`**: Reachable (순수 도메인 엔티티 19종 모델).
 17. **`infra_models.py`**: Reachable (6계층 인프라 순수 데이터 모델 21종).
 18. **`infra_loader.py`**: Reachable (`InfrastructureTemplateLoader` 템플릿 로드 및 계층 바인딩).
+19. **`action_resolvers.py`**: Reachable (`TwoPassEngine` 10대 서브시스템 액션 리졸버 도메인 믹스인).
 
 ---
 
@@ -55,8 +56,8 @@ These modules are confirmed fully reachable and active in the live turn executio
 
 ---
 
-### Category C: `SHELVED / UNREACHABLE` (0 of 67 modules)
-- **None**. All 67 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
+### Category C: `SHELVED / UNREACHABLE` (0 of 68 modules)
+- **None**. All 68 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
 
 ---
 

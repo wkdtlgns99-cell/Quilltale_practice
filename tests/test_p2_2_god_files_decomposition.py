@@ -220,3 +220,109 @@ def test_infrastructure_registry_standalone_roundtrip():
     assert "f1" in restored.facilities
     assert restored.settlements["s1"].name == "수도"
 
+
+def test_action_resolvers_direct_import_and_mixins():
+    """Verify Phase 3: action resolvers can be directly imported and contain expected resolver methods."""
+    from src.world import action_resolvers
+
+    expected_mixins = [
+        "MovementResolverMixin",
+        "StealthResolverMixin",
+        "SurvivalResolverMixin",
+        "TacticalCombatResolverMixin",
+        "ActionResolversMixin",
+    ]
+    for mixin_name in expected_mixins:
+        assert hasattr(action_resolvers, mixin_name), f"action_resolvers missing {mixin_name}"
+
+    # Verify method allocations
+    assert hasattr(action_resolvers.MovementResolverMixin, "resolve_action_movement")
+    assert hasattr(action_resolvers.StealthResolverMixin, "resolve_action_eavesdrop")
+    assert hasattr(action_resolvers.StealthResolverMixin, "resolve_action_stealth")
+    assert hasattr(action_resolvers.SurvivalResolverMixin, "resolve_action_harvest")
+    assert hasattr(action_resolvers.SurvivalResolverMixin, "resolve_action_campsite")
+    assert hasattr(action_resolvers.SurvivalResolverMixin, "resolve_action_drink")
+    assert hasattr(action_resolvers.SurvivalResolverMixin, "resolve_action_botany")
+    assert hasattr(action_resolvers.TacticalCombatResolverMixin, "resolve_action_barter")
+    assert hasattr(action_resolvers.TacticalCombatResolverMixin, "resolve_action_combat_distance_and_timing")
+    assert hasattr(action_resolvers.TacticalCombatResolverMixin, "resolve_action_siege")
+
+
+def test_two_pass_engine_mixin_inheritance_and_reexport_identity():
+    """Verify Phase 3: TwoPassEngine inherits ActionResolversMixin and re-exports symbols cleanly."""
+    from src.world import action_resolvers
+    from src.world import two_pass_engine
+
+    assert issubclass(two_pass_engine.TwoPassEngine, action_resolvers.ActionResolversMixin)
+    assert issubclass(action_resolvers.ActionResolversMixin, action_resolvers.MovementResolverMixin)
+    assert issubclass(action_resolvers.ActionResolversMixin, action_resolvers.StealthResolverMixin)
+    assert issubclass(action_resolvers.ActionResolversMixin, action_resolvers.SurvivalResolverMixin)
+    assert issubclass(action_resolvers.ActionResolversMixin, action_resolvers.TacticalCombatResolverMixin)
+
+    # Verify re-exported identity
+    for sym in ["ActionResolversMixin", "MovementResolverMixin", "StealthResolverMixin", "SurvivalResolverMixin", "TacticalCombatResolverMixin"]:
+        assert hasattr(two_pass_engine, sym), f"two_pass_engine missing re-exported {sym}"
+        assert getattr(two_pass_engine, sym) is getattr(action_resolvers, sym), f"{sym} identity mismatch"
+
+    # All 10 resolvers accessible from TwoPassEngine
+    resolvers = [
+        "resolve_action_movement",
+        "resolve_action_eavesdrop",
+        "resolve_action_stealth",
+        "resolve_action_harvest",
+        "resolve_action_campsite",
+        "resolve_action_drink",
+        "resolve_action_botany",
+        "resolve_action_barter",
+        "resolve_action_combat_distance_and_timing",
+        "resolve_action_siege",
+    ]
+    for r in resolvers:
+        assert hasattr(two_pass_engine.TwoPassEngine, r), f"TwoPassEngine missing resolver {r}"
+
+
+def test_action_resolvers_standalone_invocation_parity():
+    """Verify Phase 3: resolvers produce identical results whether invoked via Mixin or TwoPassEngine."""
+    from src.world.action_resolvers import MovementResolverMixin
+    from src.world.two_pass_engine import TwoPassEngine
+    from src.world.state import WorldState
+
+    with open("data/worlds/default.json", encoding="utf-8") as f:
+        state = WorldState.from_json(f.read())
+
+    action = "남쪽 출구로 걸어 나간다"
+    res_direct = MovementResolverMixin.resolve_action_movement(action, state)
+    res_engine = TwoPassEngine.resolve_action_movement(action, state)
+
+    # Both must match
+    assert res_direct == res_engine
+    if res_direct is not None:
+        assert "target_location_id" in res_direct
+
+
+def test_action_resolvers_non_matching_graceful_return():
+    """Verify Phase 3: resolvers gracefully return None for unrelated actions without side effects."""
+    from src.world.action_resolvers import (
+        MovementResolverMixin,
+        StealthResolverMixin,
+        SurvivalResolverMixin,
+        TacticalCombatResolverMixin,
+    )
+    from src.world.state import WorldState
+
+    with open("data/worlds/default.json", encoding="utf-8") as f:
+        state = WorldState.from_json(f.read())
+
+    unrelated_action = "가만히 서서 하늘의 구름을 바라본다"
+    assert MovementResolverMixin.resolve_action_movement(unrelated_action, state) is None
+    assert StealthResolverMixin.resolve_action_eavesdrop(unrelated_action, state) is None
+    assert StealthResolverMixin.resolve_action_stealth(unrelated_action, state) is None
+    assert SurvivalResolverMixin.resolve_action_harvest(unrelated_action, state) is None
+    assert SurvivalResolverMixin.resolve_action_campsite(unrelated_action, state) is None
+    assert SurvivalResolverMixin.resolve_action_drink(unrelated_action, state) is None
+    assert SurvivalResolverMixin.resolve_action_botany(unrelated_action, state) is None
+    assert TacticalCombatResolverMixin.resolve_action_barter(unrelated_action, state) is None
+    assert TacticalCombatResolverMixin.resolve_action_combat_distance_and_timing(unrelated_action, state) is None
+    assert TacticalCombatResolverMixin.resolve_action_siege(unrelated_action, state) is None
+
+
