@@ -78,13 +78,13 @@
     2. `src/world/validator.py`의 `ActionValidator.pre_validate_action()`(873줄)을 5대 서브 검증기로 분할: `_validate_physical_blocks`, `_validate_inventory_and_equipment`, `_validate_target_and_interaction`, `_validate_spatial_and_physical_limits`, `_dispatch_action_challenges`. 메인 `pre_validate_action()`은 간결한 오케스트레이터로 경량화.
     3. 외부 API 시그니처 및 반환 튜플 규격 100% 보존.
   - **검증 파일/테스트**: `src/world/state.py`, `src/world/validator.py` | `tests/test_p2_1_god_methods_refactor.py` (12 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 634 passed in 229.33s (0 failed)
-- [x] **🔧 [P2-2] God 파일 분할 로드맵 수립 및 1단계(엔티티 모델 분리) 완수**:
+- [x] **🔧 [P2-2] God 파일 분할 로드맵 수립 및 1·2단계(entities.py, infrastructure.py) 완수**:
   - **수정**:
-    1. `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` 작성: 3대 God 파일(`state.py`, `infrastructure.py`, `two_pass_engine.py`)의 책임 분석, re-export 하위 호환 전략, 3단계 마이그레이션 로드맵 확정.
-    2. Phase 1 실천: `src/world/state.py`의 상단 데이터 모델 19종(L40~L1937, 약 1,900줄)을 순수 도메인 모듈 `src/world/entities.py`로 분리.
-    3. `src/world/state.py`에서 `from .entities import (...)`로 re-export하여 기존 모든 모듈/테스트의 import 경로 100% 무회귀 하위 호환성 보장.
-    4. `state.py` 줄 수 4,641줄 → 2,752줄로 약 1,900줄 대폭 경량화.
-  - **검증 파일/테스트**: `src/world/entities.py`, `src/world/state.py`, `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` | `tests/test_p2_2_god_files_decomposition.py` (3 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 637 passed in 228.75s (0 failed)
+    1. `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` 수립: 3대 God 파일(`state.py`, `infrastructure.py`, `two_pass_engine.py`)의 책임 분리 원칙 확립.
+    2. Phase 1 완수: `src/world/state.py` 상단 데이터 모델 19종을 `src/world/entities.py`로 분리 (1,900줄 경량화).
+    3. Phase 2 완수: `src/world/infrastructure.py` (3,092줄)를 순수 데이터 모델 21종(`src/world/infra_models.py`), 거대 템플릿 로더(`src/world/infra_loader.py`, 1,630줄), 런타임 레지스트리(`src/world/infrastructure.py`, 654줄)로 3단 분할.
+    4. `src/world/infrastructure.py`에서 기존 심볼 100% re-export하여 기존 호출자 및 656개 테스트에 대한 Zero-Breaking 하위 호환성 보장.
+  - **검증 파일/테스트**: `src/world/infra_models.py`, `src/world/infra_loader.py`, `src/world/infrastructure.py` | `tests/test_p2_2_god_files_decomposition.py` (7 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 656 passed in 258.33s (0 failed)
 - [x] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**:
   - **수정**:
     1. `.github/workflows/ci.yml` 파이프라인 구축: push 및 pull_request 트리거, Ubuntu 환경, Python 3.12, 의존성 pip 캐싱.
@@ -125,32 +125,31 @@
 
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-5 LLM JSON 파싱 일원화 및 뉴스 틱 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-2 Phase 2 infrastructure.py 분할 완수)
 
-#### [P2-5 LLM JSON 출력 파싱 파이프라인 일원화 및 소문 틱 결합 완수]
-1. **JSONRepairEngine 탄력성 고도화 (`src/llm/resilience.py`)**:
-   - `ast.literal_eval` 폴백을 통합하여 작은따옴표 기반 Python 딕셔너리 출력과 unescaped 개행에 대한 완전 복원 체계 구축.
-2. **GameMaster 소문 생성 주기 배선 및 목록 상한 관리 (`src/agents/game_master.py`, `src/world/state.py`)**:
-   - `generate_world_news_tick()`을 `process_turn()`의 10턴 주기(`state.turn % 10 == 0`) 실행 경로에 실시간 배선.
-   - 오프스크린 NPC 활동 로그 기반으로 1-2줄 세간의 소문을 나레이션에 자연스럽게 장식.
-   - `world_news_feed` 및 `world_facts`에 30개 상한(Cap) 슬라이싱 정책 도입으로 무한 증식 방지.
-   - `WorldState.from_dict()`에 `world_news_feed` 역직렬화 복원 추가.
-3. **평가 판정관 JSON 파이프라인 일원화 (`eval_runner.py`)**:
-   - `judge_memory_utilisation`, `judge_factual_consistency`의 raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일하여 마크다운 코드블록/구문 파손 방어.
+#### [P2-2 God 파일 분할 Phase 2: `infrastructure.py` 계층 분리 100% 완수]
+1. **순수 데이터 모델 분리 (`src/world/infra_models.py`)**:
+   - 21종의 인프라 데이터클래스 및 Enums 추출 (Continent, Region, Nation, Settlement, Facility 등).
+2. **템플릿 로더 및 계층 조립기 분리 (`src/world/infra_loader.py`)**:
+   - `InfrastructureTemplateLoader` (1,630줄) 독립 모듈화, JSON 템플릿 로딩 및 엔티티/도로망 실전 바인딩 전담.
+3. **인프라 레지스트리 및 무회귀 re-export (`src/world/infrastructure.py`)**:
+   - `InfrastructureRegistry` (654줄) 유지 및 기존 23개 심볼 100% re-export로 Zero-Breaking 하위 호환성 보장.
+   - 3,092줄 God 파일 → 3개 특화 모듈(654줄, 858줄, 1,680줄)로 완전 분할.
+4. **회귀 방어 단위 테스트 고도화 (`tests/test_p2_2_god_files_decomposition.py`)**:
+   - 4개 신규 테스트 추가(총 7 passed), 독립 임포트 및 re-export 완전 동일성 검증.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `652 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 643 → 완료 652 (+9 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `656 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 652 → 완료 656 (+4 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/65 Unreachable` (100% 도달성 유지).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/67 Unreachable` (100% 도달성 유지).
 - **문서-코드 드리프트 (scripts/sync_doc_metrics.py --check)**: `Clean (0 drift)`.
 - **코드 정적 검사 (pyflakes & ruff)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P2-8 / 원칙 점검 및 플랫폼 동결 유지]**:
-   - P2 우선순위 버그/인프라 100% 완료 상태 최종 확인.
-   - 플랫폼/UI 동결 원칙 확인 및 다음 마일스톤 정렬.
+1. **[God 파일 분할 Phase 3: `two_pass_engine.py` 액션 리졸버 분리]**:
+   - 2,941줄 `TwoPassEngine`의 10대 서브시스템 액션 리졸버(`movement`, `stealth`, `survival`, `combat`) 도메인별 분리.

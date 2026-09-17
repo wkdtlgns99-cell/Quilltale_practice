@@ -44,6 +44,8 @@ These modules are confirmed fully reachable and active in the live turn executio
 14. **`merchant_barter_engine.py`**: Reachable (`TwoPassEngine:resolve_action_barter` 물물교환, 감정, 금화 깎기, 밀수 검문).
 15. **`siege_engine.py`**: Reachable (`TwoPassEngine:resolve_action_siege` 요새 다층 방호, 포격, 특공 침투).
 16. **`entities.py`**: Reachable (순수 도메인 엔티티 19종 모델).
+17. **`infra_models.py`**: Reachable (6계층 인프라 순수 데이터 모델 21종).
+18. **`infra_loader.py`**: Reachable (`InfrastructureTemplateLoader` 템플릿 로드 및 계층 바인딩).
 
 ---
 
@@ -53,8 +55,8 @@ These modules are confirmed fully reachable and active in the live turn executio
 
 ---
 
-### Category C: `SHELVED / UNREACHABLE` (0 of 65 modules)
-- **None**. All 65 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
+### Category C: `SHELVED / UNREACHABLE` (0 of 67 modules)
+- **None**. All 67 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
 
 ---
 

@@ -26,8 +26,8 @@ def test_reachability_audit_matches_triage_and_readme():
     # Verify TRIAGE.md
     triage_file = ROOT_DIR / "TRIAGE.md"
     content = triage_file.read_text(encoding="utf-8")
-    assert "### Category C: `SHELVED / UNREACHABLE` (0 of 65 modules)" in content
-    assert "All 65 `src/world/` modules are 100% reachable" in content
+    assert f"### Category C: `SHELVED / UNREACHABLE` (0 of {total_mod} modules)" in content
+    assert f"All {total_mod} `src/world/` modules are 100% reachable" in content
 
 
 def test_sync_doc_metrics_detects_drift():

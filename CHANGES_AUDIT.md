@@ -1,7 +1,7 @@
 # CHANGES_AUDIT: Static Reachability and Call Analysis
 
 **Entrypoints**: `app.py`, `src/agents/game_master.py`  
-**Total `src/world/` modules analyzed**: 65  
+**Total `src/world/` modules analyzed**: 67  
 
 ## Summary Table
 
@@ -34,7 +34,9 @@
 | `harvest_engine.py` | ✅ Yes | 8 | 7 | 1 | 0 |
 | `hidden_encounter_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `incantation.py` | ✅ Yes | 6 | 3 | 2 | 1 |
-| `infrastructure.py` | ✅ Yes | 39 | 31 | 8 | 0 |
+| `infra_loader.py` | ✅ Yes | 20 | 20 | 0 | 0 |
+| `infra_models.py` | ✅ Yes | 3 | 2 | 1 | 0 |
+| `infrastructure.py` | ✅ Yes | 18 | 11 | 7 | 0 |
 | `injury_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `legacy.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `mana_burn_engine.py` | ✅ Yes | 9 | 9 | 0 | 0 |
@@ -72,9 +74,9 @@
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
-| **TOTAL** | - | **590** | **484** | **80** | **26** |
+| **TOTAL** | - | **592** | **486** | **80** | **26** |
 
-### Unreachable Modules (0/65)
+### Unreachable Modules (0/67)
 
 
 ## Detailed Method Breakdown
@@ -144,8 +146,10 @@
 - `validate_incantation`: **called-from-tests-only**
 - `can_be_cancelled_by_npc`: **never-called**
 
-### `infrastructure.py` (Reachable: True)
+### `infra_models.py` (Reachable: True)
 - `calculate_total_military_power`: **called-from-tests-only**
+
+### `infrastructure.py` (Reachable: True)
 - `check_border_entry`: **called-from-tests-only**
 - `resolve_specialties`: **called-from-tests-only**
 - `resolve_natural_resources`: **called-from-tests-only**
