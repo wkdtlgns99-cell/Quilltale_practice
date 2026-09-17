@@ -123,40 +123,49 @@
 
 ---
 
-## 3. 📅 [2026-09-17] 현재 세션 개발 현황
+## 3. 📅 [2026-09-17] 현재 세션 통합 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-2 Phase 3 two_pass_engine.py 액션 리졸버 분리 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 종합 (총 4대 핵심 과제 100% 완수)
 
-#### [P2-2 God 파일 분할 Phase 3: `two_pass_engine.py` 액션 리졸버 모듈화 100% 완수]
-1. **도메인 액션 리졸버 분리 (`src/world/action_resolvers.py`)**:
-   - 10대 서브시스템 `resolve_action_*` 메서드(1,228줄)를 4대 도메인 믹스인 및 합성 믹스인으로 분리:
-     - `MovementResolverMixin`: `resolve_action_movement`
-     - `StealthResolverMixin`: `resolve_action_eavesdrop`, `resolve_action_stealth`
-     - `SurvivalResolverMixin`: `resolve_action_harvest`, `resolve_action_campsite`, `resolve_action_drink`, `resolve_action_botany`
-     - `TacticalCombatResolverMixin`: `resolve_action_barter`, `resolve_action_combat_distance_and_timing`, `resolve_action_siege`
-     - `ActionResolversMixin`: 4대 믹스인 합성 베이스.
-2. **TwoPassEngine 경량화 및 다중 상속 (`src/world/two_pass_engine.py`)**:
-   - `TwoPassEngine(ActionResolversMixin)` 선언으로 모든 리졸버를 클래스 메서드로 100% 호환 상속.
-   - 파일 크기 2,942줄 → 1,718줄 (1,224줄 경량화). 순수 Pass 1 오케스트레이션 및 서사 정제에 집중.
-3. **Zero-Breaking 하위 호환성 및 re-export**:
-   - 기존 외부 호출자(`TwoPassEngine.resolve_action_*`) 및 내부 호출(`cls.resolve_action_*`) 일체 무회귀 보장.
-4. **회귀 방어 단위 테스트 추가 (`tests/test_p2_2_god_files_decomposition.py`)**:
-   - 4개 신규 테스트 추가(총 11 passed), 독립 임포트, 상속 관계, 직접 호출 동등성, 무관 행동 None 반환 검증.
+#### 1) [P2-4] 문서-코드 드리프트 자동 동기화 도구 및 CI 게이트 구축
+- `scripts/sync_doc_metrics.py` 구축: 단위 테스트 수치, 명령어 주석, 디렉터리 트리 주석, 정적 도달률 자동 동기화(`--sync`) 및 CI 검증(`--check`).
+- `.github/workflows/ci.yml` 파이프라인 연동 및 `tests/test_p2_4_doc_drift.py` 3종 테스트 구축 및 통과.
+
+#### 2) [P2-5] LLM JSON 파싱 파이프라인 일원화 및 세계 뉴스 턴 배선
+- `JSONRepairEngine`에 AST `literal_eval` 폴백 추가(작은따옴표 포함 Python 딕셔너리 안전 복원).
+- `GameMasterAgent.generate_world_news_tick()` 10턴 주기 라이브 배선 및 30개 상한 슬라이싱/감쇄 정책 적용.
+- `eval_runner.py` 판정관 JSON 복원 로직 일원화 및 `tests/test_p2_5_json_repair_pipeline.py` 9종 테스트 구축 및 통과.
+
+#### 3) [P2-2 Phase 2] `src/world/infrastructure.py` 계층 분리
+- 3,092줄 God 파일을 3단 분리:
+  - `src/world/infra_models.py` (21종 데이터 모델, 858줄)
+  - `src/world/infra_loader.py` (템플릿 로더 및 계층 바인딩, 1,680줄)
+  - `src/world/infrastructure.py` (런타임 레지스트리 및 심볼 100% re-export, 654줄)
+- `tests/test_p2_2_god_files_decomposition.py` Phase 2 테스트 4종 추가 (총 7 passed).
+
+#### 4) [P2-2 Phase 3] `src/world/two_pass_engine.py` 액션 리졸버 분리
+- 2,942줄 God 파일 분할:
+  - `src/world/action_resolvers.py` (10대 리졸버 4대 도메인 믹스인, 1,293줄)
+  - `src/world/two_pass_engine.py` (1,228줄 제거 및 `ActionResolversMixin` 상속, 2,942줄 → 1,718줄)
+- `TwoPassEngine(ActionResolversMixin)` 다중 상속으로 100% 무회귀 하위 호환성 보장.
+- `tests/test_p2_2_god_files_decomposition.py` Phase 3 테스트 4종 추가 (총 11 passed).
 
 ---
 
-### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `660 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 656 → 완료 660 (+4 신규 단위 테스트 추가, 기존 회귀 0건).
+### 2. 테스트 및 평가 검증 상태 (세션 누적 지표)
+- **전체 단위 테스트**: `660 passed` (0 failed, 세션 시작 640 → 완료 660, +20 신규 단위 테스트 순증, 무회귀).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/68 Unreachable` (100% 도달성 유지).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/68 Unreachable` (68/68 모듈 100% 도달).
 - **문서-코드 드리프트 (scripts/sync_doc_metrics.py --check)**: `Clean (0 drift)`.
 - **코드 정적 검사 (pyflakes & ruff)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[God 파일 분할 로드맵 완수 후 다음 백로그 탐색]**:
-   - P0~P2 주요 과제(P0-0, P0, P1-1, P1-2, P2-1, P2-2 전 3단계, P2-3, P2-4, P2-5, P2-6, P2-7) 전면 완료 상태.
-   - 잔여 백로그: 플랫폼 UI/런처 로드맵, 미완성 게임플레이 확장(혈통/영지/신앙 등) 순서 확인 및 다음 작업 결정.
+1. **[정리 과제] `save_load_manager.py` 삭제**:
+   - `persistence.py`로 완전 대체된 레거시 중복 파일 정리 (Category B).
+2. **[게임플레이 도메인 확장 백로그]**:
+   - 가문 혈통(Lineage), 종교 신앙(Deity), 영지 개척(Domain), 사령술(Necromancy) 시스템.
+3. **[플랫폼/UI 로드맵]**:
+   - 독립 실행형 창 모드 런처(`SteamStyleStandaloneLauncher`), 동적 부분 갱신 이중 맵(`DynamicDualMapRenderer`).
 
