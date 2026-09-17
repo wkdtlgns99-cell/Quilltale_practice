@@ -1,8 +1,7 @@
 import ast
-import os
 import sys
 from pathlib import Path
-from collections import defaultdict, deque
+from collections import deque
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
@@ -126,7 +125,6 @@ def classify_methods(world_files: list[Path], reachable_files: set[Path]):
 
     test_files = [f.resolve() for f in all_py_files if 'tests' in f.parts]
     live_files = [f.resolve() for f in all_py_files if 'tests' not in f.parts and f.resolve() in reachable_files]
-    non_test_files = [f.resolve() for f in all_py_files if 'tests' not in f.parts]
 
     # String-based cross-file checks (fast, good enough for other-file detection)
     live_contents = [(f, f.read_text(encoding='utf-8-sig', errors='ignore')) for f in live_files]
@@ -202,7 +200,7 @@ def main():
     lines = [
         "# CHANGES_AUDIT: Static Reachability and Call Analysis",
         "",
-        f"**Entrypoints**: `app.py`, `src/agents/game_master.py`  ",
+        "**Entrypoints**: `app.py`, `src/agents/game_master.py`  ",
         f"**Total `src/world/` modules analyzed**: {len(world_files)}  ",
         "",
         "## Summary Table",
@@ -251,6 +249,9 @@ def main():
     report_path.write_text("\n".join(lines), encoding="utf-8")
     print(f"Audit complete. Results written to {report_path}")
     print(f"Unreachable modules: {len(unreachable_modules)}/{len(world_files)}")
+    if len(unreachable_modules) > 0:
+        print(f"FAILED: {len(unreachable_modules)} unreachable modules detected!")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

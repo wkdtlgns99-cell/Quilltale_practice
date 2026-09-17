@@ -85,7 +85,12 @@
     3. `src/world/state.py`에서 `from .entities import (...)`로 re-export하여 기존 모든 모듈/테스트의 import 경로 100% 무회귀 하위 호환성 보장.
     4. `state.py` 줄 수 4,641줄 → 2,752줄로 약 1,900줄 대폭 경량화.
   - **검증 파일/테스트**: `src/world/entities.py`, `src/world/state.py`, `docs/ROADMAP_GOD_FILE_DECOMPOSITION.md` | `tests/test_p2_2_god_files_decomposition.py` (3 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%), `pytest tests/` 637 passed in 228.75s (0 failed)
-- [ ] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**: `pytest tests/`, `ruff check --select F,E9`, `python scripts/reachability_audit.py` 자동 검증.
+- [x] **🔧 [P2-3] GitHub Actions CI 워크플로우(`.github/workflows/ci.yml`) 구축**:
+  - **수정**:
+    1. `.github/workflows/ci.yml` 파이프라인 구축: push 및 pull_request 트리거, Ubuntu 환경, Python 3.12, 의존성 pip 캐싱.
+    2. 4대 품질 게이트 자동화: `pyflakes src/ tests/` (코드 위생), `ruff check src/ --select F,E9` (구문/임포트 치명적 린트), `python scripts/reachability_audit.py` (정적 도달성 100% 검증), `pytest tests/` (640개 자동화 테스트 스위트 전수 실행).
+    3. `scripts/reachability_audit.py`에 미도달 모듈 발생 시 `sys.exit(1)` 반환 차단 가드 구축.
+  - **검증 파일/테스트**: `.github/workflows/ci.yml`, `scripts/reachability_audit.py` | `tests/test_p2_3_ci_workflow.py` (3 passed), `pytest tests/` 640 passed in 232.20s (0 failed)
 - [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**: README.md 수치 최신화(604 통과), 배선 변경 시 `reachability_audit.py` 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
 - [ ] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**: `game_master.py:638` raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일.
 - [x] **🐛 [P2-6] `src/world/economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정**:
@@ -109,34 +114,34 @@
 
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-2 God 파일 분할 로드맵 및 1단계 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-3 GitHub Actions CI 구축 완수)
 
-#### [P2-2 God 파일 분할 로드맵 및 엔티티 모델 분리 100% 완수]
-1. **로드맵 수립 문서화 (`docs/ROADMAP_GOD_FILE_DECOMPOSITION.md`)**:
-   - 3대 God 파일(`state.py`, `infrastructure.py`, `two_pass_engine.py`)의 책임 분석 및 문제점 진단.
-   - Re-export 패턴을 통한 외부 호출자 100% 무회귀 하위 호환 전략 확립.
-   - Phase 1 (엔티티 분리), Phase 2 (인프라 3단 분리), Phase 3 (액션 리졸버 분리) 로드맵 확정.
-2. **Phase 1 실천적 분리 (`src/world/entities.py`)**:
-   - `state.py`의 상단 데이터 모델 19종(L40~L1937, 약 1,900줄)을 순수 도메인 모듈 `src/world/entities.py`로 분리.
-   - `EquipmentSlots`, `CombatProfile`, `NPCPersonality`, `Skill`, `Title`, `ItemVisualProfile`, `Item`, `MemoryEntry`, `Faction`, `FacialDetails`, `BodyMeasurements`, `ClothingLayer`, `NPCVisualDetails`, `NPCNeeds`, `NPC`, `Location`, `EnvironmentalMetrics`, `PendingInformation`, `Player`, `DISPOSITION_KO_MAP`
-   - `src/world/state.py`에서 `from .entities import (...)`로 re-export하여 기존 전역 import와 100% 심볼 동일성 유지.
-   - `state.py` 크기 4,641줄 → 2,752줄로 약 1,900줄 대폭 경량화.
+#### [P2-3 GitHub Actions CI 워크플로우 100% 구축]
+1. **CI 워크플로우 명세 (`.github/workflows/ci.yml`)**:
+   - 트리거: `push: [main]`, `pull_request: [main]`
+   - 환경: `ubuntu-latest`, Python 3.12, pip cache
+   - 4대 자동화 품질 게이트:
+     1. `pyflakes src/ tests/`: 코드 위생 및 미사용 변수/문법 오류 사전 검사.
+     2. `ruff check src/ --select F,E9`: 치명적 문법 및 런타임 NameError 검사.
+     3. `python scripts/reachability_audit.py`: 65대 모듈 정적 도달성 100% 게이트 (`sys.exit(1)` 가드).
+     4. `pytest tests/ --durations=10`: 640개 자동화 테스트 스위트 전수 실행.
+2. **스크립트 안정성 보강 (`scripts/reachability_audit.py`)**:
+   - 미도달 모듈 발생 시 CI가 즉시 차단되도록 `sys.exit(1)` 방어 로직 추가.
+   - 미사용 import/변수 정리 완료 (pyflakes 0 error).
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `637 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 634 → 완료 637 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `640 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 637 → 완료 640 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/65 Unreachable` (신규 모듈 포함 100% 도달성 유지).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/65 Unreachable` (100% 도달성 유지).
 - **코드 정적 검사 (pyflakes)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P2-3 GitHub Actions CI 워크플로우 구축]**:
-   - `.github/workflows/ci.yml` 구축 (`pytest tests/`, `pyflakes src/`, `reachability_audit.py` 자동 검증).
-2. **[P2-4 문서-코드 드리프트 최신화 및 자동화]**:
+1. **[P2-4 문서-코드 드리프트 최신화 및 자동화]**:
    - README.md 수치 최신화 및 CHANGES_AUDIT 자동 동기화.
-3. **[P2-5 LLM JSON 출력 파싱 파이프라인 일원화]**:
+2. **[P2-5 LLM JSON 출력 파싱 파이프라인 일원화]**:
    - 잔여 raw `json.loads` 점검 및 `JSONRepairEngine`으로 통일.
