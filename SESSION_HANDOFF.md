@@ -97,7 +97,13 @@
     2. `.github/workflows/ci.yml`에 `Document-Code Drift Check` 게이트 단계 추가하여 문서-코드 불일치 시 CI 자동 차단.
     3. `TRIAGE.md`의 오래된 Category C(P1-2 3대 엔진 보류 상태)를 최신 100% 도달 상태(`0 of 65 modules`)로 갱신.
   - **검증 파일/테스트**: `scripts/sync_doc_metrics.py`, `TRIAGE.md`, `README.md`, `.github/workflows/ci.yml` | `tests/test_p2_4_doc_drift.py` (3 passed), `pytest tests/` 643 passed in 234.37s (0 failed)
-- [ ] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**: `game_master.py:638` raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일.
+- [x] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**:
+  - **수정**:
+    1. `src/llm/resilience.py`: `JSONRepairEngine.repair_json()` 및 `repair_and_parse()`에 `ast.literal_eval` 폴백을 추가하여 LLM이 작은따옴표(`'`)를 포함한 Python 딕셔너리 형태로 반환하거나 줄바꿈 에러 발생 시에도 안전하게 파싱 지원.
+    2. `src/agents/game_master.py`: `generate_world_news_tick(state)`을 `process_turn()`의 10턴 주기(`state.turn > 0 and state.turn % 10 == 0`) 경로에 정식 배선하여 매 10턴마다 오프스크린 NPC 활동 기반 소문 생성 및 `narration`, `world_news_feed`, `world_facts`에 반영. `world_news_feed` 및 `world_facts` 최대 30개 캡/감쇄 정책 적용.
+    3. `src/world/state.py`: `WorldState.from_dict()`에서 `world_news_feed` 역직렬화 복구 반영.
+    4. `eval_runner.py`: LLM 판정관(`judge_memory_utilisation`, `judge_factual_consistency`)의 raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일하여 마크다운 코드블록 등으로 인한 판정 누락 방지.
+  - **검증 파일/테스트**: `src/llm/resilience.py`, `src/agents/game_master.py`, `src/world/state.py`, `eval_runner.py` | `tests/test_p2_5_json_repair_pipeline.py` (9 passed), `pytest tests/` 652 passed in 269.80s (0 failed)
 - [x] **🐛 [P2-6] `src/world/economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정**:
   - **수정**: `cured` 결과에 따라 치료 대상 존재 시에만 골드 차감 및 성공 반환, 미치료 시 골드 미차감 및 안내 메시지 반환.
   - **검증 파일/테스트**: `src/world/economy_engine.py` | `tests/test_p0_p2_fixes.py::test_economy_engine_remove_poison_cured_check` (통과)
@@ -119,31 +125,32 @@
 
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-4 문서-코드 드리프트 자동화 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-5 LLM JSON 파싱 일원화 및 뉴스 틱 완수)
 
-#### [P2-4 문서-코드 드리프트 최신화 및 자동화 100% 완수]
-1. **동기화 및 검증 자동화 도구 (`scripts/sync_doc_metrics.py`)**:
-   - `pytest --collect-only -q`로 실제 정의된 테스트 수를 실시간 산출.
-   - `CHANGES_AUDIT.md`에서 전체/도달 모듈 통계 추출.
-   - `README.md`의 본문 테스트 통과 수치, bash 실행 명령어 주석, 디렉터리 트리 주석, 정적 도달성 통계 4대 지표 자동 검증 및 갱신.
-   - `--check` 플래그로 불일치 시 `sys.exit(1)` 반환하여 CI 연동 지원.
-2. **CI 파이프라인 5대 품질 게이트 확장 (`.github/workflows/ci.yml`)**:
-   - `Document-Code Drift Check` 스텝을 추가하여 PR/Push 시 문서와 코드 간 수치 불일치 원천 차단.
-3. **프로젝트 문서 최신화 (`TRIAGE.md`)**:
-   - P1-2 결합 완료된 3대 엔진(`combat_time_track_engine.py`, `merchant_barter_engine.py`, `siege_engine.py`)을 `Category A: WIRED_ACTIVE`로 승격.
-   - `Category C`를 `0 of 65 modules` (100% Reachable)로 최신화.
+#### [P2-5 LLM JSON 출력 파싱 파이프라인 일원화 및 소문 틱 결합 완수]
+1. **JSONRepairEngine 탄력성 고도화 (`src/llm/resilience.py`)**:
+   - `ast.literal_eval` 폴백을 통합하여 작은따옴표 기반 Python 딕셔너리 출력과 unescaped 개행에 대한 완전 복원 체계 구축.
+2. **GameMaster 소문 생성 주기 배선 및 목록 상한 관리 (`src/agents/game_master.py`, `src/world/state.py`)**:
+   - `generate_world_news_tick()`을 `process_turn()`의 10턴 주기(`state.turn % 10 == 0`) 실행 경로에 실시간 배선.
+   - 오프스크린 NPC 활동 로그 기반으로 1-2줄 세간의 소문을 나레이션에 자연스럽게 장식.
+   - `world_news_feed` 및 `world_facts`에 30개 상한(Cap) 슬라이싱 정책 도입으로 무한 증식 방지.
+   - `WorldState.from_dict()`에 `world_news_feed` 역직렬화 복원 추가.
+3. **평가 판정관 JSON 파이프라인 일원화 (`eval_runner.py`)**:
+   - `judge_memory_utilisation`, `judge_factual_consistency`의 raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일하여 마크다운 코드블록/구문 파손 방어.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `643 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 640 → 완료 643 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `652 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 643 → 완료 652 (+9 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
 - **정적 도달성 (scripts/reachability_audit.py)**: `0/65 Unreachable` (100% 도달성 유지).
-- **코드 정적 검사 (pyflakes)**: 미사용 import, syntax error, undefined name 0건 (Clean).
+- **문서-코드 드리프트 (scripts/sync_doc_metrics.py --check)**: `Clean (0 drift)`.
+- **코드 정적 검사 (pyflakes & ruff)**: 미사용 import, syntax error, undefined name 0건 (Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P2-5 LLM JSON 출력 파싱 파이프라인 일원화]**:
-   - `src/` 내 잔여 raw `json.loads` 점검 및 `JSONRepairEngine`으로 통일.
+1. **[P2-8 / 원칙 점검 및 플랫폼 동결 유지]**:
+   - P2 우선순위 버그/인프라 100% 완료 상태 최종 확인.
+   - 플랫폼/UI 동결 원칙 확인 및 다음 마일스톤 정렬.

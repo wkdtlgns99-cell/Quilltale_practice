@@ -15,7 +15,6 @@ Outputs:
 """
 
 import json
-import os
 import sys
 import logging
 from datetime import datetime
@@ -125,7 +124,11 @@ def judge_memory_utilisation(
             """
     try:
         raw = llm.generate_json(prompt, JUDGE_SYSTEM)
-        return json.loads(raw)
+        from src.llm.resilience import JSONRepairEngine
+        parsed = JSONRepairEngine.repair_json(raw)
+        if parsed and isinstance(parsed, dict):
+            return parsed
+        return {"reflects_memory": False, "confidence": 0.0, "reason": "Judge JSON parse failed."}
     except Exception:
         return {"reflects_memory": False, "confidence": 0.0, "reason": "Judge call failed."}
 
@@ -157,7 +160,11 @@ def judge_factual_consistency(
               """
     try:
         raw = llm.generate_json(prompt, JUDGE_SYSTEM)
-        return json.loads(raw)
+        from src.llm.resilience import JSONRepairEngine
+        parsed = JSONRepairEngine.repair_json(raw)
+        if parsed and isinstance(parsed, dict):
+            return parsed
+        return {"is_consistent": True, "confidence": 0.0, "violation": "Judge JSON parse failed."}
     except Exception:
         return {"is_consistent": True, "confidence": 0.0, "violation": "Judge call failed."}
 
@@ -420,7 +427,7 @@ def write_report(report: EvalReport, output_dir: str = "eval_results"):
                 con = " [con:✓]" if t.consistency_judgement.get("is_consistent") else " [con:✗]"
             f.write(f"  {status} T{t.turn:02d} {t.action[:45]:<45}{mem}{con}\n")
 
-    print(f"Report written to:")
+    print("Report written to:")
     print(f"  {json_path}")
     print(f"  {txt_path}")
     return json_path, txt_path

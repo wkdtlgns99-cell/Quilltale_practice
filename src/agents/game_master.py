@@ -273,6 +273,12 @@ class GameMasterAgent:
             ChronicleManager.save_chronicle(state, chronicle)
             narration += f"\n\n📜 **[세계의 연대기 기록됨]**\n{chronicle[:200]}..."
 
+        # Batched 10-turn World News tick (synthesizes off-screen NPC activities)
+        if state.turn > 0 and state.turn % 10 == 0:
+            world_news = self.generate_world_news_tick(state)
+            if world_news:
+                narration += f"\n\n📰 **[세간에 떠도는 소문]** {world_news}"
+
         # Index turn into Vector RAG Memory
         max_significance = 1
         emotional_tone = "neutral"
@@ -648,8 +654,12 @@ JSON 형식: {{"news": "요약된 소식"}}"""
             news = result.get("news", "")
             if news:
                 state.world_news_feed.append(f"(턴 {state.turn}) {news}")
+                if len(state.world_news_feed) > 30:
+                    state.world_news_feed = state.world_news_feed[-30:]
                 if news not in state.world_facts:
                     state.world_facts.append(f"[소문] {news}")
+                    if len(state.world_facts) > 30:
+                        state.world_facts = state.world_facts[-30:]
                 return news
 
         except Exception as e:

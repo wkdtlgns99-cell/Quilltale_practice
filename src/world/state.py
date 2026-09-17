@@ -2421,6 +2421,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.world_traits = raw.get("world_traits", raw.get("traits", []))
         state.world_reputation = raw.get("world_reputation", 0)
         state.world_facts = raw.get("world_facts", [])
+        state.world_news_feed = raw.get("world_news_feed", [])
         state.world_chronicle = raw.get("world_chronicle", "")
         state.active_world_ended = raw.get("active_world_ended", False)
         state.history = raw.get("history", [])

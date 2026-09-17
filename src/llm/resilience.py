@@ -4,10 +4,11 @@ Handles network timeouts, 429 quota retries with exponential backoff,
 and auto-repairs broken JSON responses (missing braces, markdown ticks, trailing commas).
 """
 import re
+import ast
 import json
 import time
 import logging
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +106,13 @@ class JSONRepairEngine:
             try:
                 parsed_dict = json.loads(text_cleaned)
             except Exception:
-                pass
+                # Try ast.literal_eval for single-quoted Python dict representations
+                try:
+                    val = ast.literal_eval(text)
+                    if isinstance(val, dict):
+                        parsed_dict = val
+                except Exception:
+                    pass
 
         default_korean_fallback = "주변의 기운이 어지럽게 요동치며 상황을 명확히 분간하기 어렵습니다. 당신은 잠시 숨을 고르고 다음 행동을 준비합니다."
 
@@ -163,6 +170,13 @@ class JSONRepairEngine:
             text_cleaned = re.sub(r'(?<!\\)\n', r'\\n', text)
             try:
                 return json.loads(text_cleaned)
+            except Exception:
+                pass
+            # Try ast.literal_eval for single-quoted Python dict representations
+            try:
+                val = ast.literal_eval(text)
+                if isinstance(val, dict):
+                    return val
             except Exception:
                 pass
 
