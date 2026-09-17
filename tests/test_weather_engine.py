@@ -1,5 +1,4 @@
-import pytest
-from src.world.state import WorldState, Location, Player, Item, EnvironmentalMetrics
+from src.world.state import WorldState, Location, Player, EnvironmentalMetrics
 from src.world.weather_engine import WeatherEngine
 
 

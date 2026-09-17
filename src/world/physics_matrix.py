@@ -2,7 +2,7 @@
 Living Physics & Chemistry Matrix Engine for Quilltale TRPG Engine.
 Replaces vector embedding lookups with fast deterministic Python keyword & tag matching.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
 
 

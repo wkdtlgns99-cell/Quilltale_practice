@@ -3,8 +3,7 @@ Unit tests for ManaBurnEngine in Quilltale TRPG.
 Tests mana circuit damage, overchanneling restrictions (blood/sacrifice only),
 backlash mechanics, dual-nature ether mutations, and circuit restoration.
 """
-import pytest
-from src.world.state import WorldState, Player, NPC
+from src.world.state import WorldState, Player
 from src.world.mana_burn_engine import (
     ManaBurnEngine, ManaCircuitState, EtherMutationSpec, ETHER_MUTATIONS_REGISTRY
 )
@@ -121,12 +120,12 @@ def test_ether_contamination_and_dual_mutation():
     assert len(circuit.active_mutations) == 0
 
     # Accumulate 60
-    logs1 = ManaBurnEngine.accumulate_contamination(target, 60.0)
+    ManaBurnEngine.accumulate_contamination(target, 60.0)
     assert circuit.ether_contamination == 60.0
     assert len(circuit.active_mutations) == 0
 
     # Accumulate 45 -> exceeds 100 -> triggers mutation
-    logs2 = ManaBurnEngine.accumulate_contamination(target, 45.0)
+    ManaBurnEngine.accumulate_contamination(target, 45.0)
     assert len(circuit.active_mutations) == 1
     assert circuit.ether_contamination == 0.0  # Reset on mutate
 

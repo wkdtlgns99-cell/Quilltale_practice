@@ -1,7 +1,7 @@
 """
 Telemetry, Latency Profiler & Token Cost Calculator for Quilltale TRPG.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass

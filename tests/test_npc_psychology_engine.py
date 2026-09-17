@@ -7,13 +7,11 @@ Validates:
 4. Causal trauma trigger matching, stress amplification, and fear escalation
 5. Multi-entity 9-axis relationship matrix, cache invalidation threshold, and legacy player attitude sync
 """
-import pytest
-from src.world.state import NPC, NPCPersonality
+from src.world.state import NPC
 from src.world.psychology_engine import (
     PERSONALITY_TEMPLATES, apply_personality_template,
-    EmotionEngine, VALID_EMOTIONS, StressEngine,
-    TraumaEngine, STANDARD_TRAUMA_REGISTRY,
-    RelationshipEngine, CANONICAL_RELATIONSHIP_AXES
+    EmotionEngine, StressEngine,
+    TraumaEngine, RelationshipEngine
 )
 
 
@@ -76,7 +74,7 @@ def test_emotion_simulation_and_decay():
     assert mods["attack"] > 0 or mods["escape"] > 0
 
     # Test tick decay
-    expired = EmotionEngine.decay_emotions(npc_neurotic)
+    EmotionEngine.decay_emotions(npc_neurotic)
     # Intensity should decrease
     assert npc_neurotic.emotion_state["anger"]["intensity"] < 50
 

@@ -1,7 +1,7 @@
 import json
 import random
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from src.world.state import WorldState
 
 class ScenarioManager:

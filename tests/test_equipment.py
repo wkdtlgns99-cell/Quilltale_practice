@@ -1,6 +1,5 @@
 import pytest
-import json
-from src.world.state import WorldState, Player, EquipmentSlots, Item
+from src.world.state import WorldState, Item
 from src.core.config import MAX_RINGS, MAX_EARRINGS
 
 

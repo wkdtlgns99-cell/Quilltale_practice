@@ -1,4 +1,3 @@
-import pytest
 from src.world.state import Player
 from src.world.incantation import IncantationSystem
 from src.core.config import BASE_INCANTATION_CHARS, WISDOM_INCANT_BONUS

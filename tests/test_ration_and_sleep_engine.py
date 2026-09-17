@@ -4,13 +4,12 @@ Tests individual food spoilage, stack separation, environmental heat/wetness dec
 food preservation (salt/smoke/dry), water boiling purification, food poisoning/dysentery,
 sleep deprivation tiers, stimulant crash, and bedding quality recovery.
 """
-import pytest
-from src.world.state import WorldState, Player, Item
+from src.world.state import WorldState, Item
 from src.world.ration_engine import (
-    RationSpoilageEngine, FoodItemStatus, PRESERVATION_METHODS
+    RationSpoilageEngine
 )
 from src.world.sleep_engine import (
-    SleepDeprivationEngine, CircadianClock, STIMULANTS_REGISTRY, BEDDING_REGISTRY
+    SleepDeprivationEngine
 )
 
 
@@ -45,20 +44,20 @@ def test_individual_spoilage_turn_ticks():
     assert status.freshness == 100.0
 
     # Tick 1 turn
-    logs = RationSpoilageEngine.process_turn_spoilage(state)
+    RationSpoilageEngine.process_turn_spoilage(state)
     # Decay is at least 5.5
     assert status.freshness <= 95.0
 
     # Advance until spoiled (< 40)
     status.freshness = 42.0
-    logs_spoil = RationSpoilageEngine.process_turn_spoilage(state)
+    RationSpoilageEngine.process_turn_spoilage(state)
     assert status.is_spoiled
     assert "상하기 시작한" in raw_meat.name
     assert "spoiled" in raw_meat.traits
 
     # Advance until completely rotten (0)
     status.freshness = 2.0
-    logs_rot = RationSpoilageEngine.process_turn_spoilage(state)
+    RationSpoilageEngine.process_turn_spoilage(state)
     assert status.is_rotten
     assert "썩은 폐기물" in raw_meat.name
     assert "rotten" in raw_meat.traits
@@ -199,7 +198,7 @@ def test_sleep_recovery_bedding_quality():
     clock.awake_hours = 33.3
 
     # 1. Inn bed sleep for 8 hours
-    logs = SleepDeprivationEngine.resolve_sleep(player, bedding_id="inn_bed", hours=8, state=state)
+    SleepDeprivationEngine.resolve_sleep(player, bedding_id="inn_bed", hours=8, state=state)
     assert player.fatigue < 80
     assert clock.awake_hours == 0.0
     assert clock.deprivation_tier == 0

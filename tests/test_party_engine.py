@@ -2,9 +2,8 @@
 Unit tests for PartyEngine, Companion recruitment, autonomous combat actions,
 loyalty & betrayal thresholds, camp roles, and serialization.
 """
-import pytest
-from src.world.state import WorldState, Player, NPC
-from src.world.party_engine import PartyEngine, Companion, CompanionStats, CompanionSkill, CompanionUltimate
+from src.world.state import WorldState, NPC
+from src.world.party_engine import PartyEngine
 
 
 def test_load_companion_templates():

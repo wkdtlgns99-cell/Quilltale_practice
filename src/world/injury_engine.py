@@ -9,9 +9,9 @@ Categorizes anatomical injuries into 4 severity tiers:
 4. CRITICAL_PERMANENT (실명, 절단): Irreversible through normal medicine. Requires high miracles or prosthetic limbs.
 """
 from enum import Enum
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Any
 import logging
-from src.world.state import WorldState, Item, Player, NPC
+from src.world.state import WorldState, Item, NPC
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,6 @@ class InjuryEngine:
         is_potion = "포션" in iname or "물약" in iname or itype == "consumable" and ("회복" in iname or "치유" in iname)
         is_bandage = "붕대" in iname or iprops.get("bandage", False)
         is_splint = "부목" in iname or iprops.get("splint", False)
-        is_poultice = "연고" in iname or "약초" in iname or iprops.get("poultice", False)
 
         # 1. Potions cannot fix structural bone/tendon injuries or permanent dismemberment
         if is_potion:
@@ -103,8 +102,6 @@ class InjuryEngine:
             return False, reason, {}
 
         severity = cls.classify_injury(injury_name)
-        iname = item.name.lower()
-        delta_mod: Dict[str, Any] = {}
 
         # Light injury: Cured instantly
         if severity == InjurySeverity.LIGHT:

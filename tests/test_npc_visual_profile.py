@@ -1,4 +1,3 @@
-import pytest
 from src.world.state import WorldState, Location, NPC, Player, NPCVisualDetails
 
 

@@ -8,10 +8,9 @@ Tests:
 5. Defeated boss suppression (no duplicate spawns).
 6. TwoPassEngine integration and Pass 1 fact sheet reporting.
 """
-import pytest
-from src.world.state import WorldState, Location, Player, NPC, Item, EnvironmentalMetrics
+from src.world.state import WorldState, Location, Item
 from src.world.geography import RoadType, RoadConnection
-from src.world.hidden_encounter_engine import HiddenEncounterEngine, HIDDEN_BOSS_REGISTRY
+from src.world.hidden_encounter_engine import HiddenEncounterEngine
 from src.world.two_pass_engine import TwoPassEngine
 
 

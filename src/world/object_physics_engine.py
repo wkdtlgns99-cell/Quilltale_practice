@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Any, Tuple
 import random
 import logging
 
-from src.world.state import WorldState, Item, Location
+from src.world.state import WorldState, Item
 
 logger = logging.getLogger(__name__)
 
@@ -587,7 +587,6 @@ class UniversalObjectPhysicsEngine:
         if item.durability >= item.max_durability:
             return False, f"[{item.name}]은(는) 이미 완벽한 상태입니다."
 
-        mat_id = cls.resolve_material(item)
         repair_amount = int(item.max_durability * 0.5)
         item.durability = min(item.max_durability, item.durability + repair_amount)
 

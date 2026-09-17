@@ -7,11 +7,11 @@ Triggers elusive, high-risk gimmick boss encounters based on strict physical and
 4. Black Market & Contraband: Possessing Illicit Goods or Debt Default + Ruins/Alleys -> Slaughterhouse Hook Scale Merchant (도살장 갈고리의 저울상인)
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 import logging
 
-from src.world.state import WorldState, NPC, Item, Skill, CombatProfile, NPCPersonality, NPCNeeds, NPCVisualDetails
-from src.world.geography import RoadType, RoadCondition
+from src.world.state import WorldState, NPC, Skill, CombatProfile, NPCPersonality
+from src.world.geography import RoadType
 
 logger = logging.getLogger(__name__)
 
@@ -278,7 +278,7 @@ class HiddenEncounterEngine:
                 continue
 
             # --- ALL CONDITIONS MET! Spawn Hidden Boss ---
-            spawned_npc = cls._spawn_hidden_boss_npc(state, spec, curr_loc.id)
+            cls._spawn_hidden_boss_npc(state, spec, curr_loc.id)
             cls._register_boss_skills_and_items(state, spec)
 
             logger.info(f"⚡ [Hidden Boss Triggered] {spec.name} spawned at {curr_loc.name}")

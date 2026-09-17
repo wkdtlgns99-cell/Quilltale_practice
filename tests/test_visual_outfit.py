@@ -15,13 +15,12 @@ Validates:
 5. Two-way synchronization between EquipmentSlots and ClothingLayer.
 6. Backwards compatibility with old JSON save states.
 """
-import pytest
 from src.world.state import (
-    WorldState, Player, NPC, Item, Location, EquipmentSlots, ClothingLayer, NPCVisualDetails
+    WorldState, NPC, Item, Location, ClothingLayer, NPCVisualDetails
 )
 from src.world.equipment import EquipmentEngine
 from src.world.outfit_engine import (
-    OutfitMechanicsEngine, EncumbranceStatus, ArmorChafingResult, QuickDrawResult, EyewearHazardResult
+    OutfitMechanicsEngine
 )
 
 

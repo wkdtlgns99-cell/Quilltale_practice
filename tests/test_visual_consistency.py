@@ -9,9 +9,8 @@ Tests:
 6. OutfitMechanicsEngine.build_consistent_character_prompt unified anchor generation.
 7. Save/Load JSON serialization and backward compatibility.
 """
-import pytest
 from src.world.state import (
-    WorldState, Location, NPC, Player, Item, EquipmentSlots,
+    WorldState, NPC, Player, Item, EquipmentSlots,
     NPCVisualDetails, ClothingLayer, FacialDetails, BodyMeasurements, ItemVisualProfile
 )
 from src.world.outfit_engine import OutfitMechanicsEngine

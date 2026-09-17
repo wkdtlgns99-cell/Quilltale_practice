@@ -6,7 +6,7 @@ and night ambush resolution with fatigue/circadian recovery.
 import pytest
 from src.world.state import WorldState, Player, NPC, Location
 from src.world.campsite_engine import (
-    CampsiteRestEngine, CampsiteState, SentryShift, NightAmbushSpec, NIGHT_AMBUSH_REGISTRY
+    CampsiteRestEngine, CampsiteState, NightAmbushSpec, NIGHT_AMBUSH_REGISTRY
 )
 
 

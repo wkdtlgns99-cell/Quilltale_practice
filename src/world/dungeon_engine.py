@@ -9,10 +9,10 @@ depth-scaled monster/NPC densities, and contextual trap integration:
 3. Contextual Trap Gating: Automatically deploys dungeon-category traps on every floor.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Tuple
 import logging
 
-from src.world.state import WorldState, Location, EnvironmentalMetrics
+from src.world.state import WorldState, Location
 from src.world.trap_engine import TrapEngine
 
 logger = logging.getLogger(__name__)
@@ -133,15 +133,7 @@ class DungeonEngine:
                 room_id = f"{dungeon_id}_b{floor_num}f_r{idx + 1}"
                 r_name = f"[지하 {floor_num}층] {cls.ROOM_NAMES_BY_TYPE[r_type][idx % len(cls.ROOM_NAMES_BY_TYPE[r_type])]}"
 
-                # Subterranean environment
-                env = EnvironmentalMetrics(
-                    weather="지하 밀실",
-                    lighting="칠흑 같은 어둠" if r_type != "entrance_hall" else "희미한 등불",
-                    smell="퀴퀴한 곰팡이와 부패한 유황 냄새",
-                    noise="불길하게 울리는 수맥 물방울 소리",
-                    oxygen_level=oxygen,
-                    hazard_level=base_danger
-                )
+
 
                 strata_map = {1: "limestone", 2: "sandstone", 3: "basalt", 4: "granite", 5: "obsidian"}
                 assigned_strata = strata_map.get(floor_num, "granite")

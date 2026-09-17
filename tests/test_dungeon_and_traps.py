@@ -1,8 +1,7 @@
 import pytest
-from src.world.state import WorldState, Location, Player, Item
-from src.world.trap_engine import TrapEngine, TrapSpec, TrapInstance, TRAP_REGISTRY
-from src.world.dungeon_engine import DungeonEngine, DungeonInstance
-from src.world.two_pass_engine import TwoPassEngine
+from src.world.state import WorldState, Location
+from src.world.trap_engine import TrapEngine, TRAP_REGISTRY
+from src.world.dungeon_engine import DungeonEngine
 from src.world.status_engine import StatusEffectEngine
 
 
@@ -203,7 +202,7 @@ def test_dungeon_instance_depth_scaling(test_world):
 
 def test_dungeon_navigation_descend_ascend(test_world):
     """Test player navigation between dungeon floors and return to surface."""
-    dungeon = DungeonEngine.create_dungeon_instance(
+    DungeonEngine.create_dungeon_instance(
         test_world,
         surface_location_id="catacomb_entrance",
         max_depth=2

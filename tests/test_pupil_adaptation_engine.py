@@ -34,7 +34,7 @@ def test_bright_to_dark_adaptation_delay(test_player):
     assert "20.0초" in state.impairment_reason
 
     # Tick 10 seconds
-    logs = PupilAdaptationEngine.tick_adaptation_seconds(test_player, delta_seconds=10.0)
+    PupilAdaptationEngine.tick_adaptation_seconds(test_player, delta_seconds=10.0)
     state = PupilAdaptationEngine.get_state(test_player)
     assert state.is_impaired is True
     assert state.seconds_remaining == 10.0

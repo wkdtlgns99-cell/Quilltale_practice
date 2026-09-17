@@ -8,10 +8,9 @@ Tests:
 5. In-game player movement in TwoPassEngine correctly computing dynamic road condition logs and fatigue.
 """
 import pytest
-from src.world.state import WorldState, Location, Player, EnvironmentalMetrics
+from src.world.state import WorldState, Location, EnvironmentalMetrics
 from src.world.geography import (
-    GeographyEngine, RoadType, RoadCondition, RoadConnection,
-    ROAD_CONDITION_EFFECTS
+    GeographyEngine, RoadType, RoadCondition, RoadConnection
 )
 from src.world.two_pass_engine import TwoPassEngine
 

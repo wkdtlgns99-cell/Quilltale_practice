@@ -373,22 +373,13 @@ class WorldGenerator:
 
         if not sample_inspirations:
             sample_inspirations = random.sample(REGION_THEME_INSPIRATIONS, min(4, len(REGION_THEME_INSPIRATIONS)))
-
-        inspiration_lines = []
-        for i, reg in enumerate(sample_inspirations, 1):
-            elems = ", ".join(reg.get("elements", [])[:3]) if "elements" in reg else reg.get("environment", "")[:40]
-            inspiration_lines.append(f"- 예시 {i} [{reg.get('name', '')}]: {elems}")
-        region_inspiration_text = "\n".join(inspiration_lines)
-
         # Retrieve Arcane Physics, Realism Mechanics, and Monster inspirations via Qdrant RAG or fallback
         sample_arcane = []
         sample_realism = []
-        sample_monsters = []
         if self._memory:
             try:
                 sample_arcane = self._memory.search_arcane_templates(rag_query, limit=3)
                 sample_realism = self._memory.search_realism_templates(rag_query, limit=3)
-                sample_monsters = self._memory.search_monster_templates(rag_query, limit=3)
             except Exception as e:
                 logger.warning(f"RAG search for templates failed: {e}")
 
@@ -411,16 +402,6 @@ class WorldGenerator:
                         sample_realism = random.sample(all_r, min(3, len(all_r)))
                 except Exception:
                     pass
-
-        arcane_lines = [f"- [{a.get('name', '')}]: {' / '.join(a.get('symptoms', [])[:2])}" for a in sample_arcane]
-        arcane_laws_text = "\n".join(arcane_lines) if arcane_lines else "특이 법칙 없음"
-
-        realism_lines = [f"- [{r.get('name', '')}]: {r.get('core_principle', '')}" for r in sample_realism]
-        realism_laws_text = "\n".join(realism_lines) if realism_lines else "기본 물리 법칙 적용"
-
-        monster_lines = [f"- [{m.get('tier', 'elite').upper()} {m.get('name', '')}]: {m.get('concept_theme', '')} (약점: {m.get('weakness_exploit', '')[:80]}...)" for m in sample_monsters]
-        monster_inspiration_text = "\n".join(monster_lines) if monster_lines else "표준 기믹 몬스터"
-
         # Infinite Variety: Procedurally assemble a completely unique world from our 30+ region templates
         # 1. Tier 1: Planet Cosmology & World Lore Selection
         cosmology_path = TEMPLATES_DIR / 'cosmology_templates.json'

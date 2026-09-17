@@ -2,13 +2,10 @@
 Unit tests for CaveCollapseEngine, Rock Strata, Oxygen Dynamics, and Subterranean Environmental Hazards.
 """
 import pytest
-from src.world.state import WorldState, Location, Player, EnvironmentalMetrics
+from src.world.state import WorldState, Location
 from src.world.cave_in_engine import (
-    CaveCollapseEngine, CAVE_COLLAPSE_SYSTEM, DUNGEON_ENVIRONMENT_SYSTEMS,
-    ROCK_STRATA_REGISTRY, VIBRATION_SOURCES_REGISTRY, COLLAPSE_STAGES_REGISTRY,
-    TOXIC_GAS_REGISTRY, WATER_QUALITY_REGISTRY, FLOOR_HAZARD_REGISTRY
+    CaveCollapseEngine, ROCK_STRATA_REGISTRY
 )
-from src.world.dungeon_engine import DungeonEngine
 from src.world.two_pass_engine import TwoPassEngine
 
 
@@ -115,7 +112,6 @@ def test_obsidian_magic_susceptibility(dungeon_world):
 def test_oxygen_depletion_and_hypoxia_stages(dungeon_world):
     """Verify turn-based oxygen consumption and hypoxia health damage."""
     state = dungeon_world
-    loc = state.locations["dungeon_room_1"]
 
     # Initial 100%
     state.environment.oxygen_level = 100

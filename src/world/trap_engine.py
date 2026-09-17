@@ -8,8 +8,7 @@ Deterministically manages contextual traps for Surface, Dungeon, and Hidden Real
 Enforces Perception detection, Agility/Intelligence disarming, tool consumption, and reflex saving throws.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
-import random
+from typing import Dict, List, Optional, Any
 import logging
 
 from src.world.dice import DiceEngine

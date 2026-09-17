@@ -4,7 +4,7 @@ Manages stamina consumption for martial/physical skills, exhaustion triggering,
 action gating (blocking heavy actions when exhausted), turn-based regeneration,
 and symmetric Player/NPC stamina mechanics.
 """
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any
 from src.world.status_engine import StatusEffectEngine
 
 

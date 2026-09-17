@@ -8,9 +8,9 @@ Propagates rumors and reputation across the geographic road network based on:
 5. Global + Regional reputation synthesis (Global 100 grants >= 75 recognition in remote villages).
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Any
 import logging
-from src.world.geography import GeographyEngine, RoadType
+from src.world.geography import GeographyEngine
 
 logger = logging.getLogger(__name__)
 

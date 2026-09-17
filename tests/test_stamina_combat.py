@@ -1,5 +1,5 @@
 import pytest
-from src.world.state import WorldState, Location, NPC, Item, Skill, Player
+from src.world.state import WorldState, Location, NPC, Skill
 from src.world.stamina_engine import StaminaEngine
 from src.world.validator import ActionValidator
 from src.world.two_pass_engine import TwoPassEngine

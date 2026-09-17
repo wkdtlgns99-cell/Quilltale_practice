@@ -6,9 +6,9 @@ and World Lore/Rumors for deep RAG retrieval.
 import uuid
 import logging
 from typing import Any, Dict, List, Optional
-from src.core.config import QDRANT_PATH, QDRANT_URL, JINA_MODEL, EMBEDDING_DIMENSION
-from .base import BaseVectorStore, BaseEmbedder, SearchResult
-from .embeddings import BGEM3Embedder, get_default_embedder
+from src.core.config import QDRANT_PATH, QDRANT_URL, EMBEDDING_DIMENSION
+from .base import BaseVectorStore, BaseEmbedder
+from .embeddings import get_default_embedder
 from .qdrant_store import QdrantVectorStore
 
 logger = logging.getLogger(__name__)

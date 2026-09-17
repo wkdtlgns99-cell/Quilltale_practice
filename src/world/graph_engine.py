@@ -8,7 +8,7 @@ Integrates:
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from src.core.config import TEMPLATES_DIR
 
 logger = logging.getLogger(__name__)
@@ -320,7 +320,6 @@ class EcologicalVacuumCollapse:
     @staticmethod
     def evaluate_vacuum_collapse(defeated_monster_name: str, current_region: str, state: Any) -> Optional[Dict[str, Any]]:
         m_lower = defeated_monster_name.lower()
-        r_lower = current_region.lower()
 
         if any(k in m_lower for k in ['거미', '누에', '포식자', '사마귀']):
             return {

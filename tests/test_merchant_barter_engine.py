@@ -1,8 +1,6 @@
-import pytest
 from src.world.merchant_barter_engine import (
     MerchantBarterEngine,
-    ContrabandTier,
-    TERRAIN_PRICE_MULTIPLIERS
+    ContrabandTier
 )
 from src.world.state import WorldState, Location
 from src.world.legacy import LegacyManager

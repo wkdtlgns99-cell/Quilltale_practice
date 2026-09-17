@@ -6,7 +6,6 @@ fast jab action interrupt, bow tension mechanics, and prompt context serializati
 import pytest
 from src.world.state import WorldState, Location, NPC, Item
 from src.world.two_pass_engine import TwoPassEngine
-from src.world.attack_physics_engine import AttackPhysicsEngine, AttackPhysicsResult
 
 
 @pytest.fixture(autouse=True)

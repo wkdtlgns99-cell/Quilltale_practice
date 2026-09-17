@@ -1,8 +1,8 @@
 import pytest
-from src.world.state import WorldState, Player, NPC, Item, Location
+from src.world.state import WorldState, NPC, Item, Location
 from src.world.validator import ActionValidator
 from src.world.two_pass_engine import TwoPassEngine
-from src.world.injury_engine import InjuryEngine, InjurySeverity
+from src.world.injury_engine import InjuryEngine
 
 
 @pytest.fixture

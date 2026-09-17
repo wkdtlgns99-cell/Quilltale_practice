@@ -1,6 +1,4 @@
-import os
-import pytest
-from src.world.state import WorldState, Player, Location, Item
+from src.world.state import WorldState, Location, Item
 from src.agents.player_bot import PlayerBotAgent
 from src.llm.claude import ClaudeLLM
 from src.world.economy_engine import EconomyEngine
@@ -386,7 +384,6 @@ def test_save_migration_list_trimming_and_archive(tmp_path, monkeypatch):
 
 def test_player_bot_no_dead_item_import():
     """P0-0-8: player_bot.py 모듈에 미사용 죽은 Item import가 존재하지 않는지 검증."""
-    import inspect
     import src.agents.player_bot as pb_mod
     # Item이 전역 네임스페이스에 노출되지 않아야 함
     assert "Item" not in pb_mod.__dict__

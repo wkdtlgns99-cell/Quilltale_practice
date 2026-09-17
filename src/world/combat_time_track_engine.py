@@ -5,12 +5,10 @@ meter-based distance matrices (up to 150m+ extreme-range), and Perception-gated
 Option A reaction interrupt triggers.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Tuple
-import math
+from typing import Dict, Any, Optional, List
 
 from src.world.state import WorldState
 from src.world.dice import DiceEngine
-from src.world.stat_engine import StatEngine
 
 
 # 5 Distance Zones
@@ -237,10 +235,10 @@ class ActionTimeTrackEngine:
                 f"[{action.action_name}]의 궤적을 출발 찰나에 즉각 포착했습니다! (남은 여유: {remaining_time:.2f}초)"
             )
             options = [
-                f"화살/칼날 쳐내기 (반격 패링)",
+                "화살/칼날 쳐내기 (반격 패링)",
                 f"몸을 굴려 측면 도약 회피 ({distance_at_perception:.1f}m)",
-                f"방패 전면 전개 방어",
-                f"반대편 엄폐물 뒤로 질주"
+                "방패 전면 전개 방어",
+                "반대편 엄폐물 뒤로 질주"
             ]
         elif ratio <= 0.4:
             desc = (
@@ -248,9 +246,9 @@ class ActionTimeTrackEngine:
                 f"급습해오는 [{action.action_name}]을 인지했습니다! (남은 대응 시간: {remaining_time:.2f}초)"
             )
             options = [
-                f"긴급 방패/무기 가드 올리기",
-                f"바닥으로 급격히 엎드리기",
-                f"시전 중인 행동 즉각 캔슬하고 회피"
+                "긴급 방패/무기 가드 올리기",
+                "바닥으로 급격히 엎드리기",
+                "시전 중인 행동 즉각 캔슬하고 회피"
             ]
         else:
             desc = (
@@ -258,8 +256,8 @@ class ActionTimeTrackEngine:
                 f"(극도로 촉박: {remaining_time:.2f}초)"
             )
             options = [
-                f"치명타를 피하기 위해 몸을 비틀어 어깨로 받아내기",
-                f"본능적인 긴급 쳐내기"
+                "치명타를 피하기 위해 몸을 비틀어 어깨로 받아내기",
+                "본능적인 긴급 쳐내기"
             ]
 
         return InterruptEvent(

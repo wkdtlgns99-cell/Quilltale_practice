@@ -156,8 +156,7 @@
 - **전체 단위 테스트**: `660 passed` (0 failed, 세션 시작 640 → 완료 660, +20 신규 단위 테스트 순증, 무회귀).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
 - **정적 도달성 (scripts/reachability_audit.py)**: `0/68 Unreachable` (68/68 모듈 100% 도달).
-- **문서-코드 드리프트 (scripts/sync_doc_metrics.py --check)**: `Clean (0 drift)`.
-- **코드 정적 검사 (pyflakes & ruff)**: 미사용 import, syntax error, undefined name 0건 (Clean).
+- **코드 정적 검사 (pyflakes & ruff)**: `src/` 및 `tests/` 전수 검증 통과 (`pyflakes src/ tests/`: 0건 Clean, `ruff check src/ --select F,E9`: All checks passed, `ruff check tests/ --select F,E9`: All checks passed). CI 파이프라인 4대 게이트 전수 로컬 초록불 검증 완료.
 
 ---
 

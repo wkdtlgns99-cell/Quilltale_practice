@@ -1,5 +1,4 @@
-import pytest
-from src.world.state import WorldState, Location, NPC, Player, Item
+from src.world.state import WorldState, Location, NPC, Player
 from src.world.audio_engine import AudioEngine
 from src.world.two_pass_engine import DeterministicFactSheet
 

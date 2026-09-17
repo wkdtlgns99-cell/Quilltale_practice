@@ -2,9 +2,8 @@
 Unit tests for EconomyEngine, Shop management, item buying/selling,
 haggling, services, restock, and WorldState integration.
 """
-import pytest
-from src.world.state import WorldState, Player, Location, NPC, Item
-from src.world.economy_engine import EconomyEngine, Shop, ShopItem
+from src.world.state import WorldState, Location, Item
+from src.world.economy_engine import EconomyEngine
 from src.world.status_engine import StatusEffectEngine
 
 

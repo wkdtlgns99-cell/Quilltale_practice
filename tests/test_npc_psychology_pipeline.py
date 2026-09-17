@@ -6,12 +6,10 @@ Validates:
 3. MemoryPsychologyBridge salience ranking and deduplication
 4. End-to-end integration through NPCCognitiveDeductionEngine.process_npc_cognitive_turn
 """
-import pytest
 from src.world.state import WorldState, NPC, MemoryEntry
 from src.world.psychology_engine import (
-    WorldEvent, ActionCandidate, DecisionResult,
-    DecisionCacheManager, MemoryPsychologyBridge, PsychologyDecisionPipeline,
-    EmotionEngine, StressEngine, RelationshipEngine
+    WorldEvent, MemoryPsychologyBridge, PsychologyDecisionPipeline,
+    RelationshipEngine
 )
 from src.world.cognitive_engine import NPCCognitiveDeductionEngine
 

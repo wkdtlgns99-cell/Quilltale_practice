@@ -2,16 +2,14 @@
 Unit tests for Realistic Combat Physics, Dynamic Action Time-Track,
 StatEngine (Human Peak 15), and Macro Calendar & Environmental Ripple Engine.
 """
-import pytest
-import json
 
-from src.world.state import WorldState, Player, Item, Location, NPC
-from src.world.stat_engine import StatEngine, HUMAN_PEAK_STAT, AVERAGE_HUMAN_STAT
-from src.world.attack_physics_engine import AttackPhysicsEngine, AttackPhysicsResult
+from src.world.state import WorldState, Player, Item, NPC
+from src.world.stat_engine import StatEngine
+from src.world.attack_physics_engine import AttackPhysicsEngine
 from src.world.combat_time_track_engine import (
-    CombatDistanceManager, ActionTimeTrackEngine, CombatAction, InterruptEvent, DISTANCE_ZONES
+    CombatDistanceManager, CombatAction
 )
-from src.world.time_calendar_engine import TimeCalendarEngine, DAILY_ACTION_DURATIONS
+from src.world.time_calendar_engine import TimeCalendarEngine
 from src.world.perception_engine import PerceptionEngine
 
 

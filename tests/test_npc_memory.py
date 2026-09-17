@@ -3,7 +3,6 @@ Tests for NPC episodic memory system.
 """
 
 from src.world.state import WorldState, MemoryEntry
-import json
 
 
 def load_test_state() -> WorldState:

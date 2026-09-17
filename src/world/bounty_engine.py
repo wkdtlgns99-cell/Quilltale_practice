@@ -4,8 +4,8 @@ Tracks faction-specific bounties, generates wanted posters, handles disguises/al
 and deterministically spawns bounty hunters and guard checkpoints.
 """
 import logging
-from typing import Dict, Any, List, Optional, Tuple
-from src.world.state import WorldState, Player, NPC
+from typing import Dict, Any, Optional, Tuple
+from src.world.state import WorldState, NPC
 
 logger = logging.getLogger(__name__)
 

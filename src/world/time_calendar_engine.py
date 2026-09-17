@@ -4,8 +4,7 @@ Manages flexible daily action durations (min~max minutes), dynamic start year re
 cosmology epochs, seasonal shifts, and environmental butterfly effects (lighting, temperature, shop hours).
 """
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Tuple
-import random
+from typing import Dict, Any, List, Tuple
 
 from src.world.state import WorldState
 
@@ -209,7 +208,6 @@ class TimeCalendarEngine:
         인게임 시간을 경과시키고, 나비효과(조도, 기온, 상점 영업시간, 신문 발간)를 갱신.
         """
         prior_day = state.current_day
-        prior_hour = state.current_hour
 
         # 1. 시간 및 피로도 적용
         state.player.time_elapsed_minutes += minutes

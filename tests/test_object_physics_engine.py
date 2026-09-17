@@ -4,14 +4,11 @@ Tests all-encompassing physical object durability, material resolution heuristic
 debris fragmentation (chairs to clubs, glass to shards, paper to ashes),
 container spilling, improvised weapon stats, and LLM prompt generation.
 """
-import pytest
 
 from src.world.state import WorldState, Item, Location
 from src.world.object_physics_engine import (
     UniversalObjectPhysicsEngine,
-    MaterialSpec,
-    ObjectInteractionResult,
-    MATERIAL_REGISTRY
+    ObjectInteractionResult
 )
 
 

@@ -1,8 +1,6 @@
 import json
-import pytest
 from pathlib import Path
 from src.world.state import WorldState, Location
-from src.world.generator import WorldGenerator
 
 
 def test_arcane_physics_template_json():

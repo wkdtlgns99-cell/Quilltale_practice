@@ -259,7 +259,7 @@ class CraftingEngine:
         if "completed_quest_id" in reqs:
             q_id = reqs["completed_quest_id"]
             if not hasattr(state, "quests") or q_id not in state.quests or state.quests[q_id].status != "completed":
-                return False, f"선행 퀘스트 미완료"
+                return False, "선행 퀘스트 미완료"
 
         return True, "제작 가능"
 

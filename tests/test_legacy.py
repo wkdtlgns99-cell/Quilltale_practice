@@ -45,7 +45,7 @@ def test_legacy_npc_spawning(monkeypatch, tmp_path):
     state.player.location = "market"
 
     # Archive Valdor
-    legacy_data = LegacyManager.archive_character(state, reason="retired")
+    LegacyManager.archive_character(state, reason="retired")
 
     # New game state
     new_state = load_test_state()

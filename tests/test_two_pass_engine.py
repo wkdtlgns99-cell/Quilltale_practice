@@ -1,6 +1,5 @@
 import json
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from src.world.state import WorldState, Location, NPC, Player, Item
 from src.world.two_pass_engine import TwoPassEngine, DeterministicFactSheet
@@ -321,7 +320,6 @@ def test_two_pass_engine_object_physics_destruction_and_burning():
 
 def test_sanitize_pass2_result_rejects_hallucinated_success_on_dice_failure():
     state = create_test_state()
-    from src.world.two_pass_engine import DeterministicFactSheet
     fact_sheet = DeterministicFactSheet(
         action="검투사를 찌른다",
         is_valid=True,
@@ -352,7 +350,6 @@ def test_sanitize_pass2_result_rejects_hallucinated_success_on_dice_failure():
 
 def test_sanitize_pass2_result_rejects_hallucinated_death_when_npc_alive():
     state = create_test_state()
-    from src.world.two_pass_engine import DeterministicFactSheet
     fact_sheet = DeterministicFactSheet(
         action="검투사를 공격한다",
         is_valid=True,
@@ -379,7 +376,6 @@ def test_sanitize_pass2_result_rejects_hallucinated_death_when_npc_alive():
 
 def test_sanitize_pass2_result_rejects_hallucinated_survival_when_npc_killed():
     state = create_test_state()
-    from src.world.two_pass_engine import DeterministicFactSheet
     fact_sheet = DeterministicFactSheet(
         action="검투사의 목을 벤다",
         is_valid=True,
@@ -406,7 +402,6 @@ def test_sanitize_pass2_result_rejects_hallucinated_survival_when_npc_killed():
 
 def test_sanitize_pass2_result_overrides_narration_on_action_rejection():
     state = create_test_state()
-    from src.world.two_pass_engine import DeterministicFactSheet
     fact_sheet = DeterministicFactSheet(
         action="손가락 튕겨서 태양을 부순다",
         is_valid=False,

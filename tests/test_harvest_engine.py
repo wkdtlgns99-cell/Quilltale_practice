@@ -12,9 +12,9 @@ Tests:
 9. Save/load backwards compatibility with anatomy fields.
 """
 import pytest
-from src.world.state import WorldState, Player, NPC, Location, Item, EquipmentSlots
+from src.world.state import WorldState, NPC, Location, Item
 from src.world.harvest_engine import (
-    AnatomyHarvestEngine, MonsterPart, PartAttackResult, HarvestOutcome
+    AnatomyHarvestEngine
 )
 from src.world.equipment import EquipmentEngine
 

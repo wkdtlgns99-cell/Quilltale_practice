@@ -4,7 +4,7 @@ Prevents infinite potion-chugging by modeling cumulative liver toxicity and dimi
 Resolves User Decision Q1: Liver toxicity decays with in-game world time, while full tolerance resets upon 8-hour campsite rest.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Any, Tuple
 
 
 @dataclass

@@ -6,7 +6,7 @@ dual-mode combat round ticks, and dual-mode travel exposure ticks (10-minute int
 import pytest
 from src.world.state import WorldState, Player, Location
 from src.world.weather_magic_engine import (
-    WeatherMagicSimulationEngine, WeatherMagicSpec, ActiveWeatherAnomaly, WEATHER_MAGIC_REGISTRY
+    WeatherMagicSimulationEngine, WeatherMagicSpec, WEATHER_MAGIC_REGISTRY
 )
 
 
@@ -156,7 +156,7 @@ def test_weather_magic_anomaly_expiration(weather_world):
     assert len(anomalies) == 1
 
     # Tick 15 minutes
-    logs1 = WeatherMagicSimulationEngine.tick_anomalies(weather_world, delta_minutes=15)
+    WeatherMagicSimulationEngine.tick_anomalies(weather_world, delta_minutes=15)
     assert len(anomalies) == 1
     assert list(anomalies.values())[0].remaining_minutes == 15
 

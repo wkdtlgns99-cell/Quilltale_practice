@@ -470,7 +470,7 @@ class EconomyEngine:
         if not shop:
             return "<div class='qt-panel-content' style='color:#a0aec0;'>현재 위치에 이용 가능한 상점이 없습니다.</div>"
 
-        html_parts = [f"<div class='qt-shop-panel' style='padding:8px;'>"]
+        html_parts = ["<div class='qt-shop-panel' style='padding:8px;'>"]
         html_parts.append(f"""
         <div style="background:#2d3748; color:#ffffff; padding:10px 14px; border-radius:6px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">

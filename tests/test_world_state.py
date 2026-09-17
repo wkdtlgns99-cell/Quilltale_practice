@@ -1,7 +1,6 @@
 # tests/test_world_state.py
 
 from src.world.state import WorldState
-import json
 
 
 def load_test_state() -> WorldState:
@@ -27,7 +26,7 @@ def test_invalid_movement_rejected():
 
 def test_valid_item_pickup():
     state = load_test_state()
-    changes = state.apply_update({"pickup_item": "dagger"})
+    state.apply_update({"pickup_item": "dagger"})
     assert "dagger" in state.player.inventory
     assert "dagger" not in state.locations["tavern"].items
 

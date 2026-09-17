@@ -2,15 +2,14 @@
 Unit tests for StatusEffectEngine and WorldState status integration.
 Verifies tick damage, healing, duration decay, stacking, stat modifiers, action blocking, and cure conditions.
 """
-import pytest
 from src.world.state import WorldState, Player, NPC, Location
-from src.world.status_engine import StatusEffectEngine, StatusEffect
+from src.world.status_engine import StatusEffectEngine
 from src.world.validator import ActionValidator
 
 
 def test_status_apply_and_stack():
     player = Player(health=100, max_health=100)
-    msg1 = StatusEffectEngine.apply_status(player, "poison", duration=3, potency=5)
+    StatusEffectEngine.apply_status(player, "poison", duration=3, potency=5)
     assert "poison" in player.status_effects
     assert player.status_effects["poison"].stacks == 1
     assert player.status_effects["poison"].duration_turns == 3
@@ -116,7 +115,7 @@ def test_world_state_apply_update_status():
             "player": {"status_id": "burn", "duration": 3, "potency": 7}
         }
     }
-    changes = state.apply_update(update)
+    state.apply_update(update)
     assert "burn" in state.player.status_effects
     assert state.player.status_effects["burn"].damage_per_turn == 7
 
@@ -126,7 +125,7 @@ def test_world_state_apply_update_status():
             "player": ["burn"]
         }
     }
-    changes2 = state.apply_update(remove_update)
+    state.apply_update(remove_update)
     assert "burn" not in state.player.status_effects
 
 

@@ -7,8 +7,7 @@ Validates:
 4. Round-trip serialization and deserialization integrity
 5. Rule 6 compliance: traits field existence
 """
-import pytest
-from src.world.state import WorldState, NPC, MemoryEntry, NPCPersonality, NPCNeeds
+from src.world.state import WorldState, NPC, MemoryEntry
 
 
 def test_memory_entry_psychological_extensions():

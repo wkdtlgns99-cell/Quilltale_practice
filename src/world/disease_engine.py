@@ -8,8 +8,7 @@ from typing import Dict, List, Optional, Any, Tuple
 import random
 import logging
 
-from src.world.state import WorldState, Player, NPC
-from src.world.dice import DiceEngine
+from src.world.state import WorldState
 
 logger = logging.getLogger(__name__)
 
@@ -788,7 +787,7 @@ class EpidemicEngine:
                 else:
                     return False, f"🍶 [소독 실패] (d20:{roll} vs DC {dc}) 소독약의 농도가 부족하여 병원체 침투를 막지 못했습니다."
             else:
-                return False, f"알코올 외상 소독은 이미 혈관과 신경계로 전이된 [2단계 이상]의 병세를 치료할 수 없습니다."
+                return False, "알코올 외상 소독은 이미 혈관과 신경계로 전이된 [2단계 이상]의 병세를 치료할 수 없습니다."
 
         # 3. Herb Decoction / Ointment
         elif remedy_type == "herbs":
@@ -818,7 +817,7 @@ class EpidemicEngine:
                 del infs[disease_id]
                 return True, f"🔥 [환부 소작 성공] 달군 쇠붙이로 물린 상처를 지져 극심한 고통(피해 8, 스트레스 +20)을 겪었지만, [{spec.name_ko}]의 신경 침투를 완벽히 차단했습니다!"
             else:
-                return False, f"이미 체내 전신으로 퍼진 질병은 환부를 지지는 것으로 치료할 수 없습니다."
+                return False, "이미 체내 전신으로 퍼진 질병은 환부를 지지는 것으로 치료할 수 없습니다."
 
         return False, "유효하지 않은 치료 방식입니다."
 

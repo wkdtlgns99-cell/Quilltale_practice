@@ -2,11 +2,8 @@
 Local Ollama LLM Provider for Quilltale TRPG.
 Allows 100% free, zero-token, private local AI inference via Ollama (e.g. Llama 3.1 8B).
 """
-import os
-import json
 import logging
 import requests
-from typing import Optional
 
 from .base import BaseLLM, LLMResponse
 

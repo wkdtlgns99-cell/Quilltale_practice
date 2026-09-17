@@ -1,4 +1,3 @@
-import pytest
 from src.world.state import WorldState, Location, Player, NPC
 from src.agents.player_bot import PlayerBotAgent
 

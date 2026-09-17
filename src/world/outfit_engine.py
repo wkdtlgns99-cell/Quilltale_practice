@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional, List, Tuple
 import logging
 import random
 
-from src.world.state import WorldState, Item, Player, NPC, ClothingLayer
+from src.world.state import WorldState, Item, ClothingLayer
 
 logger = logging.getLogger(__name__)
 
@@ -373,7 +373,7 @@ class OutfitMechanicsEngine:
         elif is_overweight:
             summary += f" ⚠️ 하중 초과로 가방 찢어짐 위험 ({tear_risk}%)!"
         elif is_overfilled_vol:
-            summary += f" ⚠️ 용적 초과! 가방 지퍼와 끈이 터질 듯 팽창했습니다."
+            summary += " ⚠️ 용적 초과! 가방 지퍼와 끈이 터질 듯 팽창했습니다."
 
         return BackpackStorageStatus(
             backpack_name=spec.name_ko,
@@ -865,7 +865,6 @@ class OutfitMechanicsEngine:
         life_stage = getattr(v, "life_stage", "")
         job = getattr(entity, "job", "traveler")
         age = getattr(v, "age_apparent", "")
-        name = getattr(entity, "name", "Character")
         gender = getattr(v, "gender", "")
 
         core_parts = [f"cinematic fantasy portrait of {species}"]

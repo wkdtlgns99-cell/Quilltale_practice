@@ -199,11 +199,11 @@ class SleepDeprivationEngine:
         # Tier Escalation Notice
         if clock.deprivation_tier > prev_tier:
             if clock.deprivation_tier == 1:
-                logs.append(f"🥱 [수면 결핍 1단계: 24시간 무수면] 눈꺼풀이 무거워지고 초점이 흐려집니다. (명중/지각 -2)")
+                logs.append("🥱 [수면 결핍 1단계: 24시간 무수면] 눈꺼풀이 무거워지고 초점이 흐려집니다. (명중/지각 -2)")
             elif clock.deprivation_tier == 2:
-                logs.append(f"😵‍💫 [수면 결핍 2단계: 48시간 무수면] 뇌의 신호 전달이 지연되며 순간적으로 졸도하는 '미세수면' 위험이 발생합니다! (회피 DC +4, 미세수면 15%)")
+                logs.append("😵‍💫 [수면 결핍 2단계: 48시간 무수면] 뇌의 신호 전달이 지연되며 순간적으로 졸도하는 '미세수면' 위험이 발생합니다! (회피 DC +4, 미세수면 15%)")
             elif clock.deprivation_tier == 3:
-                logs.append(f"👁️‍🗨️ [수면 결핍 3단계: 72시간 무수면 - 급성 착란] 헛것이 보이고 속삭임이 들립니다. 뇌 기능이 붕괴 직전이며 언제 쓰러져도 이상하지 않습니다! (미세수면 35%, 심장마비 위험)")
+                logs.append("👁️‍🗨️ [수면 결핍 3단계: 72시간 무수면 - 급성 착란] 헛것이 보이고 속삭임이 들립니다. 뇌 기능이 붕괴 직전이며 언제 쓰러져도 이상하지 않습니다! (미세수면 35%, 심장마비 위험)")
 
         # In-Turn Passive Fatigue Gain
         if clock.active_stimulant_turns == 0:

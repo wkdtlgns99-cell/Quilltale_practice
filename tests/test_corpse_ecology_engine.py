@@ -8,8 +8,7 @@ Verifies User Decision Q1 (Hybrid Option A + B):
 - Looting mechanics and sanitary disposal (burn / bury)
 """
 import pytest
-import random
-from src.world.state import WorldState, Player, NPC, Location
+from src.world.state import WorldState, NPC, Location
 from src.world.corpse_ecology_engine import CorpseEcologyEngine, CorpseInstance
 
 

@@ -4,8 +4,8 @@ Calculates deterministic environmental elemental modifiers, visibility penalties
 hypothermia/heatstroke survival ticks, and ambush chances.
 """
 import logging
-from typing import Dict, Any, List, Tuple
-from src.world.state import WorldState, Player
+from typing import List, Tuple
+from src.world.state import WorldState
 
 logger = logging.getLogger(__name__)
 

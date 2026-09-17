@@ -1,5 +1,5 @@
 import pytest
-from src.world.state import WorldState, Player, NPC, Location
+from src.world.state import WorldState, NPC, Location
 from src.world.geography import GeographyEngine, RoadConnection, RoadType
 from src.world.rumor_diffusion_engine import RumorDiffusionEngine, RumorWave
 

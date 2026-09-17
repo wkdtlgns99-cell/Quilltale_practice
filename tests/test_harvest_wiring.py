@@ -3,11 +3,9 @@ Integration tests for harvest_engine.py wiring into TwoPassEngine and ActionVali
 Verifies monster part targeting, hitzone multipliers, physical tail severing,
 field butchering/carving, broken part ruin penalties, and prompt context serialization.
 """
-import pytest
 from src.world.state import WorldState, Location, NPC, Item
 from src.world.two_pass_engine import TwoPassEngine
-from src.world.validator import ActionValidator
-from src.world.harvest_engine import MonsterPart, AnatomyHarvestEngine
+from src.world.harvest_engine import MonsterPart
 
 
 def setup_harvest_world():

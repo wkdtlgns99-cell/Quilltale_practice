@@ -10,7 +10,7 @@ import logging
 from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 
-from src.world.state import WorldState, Item, Player, NPC
+from src.world.state import WorldState, Item, NPC
 
 logger = logging.getLogger(__name__)
 

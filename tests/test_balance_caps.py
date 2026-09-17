@@ -176,7 +176,7 @@ def test_npc_needs_and_economy_simulation():
     npc.inventory.append("minor_heal_potion")
     state.items["minor_heal_potion"] = type("ItemObj", (), {"name": "하급 치유 포션", "id": "minor_heal_potion"})()
     
-    logs = state.simulate_npc_needs_and_economy()
+    state.simulate_npc_needs_and_economy()
     assert npc.needs.hunger == initial_hunger + 1
     assert npc.health > 20
     assert "minor_heal_potion" not in npc.inventory

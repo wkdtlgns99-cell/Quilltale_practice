@@ -2,12 +2,10 @@
 Unit tests for Realistic Physical Stealth, Infiltration, Ground Vibration,
 Acoustic Masking, Wind-Borne Scent, and Eavesdropping Engine.
 """
-import pytest
 
-from src.world.state import WorldState, Player, Item, NPC
+from src.world.state import WorldState, Player, NPC
 from src.world.stealth_engine import (
-    StealthInfiltrationEngine, StealthAttemptResult, EavesdropAttemptResult,
-    FLOOR_ACOUSTICS_DB, STRIDE_STANCE_MODIFIERS, BARRIER_OCCLUSION_DB
+    StealthInfiltrationEngine, FLOOR_ACOUSTICS_DB
 )
 
 

@@ -2,8 +2,7 @@
 Unit tests for PhysicsMatrixEngine.
 Verifies fast pure-Python elemental and chemical matrix matching without vector DB.
 """
-import pytest
-from src.world.physics_matrix import PhysicsMatrixEngine, PHYSICS_RULES
+from src.world.physics_matrix import PhysicsMatrixEngine
 
 
 def test_physics_matrix_methane_explosion():

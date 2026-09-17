@@ -1,5 +1,3 @@
-import pytest
-import json
 from src.world.state import WorldState, Player, NPC, EnvironmentalMetrics, PendingInformation
 
 
@@ -89,7 +87,7 @@ def test_apply_update_deep_realism_deltas():
         "queue_information_wave": {"event_desc": "도적단 괴멸", "delay_turns": 1}
     }
 
-    changes = state.apply_update(delta_update)
+    state.apply_update(delta_update)
     assert npc.affinity == 65  # 50 + 15
     assert npc.fear == 20      # 0 + 20
     assert npc.debt == -30     # 0 - 30

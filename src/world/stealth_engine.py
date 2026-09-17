@@ -5,12 +5,11 @@ ambient noise masking, ground seismic micro-vibrations, wind-borne scent dispers
 and barrier sound transmission loss.
 """
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, List
 import math
 
 from src.world.state import WorldState
 from src.world.dice import DiceEngine
-from src.world.stat_engine import StatEngine
 
 
 # 1. Floor Material Base Impact Acoustics (dB at 1 meter)
@@ -195,7 +194,6 @@ class StealthInfiltrationEngine:
 
         # 3. 착용 갑옷 금속 마찰음
         armor_db = 0.0
-        eq_armor = getattr(infiltrator, "equipped_armor", None)
         eq_def = getattr(infiltrator, "equipment_defense", 0)
         if eq_def >= 15:
             armor_db = 20.0  # 육중한 전신 풀 플레이트 판금갑옷
@@ -418,19 +416,19 @@ class StealthInfiltrationEngine:
             else:
                 clarity = "audible_keywords"
                 content = "내일 밤... 북쪽 성문... 수비대 교대... 암호..."
-                narrative = f"웅성거림 속에서 중요한 핵심 단어들을 확실하게 건져냈습니다."
+                narrative = "웅성거림 속에서 중요한 핵심 단어들을 확실하게 건져냈습니다."
                 success = True
         elif perceived_db >= 20.0:
             # 약하게 웅얼거림
             if total_check >= 13:
                 clarity = "audible_keywords"
                 content = "자정... 성문... 수비대 교대..."
-                narrative = f"미세하게 떨려오는 음파에 온 신경을 집중하여 몇 가지 단어를 알아들었습니다."
+                narrative = "미세하게 떨려오는 음파에 온 신경을 집중하여 몇 가지 단어를 알아들었습니다."
                 success = True
             else:
                 clarity = "muffled_murmur"
                 content = "...수군거리는 소리... (내용 식별 불가)"
-                narrative = f"사람 목소리가 오가는 것은 느껴지나, 차폐가 두터워 무슨 말인지 알아듣지 못했습니다."
+                narrative = "사람 목소리가 오가는 것은 느껴지나, 차폐가 두터워 무슨 말인지 알아듣지 못했습니다."
                 success = False
         else:
             # 거의 무음

@@ -1,7 +1,6 @@
 """
 Tests for WorldPowerScalePresets: Low Fantasy, Standard Fantasy, Hyper Inflation, Cultivation.
 """
-import pytest
 from src.world.state import WorldState, Player
 from src.world.stat_engine import StatEngine, PowerScalePreset, POWER_SCALE_PRESETS
 from src.world.two_pass_engine import TwoPassEngine
@@ -68,7 +67,7 @@ def test_low_fantasy_growth_and_stat_cap():
     assert player.level == 16
 
     # Attempt to exceed max level 16 -> level does not increase
-    res2 = player.add_exp(999999, preset)
+    player.add_exp(999999, preset)
     assert player.level == 16
 
 

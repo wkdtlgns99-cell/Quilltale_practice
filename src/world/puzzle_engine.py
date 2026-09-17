@@ -6,7 +6,7 @@ beam reflectors, and valve sequences in dungeons and ruins.
 import os
 import json
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional
 from pathlib import Path
 
 from src.world.state import WorldState, Item
@@ -73,7 +73,6 @@ class PuzzleEngine:
                 solve_msg = f"✨ [고유 기믹 해제] 고대어 비문 [{puzzle['name_ko']}]의 암호가 공명하며 육중한 석문이 열립니다!"
 
         elif p_type == "weight_pressure_plate":
-            req_weight = puzzle.get("required_weight_kg", 50.0)
             req_str = puzzle.get("required_strength", 14)
             # Check strength or heavy item placement
             if state.player.strength >= req_str and any(k in action_lower for k in ["밀어", "밟아", "누른다", "힘으로", "올린다"]):
@@ -87,13 +86,13 @@ class PuzzleEngine:
             req_angles = puzzle.get("required_angles", [45, 90, 135])
             if all(str(a) in action_lower for a in req_angles) or any(k in action_lower for k in ["거울을 맞춘다", "각도를 정렬", "광선을 유도"]):
                 is_solved = True
-                solve_msg = f"💎 [광선 굴절 성공] 회전 거울의 각도가 일치하며 마력 광선이 제단 중앙에 집중되어 봉인이 풀립니다!"
+                solve_msg = "💎 [광선 굴절 성공] 회전 거울의 각도가 일치하며 마력 광선이 제단 중앙에 집중되어 봉인이 풀립니다!"
 
         elif p_type == "valve_sequence":
             req_seq = puzzle.get("required_sequence", [])
             if all(v.lower() in action_lower for v in req_seq) or any(k in action_lower for k in ["밸브 순서대로", "3, 1, 2", "순서대로 잠근다"]):
                 is_solved = True
-                solve_msg = f"🔧 [밸브 차단 완료] 올바른 순서로 압력을 제어하여 치명적인 독가스 살포가 멈췄습니다!"
+                solve_msg = "🔧 [밸브 차단 완료] 올바른 순서로 압력을 제어하여 치명적인 독가스 살포가 멈췄습니다!"
 
         if is_solved:
             # Update state puzzles DB

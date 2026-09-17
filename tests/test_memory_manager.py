@@ -3,7 +3,7 @@ Tests for MemoryManager, QdrantVectorStore, and JinaEmbedder.
 """
 from src.memory.memory_manager import MemoryManager
 from src.memory.qdrant_store import QdrantVectorStore
-from src.memory.embeddings import JinaEmbedder, BGEM3Embedder, get_default_embedder
+from src.memory.embeddings import JinaEmbedder, BGEM3Embedder
 
 
 def test_bge_m3_embedder_dimension():

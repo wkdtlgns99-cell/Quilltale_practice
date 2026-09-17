@@ -4,10 +4,10 @@ Deterministic calculation of physiological body temperature, clothing insulation
 drenching wetness dynamics, wind chill, flood, mold, and lightning conductivity.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Tuple
 import logging
 
-from src.world.state import WorldState, Player, Item, EnvironmentalMetrics
+from src.world.state import WorldState, Player
 
 logger = logging.getLogger(__name__)
 

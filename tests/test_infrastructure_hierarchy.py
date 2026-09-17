@@ -6,7 +6,6 @@ Tests:
 3. Cascading price calculation combining Regional natural multipliers and National import tariffs.
 4. Cross-border checkpoint inspection (passports, contraband, and wartime blockades).
 """
-import pytest
 from src.world.infrastructure import (
     Continent, Region, Nation, Settlement, Facility, InfrastructureRegistry,
     BuildingStatus, FacilityType
@@ -614,12 +613,6 @@ def test_settlement_infrastructure_profile_generic_defaults_and_roundtrip():
     """Verify 5-sector infrastructure defaults are pure generic empty lists and survive roundtrip."""
     from src.world.infrastructure import (
         Settlement,
-        SettlementInfrastructureProfile,
-        SanitationWaterInfrastructure,
-        FoodStorageInfrastructure,
-        DefenseSecurityInfrastructure,
-        TradeWorkshopsInfrastructure,
-        CivicHealthInfrastructure,
     )
 
     settle = Settlement(id="settle_pure", name="무작위 개척촌", nation_id="n1", region_id="r1")
@@ -2859,7 +2852,7 @@ def test_region_templates_json_integrity():
     """Verifies all 61 region templates in region_templates.json are valid, unique, and well-formed."""
     import json
     from pathlib import Path
-    from src.world.infrastructure import InfrastructureTemplateLoader, Region
+    from src.world.infrastructure import InfrastructureTemplateLoader
 
     path = Path("data/templates/region_templates.json")
     assert path.exists(), "region_templates.json must exist"

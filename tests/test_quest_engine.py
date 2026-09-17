@@ -2,9 +2,8 @@
 Unit tests for QuestEngine, Quest tracking, multi-stage progression,
 branching narrative choices, time limits, rewards, and WorldState integration.
 """
-import pytest
-from src.world.state import WorldState, Player, Location, NPC, Item
-from src.world.quest_engine import QuestEngine, Quest, QuestStage, QuestChoice, QuestOptional
+from src.world.state import WorldState, Location
+from src.world.quest_engine import QuestEngine, Quest
 
 
 def test_load_quest_templates():
@@ -53,18 +52,18 @@ def test_quest_accept_and_progress_stages():
     assert quest.current_stage.target == "dire_wolf"
 
     # Kill 2 dire wolves (need 3)
-    logs1 = QuestEngine.progress_event(state, "kill", "dire_wolf", count=2)
+    QuestEngine.progress_event(state, "kill", "dire_wolf", count=2)
     assert quest.current_stage_idx == 0
     assert quest.current_stage.current_count == 2
     assert quest.current_stage.completed is False
 
     # Kill 1 more dire wolf (stage 1 completed!)
-    logs2 = QuestEngine.progress_event(state, "kill", "dire_wolf", count=1)
+    QuestEngine.progress_event(state, "kill", "dire_wolf", count=1)
     assert quest.current_stage_idx == 1  # advanced to stage 2 (dire_wolf_alpha)
     assert quest.current_stage.target == "dire_wolf_alpha"
 
     # Kill alpha wolf (stage 2 completed!)
-    logs3 = QuestEngine.progress_event(state, "kill", "dire_wolf_alpha", count=1)
+    QuestEngine.progress_event(state, "kill", "dire_wolf_alpha", count=1)
     assert quest.current_stage_idx == 2  # advanced to stage 3 (talk to marta)
 
     # Report to marta (all stages completed & auto-completed!)
@@ -104,7 +103,7 @@ def test_quest_time_limits_and_failure():
     assert quest.time_limit_minutes == 720
 
     # Advance 400 minutes (still active)
-    logs1 = QuestEngine.check_turn_time_limits(state, delta_minutes=400)
+    QuestEngine.check_turn_time_limits(state, delta_minutes=400)
     assert quest.status == "active"
 
     # Advance 400 more minutes (800 total >= 720 limit -> fails!)

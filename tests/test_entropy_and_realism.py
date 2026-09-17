@@ -1,6 +1,5 @@
-import pytest
 from src.world.graph_engine import PhysicsChemistryMatrix, EcologicalVacuumCollapse
-from src.world.state import WorldState, Player, NPC, PendingInformation
+from src.world.state import WorldState, NPC, PendingInformation
 
 
 def test_entropy_physical_degradation_rules():

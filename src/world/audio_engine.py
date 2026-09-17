@@ -6,7 +6,7 @@ DiceEngine, Combat outcome, Environment, and Quests.
 import os
 import json
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from pathlib import Path
 
 from src.world.state import WorldState
@@ -153,7 +153,6 @@ class AudioEngine:
 
         bgm_name = bgm.get("name_ko", "배경음악 없음")
         bgm_desc = bgm.get("description_ko", "")
-        bgm_path = bgm.get("asset_path", "")
         volume = bgm.get("default_volume", 0.5)
 
         sfx_badges_html = ""

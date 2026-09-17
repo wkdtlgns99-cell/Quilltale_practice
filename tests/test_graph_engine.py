@@ -1,6 +1,5 @@
-import pytest
 from src.world.graph_engine import LivingWorldGraph, PhysicsChemistryMatrix, EcologicalFeedbackLoop
-from src.world.state import WorldState, Player, Location
+from src.world.state import WorldState, Player
 from src.memory.memory_manager import MemoryManager
 
 

@@ -6,9 +6,6 @@ import pytest
 from src.world.state import WorldState, NPC, Player, Item, NPCPersonality
 from src.world.cognitive_engine import (
     NPCCognitiveDeductionEngine,
-    HypothesisEvidence,
-    HypothesisValidationResult,
-    PredictedNPCAction,
     MicroLeakageObservation,
 )
 

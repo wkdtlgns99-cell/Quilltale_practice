@@ -3,17 +3,12 @@ Unit tests for ThermalSurvivalEngine, clothing insulation, wetness physics,
 hypothermia and hyperthermia stages, and campfire mechanics.
 """
 import pytest
-from src.world.state import WorldState, Location, Player, Item, EnvironmentalMetrics
+from src.world.state import WorldState, Location, Item
 from src.world.thermal_engine import (
     ThermalSurvivalEngine,
-    THERMAL_SURVIVAL_SYSTEM,
-    ADDITIONAL_SURVIVAL_ENVIRONMENT_SYSTEMS,
     CLOTHING_INSULATION_REGISTRY,
     HYPOTHERMIA_STAGES_REGISTRY,
-    HYPERTHERMIA_STAGES_REGISTRY,
-    ThermalClothingSpec,
-    HypothermiaStageSpec,
-    HyperthermiaStageSpec
+    HYPERTHERMIA_STAGES_REGISTRY
 )
 from src.world.weather_engine import WeatherEngine
 
@@ -160,7 +155,7 @@ def test_heatstroke_and_steel_armor(survival_world):
 
     # Initial body temperature
     state.player.body_temperature = 38.0
-    logs = ThermalSurvivalEngine.process_turn_thermal_survival(state)
+    ThermalSurvivalEngine.process_turn_thermal_survival(state)
 
     assert state.player.body_temperature > 38.0
     assert state.player.thermal_status in ["heat_exhaustion", "heat_cramps"]
@@ -169,7 +164,7 @@ def test_heatstroke_and_steel_armor(survival_world):
     state.player.body_temperature = 40.0
     state.player.health = 100
     state.player.fatigue = 0
-    logs = ThermalSurvivalEngine.process_turn_thermal_survival(state)
+    ThermalSurvivalEngine.process_turn_thermal_survival(state)
 
     assert state.player.thermal_status in ["heat_stroke", "multi_organ_failure"]
     assert state.player.health < 100
@@ -192,7 +187,7 @@ def test_campfire_drying_and_normalization(survival_world):
     assert state.player.body_temperature == 35.0  # 34.5 + 0.5
 
     # Process turn with campfire active under shelter/cloudy
-    logs = ThermalSurvivalEngine.process_turn_thermal_survival(state)
+    ThermalSurvivalEngine.process_turn_thermal_survival(state)
     assert state.player.wetness == 35.0  # 45 - 10
     assert state.player.body_temperature == 35.5  # 35.0 + 0.5
 

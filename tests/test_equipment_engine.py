@@ -1,7 +1,6 @@
 import pytest
-from src.world.state import WorldState, Player, EquipmentSlots, Item
+from src.world.state import WorldState, Item
 from src.world.equipment import EquipmentEngine
-from src.core.config import MAX_RINGS, MAX_EARRINGS
 
 
 @pytest.fixture

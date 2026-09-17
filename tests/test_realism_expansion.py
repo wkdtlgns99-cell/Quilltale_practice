@@ -1,8 +1,7 @@
 import json
-import pytest
 from pathlib import Path
 from src.world.graph_engine import PhysicsChemistryMatrix
-from src.world.state import WorldState, Player, NPC, Location
+from src.world.state import WorldState, NPC, Location
 from src.world.validator import ActionValidator
 
 
@@ -81,7 +80,7 @@ def test_state_morale_hygiene_temperature_deltas():
         "update_body_temperature": -2.5
     }
 
-    changes = state.apply_update(delta)
+    state.apply_update(delta)
     assert npc.morale == 40  # 100 - 60
     assert state.player.hygiene_level == 60  # 100 - 40
     assert state.player.body_temperature == 34.0  # 36.5 - 2.5

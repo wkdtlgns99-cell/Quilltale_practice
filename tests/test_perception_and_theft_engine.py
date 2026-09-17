@@ -1,7 +1,6 @@
 import pytest
-from src.world.state import WorldState, Player, NPC, Item, Location
+from src.world.state import WorldState, NPC, Location
 from src.world.perception_engine import PerceptionEngine
-from src.world.npc_skill_engine import NPCSkillEngine
 from src.world.two_pass_engine import TwoPassEngine
 
 

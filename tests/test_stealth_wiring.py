@@ -2,9 +2,8 @@
 Integration tests for stealth_engine.py wiring into TwoPassEngine and DeterministicFactSheet.
 Verifies physical stealth, detection handling, and eavesdropping within the live Pass 1 turn loop.
 """
-import pytest
-from src.world.state import WorldState, Location, NPC, Player
-from src.world.two_pass_engine import TwoPassEngine, DeterministicFactSheet
+from src.world.state import WorldState, Location, NPC
+from src.world.two_pass_engine import TwoPassEngine
 
 
 def create_stealth_test_state() -> WorldState:

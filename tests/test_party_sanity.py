@@ -1,10 +1,9 @@
 import pytest
-from src.world.state import WorldState, Location, Player, NPC
+from src.world.state import WorldState, Location, NPC
 from src.world.party_engine import Companion, PartyEngine
 from src.world.party_sanity_engine import (
-    PartySanityEngine, MentalBreakdownSpec, MENTAL_BREAKDOWN_REGISTRY, PERSONALITY_BREAKDOWN_TABLES
+    PartySanityEngine, MENTAL_BREAKDOWN_REGISTRY
 )
-from src.world.two_pass_engine import TwoPassEngine
 
 
 @pytest.fixture

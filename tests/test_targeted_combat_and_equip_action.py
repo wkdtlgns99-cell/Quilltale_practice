@@ -1,5 +1,5 @@
 import pytest
-from src.world.state import WorldState, Player, NPC, Item, Location, Skill
+from src.world.state import WorldState, NPC, Item, Location, Skill
 from src.world.validator import ActionValidator
 from src.world.two_pass_engine import TwoPassEngine
 from src.world.status_engine import StatusEffectEngine
@@ -172,7 +172,7 @@ def test_curse_dot_drains_hp_and_mp_and_requires_holy_cure(action_state):
     mp_start = action_state.player.mana
 
     # Process 1 turn tick
-    logs = StatusEffectEngine.process_turn_ticks(action_state)
+    StatusEffectEngine.process_turn_ticks(action_state)
     assert action_state.player.health == hp_start - 5
     assert action_state.player.mana == mp_start - 5
 

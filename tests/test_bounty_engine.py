@@ -1,5 +1,4 @@
-import pytest
-from src.world.state import WorldState, Location, Player, NPC, Faction
+from src.world.state import WorldState, Player, NPC, Faction
 from src.world.bounty_engine import BountyEngine
 
 

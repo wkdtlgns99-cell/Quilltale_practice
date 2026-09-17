@@ -3,23 +3,16 @@ Unit tests for EpidemicEngine (6 deadly diseases, infection checks, incubation, 
 Realistic Backpack Storage Specs & Overload Tear Mechanics, and Skill Visual Aesthetics.
 """
 import pytest
-from src.world.state import WorldState, Location, Player, NPC, Item, Skill
+from src.world.state import WorldState, Location, Item, Skill
 from src.world.disease_engine import (
     EpidemicEngine,
-    EPIDEMIC_SYSTEM,
     DISEASE_REGISTRY,
-    DiseaseSpec,
-    DiseaseStageSpec,
-    ActiveInfection,
-    InfectionAttemptResult
+    ActiveInfection
 )
 from src.world.outfit_engine import (
     OutfitMechanicsEngine,
-    BackpackSpec,
-    BackpackStorageStatus,
     BACKPACK_SPECS
 )
-from src.world.two_pass_engine import TwoPassEngine
 
 
 @pytest.fixture

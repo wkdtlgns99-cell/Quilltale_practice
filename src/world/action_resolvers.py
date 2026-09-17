@@ -9,14 +9,12 @@ Provides mixins for:
 - TacticalCombatResolverMixin (merchant barter, combat timing/distance, siege warfare)
 - ActionResolversMixin (combined mixin)
 """
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 import re
 import logging
 
 from src.world.state import WorldState, Item, NPC
-from src.world.skills import SkillSystem
 from src.world.geography import GeographyEngine
-from src.world.weather_engine import WeatherEngine
 from src.world.stealth_engine import StealthInfiltrationEngine
 from src.world.harvest_engine import AnatomyHarvestEngine, HarvestOutcome
 from src.world.campsite_engine import CampsiteRestEngine
@@ -56,7 +54,6 @@ class MovementResolverMixin:
         if not is_move_action:
             return None
 
-        from src.world.geography import GeographyEngine
 
         # Case 0: Auto-advance on pending_travel_waypoints if continuing journey
         is_continue_intent = any(k in action_lower for k in ["계속", "가던 길", "다음", "전진", "continue", "next"])

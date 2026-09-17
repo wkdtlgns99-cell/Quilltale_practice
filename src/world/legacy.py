@@ -3,13 +3,11 @@ Legacy Character Archiving and World Inhabitation System for Quilltale.
 Manages character release/retirement, 3rd-person lore transformation,
 and spawning legacy past characters as live NPCs in future sessions.
 """
-import os
 import json
 import uuid
 import logging
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 from src.core.config import LEGACY_DIR
 from src.world.state import WorldState, NPC, Item, MemoryEntry, Skill, Title

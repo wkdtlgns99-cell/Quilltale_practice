@@ -5,8 +5,7 @@ Enables NPCs to perceive, remember, and interpret world historical events differ
 based on their Social Class, Gender/Family Role, Education, Wealth/Debt, Health, Race,
 Ideology, Profession, Geographic Proximity, Generation, Stakeholder Nexus, and Info Veracity.
 """
-from typing import Dict, List, Any, Optional
-import random
+from typing import List
 
 
 class EventPerspectiveEngine:
@@ -89,7 +88,6 @@ class EventPerspectiveEngine:
         # If no explicit historical_events defined in template, synthesize from era_background & censored_history
         if not historical_events:
             era_bg = cosmology.get("era_background", "")
-            censored = cosmology.get("censored_history", "")
             historical_events = [
                 {
                     "event_name": f"{cosmology.get('world_name', '제국')}의 대참사와 역사 말소",
@@ -135,34 +133,30 @@ class EventPerspectiveEngine:
     @staticmethod
     def _generate_default_perspectives(cosmology: dict) -> dict:
         """Generates dynamic 12-axis perspectives for a cosmology based on its metadata."""
-        w_name = cosmology.get("world_name", "대륙")
-        era_bg = cosmology.get("era_background", "")
-        censored = cosmology.get("censored_history", "")
-        
         return {
             "1_신분_계급": {
-                "지배귀족_영주": f"옛 제국의 영광을 복원하고 가문의 권세를 드높일 기회로 여김.",
-                "몰락귀족_기사": f"가문의 가보와 영지를 잃고 방랑하게 된 뼈아픈 과거로 기억함.",
-                "부유상인_자본가": f"혼란과 폐허 속에서 진귀한 유물과 이권을 독점할 막대한 기회로 봄.",
-                "소시민_자영농": f"전쟁과 세금 폭등으로 하루 벌어 하루 먹고살기 벅찬 고통스러운 시대로 여김.",
-                "농노_빈민_노예": f"오만한 지배자들이 천벌을 받아 몰락한 것을 속으로 통쾌해함.",
-                "추방자_범죄자": f"치안이 무너진 틈을 타 암시장과 약탈로 한밑천 잡을 무법의 시대로 봄."
+                "지배귀족_영주": "옛 제국의 영광을 복원하고 가문의 권세를 드높일 기회로 여김.",
+                "몰락귀족_기사": "가문의 가보와 영지를 잃고 방랑하게 된 뼈아픈 과거로 기억함.",
+                "부유상인_자본가": "혼란과 폐허 속에서 진귀한 유물과 이권을 독점할 막대한 기회로 봄.",
+                "소시민_자영농": "전쟁과 세금 폭등으로 하루 벌어 하루 먹고살기 벅찬 고통스러운 시대로 여김.",
+                "농노_빈민_노예": "오만한 지배자들이 천벌을 받아 몰락한 것을 속으로 통쾌해함.",
+                "추방자_범죄자": "치안이 무너진 틈을 타 암시장과 약탈로 한밑천 잡을 무법의 시대로 봄."
             },
             "2_성별_가족역할": {
-                "징집_부양_남성": f"군대에 끌려가 개죽음당하거나 빚을 갚기 위해 칼을 쥐어야 했던 서러운 한을 품음.",
-                "생존_수호_여성": f"약탈과 혼란 속에서 아이들을 먹여 살리기 위해 온갖 수모를 견뎌낸 피눈물로 기억함."
+                "징집_부양_남성": "군대에 끌려가 개죽음당하거나 빚을 갚기 위해 칼을 쥐어야 했던 서러운 한을 품음.",
+                "생존_수호_여성": "약탈과 혼란 속에서 아이들을 먹여 살리기 위해 온갖 수모를 견뎌낸 피눈물로 기억함."
             },
             "3_학력_문해력": {
-                "고등_아카데미_학자": f"마나 순환의 구조적 파탄과 제어 실패가 부른 필연적 마도공학 참사로 냉철히 분석함.",
-                "실무_문해자_서기": f"지배층의 기록 조작과 역사 은폐 정황을 의심의 눈초리로 주시함.",
-                "완전_문맹_무지자": f"교단의 설교대로 신의 천벌이나 사악한 마녀의 저주 때문이라 굳게 믿음."
+                "고등_아카데미_학자": "마나 순환의 구조적 파탄과 제어 실패가 부른 필연적 마도공학 참사로 냉철히 분석함.",
+                "실무_문해자_서기": "지배층의 기록 조작과 역사 은폐 정황을 의심의 눈초리로 주시함.",
+                "완전_문맹_무지자": "교단의 설교대로 신의 천벌이나 사악한 마녀의 저주 때문이라 굳게 믿음."
             },
             "6_종족_혈통": {
-                "순혈_인간": f"인류의 찬란했던 번영이 꺾인 불운한 비극으로 애통해함.",
-                "장수종_엘프": f"인간들이 자연의 질서를 무시하고 마나를 탐욕스럽게 착취하다 자멸한 자업자득으로 여김.",
-                "장인종_드워프": f"자신들이 벼려준 룬과 성벽의 은혜를 저버리고 내부에서 자폭한 어리석음으로 치부함.",
-                "소형종_수인": f"거대 제국들의 충돌에 등 터져 고향을 잃고 흩어져야 했던 설움으로 기억함.",
-                "차별받는_아인종": f"인간 지배자들의 군대가 무너졌으니 이제 자신들의 땅을 되찾을 기회로 봄.",
-                "이계_혼혈_잡종": f"차원의 균열 속에서 태어나 차별받게 된 원죄의 날로 고뇌함."
+                "순혈_인간": "인류의 찬란했던 번영이 꺾인 불운한 비극으로 애통해함.",
+                "장수종_엘프": "인간들이 자연의 질서를 무시하고 마나를 탐욕스럽게 착취하다 자멸한 자업자득으로 여김.",
+                "장인종_드워프": "자신들이 벼려준 룬과 성벽의 은혜를 저버리고 내부에서 자폭한 어리석음으로 치부함.",
+                "소형종_수인": "거대 제국들의 충돌에 등 터져 고향을 잃고 흩어져야 했던 설움으로 기억함.",
+                "차별받는_아인종": "인간 지배자들의 군대가 무너졌으니 이제 자신들의 땅을 되찾을 기회로 봄.",
+                "이계_혼혈_잡종": "차원의 균열 속에서 태어나 차별받게 된 원죄의 날로 고뇌함."
             }
         }

@@ -7,7 +7,6 @@ water purification, food poisoning, and dysentery epidemic integration.
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Tuple
 import logging
-import copy
 import random
 
 logger = logging.getLogger(__name__)
@@ -206,7 +205,6 @@ class RationSpoilageEngine:
             if status.is_rotten:
                 continue  # Already rotten
 
-            prev_freshness = status.freshness
             decay = status.spoilage_rate_per_turn * env_multiplier * time_mult
             status.freshness = max(0.0, status.freshness - decay)
 
@@ -347,7 +345,7 @@ class RationSpoilageEngine:
                     consumer.health = max(1, consumer.health - 6)
                 if hasattr(consumer, "stamina"):
                     consumer.stamina = max(0, consumer.stamina - 20)
-                logs.append(f"🤮 [급성 식중독] 위장이 뒤틀리는 복통과 함께 구토를 일으켜 6의 체력 피해와 20의 기력을 잃었습니다!")
+                logs.append("🤮 [급성 식중독] 위장이 뒤틀리는 복통과 함께 구토를 일으켜 6의 체력 피해와 20의 기력을 잃었습니다!")
 
         # 4. Rotten Food (0.0) or Contaminated Water - Severe Dysentery Integration
         else:

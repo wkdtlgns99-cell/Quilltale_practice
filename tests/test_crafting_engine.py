@@ -2,9 +2,8 @@
 Unit tests for CraftingEngine, Recipe management, ingredient consumption,
 catalysts, quality outcomes, salvaging, and blind experimentation.
 """
-import pytest
-from src.world.state import WorldState, Player, Location, NPC, Item
-from src.world.crafting_engine import CraftingEngine, Recipe, RecipeIngredient, RecipeOutcome
+from src.world.state import WorldState, Item
+from src.world.crafting_engine import CraftingEngine
 
 
 def test_load_recipe_templates():
