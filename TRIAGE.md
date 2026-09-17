@@ -40,22 +40,23 @@ These modules are confirmed fully reachable and active in the live turn executio
 10. **`botany_engine.py`**: Reachable (`TwoPassEngine` flora foraging).
 11. **`vein_restoration_engine.py`**: Reachable (`TwoPassEngine:2.75 Sub-path B` surgery loop).
 12. **`time_calendar_engine.py`**: Reachable (`TwoPassEngine:compute_pass1` variable turn duration).
+13. **`combat_time_track_engine.py`**: Reachable (`TwoPassEngine:resolve_action_combat_distance_and_timing` 5대 사거리 존 & PER 인터럽트).
+14. **`merchant_barter_engine.py`**: Reachable (`TwoPassEngine:resolve_action_barter` 물물교환, 감정, 금화 깎기, 밀수 검문).
+15. **`siege_engine.py`**: Reachable (`TwoPassEngine:resolve_action_siege` 요새 다층 방호, 포격, 특공 침투).
+16. **`entities.py`**: Reachable (순수 도메인 엔티티 19종 모델).
 
 ---
 
 ### Category B: `DUPLICATE_DELETE` (Deletion Candidates)
 1. **`save_load_manager.py`**:
    - Fully superseded by `persistence.py`. Redundant JSON file-based persistence engine.
-2. **`merchant_barter_engine.py`**:
-   - Orphan file (unregistered in `__init__.py`). Slated for complete absorption into `EconomyEngine` under Backlog #21 (`UnifiedCommerceEngine`). Deletion / absorption candidate.
 
 ---
 
-### Category C: `SHELVED / P1-2 BACKLOG` (Unreachable: 3/64 modules)
-Current unreachable modules identified by `reachability_audit.py` (3 of 64):
-1. **`combat_time_track_engine.py`**: **[공식 보류 SHELVED]** — 미터 단위 거리/초 단위 인터럽트 엔진. 현재 고정 턴제 전투 전면 개편 세션으로 보류 (CombatDistanceManager, ActionTimeTrackEngine).
-2. **`merchant_barter_engine.py`**: **[공식 보류 SHELVED - 통합 대기]** — `EconomyEngine` 흡수 대기.
-3. **`siege_engine.py`**: **[공식 보류 SHELVED]** — 1,065줄 요새 공성전/군단 전술 엔진. 독립 공성 시나리오 설계 세션까지 분리 보류.
+### Category C: `SHELVED / UNREACHABLE` (0 of 65 modules)
+- **None**. All 65 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
+
+---
 
 ### Category D: `UNCLEAR` (Needs Human Judgment)
-- None. All 16 modules and priority methods have unambiguous roles and clean triage categorizations.
+- None. All modules have unambiguous roles and clean triage categorizations.

@@ -91,7 +91,12 @@
     2. 4대 품질 게이트 자동화: `pyflakes src/ tests/` (코드 위생), `ruff check src/ --select F,E9` (구문/임포트 치명적 린트), `python scripts/reachability_audit.py` (정적 도달성 100% 검증), `pytest tests/` (640개 자동화 테스트 스위트 전수 실행).
     3. `scripts/reachability_audit.py`에 미도달 모듈 발생 시 `sys.exit(1)` 반환 차단 가드 구축.
   - **검증 파일/테스트**: `.github/workflows/ci.yml`, `scripts/reachability_audit.py` | `tests/test_p2_3_ci_workflow.py` (3 passed), `pytest tests/` 640 passed in 232.20s (0 failed)
-- [ ] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**: README.md 수치 최신화(604 통과), 배선 변경 시 `reachability_audit.py` 및 `CHANGES_AUDIT.md` 동시 커밋 프로세스 준수.
+- [x] **🔧 [P2-4] 문서-코드 드리프트 최신화 및 자동화 프로세스**:
+  - **수정**:
+    1. `scripts/sync_doc_metrics.py` 신설: `pytest --collect-only` 기반 실제 테스트 수 및 `CHANGES_AUDIT.md` 기반 정적 도달성 통계를 자동 추출하여 `README.md`의 단위 테스트 합격 수치, 명령어 주석, 디렉터리 트리 주석, 도달률 수치 자동 동기화 (`--sync`) 및 검증 (`--check`).
+    2. `.github/workflows/ci.yml`에 `Document-Code Drift Check` 게이트 단계 추가하여 문서-코드 불일치 시 CI 자동 차단.
+    3. `TRIAGE.md`의 오래된 Category C(P1-2 3대 엔진 보류 상태)를 최신 100% 도달 상태(`0 of 65 modules`)로 갱신.
+  - **검증 파일/테스트**: `scripts/sync_doc_metrics.py`, `TRIAGE.md`, `README.md`, `.github/workflows/ci.yml` | `tests/test_p2_4_doc_drift.py` (3 passed), `pytest tests/` 643 passed in 234.37s (0 failed)
 - [ ] **🐛 [P2-5] LLM JSON 출력 파싱 파이프라인 일원화 (`JSONRepairEngine`)**: `game_master.py:638` raw `json.loads`를 `JSONRepairEngine.repair_json()`으로 통일.
 - [x] **🐛 [P2-6] `src/world/economy_engine.py:423` 독 치료(`remove_poison`) 반환값 무시 버그 수정**:
   - **수정**: `cured` 결과에 따라 치료 대상 존재 시에만 골드 차감 및 성공 반환, 미치료 시 골드 미차감 및 안내 메시지 반환.
@@ -114,26 +119,25 @@
 
 ## 3. 📅 [2026-09-15] 현재 세션 개발 현황
 
-### 1. 이번 세션 구현 완료 핵심 내용 (P2-3 GitHub Actions CI 구축 완수)
+### 1. 이번 세션 구현 완료 핵심 내용 (P2-4 문서-코드 드리프트 자동화 완수)
 
-#### [P2-3 GitHub Actions CI 워크플로우 100% 구축]
-1. **CI 워크플로우 명세 (`.github/workflows/ci.yml`)**:
-   - 트리거: `push: [main]`, `pull_request: [main]`
-   - 환경: `ubuntu-latest`, Python 3.12, pip cache
-   - 4대 자동화 품질 게이트:
-     1. `pyflakes src/ tests/`: 코드 위생 및 미사용 변수/문법 오류 사전 검사.
-     2. `ruff check src/ --select F,E9`: 치명적 문법 및 런타임 NameError 검사.
-     3. `python scripts/reachability_audit.py`: 65대 모듈 정적 도달성 100% 게이트 (`sys.exit(1)` 가드).
-     4. `pytest tests/ --durations=10`: 640개 자동화 테스트 스위트 전수 실행.
-2. **스크립트 안정성 보강 (`scripts/reachability_audit.py`)**:
-   - 미도달 모듈 발생 시 CI가 즉시 차단되도록 `sys.exit(1)` 방어 로직 추가.
-   - 미사용 import/변수 정리 완료 (pyflakes 0 error).
+#### [P2-4 문서-코드 드리프트 최신화 및 자동화 100% 완수]
+1. **동기화 및 검증 자동화 도구 (`scripts/sync_doc_metrics.py`)**:
+   - `pytest --collect-only -q`로 실제 정의된 테스트 수를 실시간 산출.
+   - `CHANGES_AUDIT.md`에서 전체/도달 모듈 통계 추출.
+   - `README.md`의 본문 테스트 통과 수치, bash 실행 명령어 주석, 디렉터리 트리 주석, 정적 도달성 통계 4대 지표 자동 검증 및 갱신.
+   - `--check` 플래그로 불일치 시 `sys.exit(1)` 반환하여 CI 연동 지원.
+2. **CI 파이프라인 5대 품질 게이트 확장 (`.github/workflows/ci.yml`)**:
+   - `Document-Code Drift Check` 스텝을 추가하여 PR/Push 시 문서와 코드 간 수치 불일치 원천 차단.
+3. **프로젝트 문서 최신화 (`TRIAGE.md`)**:
+   - P1-2 결합 완료된 3대 엔진(`combat_time_track_engine.py`, `merchant_barter_engine.py`, `siege_engine.py`)을 `Category A: WIRED_ACTIVE`로 승격.
+   - `Category C`를 `0 of 65 modules` (100% Reachable)로 최신화.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태
-- **전체 단위 테스트**: `640 passed` (0 failed, 100% 회귀 방어 달성).
-- **회귀 기준선 대비**: 세션 시작 637 → 완료 640 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
+- **전체 단위 테스트**: `643 passed` (0 failed, 100% 회귀 방어 달성).
+- **회귀 기준선 대비**: 세션 시작 640 → 완료 643 (+3 신규 단위 테스트 추가, 기존 회귀 0건).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
 - **정적 도달성 (scripts/reachability_audit.py)**: `0/65 Unreachable` (100% 도달성 유지).
 - **코드 정적 검사 (pyflakes)**: 미사용 import, syntax error, undefined name 0건 (Clean).
@@ -141,7 +145,5 @@
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[P2-4 문서-코드 드리프트 최신화 및 자동화]**:
-   - README.md 수치 최신화 및 CHANGES_AUDIT 자동 동기화.
-2. **[P2-5 LLM JSON 출력 파싱 파이프라인 일원화]**:
-   - 잔여 raw `json.loads` 점검 및 `JSONRepairEngine`으로 통일.
+1. **[P2-5 LLM JSON 출력 파싱 파이프라인 일원화]**:
+   - `src/` 내 잔여 raw `json.loads` 점검 및 `JSONRepairEngine`으로 통일.

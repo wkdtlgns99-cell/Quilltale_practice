@@ -39,6 +39,10 @@ jobs:
         run: |
           python scripts/reachability_audit.py
 
+      - name: Document-Code Drift Check
+        run: |
+          python scripts/sync_doc_metrics.py --check
+
       - name: Run Pytest Test Suite
         run: |
           pytest tests/ --durations=10
