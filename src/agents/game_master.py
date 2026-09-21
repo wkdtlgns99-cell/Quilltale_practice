@@ -692,3 +692,17 @@ JSON 형식: {{"news": "요약된 소식"}}"""
         except Exception as e:
             logger.error(f"World news generation failed: {e}")
         return None
+
+    def export_map_blueprint(self, state: WorldState, zoom_level: str = "macro", target_id: Optional[str] = None):
+        """
+        Exports 3D elevation map blueprint, executable GPT prompt, and SD 1.5 tags for external AI generation.
+        zoom_level: 'macro' (대륙/국가), 'meso' (권역/도로망), 'micro' (정주지/시설).
+        """
+        from src.world.map_blueprint_engine import MapBlueprintEngine, MapZoomLevel
+        z_map = {
+            "macro": MapZoomLevel.MACRO_CONTINENT,
+            "meso": MapZoomLevel.MESO_REGION_ROADS,
+            "micro": MapZoomLevel.MICRO_SETTLEMENT_FACILITIES,
+        }
+        level = z_map.get(zoom_level.lower(), MapZoomLevel.MACRO_CONTINENT)
+        return MapBlueprintEngine.generate_blueprint(state, zoom_level=level, target_id=target_id)

@@ -108,6 +108,8 @@ class DeterministicFactSheet:
     siege_summary: Optional[str] = None
     dialogue_slot_summary: Optional[str] = None
     dialogue_persona_anchor: Optional[Dict[str, Any]] = None
+    map_blueprint_summary: Optional[str] = None
+    map_blueprint_prompt: Optional[str] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -291,6 +293,13 @@ class DeterministicFactSheet:
             lines.append("💬 [NPC 결정론적 반응 및 기본 대사 (Dialogue Slot)]")
             lines.append(f"- {self.dialogue_slot_summary}")
             lines.append("*GM 서사 지침*: NPC의 성격 아키타입, 스트레스, 감정 상태가 반영된 상기 기본 반응 대사와 신체 지문을 서사의 뼈대로 삼아 대화를 묘사하십시오.")
+
+        if self.map_blueprint_summary:
+            lines.append("🗺️ [3D 지형 지도 및 인프라 설계도 (Map Blueprint & Elevation)]")
+            lines.append(f"- {self.map_blueprint_summary}")
+            if self.map_blueprint_prompt:
+                lines.append(f"- [GPT 작화 지침 프리뷰]: {self.map_blueprint_prompt[:250]}...")
+            lines.append("*GM 서사 지침*: 지도와 지형의 3D 높낮이, 등고선, 도로 경사도 및 거점/시설의 입체적 배치를 눈앞에 펼쳐진 시각적 조감도처럼 생생하게 묘사하십시오.")
 
         lines.append("=================================================================")
         return "\n".join(lines)
@@ -686,6 +695,17 @@ class TwoPassEngine(ActionResolversMixin):
             fact_sheet.extra_flags["dialogue_routing"] = dialogue_info.get("routing", {})
             fact_sheet.extra_flags["dialogue_persona"] = dialogue_info.get("persona_anchor")
             QuestEngine.progress_event(state, "dialogue", dialogue_info.get("intent", "greeting"))
+
+        # 2.4995 Deterministic 3D Map Blueprint & Elevation Topography (MapBlueprintEngine)
+        map_info = cls.resolve_action_map_inspection(action, state)
+        if map_info:
+            fact_sheet.map_blueprint_summary = map_info["summary"]
+            fact_sheet.map_blueprint_prompt = map_info.get("gpt_prompt")
+            fact_sheet.quest_progress_logs.append(f"🗺️ {map_info['summary']}")
+            fact_sheet.extra_flags["map_blueprint"] = map_info["blueprint"].to_dict() if map_info.get("blueprint") else {}
+            fact_sheet.extra_flags["map_gpt_prompt"] = map_info.get("gpt_prompt", "")
+            fact_sheet.extra_flags["map_ascii_preview"] = map_info.get("ascii_preview", "")
+            QuestEngine.progress_event(state, "map_inspection", map_info.get("zoom_level", "meso"))
 
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         if travel_info:

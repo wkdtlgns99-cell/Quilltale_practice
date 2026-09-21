@@ -120,6 +120,13 @@
   - *상세 아키텍처 및 동결 원칙은 [MASTER_GAME_ARCHITECTURE.md Section 8 & 9](file:///c:/Quilltale/MASTER_GAME_ARCHITECTURE.md) 참조.*
 - [ ] **기타 미완성 기능 및 템플릿 백로그 (가문 혈통, 종교 신앙, 영지 개척, 네크로맨시, 템플릿 확충 등)**:
   - *전체 상세 명세 및 40여 종 완료 이력은 [docs/archive/SESSION_LOG_2026-09.md](file:///c:/Quilltale/docs/archive/SESSION_LOG_2026-09.md)에 보존됨.*
+- [ ] **🚀 [0-토큰 사전 엔진 & 스팀 인디 출시 준비 백로그 (2026-09-21 추가)]**:
+  - [ ] **[P3-1] 로컬 WebSocket / IPC API 서버 (`api_server.py`)**: 유니티(Body) 및 웹 뷰어 실시간 JSON 패킷 통신 브릿지.
+  - [ ] **[P3-2] 디아블로식 프로시저럴 아이템/루트 생성기 (`loot_generator.py`)**: 접두/접미사 옵션 조합 수십만 종 파밍 롤링.
+  - [ ] **[P3-3] 절차적 던전 맵 생성기 (`dungeon_generator.py`)**: BSP 기반 미궁 방, 복도, 비밀의 방, 함정, 그리드 맵 자동 생성.
+  - [ ] **[P3-4] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py`)**: FSM/행동 트리 기반 지능적 후퇴, 원거리 엄폐, 버프 시전 등 전술 패턴.
+  - [ ] **[P3-5] 터미널 레트로 TUI 플레이어블 모드 (`play.py`)**: Streamlit 없이 콘솔 키보드 입력만으로 던전 탐험/대화 즉시 플레이.
+  - [ ] **[P3-6] GPT 구독 당일 폭격용 대량 컨텐츠 생성 프롬프트 팩 (`docs/prompts/`)**: 퀘스트 100종, 국가 50종, NPC 200종 대량 생산 템플릿.
 
 ---
 
@@ -162,12 +169,27 @@
   - **[3단계] 심층 대화 페르소나 화법 주입**: 심층 질문(`requires_llm is True`) 시 대상 NPC의 말투 규칙, 신체 행동 지문, 스트레스/감정을 `dynamic_system_prompt`에 강제 주입하여 캐붕(캐릭터 붕괴) 및 AI 비서체 원천 차단.
 - `tests/test_dialogue_slot_engine.py`: 12종 단위 테스트 전원 통과 (0-토큰 바이패스, 심층 질문 페르소나 앵커링, 검증기 화자 보정 전수 검증).
 
+#### 6) [P1-4] 5계층 인프라 & 3D 지형 높낮이 지도 설계도 엔진 (`MapBlueprintEngine`)
+- **웹/UI 없는 순수 백엔드 청사진 엔진**: GPT/DALL-E 및 LoRA SD 1.5가 왜곡 없이 3D 지형과 판타지 지도를 그릴 수 있도록 5계층 인프라 및 Z축 고도를 수학적으로 통합.
+- `src/world/map_blueprint_engine.py`:
+  - 3대 줌 레벨(`MapZoomLevel`): `MACRO_CONTINENT`(대륙/바이옴/국경선), `MESO_REGION_ROADS`(권역 3D 등고선/도로망 경사도/마을 핀), `MICRO_SETTLEMENT_FACILITIES`(정주지 내 5계층 시설 -2~+3층 입체 배치).
+  - 결정론적 3D 지형 고도(Elevation Z축) 및 도로 경사도(Slope Degree), 높이차(Delta Z) 산출.
+  - 외부 AI용 실행 가능 프롬프트(`gpt_executable_prompt`) 및 DALL-E 3 프롬프트 생성.
+  - LoRA SD 1.5용 긍정/부정 태그 세트(`diffusion_tags`) 및 터미널용 ASCII 3D 등고선 릴리프 맵(`ascii_relief_preview`) 생성.
+  - Unity 2D-3D HD-2D 씬 그래프 규격(`unity_hd2d_spec`) JSON 컴파일.
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `resolve_action_map_inspection()` 구현 및 `compute_pass1()` 루프에 2.4995로 실전 결합.
+  - `DeterministicFactSheet`에 `map_blueprint_summary`, `map_blueprint_prompt` 필드 및 프롬프트 서사 지침 결합.
+- `src/agents/game_master.py`:
+  - `GameMasterAgent.export_map_blueprint(state, zoom_level, target_id)` 1줄 추출 인터페이스 제공.
+- `tests/test_map_blueprint_engine.py`: 9종 포괄적 단위/통합 테스트 100% 통과.
+
 ---
 
 ### 2. 테스트 및 평가 검증 상태 (세션 누적 지표)
-- **전체 단위 테스트**: `672 passed` (0 failed, 무회귀).
+- **전체 단위 테스트**: `681 passed` (0 failed, 무회귀, +9 신규 테스트).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/69 Unreachable` (69/69 모듈 100% 도달).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/70 Unreachable` (70/70 모듈 100% 도달).
 - **코드 정적 검사 (pyflakes & ruff)**: `src/` 및 `tests/` 전수 검증 통과 (`pyflakes src/ tests/`: 0건 Clean, `ruff check`: Clean).
 
 ---
@@ -178,6 +200,7 @@
 2. **[게임플레이 도메인 확장 백로그]**:
    - 가문 혈통(Lineage), 종교 신앙(Deity), 영지 개척(Domain), 사령술(Necromancy) 시스템.
 3. **[플랫폼/UI 로드맵]**:
+   - **인터랙티브 3D 오버월드 지도 UI**: `docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md` 설계서 보관 완료 (16:9 배경 맵 위 좌표 핀/깃발 오버레이 및 클릭 상세 인스펙터).
    - 독립 실행형 창 모드 런처(`SteamStyleStandaloneLauncher`), 동적 부분 갱신 이중 맵(`DynamicDualMapRenderer`).
 
 

@@ -66,6 +66,12 @@ from .harvest_engine import (
 )
 from .incantation import IncantationSystem
 from .legacy import LegacyManager
+from .map_blueprint_engine import (
+    ElevationTopologyPoint,
+    Map3DBlueprint,
+    MapBlueprintEngine,
+    MapZoomLevel,
+)
 from .mana_burn_engine import (
     ETHER_MUTATIONS_REGISTRY,
     EtherMutationSpec,
@@ -263,6 +269,7 @@ __all__ = [
     "EmotionEngine",
     "EncumbranceStatus",
     "EnvironmentalMetrics",
+    "ElevationTopologyPoint",
     "EpidemicEngine",
     "EquipmentEngine",
     "EquipmentSet",
@@ -290,6 +297,9 @@ __all__ = [
     "ManaBurnEngine",
     "ManaCircuitState",
     "ManaVeinRestorationEngine",
+    "Map3DBlueprint",
+    "MapBlueprintEngine",
+    "MapZoomLevel",
     "MaterialSpec",
     "MemoryEntry",
     "MemoryPsychologyBridge",

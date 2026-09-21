@@ -101,9 +101,38 @@ def audit_and_sync_readme(check_only: bool = False) -> list[str]:
     return issues
 
 
+def audit_and_sync_triage(check_only: bool = False) -> list[str]:
+    """Checks and synchronizes reachability module count in TRIAGE.md."""
+    triage_file = ROOT_DIR / "TRIAGE.md"
+    content = triage_file.read_text(encoding="utf-8")
+    total_mod, reachable_mod = get_reachability_stats()
+    issues = []
+
+    expected_header = f"### Category C: `SHELVED / UNREACHABLE` (0 of {total_mod} modules)"
+    if expected_header not in content:
+        issues.append(f"TRIAGE.md module count drift: not '{expected_header}'")
+        content = re.sub(
+            r"### Category C: `SHELVED / UNREACHABLE` \(0 of \d+ modules\)",
+            expected_header,
+            content
+        )
+        content = re.sub(
+            r"All \d+ `src/world/` modules are 100% reachable",
+            f"All {total_mod} `src/world/` modules are 100% reachable",
+            content
+        )
+
+    if not check_only and issues:
+        triage_file.write_text(content, encoding="utf-8")
+        print(f"Synchronized {len(issues)} drift items in TRIAGE.md")
+
+    return issues
+
+
 def main():
     check_only = "--check" in sys.argv
     issues = audit_and_sync_readme(check_only=check_only)
+    issues.extend(audit_and_sync_triage(check_only=check_only))
 
     if issues:
         print("Doc Drift Detected:")

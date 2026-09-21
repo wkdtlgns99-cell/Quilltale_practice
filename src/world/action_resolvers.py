@@ -27,6 +27,7 @@ from src.world.bounty_engine import BountyEngine
 from src.world.dice import DiceEngine
 from src.world.infrastructure import Settlement
 from src.world.dialogue_slot_engine import DialogueSlotEngine
+from src.world.map_blueprint_engine import MapBlueprintEngine, MapZoomLevel
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +181,52 @@ class MovementResolverMixin:
                 }
 
         return None
+
+    @classmethod
+    def resolve_action_map_inspection(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses map inspection, 3D topographical relief, cartography, or layout blueprint intent.
+        Invokes MapBlueprintEngine to generate multi-scale 3D blueprint, ASCII preview, and GPT prompts.
+        """
+        act_lower = action.lower()
+        map_keywords = [
+            "지도", "약도", "전도", "조감도", "지형도", "지형", "등고선", "고도",
+            "높낮이", "지하도", "설계도", "map", "topography", "blueprint", "cartography", "elevation"
+        ]
+        if not any(k in act_lower for k in map_keywords):
+            return None
+
+        # Exclude pure attacks or magic casting
+        if any(v in act_lower for v in ["공격", "베어", "찌르", "마법 영창", "도주"]):
+            return None
+
+        # Determine Zoom Level
+        if any(w in act_lower for w in ["대륙", "세계", "전도", "천하", "대륙도", "continent", "world", "macro"]):
+            zoom_level = MapZoomLevel.MACRO_CONTINENT
+        elif any(w in act_lower for w in ["시설", "건물", "마을 안", "내부", "상점", "거리", "조감도", "골목", "micro"]):
+            zoom_level = MapZoomLevel.MICRO_SETTLEMENT_FACILITIES
+        else:
+            zoom_level = MapZoomLevel.MESO_REGION_ROADS
+
+        blueprint = MapBlueprintEngine.generate_blueprint(state, zoom_level=zoom_level)
+        scope_name = blueprint.target_name or blueprint.world_name
+
+        summary = (
+            f"[{scope_name}] 3D 지형 설계도 (줌: {zoom_level.value}, "
+            f"해발 {blueprint.elevation_range_m[0]}m~{blueprint.elevation_range_m[1]}m, "
+            f"거점 {len(blueprint.settlements_3d)}곳, 도로 {len(blueprint.roads_3d)}개선)"
+        )
+
+        return {
+            "action_type": "map_inspection",
+            "zoom_level": zoom_level.value,
+            "scope_name": scope_name,
+            "blueprint": blueprint,
+            "ascii_preview": blueprint.ascii_relief_preview,
+            "gpt_prompt": blueprint.gpt_executable_prompt,
+            "diffusion_tags": blueprint.diffusion_tags,
+            "summary": summary,
+        }
 
 
 class StealthResolverMixin:
