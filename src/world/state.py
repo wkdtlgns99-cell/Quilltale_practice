@@ -85,6 +85,7 @@ class WorldState:
     world_news_feed: list[str] = field(default_factory=list)
     world_chronicle: str = ""
     active_world_ended: bool = False
+    active_map_image: str = "data/maps/default_overworld.jpg"
     history: list[dict] = field(default_factory=list)
     last_dice_result: dict | None = None
     last_npc_action: dict | None = None
@@ -1173,6 +1174,10 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         from src.world.audio_engine import AudioEngine
         audio_data = AudioEngine.determine_turn_audio(self, fact_sheet=fact_sheet, action=action)
         return AudioEngine.format_audio_html(audio_data)
+
+    def to_map_html(self, zoom_level: str = "macro_continent") -> str:
+        from src.world.map_interactive_renderer import MapInteractiveRenderer
+        return MapInteractiveRenderer.render_map_html(self)
 
 
     def to_skills_html(self) -> str:
@@ -2424,6 +2429,7 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
         state.world_news_feed = raw.get("world_news_feed", [])
         state.world_chronicle = raw.get("world_chronicle", "")
         state.active_world_ended = raw.get("active_world_ended", False)
+        state.active_map_image = raw.get("active_map_image", "data/maps/default_overworld.jpg")
         state.history = raw.get("history", [])
         state.last_dice_result = raw.get("last_dice_result", None)
         state.last_npc_action = raw.get("last_npc_action", None)

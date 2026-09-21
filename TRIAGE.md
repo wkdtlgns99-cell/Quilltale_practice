@@ -56,8 +56,8 @@ These modules are confirmed fully reachable and active in the live turn executio
 
 ---
 
-### Category C: `SHELVED / UNREACHABLE` (0 of 70 modules)
-- **None**. All 70 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
+### Category C: `SHELVED / UNREACHABLE` (0 of 71 modules)
+- **None**. All 71 `src/world/` modules are 100% reachable from live game entrypoints (`app.py`, `src/agents/game_master.py`). Verified by `reachability_audit.py`.
 
 ---
 

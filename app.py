@@ -181,7 +181,18 @@ def take_action(
         )
 
     if getattr(state, "active_world_ended", False):
-        return chat_history, current_image, world_state_json, state.to_player_summary_html(), state.to_quest_journal_html(), state.to_shop_html(), state.to_crafting_html(), state.to_party_html(), state.to_skills_html(), state.to_inventory_html()
+        return (
+            chat_history,
+            current_image,
+            world_state_json,
+            state.to_player_summary_html(),
+            state.to_quest_journal_html(),
+            state.to_shop_html(),
+            state.to_crafting_html(),
+            state.to_party_html(),
+            state.to_skills_html(),
+            state.to_inventory_html(),
+        )
 
     llm = get_llm(LLM_NAME)
     gm = GameMasterAgent(llm)
@@ -431,6 +442,8 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
             with gr.Tabs():
                 with gr.TabItem("⚔️ 상태 기록부"):
                     status_display = gr.HTML(elem_classes="qt-accord")
+                with gr.TabItem("🗺️ 3D 지도"):
+                    map_display = gr.HTML(elem_classes="qt-accord")
                 with gr.TabItem("📜 퀘스트 저널"):
                     quest_display = gr.HTML(elem_classes="qt-accord")
                 with gr.TabItem("🏪 상점"):
@@ -573,6 +586,22 @@ with gr.Blocks(title="Quilltale — TRPG 엔진") as demo:
         inputs=[action_input],
         outputs=[submit_btn],
         show_progress="hidden"
+    )
+
+    def update_map_display(world_state_json: str) -> str:
+        if not world_state_json:
+            return ""
+        try:
+            state = WorldState.from_json(world_state_json)
+            return state.to_map_html()
+        except Exception:
+            return ""
+
+    world_state.change(
+        fn=update_map_display,
+        inputs=[world_state],
+        outputs=[map_display],
+        show_progress="hidden",
     )
 
     demo.load(

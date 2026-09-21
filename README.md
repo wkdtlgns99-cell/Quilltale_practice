@@ -87,15 +87,15 @@ Quilltale의 세계관은 단순 텍스트가 아니라 **수천 개의 정밀 J
 Quilltale은 코드의 안정성을 위해 회귀 결함 0건 원칙을 엄격히 준수합니다.
 
 ```bash
-# 전체 단위 테스트 실행 (681개 테스트 100% 무결점 통과)
+# 전체 단위 테스트 실행 (689개 테스트 100% 무결점 통과)
 python -m pytest tests/
 
 # 20턴 자동화 시나리오 무효 전이율 검증
 python eval_runner.py --no-judge
 ```
 
-- **단위 테스트**: `681 passed` (0 failed, 100% 회귀 방어)
-- **정적 도달성 분석 (Static Reachability)**: `70/70 (100%) Reachable` (미도달 모듈 0개)
+- **단위 테스트**: `689 passed` (0 failed, 100% 회귀 방어)
+- **정적 도달성 분석 (Static Reachability)**: `71/71 (100%) Reachable` (미도달 모듈 0개)
 - **무효 상태 전이율 (Invalid Transition Rate)**: `0.0%` 달성
 
 ---
@@ -150,7 +150,7 @@ Quilltale/
 ├── data/
 │   ├── templates/                        # 1,000종 이상의 정밀 세계관/시설/몬스터 JSON
 │   └── saves/                            # 세이브/로드 슬롯 데이터
-├── tests/                                # 681개 자동화 테스트 스위트
+├── tests/                                # 689개 자동화 테스트 스위트
 ├── app.py                                # Gradio UI 프론트엔드 (I/O 및 렌더링 전용)
 └── eval_runner.py                        # 20턴 자동 평가 러너
 ```

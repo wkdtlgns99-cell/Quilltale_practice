@@ -611,3 +611,15 @@ class MapBlueprintEngine:
                 for f in blueprint.facilities_3d
             ]
         }
+
+    @classmethod
+    def to_interactive_html(
+        cls,
+        state: WorldState,
+        zoom_level: MapZoomLevel = MapZoomLevel.MACRO_CONTINENT
+    ) -> str:
+        """Convenience bridge to MapInteractiveRenderer."""
+        from src.world.map_interactive_renderer import MapInteractiveRenderer
+        blueprint = cls.generate_blueprint(state, zoom_level=zoom_level)
+        return MapInteractiveRenderer.render_map_html(state, blueprint=blueprint)
+

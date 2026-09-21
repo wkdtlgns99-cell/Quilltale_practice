@@ -1,7 +1,7 @@
 # CHANGES_AUDIT: Static Reachability and Call Analysis
 
 **Entrypoints**: `app.py`, `src/agents/game_master.py`  
-**Total `src/world/` modules analyzed**: 70  
+**Total `src/world/` modules analyzed**: 71  
 
 ## Summary Table
 
@@ -42,7 +42,8 @@
 | `injury_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `legacy.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `mana_burn_engine.py` | ✅ Yes | 9 | 9 | 0 | 0 |
-| `map_blueprint_engine.py` | ✅ Yes | 2 | 2 | 0 | 0 |
+| `map_blueprint_engine.py` | ✅ Yes | 3 | 2 | 1 | 0 |
+| `map_interactive_renderer.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `merchant_barter_engine.py` | ✅ Yes | 8 | 8 | 0 | 0 |
 | `npc_skill_engine.py` | ✅ Yes | 4 | 3 | 1 | 0 |
 | `object_physics_engine.py` | ✅ Yes | 7 | 5 | 2 | 0 |
@@ -65,7 +66,7 @@
 | `sleep_engine.py` | ✅ Yes | 7 | 5 | 1 | 1 |
 | `stamina_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `stat_engine.py` | ✅ Yes | 14 | 11 | 3 | 0 |
-| `state.py` | ✅ Yes | 55 | 45 | 6 | 4 |
+| `state.py` | ✅ Yes | 56 | 46 | 6 | 4 |
 | `status_engine.py` | ✅ Yes | 11 | 11 | 0 | 0 |
 | `stealth_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `thermal_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
@@ -77,9 +78,9 @@
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
-| **TOTAL** | - | **601** | **494** | **81** | **26** |
+| **TOTAL** | - | **606** | **498** | **82** | **26** |
 
-### Unreachable Modules (0/70)
+### Unreachable Modules (0/71)
 
 
 ## Detailed Method Breakdown
@@ -163,6 +164,9 @@
 - `register_inter_tier_route`: **called-from-tests-only**
 - `find_inter_tier_routes`: **called-from-tests-only**
 - `audit_settlement_resilience`: **called-from-tests-only**
+
+### `map_blueprint_engine.py` (Reachable: True)
+- `to_interactive_html`: **called-from-tests-only**
 
 ### `npc_skill_engine.py` (Reachable: True)
 - `process_npc_opportunistic_turn`: **called-from-tests-only**
