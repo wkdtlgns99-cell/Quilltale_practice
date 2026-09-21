@@ -14,35 +14,75 @@
 * **핵심 철학:**
   1. **절차적 무한 생성 (Infinite Procedural World):** 스토리, 맵 지형, NPC 심리, 사물 물리, 역사적 사건 나비효과가 매 플레이마다 완전히 새롭게 생성됨.
   2. **과부하 0, 토큰 0의 현실적 아키텍처:** 플레이 중 실시간 3D/이미지 생성(과부하/GPU 폭발)을 배제하고, **[사전 3D 에셋 풀 + 규칙 엔진 자동 조립 + 3D-to-픽셀 실시간 셰이더]** 파이프라인을 채택.
-  3. **Zero-Server-Cost (영구 무료 인디 모델):** 유저 본인의 구글 Gemini 무료 API 키 연동(BYOK)을 통해 개발사 서버비 0원으로 무제한 서비스 가능.
+  3. **Zero-Server-Cost & Zero-Developer-Risk (영구 무료 인디 BYOK 모델):** 개발사의 API 키를 전혀 쓰지 않고, **게임을 플레이하는 유저 본인의 개인 Google Gemini API 키(무료/유료)**를 클라이언트에 직접 등록하여 구동. 개발사 서버비 및 API 과금 0원, 사용자 일일 무료 할당량(하루 1,500턴)으로 평생 무료 플레이 가능.
 
 ---
 
 ## 2. 이원화 시스템 아키텍처 (Brain & Body 분리)
 
-시스템은 **[파이썬 로직 엔진 (Brain)]**과 **[유니티 렌더러 클라이언트 (Body)]**로 완벽히 물리 분리된다.
+시스템은 **[파이썬 로직 엔진 (Brain)]**과 **[프론트엔드 클라이언트 (Body)]**로 완벽히 물리 분리된다.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│               BRAIN: 파이썬 로컬 백엔드 (Quilltale)           │
-│  - 100% 결정론적 물리/규칙 연산 (주사위, 거리, 사물 내구도)      │
-│  - 6계층 현실 인프라 (Level 0~5: 우주→대륙→권역→국가→마을→시설)  │
-│  - 12대 만물 물리 재질 & 파괴 역학 (UniversalObjectPhysics)   │
-│  - 12단계 NPC 심리·인지·행동 예측 (NPCCognitiveDeduction)     │
-│  - 로컬 RAG (Qdrant + Jina BGE-M3 1024-dim) 핀셋 데이터 추출 │
-│  - WorldState JSON (단일 진실의 원천 / Single Source of Truth)│
-└──────────────────────────────┬──────────────────────────────┘
-                               │ 로컬 웹소켓 / IPC (JSON 패킷 통신)
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 BODY: 유니티 클라이언트 (Unity Front-End)       │
-│  - 실시간 3D-to-HD-2D 픽셀 렌더링 & 자유 회전 카메라 조작     │
-│  - 3D 모듈러 에셋 스폰 & 드로우콜 단일화(Bake) 메시 병합        │
-│  - Toon Cel-Shading (2단 명암) + 1px Depth Outline 외곽선     │
-│  - 대화창 고화질 2D 일러스트 초상화 팝업                       │
-│  - BGM, 의성어 사운드 및 플레이어 키보드/패드 입력 처리         │
-└─────────────────────────────────────────────────────────────┘
-```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    BRAIN: Quilltale Python Logic Engine                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. Single Source of Truth & Validation                                      │
+│    - src/world/state.py (WorldState, Player, NPC, Location, Faction 등)      │
+│    - src/world/validator.py (ActionValidator, 물리/장비/규칙 불변식 검증)   │
+│    - src/world/persistence.py, legacy.py, chronicle.py (세계 저장/계승/연대기)│
+│                                                                             │
+│ 2. Two-Pass GM Engine (결정론 연산과 서사의 완전 분리)                      │
+│    - src/world/two_pass_engine.py (TwoPassEngine, DeterministicFactSheet)   │
+│    - src/world/action_resolvers.py (이동, 은신, 생존/채집, 전술전투 리졸버) │
+│    - src/agents/game_master.py (GameMasterAgent - Pass 2 문학적 서사 렌더링)│
+│                                                                             │
+│ 3. 50+ Deterministic Domain Engines (4대 핵심 영역 매트릭스)                │
+│    ① 물리 & 환경 생태 (13개 엔진):                                          │
+│       object_physics_engine (12대 재질 파괴역학), physics_matrix,           │
+│       attack_physics_engine, cave_in_engine, thermal_engine,                │
+│       weather_engine, weather_magic_engine, celestial_engine,               │
+│       pupil_adaptation_engine, botany_engine, harvest_engine,               │
+│       vein_restoration_engine, corpse_ecology_engine                        │
+│    ② 전투, 전술 & 생존 (10개 엔진):                                         │
+│       poise_engine, stamina_engine, status_engine, injury_engine,           │
+│       toxicology_engine, alcohol_engine, mana_burn_engine,                  │
+│       stealth_engine, siege_engine, combat_time_track_engine                │
+│    ③ NPC 심리 & 사회 역학 (12개 엔진):                                      │
+│       psychology_engine (8 아키타입, 14 감정, 트라우마/스트레스 파이프라인),│
+│       cognitive_engine, npc_skill_engine, dialogue_slot_engine,             │
+│       rumor_diffusion_engine, merchant_barter_engine, bounty_engine,        │
+│       party_engine, party_sanity_engine, economy_engine, perception_engine,  │
+│       outfit_engine                                                         │
+│    ④ 공간 위상 & 인프라 계층 (13개 모듈):                                   │
+│       infrastructure.py / infra_models.py (Level 0~5 6계층 현실 인프라),    │
+│       map_blueprint_engine.py, map_interactive_renderer.py,                 │
+│       dungeon_engine, trap_engine, puzzle_engine, hidden_encounter_engine,  │
+│       campsite_engine, ration_engine, sleep_engine, time_calendar_engine,   │
+│       quest_engine, graph_engine                                            │
+│                                                                             │
+│ 4. Local RAG & Vector Memory Layer                                          │
+│    - src/memory/qdrant_store.py (로컬 Qdrant 벡터 검색)                     │
+│    - src/memory/memory_manager.py (NPC 에피소드 기억 및 단기/장기 컨텍스트) │
+│                                                                             │
+│ 5. LLM Engine Gateway                                                       │
+│    - src/llm/gemini.py, resilience.py (유저 본인 API 키 기반 직접 통신)     │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ 로컬 웹소켓 / IPC (JSON 패킷 통신)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 BODY: Client Front-End Presentation (Gradio / Unity)        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. 현재 프로토타입 프론트엔드:                                              │
+│    - app.py (Gradio 인터랙티브 탭 UI + 터미널 세션 인터페이스)              │
+│    - map_interactive_renderer.py (5계층 인터랙티브 3D 등고선 HTML/SVG 뷰어) │
+│                                                                             │
+│ 2. 정식 상용화 클라이언트 (Unity Front-End):                                │
+│    - 실시간 3D-to-HD-2D 픽셀 렌더링 & 자유 회전(360도) 카메라 조작          │
+│    - 3D 모듈러 에셋 스폰 & 드로우콜 단일화(Bake) 메시 병합                  │
+│    - Toon Cel-Shading (2~3단 명암) + 1px Depth Outline 외곽선               │
+│    - 대화창 고화질 2D 일러스트 초상화 팝업 (SD 1.5 + LoRA + ADetailer 연동) │
+│    - 의성어(Gibberish) 사운드 재생 & 플레이어 키보드/패드 입력 처리         │
+└─────────────────────────────────────────────────────────────────────────────┘
 
 ---
 
@@ -90,25 +130,36 @@ Quilltale의 방대한 텍스트 외형 데이터(`FacialDetails`, `BodyMeasurem
 
 ---
 
-## 5. 사운드 & BGM & 연출 구조
+## 5. 사운드 & BGM & 의성어 TTS 구조
 
 * **BGM 연동:** 6계층 인프라 권역(`Region`: 사막, 툰드라, 고대 유적) 및 전투 위기 상황(사기 붕괴, 공성전) 태그에 맞춰 사전 라이브러리 음원을 크로스페이드 재생.
-* **의성어/TTS (동물의 숲 / 옥토패스 방식):**
-  * 고비용의 풀 음성 TTS 대신, NPC 직업/성격/종족에 맞춘 **가상 음소 텍스트 보이스(Gibberish / Chatter sound)** 및 효과음 큐 재생으로 감성과 몰입감 극대화 (비용 0원).
+* **의성어/가상 음소 TTS 체계 (Full-Speech TTS 전면 배제):**
+  * **철학:** 긴 텍스트 문장을 통째로 읽어주는 일반 TTS는 텍스트 RPG 특유의 빠른 읽기 템포를 저해하고 대화 지연 및 과도한 리소스를 유발하므로 **전면 금지**.
+  * **방식:** 동물의 숲 / 옥토패스 트래블러 / 젤다의 전설 스타일의 **의성어·가상 음소 웅얼거림(Gibberish / Chatter Sound)**만 채택.
+  * **무료 옵션 (기본 탑재, 비용 0원):**
+    - 20~30개 기본 감탄사/음소 풀을 유니티 런타임에서 피치 변조(`AudioSource.pitch = 0.70f ~ 1.30f`) 및 룸 리버브를 적용하여 수백 명의 고유 음색 자동 생성.
+    - 파이썬 오프라인 배치 스크립트(`pydub`)를 통한 무제한 음소 바리에이션 풀 무료 사전 생성.
+  * **유료 옵션 (선택적 DLC / 고품질 사운드팩):**
+    - 전문 성우 기반의 직업/성격별 프리미엄 의성어 보이스 팩 DLC.
+    - 선택적 고음질 프로시저럴 음소/효과음 합성 엔진(FMOD/Wwise 고급 음소 신디사이저) 연동 지원.
 
 ---
 
-## 6. 비즈니스 모델 & 유저 무료 API 연동 (BYOK 아키텍처)
+## 6. 비즈니스 모델 & 유저 본인 API 키 연동 (BYOK 아키텍처)
 
-* **원리:** Google Cloud의 제3자 자동 키 추출은 보안상 불가능하므로, **Bring Your Own Key (BYOK)** 방식을 채택.
+* **핵심 명제:** **API 키는 개발사의 것이 아니라, 게임을 플레이하는 유저 본인의 개인 소유 키이다.**
+  * 개발사는 중앙 중계 서버를 운영하지 않으며, API 과금 비용과 트래픽 리스크를 일체 부담하지 않음 (**개발사 유지비 0원 / Zero-Liability**).
+* **원리 (BYOK: Bring Your Own Key):**
+  * 유저는 Google AI Studio에서 본인 명의로 개인 무료 API 키(하루 1,500회 무료) 또는 유료 종량제 키를 발급받아 인게임에 등록.
+  * 클라이언트는 유저 본인의 로컬 PC에 키를 안전하게 암호화 보관하며, 백엔드와 Gemini 간 직접 통신 수행.
 * **인게임 UX 플로우:**
-  1. 게임 최초 실행 또는 설정창 진입.
-  2. **[Google Gemini 무료 API 키 연동 (1분 소요)]** 버튼 클릭.
-  3. 클릭 시 Google AI Studio 키 발급 브라우저 팝업 ➔ 복사 후 게임 내 입력창에 `Ctrl+V`.
-  4. 로컬 PC에 암호화 저장 후, 유저 본인의 구글 일일 무료 한도(하루 1,500턴 무료)를 사용하여 게임 진행.
+  1. 게임 최초 실행 또는 설정(Settings) 메뉴 진입.
+  2. **[내 Google Gemini API 키 등록 (무료 발급 안내)]** 버튼 클릭.
+  3. Google AI Studio 키 발급 브라우저 창 팝업 ➔ 키 복사 후 인게임 입력창에 붙여넣기.
+  4. 로컬 PC에 암호화 저장 후, 유저 본인의 일일 무료 할당량으로 무제한 싱글 플레이 진행.
 * **효과:**
-  * 개발사: **서버비 및 AI API 유지비 0원**.
-  * 플레이어: **구글 계정만 있으면 평생 무료로 무제한 싱글 플레이 가능**.
+  * 개발사: **서버비 및 LLM API 유지비 0원, 무한 확장 가능한 영구 무료 인디 모델**.
+  * 플레이어: **구글 계정 하나로 평생 무료로 안전하고 무제한한 게임 플레이 가능**.
 
 ---
 
@@ -150,15 +201,14 @@ Quilltale의 방대한 텍스트 외형 데이터(`FacialDetails`, `BodyMeasurem
   - 파이썬(Quilltale) 백엔드: `PyInstaller` 또는 `Nuitka`를 통해 단독 실행 바이너리로 패키징.
   - 유니티(Unity) 클라이언트: 실행 시 백그라운드에서 로컬 파이썬 바이너리를 자동 호출/종료하도록 생명주기(Lifecycle) 바인딩.
 
-### 4. TTS/의성어 배리에이션 무한 확장 (동일 음성 돌려막기 방지)
-- **핵심 원리:** 기본 감탄사 20세트만으로 수백 명의 NPC에게 서로 다른 목소리를 부여하는 2단계 기법.
-- **방식 A (유니티 런타임 피치 실시간 변조 — 젤다/동물의 숲 공식 방식):**
-  - 유니티 `AudioSource.pitch` 조절 코드로 음원 1개당 10개 이상의 고유 음색 파생:
-    - `audioSource.pitch = 1.15f;` ➔ 톤업 (쾌활하고 젊은 청년/소년 목소리)
-    - `audioSource.pitch = 0.85f;` ➔ 톤다운 (묵직하고 거친 중년/노련한 용병 목소리)
-    - `audioSource.pitch = 0.70f;` + Reverb ➔ 동굴/대형 몬스터/오크 음색
-- **방식 B (오프라인 일괄 파이썬 배치 가공):**
-  - 무료 사운드 툴 `Audacity` 또는 파이썬 `pydub` 스크립트를 통해 원본 음원에 반음(Semitone) 피치, 템포, 이퀄라이저를 적용하여 20개 기본 음원을 100개 이상의 파일로 1초 만에 일괄 뻥튀기 생성.
+### 4. TTS/의성어 배리에이션 무한 확장 (Full-Speech 배제 & 의성어 전용 단일화)
+- **핵심 철학:** 긴 대사 문장을 통째로 읽어주는 일반 TTS는 게임 템포 저하 및 리소스 낭비로 인해 **완벽히 배제**. 오직 옥토패스 트래블러 / 동물의 숲 스타일의 **의성어·가상 음소 웅얼거림(Gibberish Chatter)**만 채택.
+- **무료 옵션 (기본 엔진 탑재, 비용 0원):**
+  - 기본 감탄사 20~30세트 기반 유니티 런타임 피치 변조(`AudioSource.pitch = 0.70f ~ 1.30f`) 및 룸 리버브로 수백 명의 음색을 실시간 자동 파생 (젤다/동물의 숲 공식 방식).
+  - 파이썬 오프라인 배치 스크립트(`pydub`)를 통해 반음(Semitone) 피치, 템포, EQ를 적용한 100개 이상의 음소 풀 무료 사전 생성.
+- **유료 옵션 (선택적 DLC / 프리미엄 팩):**
+  - 전문 성우 녹음 기반의 직업/성격/종족별 고음질 의성어 보이스 팩 DLC.
+  - 선택적 고품질 프로시저럴 음향 합성 엔진(FMOD/Wwise 고급 가상 음소 신디사이저) 플러그인 연동.
 
 ---
 
