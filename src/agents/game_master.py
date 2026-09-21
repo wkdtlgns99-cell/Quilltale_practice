@@ -229,28 +229,55 @@ class GameMasterAgent:
         # -------------------------------------------------------------
         # PASS 2: NARRATIVE GENERATION & CONSISTENCY SANITIZATION
         # -------------------------------------------------------------
-        try:
-            dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
-            try:
-                action_text = action if "action" in locals() else ""
-                magic_keywords = ["마법", "영창", "주문", "캐스팅", "마나", "원소", "형태", "기동"]
-                if any(k in action_text for k in magic_keywords):
-                    from src.agents.prompts import MAGIC_SYSTEM_PROMPT
-                    dynamic_system_prompt += "\n\n" + MAGIC_SYSTEM_PROMPT
-            except Exception:
-                pass
+        # Hybrid Bypass: If action is deterministic routine dialogue (requires_llm == False)
+        # without skills or dice, serve instantly with 0 LLM tokens (0 cost, 0ms).
+        is_routine_dialogue = (
+            fact_sheet.dialogue_slot_summary is not None
+            and not uses_skill
+            and not fact_sheet.dice_result
+            and not (extra_flags and extra_flags.get("requires_llm", True))
+        )
 
-            from src.llm.resilience import JSONRepairEngine
-            raw = self._llm.generate_json(prompt, dynamic_system_prompt)
-            raw_result = JSONRepairEngine.repair_and_parse(raw)
-
-        except Exception as e:
-            logger.error(f"GM Generation/Parse error: {e}")
+        if is_routine_dialogue:
             raw_result = {
-                "narration": "주변의 기운이 어지럽게 요동치며 상황을 명확히 분간하기 어렵습니다. 당신은 잠시 숨을 고르고 다음 행동을 신중하게 가늠합니다.",
-                "state_update": {},
+                "narration": f"{fact_sheet.dialogue_slot_summary}",
+                "state_update": fact_sheet.pre_computed_state_delta,
                 "scene_changed": False,
             }
+        else:
+            try:
+                dynamic_system_prompt = GM_SYSTEM_PROMPT + "\n" + self._scenario_manager.get_prompt_injection(state)
+                try:
+                    action_text = action if "action" in locals() else ""
+                    magic_keywords = ["마법", "영창", "주문", "캐스팅", "마나", "원소", "형태", "기동"]
+                    if any(k in action_text for k in magic_keywords):
+                        from src.agents.prompts import MAGIC_SYSTEM_PROMPT
+                        dynamic_system_prompt += "\n\n" + MAGIC_SYSTEM_PROMPT
+
+                    # 3단계: Persona Anchoring for Deep Inquiry
+                    if extra_flags and extra_flags.get("dialogue_persona"):
+                        pa = extra_flags["dialogue_persona"]
+                        dynamic_system_prompt += (
+                            f"\n\n[🎭 대상 NPC 화법 및 페르소나 엄수 규칙]\n"
+                            f"- 화자: {pa.get('name')} (성향: {pa.get('archetype_ko')})\n"
+                            f"- 말투 규칙: {pa.get('speech_style')}\n"
+                            f"- 행동 지문: {pa.get('gesture')}\n"
+                            f"- 절대 조수 AI나 정형화된 비서 말투를 쓰지 마십시오. 반드시 위 인물의 말투와 행동 지문을 반영해 유저에게 직접 대사로 답변하십시오."
+                        )
+                except Exception:
+                    pass
+
+                from src.llm.resilience import JSONRepairEngine
+                raw = self._llm.generate_json(prompt, dynamic_system_prompt)
+                raw_result = JSONRepairEngine.repair_and_parse(raw)
+
+            except Exception as e:
+                logger.error(f"GM Generation/Parse error: {e}")
+                raw_result = {
+                    "narration": "주변의 기운이 어지럽게 요동치며 상황을 명확히 분간하기 어렵습니다. 당신은 잠시 숨을 고르고 다음 행동을 신중하게 가늠합니다.",
+                    "state_update": {},
+                    "scene_changed": False,
+                }
 
         # Sanitize and reconcile Pass 2 output with Pass 1 deterministic truth
         result = TwoPassEngine.sanitize_pass2_result(raw_result, fact_sheet, state)

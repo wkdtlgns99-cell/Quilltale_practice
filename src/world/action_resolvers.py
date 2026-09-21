@@ -26,6 +26,7 @@ from src.world.siege_engine import SiegeWarfareEngine
 from src.world.bounty_engine import BountyEngine
 from src.world.dice import DiceEngine
 from src.world.infrastructure import Settlement
+from src.world.dialogue_slot_engine import DialogueSlotEngine
 
 logger = logging.getLogger(__name__)
 
@@ -1268,6 +1269,93 @@ class TacticalCombatResolverMixin:
             "logs": logs,
             "summary": summary,
             "ext_prompt": ext_prompt
+        }
+
+    @classmethod
+    def resolve_action_npc_dialogue(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses dialogue, conversation, inquiry, or greeting intent towards NPCs.
+        Invokes DialogueSlotEngine deterministic dialogue assembly.
+        """
+        act_lower = action.lower()
+        curr_loc = state.current_location()
+        if not curr_loc or not curr_loc.npcs:
+            return None
+
+        present_npcs = [state.npcs[nid] for nid in curr_loc.npcs if nid in state.npcs]
+        if not present_npcs:
+            return None
+
+        present_names = [n.name for n in present_npcs]
+        routing = DialogueSlotEngine.classify_intent(action, present_names)
+
+        dialogue_keywords = [
+            "talk", "speak", "greet", "ask", "threat", "대화", "말걸", "이야기",
+            "인사", "물어", "위협", "따지", "수락", "거절", "구입", "구매", "사다",
+            "얼마", "둘러", "구경", "의뢰", "일감", "왜", "비밀", "진실"
+        ]
+        if not (any(k in act_lower for k in dialogue_keywords) or (routing.intent != "unknown")):
+            return None
+
+        target_npc: Optional[NPC] = None
+        if routing.target_npc_name:
+            for n in present_npcs:
+                if n.name == routing.target_npc_name:
+                    target_npc = n
+                    break
+        if not target_npc:
+            for n in present_npcs:
+                if n.name.lower() in act_lower or n.id.lower() in act_lower:
+                    target_npc = n
+                    break
+        if not target_npc and present_npcs:
+            target_npc = present_npcs[0]
+
+        if not target_npc:
+            return None
+
+        intent = routing.intent
+        assemble_intent = intent if intent not in ("deep_inquiry", "unknown") else "greeting"
+
+        rel_score = 50
+        if hasattr(target_npc, "relationship_matrix"):
+            rel_score = target_npc.relationship_matrix.get(state.player.name, {}).get("affection", 50)
+        elif hasattr(target_npc, "attitude"):
+            rel_score = getattr(target_npc.attitude, "trust", 50)
+
+        res = DialogueSlotEngine.assemble_dialogue(
+            npc=target_npc,
+            intent=assemble_intent,
+            relationship_score=rel_score,
+            seed_modifier=state.turn,
+        )
+
+        templates = DialogueSlotEngine.load_templates()
+        arch_tones = templates.get("archetype_tones", {})
+        arch_data = arch_tones.get(res.archetype, {})
+        speech_style = arch_data.get("speech_style", "")
+        name_ko = arch_data.get("name_ko", res.archetype)
+
+        persona_anchor = {
+            "name": target_npc.name,
+            "archetype": res.archetype,
+            "archetype_ko": name_ko,
+            "speech_style": speech_style,
+            "gesture": res.gesture,
+            "stress": getattr(target_npc, "stress", 0),
+            "dominant_emotion": getattr(target_npc, "emotion_state", {}),
+            "base_slot_utterance": res.full_text,
+        }
+
+        return {
+            "target_npc_id": target_npc.id,
+            "target_npc_name": target_npc.name,
+            "intent": intent,
+            "requires_llm": routing.requires_llm,
+            "routing": routing.to_dict(),
+            "persona_anchor": persona_anchor,
+            "dialogue_result": res.to_dict(),
+            "summary": f"{target_npc.name}: {res.full_text}",
         }
 
 

@@ -106,6 +106,8 @@ class DeterministicFactSheet:
     combat_distance_summary: Optional[str] = None
     interrupt_event: Optional[Dict[str, Any]] = None
     siege_summary: Optional[str] = None
+    dialogue_slot_summary: Optional[str] = None
+    dialogue_persona_anchor: Optional[Dict[str, Any]] = None
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -275,6 +277,20 @@ class DeterministicFactSheet:
             lines.append("🏰💥 [대규모 공성전 및 요새 방호 시뮬레이션 (Siege Warfare)]")
             lines.append(f"- {self.siege_summary}")
             lines.append("*GM 서사 지침*: 포격, 성벽과 성문의 파괴, 해자 도하 및 백병전 충돌의 비장미를 결정론적 수치에 입각해 생생하게 서술하십시오.")
+
+        if self.dialogue_persona_anchor:
+            pa = self.dialogue_persona_anchor
+            lines.append("🎭 [NPC 페르소나 및 화법 앵커링 (PERSONA ANCHORING)]")
+            lines.append(f"- 대상 NPC: {pa.get('name')} (성향: {pa.get('archetype_ko', pa.get('archetype'))})")
+            lines.append(f"- 말투 규칙: {pa.get('speech_style')}")
+            lines.append(f"- 신체 행동 지문: {pa.get('gesture')}")
+            lines.append(f"- 심리 상태: 스트레스 {pa.get('stress')}/100, 주요 감정: {pa.get('dominant_emotion')}")
+            lines.append(f"- 기본 반응 슬롯: {pa.get('base_slot_utterance')}")
+            lines.append("*GM 서사 지침*: 상기 인물의 말투 규칙과 행동 지문을 엄격히 준수하여 유저의 발언에 대응하십시오. 현대적 AI 비서체나 캐릭터 붕괴는 엄격히 금지됩니다.")
+        elif self.dialogue_slot_summary:
+            lines.append("💬 [NPC 결정론적 반응 및 기본 대사 (Dialogue Slot)]")
+            lines.append(f"- {self.dialogue_slot_summary}")
+            lines.append("*GM 서사 지침*: NPC의 성격 아키타입, 스트레스, 감정 상태가 반영된 상기 기본 반응 대사와 신체 지문을 서사의 뼈대로 삼아 대화를 묘사하십시오.")
 
         lines.append("=================================================================")
         return "\n".join(lines)
@@ -659,6 +675,17 @@ class TwoPassEngine(ActionResolversMixin):
             fact_sheet.quest_progress_logs.append(f"🏰 {siege_info['summary']}")
             state_delta["active_sieges"] = {k: v for k, v in state.active_sieges.items()}
             QuestEngine.progress_event(state, "siege", siege_info.get("action_type", "turn"))
+
+        # 2.499 Deterministic NPC Dialogue Slot Assembly (DialogueSlotEngine)
+        dialogue_info = cls.resolve_action_npc_dialogue(action, state)
+        if dialogue_info:
+            fact_sheet.dialogue_slot_summary = dialogue_info["summary"]
+            fact_sheet.dialogue_persona_anchor = dialogue_info.get("persona_anchor")
+            fact_sheet.quest_progress_logs.append(f"💬 {dialogue_info['summary']}")
+            fact_sheet.extra_flags["requires_llm"] = dialogue_info.get("requires_llm", True)
+            fact_sheet.extra_flags["dialogue_routing"] = dialogue_info.get("routing", {})
+            fact_sheet.extra_flags["dialogue_persona"] = dialogue_info.get("persona_anchor")
+            QuestEngine.progress_event(state, "dialogue", dialogue_info.get("intent", "greeting"))
 
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         if travel_info:
@@ -1655,6 +1682,15 @@ class TwoPassEngine(ActionResolversMixin):
                     death_note = f"\n\n*(⚠️ 처치 확인: {t_name}은(는) 치명상을 입고 완전히 쓰러져 사망했습니다.)*"
                     if death_note not in narration:
                         narration += death_note
+
+        # 4. Dialogue Persona Speaker Grounding Check
+        if fact_sheet.dialogue_persona_anchor and fact_sheet.extra_flags.get("requires_llm"):
+            pa = fact_sheet.dialogue_persona_anchor
+            npc_name = pa.get("name", "")
+            if npc_name and npc_name not in narration:
+                anchor_prefix = f"[{npc_name}] {pa.get('gesture', '')}\n"
+                logger.info(f"Reconciled missing dialogue speaker anchor for {npc_name}")
+                narration = f"{anchor_prefix}{narration}"
 
         return narration
 

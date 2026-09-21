@@ -150,13 +150,25 @@
 - `TwoPassEngine(ActionResolversMixin)` 다중 상속으로 100% 무회귀 하위 호환성 보장.
 - `tests/test_p2_2_god_files_decomposition.py` Phase 3 테스트 4종 추가 (총 11 passed).
 
+#### 5) [P1-3] 결정론적 대사 슬롯 조립, 하이브리드 의도 라우터 및 심층 대화 페르소나 앵커링 (`DialogueSlotEngine`) 3단계 전면 완수
+- `data/templates/dialogue_slots.json`: 8대 아키타입, 431개 대사 템플릿, 70종 스트레스/감정 행동 지문, 32종 성격 트레이트 어미 데이터베이스 완성 (~965,000가지 조합).
+- `src/world/dialogue_slot_engine.py`: 100% 결정론적 SHA-256 슬롯 조립 엔진 및 `classify_intent()` 하이브리드 라우터 구현 (`IntentRoutingResult`, Rule 5 `traits` 준수).
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `compute_pass1()` 라이브 턴 경로 및 `DeterministicFactSheet` 완전 배선 (`requires_llm`, `dialogue_routing`, `dialogue_persona_anchor` 슬롯 주입).
+  - Pass 1 프롬프트 컨텍스트에 `[🎭 NPC 페르소나 및 화법 앵커링 (PERSONA ANCHORING)]` 자동 직렬화.
+  - `TwoPassEngine.sanitize_pass2_result()`에 화자 누락 시 대상 NPC 및 행동 지문 강제 주입 화자 검증기(Speaker Grounding) 탑재.
+- `src/agents/game_master.py`:
+  - **[1~2단계] 0-토큰 하이브리드 바이패스 (0원 / 0ms)**: 일상 대화(`requires_llm is False`) 시 LLM 호출을 건너뛰고 조립 대사 즉시 반환.
+  - **[3단계] 심층 대화 페르소나 화법 주입**: 심층 질문(`requires_llm is True`) 시 대상 NPC의 말투 규칙, 신체 행동 지문, 스트레스/감정을 `dynamic_system_prompt`에 강제 주입하여 캐붕(캐릭터 붕괴) 및 AI 비서체 원천 차단.
+- `tests/test_dialogue_slot_engine.py`: 12종 단위 테스트 전원 통과 (0-토큰 바이패스, 심층 질문 페르소나 앵커링, 검증기 화자 보정 전수 검증).
+
 ---
 
 ### 2. 테스트 및 평가 검증 상태 (세션 누적 지표)
-- **전체 단위 테스트**: `660 passed` (0 failed, 세션 시작 640 → 완료 660, +20 신규 단위 테스트 순증, 무회귀).
+- **전체 단위 테스트**: `672 passed` (0 failed, 무회귀).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/68 Unreachable` (68/68 모듈 100% 도달).
-- **코드 정적 검사 (pyflakes & ruff)**: `src/` 및 `tests/` 전수 검증 통과 (`pyflakes src/ tests/`: 0건 Clean, `ruff check src/ --select F,E9`: All checks passed, `ruff check tests/ --select F,E9`: All checks passed). CI 파이프라인 4대 게이트 전수 로컬 초록불 검증 완료.
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/69 Unreachable` (69/69 모듈 100% 도달).
+- **코드 정적 검사 (pyflakes & ruff)**: `src/` 및 `tests/` 전수 검증 통과 (`pyflakes src/ tests/`: 0건 Clean, `ruff check`: Clean).
 
 ---
 
@@ -167,4 +179,5 @@
    - 가문 혈통(Lineage), 종교 신앙(Deity), 영지 개척(Domain), 사령술(Necromancy) 시스템.
 3. **[플랫폼/UI 로드맵]**:
    - 독립 실행형 창 모드 런처(`SteamStyleStandaloneLauncher`), 동적 부분 갱신 이중 맵(`DynamicDualMapRenderer`).
+
 

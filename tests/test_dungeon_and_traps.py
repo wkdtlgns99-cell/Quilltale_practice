@@ -84,8 +84,10 @@ def test_contextual_trap_matching(test_world):
         assert len(spec.traits) > 0
 
 
-def test_trap_detection_perception(test_world):
+def test_trap_detection_perception(test_world, monkeypatch):
     """Test perception-based trap discovery and status transition to revealed."""
+    from src.world.dice import DiceEngine
+    monkeypatch.setattr(DiceEngine, "roll_d20", lambda: 15)
     player = test_world.player
     loc = test_world.locations["forest_path"]
 
