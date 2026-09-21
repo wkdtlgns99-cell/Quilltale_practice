@@ -18,6 +18,16 @@
 ## 2. [해야 할 일(Backlog)]
 상세 엔진 분류 및 도달성 상태는 [TRIAGE.md](file:///c:/Quilltale/TRIAGE.md) 및 [CHANGES_AUDIT.md](file:///c:/Quilltale/CHANGES_AUDIT.md) 단일 출처 참조.
 
+### [🔥 2026-09-21 최우선 긴급 과제 (Backlog 0순위 - User Pin)]
+- [ ] **[P0-TOP-1] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py` / `monster_tactics_engine.py`)**:
+  - **개요**: 단순 주사위/수치 대미지 교환 탈피. FSM/행동 트리(Behavior Tree) 기반 몬스터 지능 탑재.
+  - **핵심 패턴**: 체력 25% 이하 도주 및 동료 지원 요청(비열함), 원거리 카이팅 및 탱커 뒤 엄폐(궁수/마법사), 상태이상 걸린 플레이어 급소 집중 타격(근접 전사), 아군 버프 및 방패 경로 차단.
+  - **효과**: 순수 파이썬 결정론적 로직(0-토큰, 비용 0원), 턴제 전투 전술성 급상승.
+- [ ] **[P0-TOP-2] 인터랙티브 3D 오버월드 지도 UI (16:9 배경 맵 위 좌표 핀/깃발 및 상세 인스펙터)**:
+  - **설계서**: [`docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md`](file:///c:/Quilltale/docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md)
+  - **개요**: 깨끗한 16:9 3D 배경 맵 아트(`data/maps/default_overworld.jpg`) 위에 엔진 5계층 인프라 좌표(X, Y, Z)를 정규화하여 인터랙티브 SVG 핀/깃발 및 도로망 오버레이.
+  - **기능**: 거점 마우스 호버(지명/고도 툴팁), 클릭 시 상세 정보(해발 고도, 소속 국가, 5계층 시설, 상주 NPC, 이동 선언 액션 버튼) 팝업 인스펙터. `Code_Hygiene Rule 6` 준수(app.py 제로 비즈니스 로직, 순수 HTML5/CSS3/ES6 컴포넌트).
+
 ### [🏛️ 시스템 결함 수정 & 6계층 인프라 실전 결합 — 2026-09-15 분석 기반]
 
 #### [P0-0 — 2026-09-15 교차 검증 기반 0순위 긴급 과제 (Backlog 0순위)]
@@ -195,12 +205,15 @@
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[정리 과제] `save_load_manager.py` 삭제**:
+1. **[Backlog 0순위 - User Pin] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py` / `monster_tactics_engine.py`) 착수**:
+   - 단순 수치 교환을 탈피하여 FSM/행동 트리(BT) 기반 도주, 카이팅, 엄폐, 집중 공격 패턴 파이썬 엔진 구현 및 단위 테스트.
+2. **[Backlog 0순위 - User Pin] 인터랙티브 3D 오버월드 지도 UI 연동**:
+   - `docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md` 설계서 기반 `MapInteractiveRenderer` 및 `app.py` 탭 연동.
+3. **[정리 과제] `save_load_manager.py` 삭제**:
    - `persistence.py`로 완전 대체된 레거시 중복 파일 정리 (Category B).
-2. **[게임플레이 도메인 확장 백로그]**:
+4. **[게임플레이 도메인 확장 백로그]**:
    - 가문 혈통(Lineage), 종교 신앙(Deity), 영지 개척(Domain), 사령술(Necromancy) 시스템.
-3. **[플랫폼/UI 로드맵]**:
-   - **인터랙티브 3D 오버월드 지도 UI**: `docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md` 설계서 보관 완료 (16:9 배경 맵 위 좌표 핀/깃발 오버레이 및 클릭 상세 인스펙터).
+5. **[플랫폼/UI 로드맵]**:
    - 독립 실행형 창 모드 런처(`SteamStyleStandaloneLauncher`), 동적 부분 갱신 이중 맵(`DynamicDualMapRenderer`).
 
 
