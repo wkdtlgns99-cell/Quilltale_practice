@@ -31,12 +31,24 @@ from src.world.alcohol_engine import AlcoholIntoxicationEngine
 from src.world.vein_restoration_engine import ManaVeinRestorationEngine, VEIN_SURGERY_REGISTRY
 from src.world.time_calendar_engine import TimeCalendarEngine
 
+from src.world.domain_engine import DomainEngine
+from src.world.lineage_engine import LineageEngine
+from src.world.faith_engine import FaithEngine
+from src.world.gambling_engine import GamblingDenEngine
+from src.world.auction_engine import BlackMarketAuctionEngine, BlackMarketAuctionState
+from src.world.arena_engine import GladiatorArenaEngine
 from src.world.action_resolvers import (
     ActionResolversMixin,
     MovementResolverMixin,
     StealthResolverMixin,
     SurvivalResolverMixin,
     TacticalCombatResolverMixin,
+    DomainResolverMixin,
+    LineageResolverMixin,
+    FaithResolverMixin,
+    GamblingResolverMixin,
+    AuctionResolverMixin,
+    ArenaResolverMixin,
 )
 
 __all__ = [
@@ -47,6 +59,12 @@ __all__ = [
     "StealthResolverMixin",
     "SurvivalResolverMixin",
     "TacticalCombatResolverMixin",
+    "DomainResolverMixin",
+    "LineageResolverMixin",
+    "FaithResolverMixin",
+    "GamblingResolverMixin",
+    "AuctionResolverMixin",
+    "ArenaResolverMixin",
 ]
 logger = logging.getLogger(__name__)
 
@@ -110,6 +128,21 @@ class DeterministicFactSheet:
     dialogue_persona_anchor: Optional[Dict[str, Any]] = None
     map_blueprint_summary: Optional[str] = None
     map_blueprint_prompt: Optional[str] = None
+    tactical_ai_logs: List[str] = field(default_factory=list)
+    dungeon_ascii_map: Optional[str] = None
+    loot_drop_logs: List[str] = field(default_factory=list)
+    domain_summary: Optional[str] = None
+    domain_logs: List[str] = field(default_factory=list)
+    lineage_summary: Optional[str] = None
+    lineage_logs: List[str] = field(default_factory=list)
+    faith_summary: Optional[str] = None
+    faith_logs: List[str] = field(default_factory=list)
+    gambling_summary: Optional[str] = None
+    gambling_logs: List[str] = field(default_factory=list)
+    auction_summary: Optional[str] = None
+    auction_logs: List[str] = field(default_factory=list)
+    arena_summary: Optional[str] = None
+    arena_logs: List[str] = field(default_factory=list)
 
     def to_prompt_context(self) -> str:
         """Serializes the fact sheet into a high-priority prompt section for the LLM."""
@@ -184,6 +217,12 @@ class DeterministicFactSheet:
             for nlog in self.npc_skill_logs:
                 lines.append(f"- {nlog}")
             lines.append("*GM 절대 서사 강제 지침*: 당신은 위 NPC의 행동 결과(반격 피해, 소매치기 성공/실패, 기습 등)를 100% 반영하여 서사를 작성해야 합니다.")
+
+        if self.tactical_ai_logs:
+            lines.append("🧠 [몬스터 전술 AI 행동 (Tactical AI Decision)]")
+            for tlog in self.tactical_ai_logs:
+                lines.append(f"- {tlog}")
+            lines.append("*GM 서사 지침*: 적 몬스터/NPC의 전술적 판단(도주, 비명, 엄폐, 급소 점사, 아군 보호, 광폭화)을 지능적이고 생생한 전장 묘사로 반영하십시오. 단순 수치 교환이 아닌, 적의 지능과 전술이 체감되도록 서술하십시오.")
 
         if self.enchant_logs:
             lines.append("✨ [장비 룬 인챈트 및 내구도 효과]")
@@ -300,6 +339,69 @@ class DeterministicFactSheet:
             if self.map_blueprint_prompt:
                 lines.append(f"- [GPT 작화 지침 프리뷰]: {self.map_blueprint_prompt[:250]}...")
             lines.append("*GM 서사 지침*: 지도와 지형의 3D 높낮이, 등고선, 도로 경사도 및 거점/시설의 입체적 배치를 눈앞에 펼쳐진 시각적 조감도처럼 생생하게 묘사하십시오.")
+
+        if self.dungeon_ascii_map:
+            lines.append("🏰🗺️ [지하 던전 2D 타일 그리드 지도 (Subterranean Tile Map)]")
+            lines.append(self.dungeon_ascii_map)
+            lines.append("*GM 서사 지침*: 플레이어가 확인한 지하 미궁의 2D 타일 구조(방의 배치, 좁은 통로 복도, 문, 계단 위치)를 생생하고 사실적인 공간 묘사로 서술하십시오. 미궁의 미로 같은 구조감과 폐소공포감을 극대화하십시오.")
+
+        if self.loot_drop_logs:
+            lines.append("💎🎁 [절차적 장비 및 전리품 획득 (Loot Drop & Affixes)]")
+            for llog in self.loot_drop_logs:
+                lines.append(f"- {llog}")
+            lines.append("*GM 서사 지침*: 획득한 장비의 등급(마법/희귀/영웅/유니크), 재질, 접두/접미 옵션의 빛남과 마력의 고동, 소켓의 형상을 흥미진진하고 가치 있게 묘사하십시오.")
+
+        if self.domain_summary:
+            lines.append("🏰👑 [영지 개척 및 거점 자치 통치 (Domain & Settlement Governance)]")
+            lines.append(self.domain_summary)
+            if self.domain_logs:
+                for dlog in self.domain_logs:
+                    lines.append(f"- {dlog}")
+            lines.append("*GM 서사 지침*: 플레이어의 영지 통치와 시설 건축 진척도, 주민들의 반응과 인구 이동, 세금 징수 및 번영의 현장을 군주로서의 위엄과 생생한 삶의 정취로 서술하십시오.")
+
+        if self.lineage_summary:
+            lines.append("🛡️👑 [가문 혈통 및 가계도 위계 (Dynasty Lineage & Bloodline)]")
+            lines.append(self.lineage_summary)
+            if self.lineage_logs:
+                for llog in self.lineage_logs:
+                    lines.append(f"- {llog}")
+            lines.append("*GM 서사 지침*: 가문의 역사와 가훈의 긍지, 혈통 특성의 신체적/초자연적 발현, 원로의 지혜 및 후계자와의 유대와 승계의 숭고함을 명문 가문의 품격으로 서술하십시오.")
+
+        if self.faith_summary:
+            lines.append("⛪🕊️ [종교 신앙 및 신성 기적 (Faith & Divine Miracles)]")
+            lines.append(self.faith_summary)
+            if self.faith_logs:
+                for flog in self.faith_logs:
+                    lines.append(f"- {flog}")
+            lines.append("*GM 서사 지침*: 플레이어의 신앙심, 신에 대한 기도와 제물 봉헌, 발현된 기적의 성스러운 광채 또는 금기 위반에 따른 신벌의 섬뜩한 저주를 종교적 숭고함과 경외심으로 장엄하게 서술하십시오.")
+        elif self.faith_logs:
+            lines.append("⛪🕊️ [종교 신앙 및 가호 변동 (Faith Updates)]")
+            for flog in self.faith_logs:
+                lines.append(f"- {flog}")
+
+        if self.gambling_summary:
+            lines.append("🎲💰 [주점 도박 및 주사위 대결 (Gambling Den & Showdown)]")
+            lines.append(self.gambling_summary)
+            if self.gambling_logs:
+                for glog in self.gambling_logs:
+                    lines.append(f"- {glog}")
+            lines.append("*GM 서사 지침*: 주점 안의 시끌벅적한 도박판 분위기, 컵 속에서 덜그럭거리는 주사위 소리와 도박꾼들의 숨죽인 긴장감, 승패에 따른 환호와 탄식, 그리고 밑장빼기 적발 시 술상이 엎어지고 고함과 주먹이 오가는 주점 난투극(Tavern Brawl)의 혼란을 거칠고 생생하게 서술하십시오.")
+
+        if self.auction_summary:
+            lines.append("🏛️🔨 [지하 암시장 비밀 경매장 (Black Market Underground Auction)]")
+            lines.append(self.auction_summary)
+            if self.auction_logs:
+                for alog in self.auction_logs:
+                    lines.append(f"- {alog}")
+            lines.append("*GM 서사 지침*: 어둠침침한 지하 경매장의 긴장감 넘치는 공기, 번호 팻말이 치솟는 입찰 경쟁과 눈치 싸움, 단상을 울리는 경매사의 망치질과 호가 카운트다운, 혹은 대담한 단상 유물 강탈 및 경비병들과의 난투극을 박진감 넘치고 영화처럼 서술하십시오.")
+
+        if self.arena_summary:
+            lines.append("🏟️⚔️ [콜로세움 투기장 결투 및 처형/자비 (Gladiator Arena & Spectacle)]")
+            lines.append(self.arena_summary)
+            if self.arena_logs:
+                for rlog in self.arena_logs:
+                    lines.append(f"- {rlog}")
+            lines.append("*GM 서사 지침*: 수천 명의 관중이 내지르는 함성과 발구르는 소리, 모래사장 위에 흩뿌려지는 피와 흙먼지, 관중 열광도에 따른 무기 투척이나 열광, 그리고 승리 후 영주와 관중들이 엄지손가락을 치켜들거나 내리는 처형/자비의 극적인 순간을 장엄하고 처절하게 서술하십시오.")
 
         lines.append("=================================================================")
         return "\n".join(lines)
@@ -706,6 +808,197 @@ class TwoPassEngine(ActionResolversMixin):
             fact_sheet.extra_flags["map_gpt_prompt"] = map_info.get("gpt_prompt", "")
             fact_sheet.extra_flags["map_ascii_preview"] = map_info.get("ascii_preview", "")
             QuestEngine.progress_event(state, "map_inspection", map_info.get("zoom_level", "meso"))
+
+        # 2.4997 Domain Pioneering & Settlement Construction (DomainEngine)
+        domain_info = cls.resolve_action_domain(action, state)
+        if domain_info:
+            fact_sheet.domain_summary = domain_info["summary"]
+            fact_sheet.domain_logs.extend(domain_info.get("logs", []))
+            for dlog in domain_info.get("logs", []):
+                fact_sheet.quest_progress_logs.append(f"🏰 {dlog}")
+            state_delta["pioneering_domains"] = {
+                k: (v.to_dict() if hasattr(v, "to_dict") else v)
+                for k, v in getattr(state, "pioneering_domains", {}).items()
+            }
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["gold"] = state.player.gold
+            QuestEngine.progress_event(state, "domain", domain_info.get("type", "manage"))
+
+        # Background Domain Tick Simulation (progress construction and yields if active domains exist)
+        if hasattr(state, "pioneering_domains") and state.pioneering_domains:
+            for s_id in list(state.pioneering_domains.keys()):
+                d_summary = DomainEngine.advance_domain_tick(state, s_id)
+                if d_summary.completed_buildings:
+                    for b_name in d_summary.completed_buildings:
+                        compl_msg = f"🏰 [건축 완공]: [{s_id}]에 [{b_name}]이(가) 완공되었습니다!"
+                        fact_sheet.quest_progress_logs.append(compl_msg)
+                        fact_sheet.domain_logs.append(compl_msg)
+                if d_summary.events_triggered:
+                    for ev in d_summary.events_triggered:
+                        fact_sheet.domain_logs.append(f"🏰 {ev}")
+
+        # 2.4998 Dynasty Lineage & Succession Resolution (LineageEngine)
+        lineage_info = cls.resolve_action_lineage(action, state)
+        if lineage_info:
+            fact_sheet.lineage_summary = lineage_info["summary"]
+            fact_sheet.lineage_logs.extend(lineage_info.get("logs", []))
+            for llog in lineage_info.get("logs", []):
+                fact_sheet.quest_progress_logs.append(f"🛡️ {llog}")
+            if getattr(state, "dynasty_lineage", None):
+                state_delta["dynasty_lineage"] = (
+                    state.dynasty_lineage.to_dict()
+                    if hasattr(state.dynasty_lineage, "to_dict")
+                    else state.dynasty_lineage
+                )
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["name"] = state.player.name
+            state_delta["player"]["gold"] = state.player.gold
+            QuestEngine.progress_event(state, "lineage", lineage_info.get("type", "dynasty"))
+
+        # 2.4999 Faith & Divine Miracles Resolution (FaithEngine)
+        faith_info = cls.resolve_action_faith(action, state)
+        if faith_info:
+            fact_sheet.faith_summary = faith_info["summary"]
+            fact_sheet.faith_logs.extend(faith_info.get("logs", []))
+            for flog in faith_info.get("logs", []):
+                fact_sheet.quest_progress_logs.append(f"⛪ {flog}")
+            if getattr(state, "faith_state", None):
+                state_delta["faith_state"] = (
+                    state.faith_state.to_dict()
+                    if hasattr(state.faith_state, "to_dict")
+                    else state.faith_state
+                )
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["gold"] = state.player.gold
+            state_delta["player"]["fatigue"] = state.player.fatigue
+            state_delta["player"]["health"] = state.player.health
+            QuestEngine.progress_event(state, "faith", faith_info.get("type", "pray"))
+
+        # Background Faith Tick Simulation (decay buffs/curses, passive settlement faith gain)
+        f_summary = FaithEngine.advance_faith_tick(state)
+        if f_summary.miracles_triggered:
+            for exp_b in f_summary.miracles_triggered:
+                fact_sheet.faith_logs.append(f"🕊️ [축복 만료]: {exp_b}의 가호가 다했습니다.")
+        if f_summary.curses_triggered:
+            for exp_c in f_summary.curses_triggered:
+                fact_sheet.faith_logs.append(f"⚡ [신벌 해제]: {exp_c}의 저주가 풀렸습니다.")
+        if f_summary.piety_delta > 0:
+            fact_sheet.faith_logs.append(f"⛪ [신앙 유입]: 영지 신앙 생산으로 신앙심 +{f_summary.piety_delta}")
+        if (f_summary.piety_delta != 0 or f_summary.miracles_triggered or f_summary.curses_triggered) and getattr(state, "faith_state", None):
+            state_delta["faith_state"] = (
+                state.faith_state.to_dict()
+                if hasattr(state.faith_state, "to_dict")
+                else state.faith_state
+            )
+
+        # 2.49995 Gambling & Tavern Dice Showdown Resolution (GamblingDenEngine)
+        gambling_info = cls.resolve_action_gambling(action, state)
+        if gambling_info:
+            fact_sheet.gambling_summary = gambling_info["summary"]
+            fact_sheet.gambling_logs.extend(gambling_info.get("logs", []))
+            for glog in gambling_info.get("logs", []):
+                fact_sheet.quest_progress_logs.append(f"🎲 {glog}")
+            if getattr(state, "gambling_record", None):
+                state_delta["gambling_record"] = (
+                    state.gambling_record.to_dict()
+                    if hasattr(state.gambling_record, "to_dict")
+                    else state.gambling_record
+                )
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["gold"] = state.player.gold
+            state_delta["player"]["reputation"] = state.player.reputation
+            if gambling_info.get("tavern_brawl_triggered"):
+                state_delta["tavern_brawl_triggered"] = True
+                if "npc_state" not in state_delta:
+                    state_delta["npc_state"] = {}
+                loc_id = state.player.location
+                if loc_id in state.locations:
+                    for n in state.npcs_in_location(loc_id):
+                        if n.alive and n.disposition == "hostile":
+                            state_delta["npc_state"][n.id] = {"disposition": "hostile"}
+            QuestEngine.progress_event(state, "gambling", gambling_info.get("type", "chinchiro"))
+
+        # 2.49996 Black Market Underground Auction Resolution (BlackMarketAuctionEngine)
+        auction_info = cls.resolve_action_auction(action, state)
+        if auction_info:
+            fact_sheet.auction_summary = auction_info["summary"]
+            fact_sheet.auction_logs.extend(auction_info.get("logs", []))
+            for alog in auction_info.get("logs", []):
+                fact_sheet.quest_progress_logs.append(f"🏛️ {alog}")
+
+            gold_spent = auction_info.get("gold_spent", 0)
+            if gold_spent > 0:
+                state.player.gold = max(0, state.player.gold - gold_spent)
+
+            acquired = auction_info.get("acquired_item")
+            if acquired:
+                from src.world.entities import Item
+                item_id = f"item_auction_{state.turn}_{len(state.items)}"
+                item_obj = Item(
+                    id=item_id,
+                    name=acquired.get("name", "경매 낙찰 유물"),
+                    description=acquired.get("description", ""),
+                    location="inventory",
+                    item_type=acquired.get("type", "misc"),
+                    value=acquired.get("value", 500),
+                    traits=acquired.get("traits", ["auction_loot"])
+                )
+                state.items[item_id] = item_obj
+                state.player.inventory.append(item_id)
+                fact_sheet.quest_progress_logs.append(f"🎁 [경매 보상 인벤토리 획득]: {item_obj.name}")
+
+            if getattr(state, "auction_state", None):
+                state_delta["auction_state"] = (
+                    state.auction_state.to_dict()
+                    if hasattr(state.auction_state, "to_dict")
+                    else state.auction_state
+                )
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["gold"] = state.player.gold
+
+            if auction_info.get("brawl_triggered"):
+                state_delta["auction_brawl_triggered"] = True
+                if "npc_state" not in state_delta:
+                    state_delta["npc_state"] = {}
+                loc_id = state.player.location
+                if loc_id in state.locations:
+                    for n in state.npcs_in_location(loc_id):
+                        if n.alive:
+                            n.disposition = "hostile"
+                            state_delta["npc_state"][n.id] = {"disposition": "hostile"}
+            QuestEngine.progress_event(state, "auction", auction_info.get("type", "auction"))
+
+        # 2.49997 Gladiator Arena & Colosseum Duels (GladiatorArenaEngine)
+        arena_info = cls.resolve_action_arena(action, state)
+        if arena_info:
+            fact_sheet.arena_summary = arena_info["summary"]
+            fact_sheet.arena_logs.extend(arena_info.get("logs", []))
+            for rlog in arena_info.get("logs", []):
+                fact_sheet.quest_progress_logs.append(f"🏟️ {rlog}")
+
+            if getattr(state, "arena_record", None):
+                state_delta["arena_record"] = (
+                    state.arena_record.to_dict()
+                    if hasattr(state.arena_record, "to_dict")
+                    else state.arena_record
+                )
+            if getattr(state, "active_arena_match", None):
+                state_delta["active_arena_match"] = (
+                    state.active_arena_match.to_dict()
+                    if hasattr(state.active_arena_match, "to_dict")
+                    else state.active_arena_match
+                )
+            if "player" not in state_delta:
+                state_delta["player"] = {}
+            state_delta["player"]["gold"] = state.player.gold
+            state_delta["player"]["health"] = state.player.health
+            state_delta["player"]["reputation"] = state.player.reputation
+            QuestEngine.progress_event(state, "arena", arena_info.get("type", "duel"))
 
         # 2.5 Deterministic Movement Resolution (Guarantees actual location change)
         if travel_info:
@@ -1239,6 +1532,22 @@ class TwoPassEngine(ActionResolversMixin):
                         "morale": target_npc.morale,
                     }
 
+                    # Procedural Loot Drop on Monster Kill
+                    if killed:
+                        from src.world.loot_generator import LootGenerator
+                        p_luck = getattr(state.player, "luck", 10)
+                        dropped_items = LootGenerator.roll_monster_drop(target_npc, player_luck=p_luck)
+                        if dropped_items:
+                            drop_names = []
+                            for d_item in dropped_items:
+                                state.items[d_item.id] = d_item
+                                state.player.inventory.append(d_item.id)
+                                r_ko = d_item.properties.get("rarity", "일반")
+                                drop_names.append(f"[{r_ko}] {d_item.name}")
+                            msg = f"🎁 [{target_npc.name}] 처치 전리품 획득: {', '.join(drop_names)}"
+                            fact_sheet.quest_progress_logs.append(msg)
+                            fact_sheet.loot_drop_logs.append(msg)
+
                     # Equipment Wear & Rune Effects on Weapon
                     eq_wep = state.get_equipped_weapon_item()
                     if eq_wep:
@@ -1529,6 +1838,34 @@ class TwoPassEngine(ActionResolversMixin):
                 ok, nav_msg = DungeonEngine.ascend_floor(state)
             fact_sheet.status_tick_logs.append(nav_msg)
 
+        # 7.95 Dungeon 2D Tile Map Inspection
+        if any(k in action_lower_act for k in ["던전 지도", "미궁 지도", "던전 타일", "미궁 구조", "지하 지도", "던전 맵"]):
+            from src.world.dungeon_engine import DungeonEngine
+            ascii_map = DungeonEngine.render_floor_map(state)
+            fact_sheet.dungeon_ascii_map = ascii_map
+            fact_sheet.status_tick_logs.append("🗺️ [지하 던전 2D 타일 지도 전개 완료]")
+
+        # 7.96 Dungeon Chest Loot Roll
+        if any(k in action_lower_act for k in ["상자 열", "보물상자", "궤짝 조사", "궤짝 열", "상자 개봉"]):
+            curr_loc = state.locations.get(state.player.location)
+            if curr_loc and getattr(curr_loc, "location_category", "") == "dungeon":
+                from src.world.loot_generator import LootGenerator
+                from src.world.dungeon_engine import DungeonEngine
+                dungeon = DungeonEngine.get_current_dungeon(state)
+                f_num = dungeon.current_floor if dungeon else 1
+                theme = dungeon.theme if dungeon else "catacomb"
+                p_luck = getattr(state.player, "luck", 10)
+                chest_items = LootGenerator.roll_chest_loot(floor_num=f_num, dungeon_theme=theme, player_luck=p_luck)
+                chest_names = []
+                for c_item in chest_items:
+                    state.items[c_item.id] = c_item
+                    state.player.inventory.append(c_item.id)
+                    r_ko = c_item.properties.get("rarity", "일반")
+                    chest_names.append(f"[{r_ko}] {c_item.name}")
+                msg = f"📦 [보물상자 개봉 성공]: {', '.join(chest_names)} 획득!"
+                fact_sheet.status_tick_logs.append(msg)
+                fact_sheet.loot_drop_logs.append(msg)
+
         # 7.10 Ventilation Shaft Interaction
         if "환기구" in action_lower_act and any(v in action_lower_act for v in ["열", "개방", "가동", "확보", "open"]):
             curr_loc = state.current_location()
@@ -1555,6 +1892,12 @@ class TwoPassEngine(ActionResolversMixin):
                         npc_outcome = NPCSkillEngine.process_npc_combat_turn(h_npc, state, player_ac=getattr(state.player, "armor_class", 10))
                         if npc_outcome:
                             fact_sheet.npc_skill_logs.append(npc_outcome["summary_ko"])
+                            # Propagate tactical AI decisions to dedicated narrative slot
+                            _tactical_types = {"flee", "call_help", "kite_away", "take_cover",
+                                               "exploit_status", "exploit_status_miss", "guard_ally",
+                                               "heal_self", "berserker_rage", "cc_stunned"}
+                            if npc_outcome.get("action_type") in _tactical_types:
+                                fact_sheet.tactical_ai_logs.append(npc_outcome["summary_ko"])
                             if "player" not in state_delta:
                                 state_delta["player"] = {}
                             state_delta["player"]["health"] = state.player.health

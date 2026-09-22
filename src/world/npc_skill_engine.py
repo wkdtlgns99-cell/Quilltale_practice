@@ -59,7 +59,31 @@ class NPCSkillEngine:
         if not npc.alive or npc.disposition != "hostile":
             return None
 
-        # Check for CC status effects preventing action
+        # ── Tactical AI Delegation (Behavior Tree) ──
+        # Evaluate tactical patterns (flee, kite, exploit, guard, CC block)
+        # before falling through to standard skill selection.
+        from src.world.tactical_ai import MonsterTacticsEngine
+        tactical_decision = MonsterTacticsEngine.evaluate_tactical_turn(npc, state, player_ac=player_ac)
+        if tactical_decision is not None:
+            # Convert TacticalDecision → standard outcome dict for backward compatibility
+            result = {
+                "npc_id": tactical_decision.npc_id,
+                "npc_name": tactical_decision.npc_name,
+                "action_type": tactical_decision.action_type,
+                "summary_ko": tactical_decision.summary_ko,
+                "damage": tactical_decision.damage,
+                "is_success": tactical_decision.is_success,
+            }
+            # Merge extra fields (e.g. player_hp_before/after, flee_distance, etc.)
+            result.update(tactical_decision.extra)
+            # Propagate player health into state_delta if damage was dealt
+            if tactical_decision.damage > 0:
+                result["player_hp_before"] = tactical_decision.extra.get("player_hp_before", state.player.health)
+                result["player_hp_after"] = tactical_decision.extra.get("player_hp_after", state.player.health)
+            return result
+
+        # Standard path: CC check (fallback — tactical AI already handles this,
+        # but keep as safety net for direct callers bypassing tactical AI)
         if StatusEffectEngine.has_status(npc, "stun") or StatusEffectEngine.has_status(npc, "paralysis"):
             return {
                 "npc_id": npc.id,

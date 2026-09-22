@@ -47,6 +47,7 @@ class DungeonFloor:
     depth_modifier: float = 1.0
     floor_danger_level: int = 30
     is_boss_floor: bool = False
+    grid_map: Optional[Any] = None # 2D BSP DungeonGridMap instance
     # Mandatory traits tag list (Rule 6)
     traits: List[str] = field(default_factory=list)
 
@@ -197,6 +198,16 @@ class DungeonEngine:
                 if r_type in ["corridor", "crypt_chamber", "armory"]:
                     TrapEngine.spawn_trap_for_location(state, room_id)
 
+            # Bind 2D BSP tile grid to floor
+            from src.world.dungeon_generator import BSPDungeonGenerator
+            floor.grid_map = BSPDungeonGenerator.generate(
+                dungeon_id=dungeon_id,
+                floor_num=floor_num,
+                theme=theme,
+                width=40,
+                height=25,
+            )
+
             instance.floors[floor_num] = floor
 
         if not hasattr(state, "dungeons"):
@@ -261,3 +272,22 @@ class DungeonEngine:
         if getattr(target_loc, "location_category", "surface") == "surface":
             return True, f"지하 던전의 숨 막히는 어둠을 뚫고 지상 [{target_loc.name}]으로 무사히 귀환했습니다!"
         return True, f"계단을 타고 위층 [{target_loc.name}]으로 올라왔습니다."
+
+    @classmethod
+    def get_floor_grid_map(cls, state: WorldState, floor_num: Optional[int] = None) -> Optional[Any]:
+        """Returns the 2D DungeonGridMap of the current (or specified) dungeon floor."""
+        dungeon = cls.get_current_dungeon(state)
+        if not dungeon:
+            return None
+        target_floor = floor_num if floor_num is not None else dungeon.current_floor
+        floor = dungeon.floors.get(target_floor)
+        return floor.grid_map if floor else None
+
+    @classmethod
+    def render_floor_map(cls, state: WorldState, floor_num: Optional[int] = None, apply_fog: bool = False) -> str:
+        """Renders ASCII 2D tile map of the active dungeon floor."""
+        grid_map = cls.get_floor_grid_map(state, floor_num=floor_num)
+        if not grid_map:
+            return "현재 탐험 중인 활성 던전 지도가 없습니다."
+        from src.world.dungeon_generator import BSPDungeonGenerator
+        return BSPDungeonGenerator.render_ascii(grid_map, apply_fog=apply_fog)

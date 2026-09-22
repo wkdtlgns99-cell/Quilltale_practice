@@ -1,15 +1,17 @@
 # CHANGES_AUDIT: Static Reachability and Call Analysis
 
 **Entrypoints**: `app.py`, `src/agents/game_master.py`  
-**Total `src/world/` modules analyzed**: 71  
+**Total `src/world/` modules analyzed**: 80  
 
 ## Summary Table
 
 | Module | File Reachable? | Total Public Methods | Called-in-Live-Path | Tests-Only | Never-Called |
 |---|:---:|:---:|:---:|:---:|:---:|
-| `action_resolvers.py` | ✅ Yes | 12 | 12 | 0 | 0 |
+| `action_resolvers.py` | ✅ Yes | 18 | 18 | 0 | 0 |
 | `alcohol_engine.py` | ✅ Yes | 8 | 8 | 0 | 0 |
+| `arena_engine.py` | ✅ Yes | 8 | 8 | 0 | 0 |
 | `attack_physics_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
+| `auction_engine.py` | ✅ Yes | 11 | 10 | 1 | 0 |
 | `audio_engine.py` | ✅ Yes | 3 | 3 | 0 | 0 |
 | `botany_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
 | `bounty_engine.py` | ✅ Yes | 4 | 3 | 0 | 1 |
@@ -24,12 +26,16 @@
 | `dialogue_slot_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `dice.py` | ✅ Yes | 7 | 5 | 1 | 1 |
 | `disease_engine.py` | ✅ Yes | 5 | 3 | 2 | 0 |
-| `dungeon_engine.py` | ✅ Yes | 4 | 2 | 1 | 1 |
+| `domain_engine.py` | ✅ Yes | 10 | 10 | 0 | 0 |
+| `dungeon_engine.py` | ✅ Yes | 6 | 5 | 1 | 0 |
+| `dungeon_generator.py` | ✅ Yes | 9 | 6 | 3 | 0 |
 | `economy_engine.py` | ✅ Yes | 15 | 14 | 1 | 0 |
 | `enchant_engine.py` | ✅ Yes | 5 | 3 | 2 | 0 |
 | `entities.py` | ✅ Yes | 54 | 44 | 4 | 6 |
 | `equipment.py` | ✅ Yes | 5 | 4 | 0 | 1 |
 | `event_perspective.py` | ✅ Yes | 2 | 2 | 0 | 0 |
+| `faith_engine.py` | ✅ Yes | 14 | 13 | 1 | 0 |
+| `gambling_engine.py` | ✅ Yes | 10 | 10 | 0 | 0 |
 | `generator.py` | ✅ Yes | 2 | 2 | 0 | 0 |
 | `geography.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `graph_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
@@ -41,6 +47,8 @@
 | `infrastructure.py` | ✅ Yes | 18 | 11 | 7 | 0 |
 | `injury_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `legacy.py` | ✅ Yes | 4 | 4 | 0 | 0 |
+| `lineage_engine.py` | ✅ Yes | 9 | 9 | 0 | 0 |
+| `loot_generator.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `mana_burn_engine.py` | ✅ Yes | 9 | 9 | 0 | 0 |
 | `map_blueprint_engine.py` | ✅ Yes | 3 | 2 | 1 | 0 |
 | `map_interactive_renderer.py` | ✅ Yes | 3 | 3 | 0 | 0 |
@@ -69,6 +77,7 @@
 | `state.py` | ✅ Yes | 56 | 46 | 6 | 4 |
 | `status_engine.py` | ✅ Yes | 11 | 11 | 0 | 0 |
 | `stealth_engine.py` | ✅ Yes | 4 | 4 | 0 | 0 |
+| `tactical_ai.py` | ✅ Yes | 2 | 2 | 0 | 0 |
 | `thermal_engine.py` | ✅ Yes | 5 | 5 | 0 | 0 |
 | `time_calendar_engine.py` | ✅ Yes | 3 | 2 | 1 | 0 |
 | `toxicology_engine.py` | ✅ Yes | 7 | 6 | 1 | 0 |
@@ -78,12 +87,15 @@
 | `vein_restoration_engine.py` | ✅ Yes | 5 | 4 | 1 | 0 |
 | `weather_engine.py` | ✅ Yes | 3 | 1 | 1 | 1 |
 | `weather_magic_engine.py` | ✅ Yes | 7 | 4 | 3 | 0 |
-| **TOTAL** | - | **606** | **498** | **82** | **26** |
+| **TOTAL** | - | **692** | **580** | **87** | **25** |
 
-### Unreachable Modules (0/71)
+### Unreachable Modules (0/80)
 
 
 ## Detailed Method Breakdown
+
+### `auction_engine.py` (Reachable: True)
+- `advance_auction_tick`: **called-from-tests-only**
 
 ### `bounty_engine.py` (Reachable: True)
 - `format_bounty_context_for_prompt`: **never-called**
@@ -118,7 +130,11 @@
 
 ### `dungeon_engine.py` (Reachable: True)
 - `create_dungeon_instance`: **called-from-tests-only**
-- `get_current_dungeon`: **never-called**
+
+### `dungeon_generator.py` (Reachable: True)
+- `inspect_tile`: **called-from-tests-only**
+- `reveal_radius`: **called-from-tests-only**
+- `reveal_room`: **called-from-tests-only**
 
 ### `economy_engine.py` (Reachable: True)
 - `perform_haggle`: **called-from-tests-only**
@@ -141,6 +157,9 @@
 
 ### `equipment.py` (Reachable: True)
 - `get_active_set_bonuses`: **never-called**
+
+### `faith_engine.py` (Reachable: True)
+- `check_taboo_violation`: **called-from-tests-only**
 
 ### `graph_engine.py` (Reachable: True)
 - `evaluate_vacuum_collapse`: **called-from-tests-only**

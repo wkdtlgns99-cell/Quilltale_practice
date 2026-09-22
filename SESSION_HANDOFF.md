@@ -19,18 +19,65 @@
 상세 엔진 분류 및 도달성 상태는 [TRIAGE.md](file:///c:/Quilltale/TRIAGE.md) 및 [CHANGES_AUDIT.md](file:///c:/Quilltale/CHANGES_AUDIT.md) 단일 출처 참조.
 
 ### [🔥 2026-09-21 최우선 긴급 과제 (Backlog 0순위 - User Pin)]
-- [ ] **[P0-TOP-1] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py` / `monster_tactics_engine.py`)**:
+- [x] **[P0-TOP-1] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py` / `MonsterTacticsEngine`)**:
   - **개요**: 단순 주사위/수치 대미지 교환 탈피. FSM/행동 트리(Behavior Tree) 기반 몬스터 지능 탑재.
-  - **핵심 패턴**: 체력 25% 이하 도주 및 동료 지원 요청(비열함), 원거리 카이팅 및 탱커 뒤 엄폐(궁수/마법사), 상태이상 걸린 플레이어 급소 집중 타격(근접 전사), 아군 버프 및 방패 경로 차단.
+  - **핵심 패턴**: 체력 25% 이하 도주 및 동료 지원 요청/자가 치유(비열함/생존 본능, 광전사 광폭화), 원거리 카이팅 및 탱커 뒤 엄폐(궁수/마법사), 상태이상 걸린 플레이어 급소 집중 타격(근접 전사/암살자), 아군 보호 및 방패 경로 차단(수호자/탱커), 표준 공격 폴백.
   - **효과**: 순수 파이썬 결정론적 로직(0-토큰, 비용 0원), 턴제 전투 전술성 급상승.
+  - **검증 파일/테스트**: `src/world/tactical_ai.py`, `src/world/npc_skill_engine.py`, `src/world/two_pass_engine.py` | `tests/test_tactical_ai.py` (30 passed), `scripts/reachability_audit.py` (0/72 unreachable), `pytest tests/` (719 passed in 284.90s), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
 - [x] **[P0-TOP-2] 인터랙티브 3D 오버월드 지도 UI (16:9 배경 맵 위 좌표 핀/깃발 및 상세 인스펙터)**:
   - **설계서**: [`docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md`](file:///c:/Quilltale/docs/plans/PLAN_INTERACTIVE_3D_MAP_UI.md)
   - **구현 내용**: 깨끗한 16:9 3D 배경 맵 아트(`data/maps/default_overworld.jpg`) 위에 5계층 인프라 3D 좌표를 정규화(8%~92% 클램핑)하여 SVG 도로망 점선 및 아키타입별 입체 핀 오버레이. 거점 클릭 시 상세 인스펙터 패널(해발 고도, 소속 국가, 인구, 치안도, 5계층 시설, 도로망, 이동 선언 빠른 입력) 전개. 플레이어 현재 거점 황금빛 펄스 핀 렌더링. `app.py`에 `🗺️ 3D 지도` 탭 연동 및 `world_state.change` 반응형 갱신.
   - **검증 파일/테스트**: `src/world/map_interactive_renderer.py`, `src/world/map_blueprint_engine.py`, `src/world/state.py`, `app.py` | `tests/test_map_interactive_renderer.py` (8 passed), `scripts/reachability_audit.py` (0/71 unreachable), `pytest tests/` (689 passed), `eval_runner.py --no-judge` (0.0%)
-- [ ] **[P0-TOP-3] 실내/던전용 2D 타일 그리드 생성기 (`dungeon_generator.py`)**:
+- [x] **[P0-TOP-3] 실내/던전용 2D 타일 그리드 및 AI 작화 설계도 생성기 (`dungeon_generator.py`)**:
   - **개요**: BSP(이진 공간 분할) 및 절차적 알고리즘 기반 실내 건물 및 지하 던전 2D 타일 그리드 자동 생성.
-  - **기능**: 벽(`#`), 바닥(`.`), 복도, 문(`+`), 방(Chamber), 함정(`^`), 보물상자(`T`), 몬스터 스폰, 계단(`>`). 층수별 심도 및 2D 아스키/JSON 타일맵 렌더링.
-  - **연동**: [`src/world/dungeon_engine.py`](file:///c:/Quilltale/src/world/dungeon_engine.py) 및 [`src/world/state.py`](file:///c:/Quilltale/src/world/state.py) 인스턴스와 결합.
+  - **기능**: 벽(`#`), 바닥(`.`), 복도(`~`), 문(`+`), 방(Chamber), 함정(`^`), 보물상자(`T`), 몬스터 스폰(`M`), 계단(`<`, `>`). 층수별 심도 및 2D 아스키/JSON 타일맵 렌더링. Z축 천장 높이(2.5m~6.0m), 광원 좌표/색상, 외부 AI 배틀맵 프롬프트(DALL-E 3, Midjourney, LoRA SD 1.5) 및 BFS 경로 100% 도달성 보장.
+  - **연동**: [`src/world/dungeon_engine.py`](file:///c:/Quilltale/src/world/dungeon_engine.py) 및 [`src/world/two_pass_engine.py`](file:///c:/Quilltale/src/world/two_pass_engine.py).
+  - **검증 파일/테스트**: `src/world/dungeon_generator.py`, `src/world/dungeon_engine.py`, `src/world/two_pass_engine.py` | `tests/test_dungeon_generator.py` (17 passed), `scripts/reachability_audit.py` (0/73 unreachable), `pytest tests/` (736 passed in 285.37s), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-4] 디아블로식 프로시저럴 아이템/루트 생성기 (`loot_generator.py`)**:
+  - **개요**: 접두사/접미사(Affix) 조합 기반 절차적 장비·아이템 생성기 (디아블로/PoE식).
+  - **기능**: 일반(White) -> 마법(Blue, 1~2옵) -> 희귀(Yellow, 3~5옵) -> 영웅(Purple, 4~5옵) -> 유니크(Orange, 전용 고유옵) 5대 등급 체계, 레벨/티어별 스탯 롤링, 소켓/보석 홈(0~3개), 장비 분해 및 재료 회수, 몬스터 처치 시 자동 드랍 및 던전 상자(`T`) 파밍 루프 실전 연동.
+  - **효과**: 순수 파이썬 결정론적 로직(0-토큰, 0-GPU, 파밍 중독성 극대화). 기존 `[P3-2]`에서 0순위로 상향 승격되어 완수.
+  - **검증 파일/테스트**: `src/world/loot_generator.py`, `src/world/two_pass_engine.py` | `tests/test_loot_generator.py` (15 passed), `scripts/reachability_audit.py` (0/74 unreachable), `pytest tests/` (751 passed in 285.37s), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-5] 영지 개척 및 거점 건축 시스템 (`domain_engine.py` / `DomainEngine`)**:
+  - **개요**: 플레이어의 영지 선포, 10대 거점 시설 건축 및 증축 큐 관리, 인구 유입/식량/불만도 시뮬레이션 및 세금 징수 엔진.
+  - **기능**: 영지 선포(`claim_new_domain`), 10대 건물 템플릿(방책, 석벽, 망루, 우물, 미곡창, 농지, 대장간, 주점, 치료소, 병영, 장터, 영주관) 신축/증축 및 턴당 공사 진척, 완공 시 영구 스탯 증강, 식량 잉여/결핍에 따른 인구 유입 및 기근 이탈 시뮬레이션, 세금 징수(`collect_taxes`) 및 세율 조정, Rule 5 `traits` 준수.
+  - **연동**: `TwoPassEngine.compute_pass1()`에 `DomainResolverMixin` 결합, Pass 1 FactSheet에 `domain_summary`, `domain_logs` 주입 및 매 턴 백그라운드 영지 틱 진행.
+  - **검증 파일/테스트**: `src/world/domain_engine.py`, `src/world/two_pass_engine.py`, `src/world/action_resolvers.py`, `src/world/state.py` | `tests/test_domain_engine.py` (16 passed), `scripts/reachability_audit.py` (0/75 unreachable), `pytest tests/` (767 passed in 288.13s), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-6] 가문 혈통 & 후계자 계승 시스템 (`lineage_engine.py` / `LineageEngine`)**:
+  - **개요**: 플레이어 주도적 가문 창설, 혈통 고유 유전 특성(패시브/가문 결함), 후계자 지명 및 육성, 자유로운 가주 이양(사망/은퇴 강제 없음) 시스템.
+  - **기능**: 가문 창설(`initialize_dynasty`), 10대 혈통 특성(용의 혈통, 거인의 골격, 고대 비전, 매의 눈, 철의 간, 황금의 감각 등), 3인 잠재 후계자 생성(`generate_heir_candidates`) 및 공식 지명(`designate_heir`), 자발적 가주 이양(`transfer_headship`, 선대 가주는 원로로 생존 보존 및 영지/가보/골드 승계), 가보 등록(`add_ancestral_heirloom`), Rule 5 `traits` 준수.
+  - **연동**: `TwoPassEngine.compute_pass1()`에 `LineageResolverMixin` 결합, Pass 1 FactSheet에 `lineage_summary`, `lineage_logs` 주입.
+  - **검증 파일/테스트**: `src/world/lineage_engine.py`, `src/world/two_pass_engine.py`, `src/world/action_resolvers.py`, `src/world/state.py` | `tests/test_lineage_engine.py` (14 passed), `scripts/reachability_audit.py` (0/76 unreachable), `pytest tests/` (781 passed in 284.96s), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-7] 종교 신앙 & 신성 기적/신벌 시스템 (`faith_engine.py` / `FaithEngine`)**:
+  - **개요**: 하드코딩 없는 순수 프레임워크 기반 종교 신앙, 동적 신격 등록, 5대 위계 신심(0~1000 P), 기도/제단 공물, 5대 범용 기적 파이프라인, 금기 위반 신벌 저주 및 영지 신앙 생산 연동 시스템.
+  - **기능**: 동적 신격 등록(`create_custom_deity`, `register_deity`), 신격 선택(`choose_deity`), 신심 위계 계산(`calculate_devotion_tier`, 0~4위계), 기도(`pray`, 피로도 회복 및 신앙도 축적), 제단 공물 바치기(`offer_sacrifice`, 금화 및 아이템 번제), 5채널 범용 기적 발동(`invoke_miracle`: heal, ward, smite, cleanse, fortune), 금기 위반 감지 및 신벌 부여(`check_taboo_violation`), 매 턴 가호/저주 감쇄 및 영지 신앙 유입(`advance_faith_tick`), Rule 5 `traits` 준수.
+  - **연동**: `TwoPassEngine.compute_pass1()`에 `FaithResolverMixin` 결합, Pass 1 FactSheet에 `faith_summary`, `faith_logs` 주입 및 백그라운드 틱 연동.
+  - **검증 파일/테스트**: `src/world/faith_engine.py`, `src/world/two_pass_engine.py`, `src/world/action_resolvers.py`, `src/world/state.py` | `tests/test_faith_engine.py` (10 passed), `scripts/reachability_audit.py` (0/77 unreachable), `pytest tests/` (791 passed in 287.65s), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-8] 사기 도박 & 주점 미니게임 주사위 엔진 (`gambling_engine.py` / `GamblingDenEngine`)**:
+  - **개요**: 친치로(Chinchiro, 3d6) 및 하이-로우(High-Low, 2d6) 100% 결정론적 주점 주사위 도박 및 손기술 사기/난투극 시스템.
+  - **기능**: 친치로 족보 판정(핀조로 5배, 시고로 2배, 아라시 3배, 눈 1~6, 히후미 -2배, 메나시), 하이-로우 판정(High/Low/Lucky 7 4배), 손기술 사기 주사위 바꿔치기(`attempt_cheat`, AGI+LUK vs 딜러 PER 대항 판정), 사기 적발 시 판돈 몰수, 평판 -15, 주점 NPC 전원 적대화(`disposition="hostile"`) 주점 난투극(`trigger_tavern_brawl`) 및 블랙리스트 등록, Rule 5 `traits` 준수.
+  - **연동**: `TwoPassEngine.compute_pass1()`에 `GamblingResolverMixin` 결합, Pass 1 FactSheet에 `gambling_summary`, `gambling_logs` 주입 및 라이브 턴 결합.
+  - **검증 파일/테스트**: `src/world/gambling_engine.py`, `src/world/two_pass_engine.py`, `src/world/action_resolvers.py`, `src/world/state.py` | `tests/test_gambling_engine.py` (10 passed), `scripts/reachability_audit.py` (0/78 unreachable), `pytest tests/` (801 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-9] 암시장 경매 & NPC 입찰 비딩 엔진 (`auction_engine.py` / `BlackMarketAuctionEngine`)**:
+  - **개요**: 지하 암시장 비밀 경매장, 다종 카테고리 매물(무기/금서/영약/망토), 성향별 NPC 입찰자 카운터 비딩, 경매봉 카운트다운(3->2->1->0 낙찰) 및 단상 강탈/난투극 시스템.
+  - **기능**: 결정론적 호가 제시(`player_place_bid`), 경쟁 입찰자 기선제압 및 입찰 포기 유도(`player_intimidate_bidders`), 단상 유물 날치기 도주(`player_snatch_lot`, 실패 시 전원 적대화 난투극 및 영구 블랙리스트), 턴 경과 카운트다운/NPC 입찰 시뮬레이션(`advance_auction_tick`), 낙찰 시 아이템 즉시 인벤토리 지급, Rule 5 `traits` 준수.
+  - **연동**: `TwoPassEngine.compute_pass1()`에 `AuctionResolverMixin` 결합(2.49996), Pass 1 FactSheet에 `auction_summary`, `auction_logs` 주입 및 라이브 턴 결합.
+  - **검증 파일/테스트**: `src/world/auction_engine.py`, `src/world/two_pass_engine.py`, `src/world/action_resolvers.py`, `src/world/state.py` | `tests/test_auction_engine.py` (13 passed), `scripts/reachability_audit.py` (0/79 unreachable), `pytest tests/` (814 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [x] **[P0-TOP-10] 투기장 검투사 & 결투 랭킹 엔진 (`arena_engine.py` / `GladiatorArenaEngine`)**:
+  - **개요**: 콜로세움 및 지하 투기장 1:1 결투, 맹수 토벌, 5대 검투사 계급(브론즈~챔피언), 관중 열광도(Crowd Favor) 버프 및 처형/자비(Execute/Spare) 판정 시스템.
+  - **기능**: 상대 매칭 생성(`generate_match_listing`), 결투 출전 및 배팅(`start_match`), 턴제 공방 및 관중 열광도 연산(`resolve_arena_combat_turn`), 피의 처형(악명 상승, 피의 보너스 상금) vs 고결한 자비(명예 상승, 생존 및 조력자 플래그) 판정(`resolve_finishing_verdict`), 계급 승급 심사, Rule 5 `traits` 준수.
+  - **연동**: `TwoPassEngine.compute_pass1()`에 `ArenaResolverMixin` 결합(2.49997), Pass 1 FactSheet에 `arena_summary`, `arena_logs` 주입 및 라이브 턴 결합.
+  - **검증 파일/테스트**: `src/world/arena_engine.py`, `src/world/two_pass_engine.py`, `src/world/action_resolvers.py`, `src/world/state.py` | `tests/test_arena_engine.py` (13 passed), `scripts/reachability_audit.py` (0/80 unreachable), `pytest tests/` (827 passed), `eval_runner.py --no-judge` (invalid_transition_rate: 0.0%)
+- [ ] **[P0-TOP-11] 항해·해상전 & 난파 표류 조난 엔진 (`naval_engine.py` / `NavalVoyageEngine`)**:
+  - **개요**: 육지/던전 외 해양/군도 탐험, 선체 내구도(흘수선/용골/돛), 조타 풍향, 함포/노포 해상 포격전, 해적선 백병전 접현 도선, 해양 괴수(크라켄) 습격, 암초 좌초 및 무인도 표류 생존 시스템.
+- [ ] **[P0-TOP-12] NPC 파벌 암투 & 쿠데타 음모 조작 엔진 (`conspiracy_engine.py` / `FactionConspiracyEngine`)**:
+  - **개요**: 도시/국가 내 3대 파벌(영주/귀족 vs 상인 길드 vs 지하 범죄조직) 지분율(%), 뇌물 매수, 비밀 문서 유출, 암살 사주, 권력 지분 변동에 따른 무혈/유혈 도시 지배권 전복 시뮬레이션.
+- [ ] **[P0-TOP-13] 공간 협소도 & 무기 벽 튕김 물리 엔진 (`clearance_engine.py` / `SpatialClearanceEngine`)**:
+  - **개요**: 던전 천장 높이(m) 및 복도 폭(m)과 무기 길이(m) 대조, 협소 공간에서 대검/장창 휘두름 시 벽면 튕김(Deflection) 역경직 발생, 단검/자루잡기/찌르기 강제 현실 물리 시스템.
+- [ ] **[P0-TOP-14] 원거리 탄약 소모 및 화살 잔탄/수거 물리 엔진 (`ammo_engine.py` / `AmmunitionRecoveryEngine`)**:
+  - **개요**: 활/석궁/투척단검 실시간 탄약 차감, 화살통 잔탄 관리, 전투 종료 후 빗나간 화살 50% 온전 회수 및 50% 파손 유실 판정 시스템.
+- [ ] **[P0-TOP-15] 근력 기반 소지 중량 과적 & 가방 적재 물리 엔진 (`encumbrance_engine.py` / `EncumbranceEngine`)**:
+  - **개요**: 근력(STR) 대비 휴대 한계 초과 시 3단계 과적(경미/중과적/한계), 이동속도 감속, 회피 불가, 주사위 디메리트, 스태미나 고갈 물리 시스템.
 
 ### [🏛️ 시스템 결함 수정 & 6계층 인프라 실전 결합 — 2026-09-15 분석 기반]
 
@@ -136,9 +183,9 @@
   - *전체 상세 명세 및 40여 종 완료 이력은 [docs/archive/SESSION_LOG_2026-09.md](file:///c:/Quilltale/docs/archive/SESSION_LOG_2026-09.md)에 보존됨.*
 - [ ] **🚀 [0-토큰 사전 엔진 & 스팀 인디 출시 준비 백로그 (2026-09-21 추가)]**:
   - [ ] **[P3-1] 로컬 WebSocket / IPC API 서버 (`api_server.py`)**: 유니티(Body) 및 웹 뷰어 실시간 JSON 패킷 통신 브릿지.
-  - [ ] **[P3-2] 디아블로식 프로시저럴 아이템/루트 생성기 (`loot_generator.py`)**: 접두/접미사 옵션 조합 수십만 종 파밍 롤링.
-  - [ ] **[P3-3] 절차적 던전 맵 생성기 (`dungeon_generator.py`)**: BSP 기반 미궁 방, 복도, 비밀의 방, 함정, 그리드 맵 자동 생성.
-  - [ ] **[P3-4] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py`)**: FSM/행동 트리 기반 지능적 후퇴, 원거리 엄폐, 버프 시전 등 전술 패턴.
+  - [ ] **[P3-2] 디아블로식 프로시저럴 아이템/루트 생성기 (`loot_generator.py`)**: 접두/접미사 옵션 조합 수십만 종 파밍 롤링. (-> `[P0-TOP-4]` 최우선 과제로 상향 승격)
+  - [ ] **[P3-3] 절차적 던전 맵 생성기 (`dungeon_generator.py`)**: BSP 기반 미궁 방, 복도, 비밀의 방, 함정, 그리드 맵 자동 생성. (-> `[P0-TOP-3]` 최우선 과제로 상향 승격)
+  - [ ] **[P3-4] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py`)**: FSM/행동 트리 기반 지능적 후퇴, 원거리 엄폐, 버프 시전 등 전술 패턴. (-> `[P0-TOP-1]` 최우선 과제로 상향 승격)
   - [ ] **[P3-5] 터미널 레트로 TUI 플레이어블 모드 (`play.py`)**: Streamlit 없이 콘솔 키보드 입력만으로 던전 탐험/대화 즉시 플레이.
   - [ ] **[P3-6] GPT 구독 당일 폭격용 대량 컨텐츠 생성 프롬프트 팩 (`docs/prompts/`)**: 퀘스트 100종, 국가 50종, NPC 200종 대량 생산 템플릿.
 
@@ -196,27 +243,74 @@
   - `DeterministicFactSheet`에 `map_blueprint_summary`, `map_blueprint_prompt` 필드 및 프롬프트 서사 지침 결합.
 - `src/agents/game_master.py`:
   - `GameMasterAgent.export_map_blueprint(state, zoom_level, target_id)` 1줄 추출 인터페이스 제공.
-- `tests/test_map_blueprint_engine.py`: 9종 포괄적 단위/통합 테스트 100% 통과.
+#### 7) [P0-TOP-5] 영지 개척 및 거점 건축 시스템 (`DomainEngine`) 완수
+- `src/world/domain_engine.py`:
+  - `ConstructionProject`, `DomainPioneeringState`, `DomainTurnSummary` 데이터 모델 구현 (Rule 5 `traits` 준수).
+  - 10대 거점 건축 템플릿(원목 방책, 석벽, 경계 망루, 공용 우물, 비축 미곡창, 개간 농경지, 개척지 대장간, 모험가 주점, 약초원/치료소, 자경단 병영, 장터 광장, 영주관) 완비.
+  - 영지 선포(`claim_new_domain`), 거점 시설 착공(`start_construction`), 턴 경과 시뮬레이션(`advance_domain_tick`), 세금 징수(`collect_taxes`) 및 세율 설정(`set_tax_rate`).
+  - 식량 잉여/결핍에 따른 인구 유입 및 기근 이탈 시뮬레이션, 불만도 및 치안도 연동.
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `DomainResolverMixin` 구현 및 `ActionResolversMixin` 결합.
+  - `compute_pass1()` 루프에 `2.4997` 도메인 액션 및 매 턴 백그라운드 영지 틱 시뮬레이션 실전 결합.
+#### 8) [P0-TOP-6] 가문 혈통 & 후계자 계승 시스템 (`LineageEngine`) 완수
+- `src/world/lineage_engine.py`:
+  - `BloodlineTrait`, `FamilyMember`, `DynastyLineageState`, `InheritanceReport` 데이터 모델 구현 (Rule 5 `traits` 준수).
+  - 10대 혈통 특성(용의 혈통, 거인의 골격, 고대 비전, 매의 눈, 철의 간, 황금의 감각 등) 완비.
+  - 가문 창설(`initialize_dynasty`), 3인 잠재 후계자 생성(`generate_heir_candidates`) 및 공식 지명(`designate_heir`), 가보 등록(`add_ancestral_heirloom`).
+  - **사망/은퇴 강제 없는 자발적 가주 이양(`transfer_headship`)**: 선대 가주는 원로로 생존 보존, 후계자에게 플레이어블 캐릭터 전환 및 가문 영지/가보/골드 이전.
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `LineageResolverMixin` 구현 및 `ActionResolversMixin` 결합.
+  - `compute_pass1()` 루프에 `2.4998` 가문 액션 실전 결합.
+  - `DeterministicFactSheet`에 `lineage_summary`, `lineage_logs` 필드 및 프롬프트 서사 지침 직렬화 추가.
+- `tests/test_lineage_engine.py`: 14종 포괄적 단위/통합 테스트 100% 통과.
+#### 9) [P0-TOP-7] 종교 신앙 & 신성 기적/신벌 시스템 (`FaithEngine`) 완수
+- `src/world/faith_engine.py`:
+  - `DeityDefinition`, `FaithRecord`, `MiracleInvocationResult`, `TabooViolationResult` 데이터 모델 구현 (Rule 5 `traits` 준수).
+  - 동적 신격 등록, 5대 위계 신심, 기도, 제단 공물 바치기, 5채널 범용 기적 발동, 금기 위반 신벌 부여.
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `FaithResolverMixin` 구현 및 `compute_pass1()` 루프에 `2.4999` 신앙 액션 실전 결합.
+- `tests/test_faith_engine.py`: 10종 포괄적 단위/통합 테스트 100% 통과.
+#### 10) [P0-TOP-8] 사기 도박 & 주점 미니게임 주사위 엔진 (`GamblingDenEngine`) 완수
+- `src/world/gambling_engine.py`:
+  - `GamblingOutcome`, `PlayerGamblingRecord` 데이터 모델 구현 (Rule 5 `traits` 준수).
+  - 친치로(3d6) 및 하이-로우(2d6) 주사위 게임, 손기술 사기(`attempt_cheat`), 적발 시 주점 난투극(`trigger_tavern_brawl`) 및 전원 적대화/블랙리스트.
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `GamblingResolverMixin` 구현 및 `compute_pass1()` 루프에 `2.49995` 도박 액션 실전 결합.
+- `tests/test_gambling_engine.py`: 10종 포괄적 단위/통합 테스트 100% 통과.
+#### 11) [P0-TOP-9] 암시장 경매 & NPC 입찰 비딩 엔진 (`BlackMarketAuctionEngine`) 완수
+- `src/world/auction_engine.py`:
+  - `AuctionLot`, `NPCBidder`, `AuctionActionResult`, `BlackMarketAuctionState` 데이터 모델 구현 (Rule 5 `traits` 준수).
+  - 결정론적 호가 제시(`player_place_bid`), 경쟁자 기선제압(`player_intimidate_bidders`), 단상 유물 날치기(`player_snatch_lot`), 턴 경과 카운트다운(3->2->1->0 낙찰) 및 NPC 입찰 시뮬레이션(`advance_auction_tick`).
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `AuctionResolverMixin` 구현 및 `compute_pass1()` 루프에 `2.49996` 경매 액션 실전 결합.
+- `tests/test_auction_engine.py`: 13종 포괄적 단위/통합 테스트 100% 통과.
+#### 12) [P0-TOP-10] 투기장 검투사 & 결투 랭킹 엔진 (`GladiatorArenaEngine`) 완수
+- `src/world/arena_engine.py`:
+  - `GladiatorOpponent`, `ArenaMatch`, `ArenaActionResult`, `GladiatorCareerRecord` 데이터 모델 구현 (Rule 5 `traits` 준수).
+  - 상대 매칭 생성, 결투 출전 및 배팅, 턴제 공방 및 관중 열광도(Crowd Favor) 연산, 피의 처형 vs 고결한 자비 판정, 계급 승급 심사.
+- `src/world/action_resolvers.py` & `src/world/two_pass_engine.py`:
+  - `ArenaResolverMixin` 구현 및 `compute_pass1()` 루프에 `2.49997` 투기장 액션 실전 결합.
+- `tests/test_arena_engine.py`: 13종 포괄적 단위/통합 테스트 100% 통과.
 
 ---
 
 ### 2. 테스트 및 평가 검증 상태 (세션 누적 지표)
-- **전체 단위 테스트**: `689 passed` (0 failed, 무회귀, +8 신규 테스트).
+- **전체 단위 테스트**: `827 passed` (0 failed, 무회귀, +13 신규 테스트).
 - **무효 상태 전이율 (eval_runner.py --no-judge)**: `0.0%` (20턴 시나리오 무결점 통과).
-- **정적 도달성 (scripts/reachability_audit.py)**: `0/71 Unreachable` (71/71 모듈 100% 도달).
-- **코드 정적 검사 (pyflakes & ruff)**: `src/` 및 `tests/` 전수 검증 통과 (`pyflakes src/`: 0건 Clean, `ruff check`: Clean).
+- **정적 도달성 (scripts/reachability_audit.py)**: `0/80 Unreachable` (80/80 모듈 100% 도달).
+- **코드 정적 검사 (pyflakes & ruff)**: `src/` 및 `tests/` 전수 검증 통과 (구문 컴파일 0 에러 Clean).
 
 ---
 
 ### 3. 다음 세션 작업 착수 안내 (Next Step)
-1. **[Backlog 0순위 - User Pin] 실내/던전용 2D 타일 그리드 생성기 (`dungeon_generator.py`) 착수**:
-   - BSP(이진 공간 분할) 기반 실내 건물 및 지하 던전 2D 타일 그리드(벽, 바닥, 복도, 문, 방, 함정, 보물, 계단) 자동 생성 엔진 구현 및 단위 테스트.
-2. **[Backlog 0순위 - User Pin] 몬스터 전술 AI / 행동 트리 엔진 (`tactical_ai.py` / `monster_tactics_engine.py`) 착수**:
-   - 단순 수치 교환을 탈피하여 FSM/행동 트리(BT) 기반 도주, 카이팅, 엄폐, 집중 공격 패턴 파이썬 엔진 구현 및 단위 테스트.
-3. **[정리 과제] `save_load_manager.py` 삭제**:
+1. **[정리 과제] `save_load_manager.py` 삭제**:
    - `persistence.py`로 완전 대체된 레거시 중복 파일 정리 (Category B).
+2. **[P3-5] 터미널 레트로 TUI 플레이어블 모드 (`play.py`)**:
+   - Streamlit 없이 콘솔 키보드 입력만으로 던전 탐험/대화 즉시 플레이.
+3. **[P3-1] 로컬 WebSocket / IPC API 서버 (`api_server.py`)**:
+   - 유니티나 웹 뷰어 연동용 실시간 JSON 패킷 브릿지.
 4. **[게임플레이 도메인 확장 백로그]**:
-   - 가문 혈통(Lineage), 종교 신앙(Deity), 영지 개척(Domain), 사령술(Necromancy) 시스템.
+   - 마법 학파 심화(사령술/암흑마법 스킬 트리 확장 via `skills.py`).
 5. **[플랫폼/UI 로드맵]**:
    - 독립 실행형 창 모드 런처(`SteamStyleStandaloneLauncher`), 동적 부분 갱신 이중 맵(`DynamicDualMapRenderer`).
 

@@ -28,6 +28,12 @@ from src.world.dice import DiceEngine
 from src.world.infrastructure import Settlement
 from src.world.dialogue_slot_engine import DialogueSlotEngine
 from src.world.map_blueprint_engine import MapBlueprintEngine, MapZoomLevel
+from src.world.domain_engine import DomainEngine, BUILDING_TEMPLATES
+from src.world.lineage_engine import LineageEngine
+from src.world.faith_engine import FaithEngine, DeityProfile, DivineMiracle
+from src.world.gambling_engine import GamblingDenEngine, GamblingOutcome
+from src.world.auction_engine import BlackMarketAuctionEngine, BlackMarketAuctionState
+from src.world.arena_engine import GladiatorArenaEngine, ArenaMatch, GladiatorCareerRecord
 
 logger = logging.getLogger(__name__)
 
@@ -196,8 +202,8 @@ class MovementResolverMixin:
         if not any(k in act_lower for k in map_keywords):
             return None
 
-        # Exclude pure attacks or magic casting
-        if any(v in act_lower for v in ["공격", "베어", "찌르", "마법 영창", "도주"]):
+        # Exclude pure attacks or magic casting or dungeon tile maps
+        if any(v in act_lower for v in ["공격", "베어", "찌르", "마법 영창", "도주", "던전 지도", "미궁 지도", "지하 지도", "던전 타일", "던전 맵"]):
             return None
 
         # Determine Zoom Level
@@ -1406,13 +1412,679 @@ class TacticalCombatResolverMixin:
         }
 
 
+class DomainResolverMixin:
+    """Action resolver mixin for settlement pioneering, building construction, and governance."""
+
+    @classmethod
+    def resolve_action_domain(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses player intent for domain pioneering, facility construction, taxation, and status briefings.
+        Returns resolved domain action dict if recognized, None otherwise.
+        """
+        act_lower = action.lower()
+
+        is_claim = any(k in act_lower for k in ["영지 개척", "거점 개척", "영지 선포", "영지 설립", "개척지 설립", "영지 건립", "영지 세우", "거점 세우", "개척지 선포"])
+        is_build = any(k in act_lower for k in ["건축", "건설", "증축", "지어", "짓기", "축조", "공사 착공", "착공"])
+        is_tax = any(k in act_lower for k in ["세금 징수", "세수 징수", "세금 걷", "세율", "세금 수취"])
+        is_status = any(k in act_lower for k in ["영지 현황", "영지 상태", "거점 현황", "영지 브리핑", "영지 보고", "영지 관리", "영지 정보", "영지 둘러보기"])
+
+        if not (is_claim or is_build or is_tax or is_status):
+            return None
+
+        curr_loc = state.current_location()
+        curr_loc_id = curr_loc.id if curr_loc else "frontier_outpost"
+        curr_loc_name = curr_loc.name if curr_loc else "미지의 개척지"
+
+        # 1. Domain Pioneering Claim Intent
+        if is_claim:
+            # Extract domain name if provided
+            m = re.search(r'(?:영지|거점|개척지)\s+(?:개척|선포|설립|건립)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+            if not m:
+                m = re.search(r'([가-힣a-zA-Z0-9_]+(?:\s+[가-힣a-zA-Z0-9_]+)?)\s+(?:영지|거점|개척지)\s*(?:개척|선포|설립|건립)', action)
+
+            domain_name = m.group(1).strip() if m else f"{curr_loc_name} 개척지"
+            settlement_id = f"domain_{curr_loc_id}"
+
+            settlement = DomainEngine.claim_new_domain(
+                state=state,
+                settlement_id=settlement_id,
+                settlement_name=domain_name,
+                settlement_type="pioneer_outpost",
+                region_id=curr_loc.region if (curr_loc and hasattr(curr_loc, "region")) else "wilderness",
+            )
+            summary = DomainEngine.get_domain_status_summary(state, settlement_id)
+            logs = [
+                f"👑 [영지 개척 선포]: [{settlement.name}]을(를) 통치자 [{settlement.lord_npc_id}]의 자치 영지로 공식 선포했습니다!",
+                f"기본 정착민 25명이 합류하였으며 영지 금고에 초기 자금 300G가 적립되었습니다.",
+            ]
+            return {
+                "type": "claim",
+                "settlement_id": settlement_id,
+                "settlement_name": settlement.name,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # Find target domain for build/tax/status
+        target_settlement_id = None
+        if hasattr(state, "pioneering_domains") and state.pioneering_domains:
+            # Match current location or pick first owned domain
+            for s_id in state.pioneering_domains.keys():
+                if curr_loc_id in s_id or s_id in curr_loc_id:
+                    target_settlement_id = s_id
+                    break
+            if not target_settlement_id:
+                target_settlement_id = next(iter(state.pioneering_domains.keys()))
+
+        if not target_settlement_id:
+            # Auto-seed domain if player commands construction in wilderness
+            target_settlement_id = f"domain_{curr_loc_id}"
+            DomainEngine.claim_new_domain(state, target_settlement_id, f"{curr_loc_name} 개척지")
+
+        # 2. Facility Construction Intent
+        if is_build:
+            matched_key = None
+            building_keyword_map = [
+                (["석벽", "성벽", "화강암벽"], "stone_wall"),
+                (["방책", "목책", "나무울타리"], "palisade"),
+                (["망루", "감시탑", "망루탑", "초소"], "watchtower"),
+                (["우물", "식수", "상수도"], "communal_well"),
+                (["미곡창", "곡물창고", "식량창고", "창고"], "granary"),
+                (["농지", "농경지", "밭", "개간"], "farmland"),
+                (["대장간", "제철소", "화로", "모루"], "blacksmith_forge"),
+                (["주점", "여관", "주막", "술집"], "tavern_inn"),
+                (["치료소", "약초원", "의원", "병원"], "apothecary_clinic"),
+                (["병영", "훈련소", "자경단"], "barracks_training"),
+                (["장터", "시장", "광장"], "market_square"),
+                (["영주관", "자치회관", "회관", "저택"], "town_hall"),
+            ]
+            for keywords, b_key in building_keyword_map:
+                if any(kw in act_lower for kw in keywords):
+                    matched_key = b_key
+                    break
+
+            if not matched_key:
+                return {
+                    "type": "build_error",
+                    "settlement_id": target_settlement_id,
+                    "summary": DomainEngine.get_domain_status_summary(state, target_settlement_id),
+                    "logs": ["건축할 시설 종류를 지정해 주십시오. (예: 방책, 석벽, 망루, 우물, 미곡창, 농지, 대장간, 주점, 치료소, 병영, 장터, 영주관)"],
+                }
+
+            res = DomainEngine.start_construction(state, target_settlement_id, matched_key)
+            summary = DomainEngine.get_domain_status_summary(state, target_settlement_id)
+            logs = [res.get("message", res.get("reason", ""))]
+            return {
+                "type": "build",
+                "settlement_id": target_settlement_id,
+                "building_key": matched_key,
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 3. Taxation Intent
+        if is_tax:
+            rate_match = re.search(r'세율\s*([0-9]+)\s*%', action)
+            if rate_match:
+                new_rate = float(rate_match.group(1)) / 100.0
+                res = DomainEngine.set_tax_rate(state, target_settlement_id, new_rate)
+            else:
+                res = DomainEngine.collect_taxes(state, target_settlement_id)
+
+            summary = DomainEngine.get_domain_status_summary(state, target_settlement_id)
+            logs = [res.get("message", res.get("reason", ""))]
+            return {
+                "type": "tax",
+                "settlement_id": target_settlement_id,
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 4. Status Briefing Intent
+        if is_status:
+            summary = DomainEngine.get_domain_status_summary(state, target_settlement_id)
+            logs = ["영지 행정 장부를 펼쳐 전반적인 정주지 운영 현황을 점검했습니다."]
+            return {
+                "type": "status",
+                "settlement_id": target_settlement_id,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        return None
+
+
+class LineageResolverMixin:
+    """Action resolver mixin for noble dynasty, bloodline traits, and heir succession."""
+
+    @classmethod
+    def resolve_action_lineage(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses player intent for dynasty founding, heir candidate evaluation, heir designation,
+        heirloom registration, voluntary headship succession, and lineage briefings.
+        Returns resolved lineage action dict if recognized, None otherwise.
+        """
+        act_lower = action.lower()
+
+        is_found = any(k in act_lower for k in ["가문 창설", "가문 설립", "가문 세우", "가문 선포", "가문 건립", "가문 만들기"])
+        is_candidates = any(k in act_lower for k in ["후계자 후보", "후계자 확인", "자녀 확인", "후계자 탐색", "가문원 확인"])
+        is_designate = any(k in act_lower for k in ["후계자 지명", "후계자 지정", "후계자 선택", "후계자로 지명"])
+        is_transfer = any(k in act_lower for k in ["가주 이양", "가주 교체", "가주 승계", "후계자 교체", "대를 잇", "대물림"])
+        is_heirloom = any(k in act_lower for k in ["가보 등록", "가보 지정", "가문 가보"])
+        is_status = any(k in act_lower for k in ["가문 현황", "가문 정보", "가계도", "가문 브리핑", "가문 상태", "혈통 현황"])
+
+        if not (is_found or is_candidates or is_designate or is_transfer or is_heirloom or is_status):
+            return None
+
+        # 1. Dynasty Founding Intent
+        if is_found:
+            m = re.search(r'가문\s*(?:창설|설립|선포|건립|만들기)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+            if not m:
+                m = re.search(r'([가-힣a-zA-Z0-9_]+(?:\s+[가-힣a-zA-Z0-9_]+)?)\s*가문\s*(?:창설|설립|선포|건립)', action)
+
+            player_name = getattr(state.player, "name", "아르민") or "아르민"
+            dynasty_name = m.group(1).strip() if m else f"{player_name} 가문"
+            if not dynasty_name.endswith("가문"):
+                dynasty_name = f"{dynasty_name} 가문"
+
+            dynasty = LineageEngine.initialize_dynasty(state, dynasty_name)
+            summary = LineageEngine.get_lineage_status_summary(state)
+            logs = [
+                f"🛡️ [가문 창설 선포]: [{dynasty.dynasty_name}]이(가) 공식 역사에 이름을 올렸습니다!",
+                f"초대 가주 [{state.player.name}]에게 가문 혈통 특성이 각성되었으며 초기 가문 명성 150점이 부여되었습니다.",
+            ]
+            return {
+                "type": "found",
+                "dynasty_name": dynasty.dynasty_name,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        dynasty = LineageEngine.get_lineage_state(state)
+        if not dynasty:
+            # Auto-found dynasty if commanding lineage actions without prior founding
+            player_name = getattr(state.player, "name", "아르민") or "아르민"
+            dynasty = LineageEngine.initialize_dynasty(state, f"{player_name} 가문")
+
+        # 2. Heir Candidates Generation & Inspection
+        if is_candidates:
+            candidates = LineageEngine.generate_heir_candidates(state, count=3)
+            cand_lines = []
+            for idx, c in enumerate(candidates, 1):
+                t_names = ", ".join([t.name for t in c.bloodline_traits]) if c.bloodline_traits else "특성 없음"
+                cand_lines.append(f"{idx}. [{c.name}] ({c.class_archetype}, {c.age}세, {c.gender}) - 혈통: {t_names}")
+
+            summary = LineageEngine.get_lineage_status_summary(state)
+            logs = [
+                "👥 [가문 후계자 후보 명부]:",
+                *cand_lines,
+                "💡 '후계자 지명 [이름]' 명령으로 공식 1순위 후계자를 선택할 수 있습니다.",
+            ]
+            return {
+                "type": "candidates",
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 3. Heir Designation Intent
+        if is_designate:
+            m = re.search(r'후계자\s*(?:지명|지정|선택|로 지명)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+            target_name = m.group(1).strip() if m else ""
+
+            # Match member
+            matched_id = None
+            if target_name:
+                for m_id, member in dynasty.family_tree.items():
+                    if target_name in member.name or member.name in target_name:
+                        matched_id = m_id
+                        break
+
+            if not matched_id and dynasty.family_tree:
+                # Pick first heir role candidate
+                for m_id, member in dynasty.family_tree.items():
+                    if member.role == "heir" and not member.is_active_player:
+                        matched_id = m_id
+                        break
+
+            if not matched_id:
+                candidates = LineageEngine.generate_heir_candidates(state, count=2)
+                matched_id = candidates[0].member_id if candidates else None
+
+            if matched_id:
+                res = LineageEngine.designate_heir(state, matched_id)
+                summary = LineageEngine.get_lineage_status_summary(state)
+                logs = [res.get("message", res.get("reason", ""))]
+                return {
+                    "type": "designate",
+                    "result": res,
+                    "summary": summary,
+                    "logs": logs,
+                }
+
+        # 4. Voluntary Headship Transfer Intent (No mandatory death/retirement!)
+        if is_transfer:
+            m = re.search(r'(?:가주 이양|가주 교체|후계자 교체|승계)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+            target_name = m.group(1).strip() if m else ""
+
+            matched_id = None
+            if target_name:
+                for m_id, member in dynasty.family_tree.items():
+                    if target_name in member.name:
+                        matched_id = m_id
+                        break
+
+            report = LineageEngine.transfer_headship(state, successor_id=matched_id)
+            summary = LineageEngine.get_lineage_status_summary(state)
+            logs = [
+                report.summary_ko,
+                f"축복: 선대 가주 [{report.predecessor_name}]의 유산과 영지 권한이 제{report.new_generation}대 가주 [{report.successor_name}]에게 완벽히 계승되었습니다.",
+            ]
+            return {
+                "type": "transfer",
+                "report": report.to_dict(),
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 5. Ancestral Heirloom Registration Intent
+        if is_heirloom:
+            m = re.search(r'가보\s*(?:등록|지정)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+            item_name = m.group(1).strip() if m else "가문의 보검"
+
+            res = LineageEngine.add_ancestral_heirloom(state, item_name)
+            summary = LineageEngine.get_lineage_status_summary(state)
+            logs = [res.get("message", res.get("reason", ""))]
+            return {
+                "type": "heirloom",
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 6. Status Briefing Intent
+        if is_status:
+            summary = LineageEngine.get_lineage_status_summary(state)
+            logs = ["가문 족보와 혈통 기록을 열람하여 가계도 현황을 확인했습니다."]
+            return {
+                "type": "status",
+                "summary": summary,
+                "logs": logs,
+            }
+
+        return None
+
+
+class FaithResolverMixin:
+    """Action resolver mixin for religion, prayer, sacrifice, and divine miracles."""
+
+    @classmethod
+    def resolve_action_faith(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses player intent for choosing deities, offering prayer/sacrifice, invoking miracles,
+        and inspecting faith status. Returns resolved faith action dict if recognized, None otherwise.
+        """
+        act_lower = action.lower()
+
+        is_choose = any(k in act_lower for k in ["신앙 선택", "신을 섬기", "신앙 귀의", "교단 선택", "신격 선택", "주신으로 모시"])
+        is_pray = any(k in act_lower for k in ["기도", "기도를 올", "묵도", "기도하기", "경배"])
+        is_sacrifice = any(k in act_lower for k in ["공물", "번제", "제단에 바치", "공물을 바치", "제물"])
+        is_miracle = any(k in act_lower for k in ["기적 발동", "기적 시전", "신의 기적", "은총 발동", "기적 사용"])
+        is_status = any(k in act_lower for k in ["신앙 현황", "신앙 정보", "신앙 상태", "신앙 브리핑", "종교 현황"])
+
+        if not (is_choose or is_pray or is_sacrifice or is_miracle or is_status):
+            return None
+
+        # 1. Choosing Deity Intent
+        if is_choose:
+            m = re.search(r'(?:신앙 선택|신앙 귀의|주신으로 모시|교단 선택)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+            if not m:
+                m = re.search(r'([가-힣a-zA-Z0-9_]+(?:\s+[가-힣a-zA-Z0-9_]+)?)\s*(?:신앙 선택|신을 섬기|교단 선택)', action)
+
+            deity_name = m.group(1).strip() if m else "빛의 신"
+            deity_id = f"deity_{abs(hash(deity_name)) % 10000}"
+
+            # Check if deity exists in db, otherwise register dynamically
+            db = FaithEngine.ensure_deities_db(state)
+            target_deity_id = None
+            for d_id, d_prof in db.items():
+                if deity_name.lower() in d_prof.name.lower() or d_prof.name.lower() in deity_name.lower():
+                    target_deity_id = d_id
+                    break
+
+            if not target_deity_id:
+                # Dynamic creation without hardcoding
+                created = FaithEngine.create_custom_deity(
+                    state=state,
+                    deity_id=deity_id,
+                    name=deity_name,
+                    domain="faith",
+                    pantheon_title="숭배받는 신격",
+                )
+                target_deity_id = created.deity_id
+
+            res = FaithEngine.choose_deity(state, target_deity_id)
+            summary = FaithEngine.get_faith_status_summary(state)
+            logs = [res.get("message", "")]
+            return {
+                "type": "choose",
+                "deity_id": target_deity_id,
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        fstate = FaithEngine.get_faith_state(state)
+        if not fstate.deity_id:
+            # Auto-seed a custom guardian deity if praying or sacrificing without formal devotion
+            deity = FaithEngine.create_custom_deity(
+                state=state,
+                deity_id="guardian_deity",
+                name="수호신",
+                domain="protection",
+            )
+            FaithEngine.choose_deity(state, deity.deity_id)
+
+        # 2. Prayer Intent
+        if is_pray:
+            intensity = "fervent" if any(k in act_lower for k in ["간절", "열렬", "깊은", "철야"]) else "normal"
+            res = FaithEngine.pray(state, prayer_intensity=intensity)
+            summary = FaithEngine.get_faith_status_summary(state)
+            logs = [res.get("message", "")]
+            return {
+                "type": "pray",
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 3. Offering Sacrifice Intent
+        if is_sacrifice:
+            gold_match = re.search(r'([0-9]+)\s*(?:골드|g|G|금화)', action)
+            if gold_match:
+                amt = int(gold_match.group(1))
+                res = FaithEngine.offer_sacrifice(state, offering_type="gold", value=amt)
+            elif "금화" in action or "골드" in action:
+                res = FaithEngine.offer_sacrifice(state, offering_type="gold", value=50)
+            else:
+                # Extract item name
+                m = re.search(r'(?:공물|번제|제물로|제단에)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+                item_name = m.group(1).strip() if m else "약초"
+                res = FaithEngine.offer_sacrifice(state, offering_type="item", offering_name=item_name)
+
+            summary = FaithEngine.get_faith_status_summary(state)
+            logs = [res.get("message", res.get("reason", ""))]
+            return {
+                "type": "sacrifice",
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 4. Invoking Miracle Intent
+        if is_miracle:
+            miracle_target = None
+            for kw in ["치유", "보호막", "천벌", "정화", "심판", "은총"]:
+                if kw in act_lower:
+                    miracle_target = kw
+                    break
+
+            if not miracle_target:
+                m = re.search(r'기적\s*(?:발동|시전|사용)\s+([가-힣a-zA-Z0-9_\s]+)', action)
+                miracle_target = m.group(1).strip() if m else "heal"
+
+            res = FaithEngine.invoke_miracle(state, miracle_key=miracle_target)
+            summary = FaithEngine.get_faith_status_summary(state)
+            logs = [res.get("message", res.get("reason", ""))]
+            return {
+                "type": "miracle",
+                "result": res,
+                "summary": summary,
+                "logs": logs,
+            }
+
+        # 5. Status Briefing Intent
+        if is_status:
+            summary = FaithEngine.get_faith_status_summary(state)
+            logs = ["경전을 펼쳐 신심과 신성 가호 및 신벌 상태를 점검했습니다."]
+            return {
+                "type": "status",
+                "summary": summary,
+                "logs": logs,
+            }
+
+        return None
+
+
+class GamblingResolverMixin:
+    """Action resolver mixin for tavern dice games, cheating, and tavern brawls."""
+    @classmethod
+    def resolve_action_gambling(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses gambling actions (Chinchiro, High-Low, Cheating/Sleight of Hand).
+        """
+        act_lower = action.lower()
+
+        gambling_keywords = [
+            "도박", "친치로", "주사위 내기", "주사위 게임", "주사위 도박",
+            "베팅", "판돈", "하이로우", "하이-로우", "밑장빼기", "사기 주사위",
+            "chinchiro", "gambling", "high low", "high-low"
+        ]
+        if not any(k in act_lower for k in gambling_keywords):
+            return None
+
+        # 1. Parse bet gold amount
+        gold_match = re.search(r'([0-9]+)\s*(?:골드|g|G|금화)', action)
+        if gold_match:
+            bet_gold = int(gold_match.group(1))
+        else:
+            bet_gold = 20  # Default tavern bet
+
+        # 2. Check cheating intent
+        cheat_keywords = ["밑장빼기", "밑장", "사기 주사위", "무게추", "손기술", "속임수", "사기치", "조작", "소매"]
+        has_cheat = any(k in act_lower for k in cheat_keywords)
+
+        # 3. Game type branch
+        if any(k in act_lower for k in ["하이로우", "하이-로우", "하이 로우", "high low", "high-low"]):
+            if any(k in act_lower for k in ["세븐", "7", "럭키"]):
+                pred = "seven"
+            elif any(k in act_lower for k in ["로우", "낮은", "low"]):
+                pred = "low"
+            else:
+                pred = "high"
+
+            outcome = GamblingDenEngine.play_high_low(
+                state=state,
+                bet_gold=bet_gold,
+                prediction=pred,
+                cheat_technique="weighted_dice" if has_cheat else None,
+            )
+        else:
+            # Default: Chinchiro (3d6 Showdown)
+            outcome = GamblingDenEngine.play_chinchiro(
+                state=state,
+                bet_gold=bet_gold,
+                cheat_technique="sleight_of_hand" if has_cheat else None,
+            )
+
+        summary = GamblingDenEngine.get_gambling_status_summary(state, outcome)
+        return {
+            "type": outcome.game_type,
+            "outcome": outcome,
+            "summary": summary,
+            "logs": [outcome.narrative_log],
+            "tavern_brawl_triggered": outcome.tavern_brawl_triggered,
+        }
+
+
+class AuctionResolverMixin:
+    """Action resolver mixin for underground black market auction bidding, intimidation, and theft."""
+    @classmethod
+    def resolve_action_auction(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses underground black market auction actions (bidding, counter-bids, intimidation, snatching).
+        """
+        act_lower = action.lower()
+
+        auction_keywords = [
+            "경매", "입찰", "호가", "비딩", "낙찰", "경매장",
+            "유물 강탈", "경매품 훔치기", "단상 강탈", "입찰자 위협", "경쟁자 위협",
+            "auction", "bid"
+        ]
+        if not any(k in act_lower for k in auction_keywords):
+            return None
+
+        # Ensure auction state exists on WorldState
+        if not hasattr(state, "auction_state") or state.auction_state is None:
+            state.auction_state = BlackMarketAuctionEngine.initialize_auction(state)
+        elif isinstance(state.auction_state, dict):
+            state.auction_state = BlackMarketAuctionState.from_dict(state.auction_state)
+
+        # 1. Snatch / Steal from pedestal maneuver
+        if any(k in act_lower for k in ["강탈", "훔치", "낚아채", "snatch", "steal"]):
+            result = BlackMarketAuctionEngine.player_snatch_lot(state, state.auction_state)
+        # 2. Intimidate competitors maneuver
+        elif any(k in act_lower for k in ["위협", "노려보", "기선제압", "압도", "intimidate"]):
+            result = BlackMarketAuctionEngine.player_intimidate_bidders(state, state.auction_state)
+        # 3. Specific or general Bid placement
+        else:
+            gold_match = re.search(r'([0-9]+)\s*(?:골드|g|G|금화)', action)
+            current_lot = BlackMarketAuctionEngine.get_current_lot(state.auction_state)
+            if gold_match:
+                bid_amount = int(gold_match.group(1))
+            elif current_lot:
+                if current_lot.highest_bidder_id == "auctioneer":
+                    bid_amount = current_lot.starting_bid
+                else:
+                    bid_amount = current_lot.current_bid + current_lot.min_increment
+            else:
+                bid_amount = 100
+
+            result = BlackMarketAuctionEngine.player_place_bid(state, state.auction_state, bid_amount=bid_amount)
+
+        summary = BlackMarketAuctionEngine.get_auction_status_summary(state, state.auction_state, result)
+        return {
+            "type": "auction",
+            "result": result,
+            "summary": summary,
+            "logs": list(result.narration_logs),
+            "brawl_triggered": result.brawl_triggered,
+            "acquired_item": result.acquired_item,
+            "gold_spent": result.gold_spent,
+        }
+
+
+class ArenaResolverMixin:
+    """Action resolver mixin for gladiator arena duels, beast hunts, and moral verdicts."""
+    @classmethod
+    def resolve_action_arena(cls, action: str, state: WorldState) -> Optional[Dict[str, Any]]:
+        """
+        Parses gladiator arena actions (match start, attack, taunt, heavy strike, parry, execute, spare).
+        """
+        act_lower = action.lower()
+
+        arena_keywords = [
+            "투기장", "결투", "검투사", "콜로세움", "도전자", "맹수 사냥",
+            "처형", "살려주", "자비", "쇼맨십", "도발", "흘리기",
+            "arena", "gladiator", "colosseum"
+        ]
+        if not any(k in act_lower for k in arena_keywords):
+            return None
+
+        record = GladiatorArenaEngine.get_career_record(state)
+        active_match = getattr(state, "active_arena_match", None)
+
+        # 1. Finishing Verdict (Execute or Spare)
+        if any(k in act_lower for k in ["처형", "죽여", "베어내", "목을", "finish", "execute"]):
+            if active_match and active_match.is_active and active_match.opponent.hp <= 0:
+                result = GladiatorArenaEngine.resolve_finishing_verdict(state, active_match, verdict="execute")
+                summary = GladiatorArenaEngine.get_arena_status_summary(state, active_match, result)
+                return {
+                    "type": "arena",
+                    "result": result,
+                    "summary": summary,
+                    "logs": list(result.narration_logs),
+                    "purse_won": result.purse_won,
+                }
+
+        if any(k in act_lower for k in ["살려", "자비", "거두", "손을 내밀", "spare", "mercy"]):
+            if active_match and active_match.is_active and active_match.opponent.hp <= 0:
+                result = GladiatorArenaEngine.resolve_finishing_verdict(state, active_match, verdict="spare")
+                summary = GladiatorArenaEngine.get_arena_status_summary(state, active_match, result)
+                return {
+                    "type": "arena",
+                    "result": result,
+                    "summary": summary,
+                    "logs": list(result.narration_logs),
+                    "purse_won": result.purse_won,
+                }
+
+        # 2. Combat Actions inside active match
+        if active_match and active_match.is_active and not active_match.is_concluded:
+            if any(k in act_lower for k in ["도발", "쇼맨십", "포효", "환호", "taunt"]):
+                act_type = "taunt"
+            elif any(k in act_lower for k in ["강타", "전력", "치명타", "후려쳐", "heavy"]):
+                act_type = "heavy_strike"
+            elif any(k in act_lower for k in ["흘리기", "반격", "패링", "가드", "parry"]):
+                act_type = "parry"
+            else:
+                act_type = "attack"
+
+            result = GladiatorArenaEngine.resolve_arena_combat_turn(state, active_match, action_type=act_type)
+            summary = GladiatorArenaEngine.get_arena_status_summary(state, active_match, result)
+            return {
+                "type": "arena",
+                "result": result,
+                "summary": summary,
+                "logs": list(result.narration_logs),
+                "purse_won": result.purse_won,
+            }
+
+        # 3. Match Entry / Start new duel
+        matches = GladiatorArenaEngine.generate_match_listing(state)
+        if not matches:
+            return None
+
+        chosen_match = matches[0]
+        if any(k in act_lower for k in ["맹수", "야수", "beast"]):
+            for m in matches:
+                if m.match_type == "beast_hunt":
+                    chosen_match = m
+                    break
+        elif any(k in act_lower for k in ["챔피언", "방패", "champion", "2번", "3번"]):
+            if len(matches) > 1:
+                chosen_match = matches[-1]
+
+        bet_gold = 0
+        gold_match = re.search(r'([0-9]+)\s*(?:골드|g|G|금화)\s*(?:베팅|배팅|걸고)', action)
+        if gold_match:
+            bet_gold = int(gold_match.group(1))
+
+        result = GladiatorArenaEngine.start_match(state, chosen_match, player_bet=bet_gold)
+        summary = GladiatorArenaEngine.get_arena_status_summary(state, chosen_match, result)
+        return {
+            "type": "arena",
+            "result": result,
+            "summary": summary,
+            "logs": list(result.narration_logs),
+            "purse_won": 0,
+        }
+
+
 class ActionResolversMixin(
     MovementResolverMixin,
     StealthResolverMixin,
     SurvivalResolverMixin,
     TacticalCombatResolverMixin,
+    DomainResolverMixin,
+    LineageResolverMixin,
+    FaithResolverMixin,
+    GamblingResolverMixin,
+    AuctionResolverMixin,
+    ArenaResolverMixin,
 ):
-    """Unified mixin composing all 10 action resolvers."""
+    """Unified mixin composing all action resolvers."""
     pass
 
 
@@ -1421,5 +2093,11 @@ __all__ = [
     "StealthResolverMixin",
     "SurvivalResolverMixin",
     "TacticalCombatResolverMixin",
+    "DomainResolverMixin",
+    "LineageResolverMixin",
+    "FaithResolverMixin",
+    "GamblingResolverMixin",
+    "AuctionResolverMixin",
+    "ArenaResolverMixin",
     "ActionResolversMixin",
 ]

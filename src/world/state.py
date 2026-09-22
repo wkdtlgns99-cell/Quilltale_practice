@@ -138,6 +138,14 @@ class WorldState:
     active_sieges: dict = field(default_factory=dict)            # 활성화된 공성전 DB {siege_id: SiegeBattleState or dict}
     pending_travel_waypoints: list[str] = field(default_factory=list) # 다중 구간 경로 이동 대기열 [waypoint_loc_id, ...]
     dilemmas_faced: list = field(default_factory=list)  # 플레이어가 직면한 윤리적 딜레마 기록
+    pioneering_domains: dict = field(default_factory=dict) # 플레이어 개척 영지 DB {settlement_id: DomainPioneeringState or dict}
+    dynasty_lineage: Optional[Any] = None # 플레이어 가문 혈통 및 가계도 상태 (DynastyLineageState or dict)
+    faith_state: Optional[Any] = None # 플레이어 종교 신앙 및 신심 상태 (PlayerFaithState or dict)
+    deities_db: dict = field(default_factory=dict) # 등록된 신격 및 교단 DB {deity_id: DeityProfile or dict}
+    gambling_record: Optional[Any] = None # 플레이어 도박 전적 및 블랙리스트 상태 (PlayerGamblingRecord or dict)
+    auction_state: Optional[Any] = None # 암시장 비밀 경매장 세션 상태 (BlackMarketAuctionState or dict)
+    arena_record: Optional[Any] = None # 플레이어 투기장 결투 전적 (GladiatorCareerRecord or dict)
+    active_arena_match: Optional[Any] = None # 현재 진행 중인 결투 매치 (ArenaMatch or dict)
 
 
 
@@ -2366,6 +2374,55 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 self.world_facts.append(f"[생태계 진공 붕괴] {eco_data['hazard_mutation']}")
                 changes.append(f"☣️ [생태계 연쇄 붕괴] {eco_data['hazard_mutation']}")
 
+        # 19. Faith & Divine Miracles Delta
+        if "faith_state" in update:
+            f_val = update["faith_state"]
+            from src.world.faith_engine import PlayerFaithState
+            if isinstance(f_val, dict):
+                self.faith_state = PlayerFaithState.from_dict(f_val)
+            elif isinstance(f_val, PlayerFaithState) or f_val is None:
+                self.faith_state = f_val
+            changes.append("⛪ 신앙 상태 동기화")
+
+        # 20. Gambling Den & Tavern Dice Delta
+        if "gambling_record" in update:
+            g_val = update["gambling_record"]
+            from src.world.gambling_engine import PlayerGamblingRecord
+            if isinstance(g_val, dict):
+                self.gambling_record = PlayerGamblingRecord.from_dict(g_val)
+            elif isinstance(g_val, PlayerGamblingRecord) or g_val is None:
+                self.gambling_record = g_val
+            changes.append("🎲 도박 전적 상태 동기화")
+
+        # 21. Black Market Auction State Delta
+        if "auction_state" in update:
+            a_val = update["auction_state"]
+            from src.world.auction_engine import BlackMarketAuctionState
+            if isinstance(a_val, dict):
+                self.auction_state = BlackMarketAuctionState.from_dict(a_val)
+            elif isinstance(a_val, BlackMarketAuctionState) or a_val is None:
+                self.auction_state = a_val
+            changes.append("🏛️ 암시장 경매장 상태 동기화")
+
+        # 22. Gladiator Arena State Delta
+        if "arena_record" in update:
+            ar_val = update["arena_record"]
+            from src.world.arena_engine import GladiatorCareerRecord
+            if isinstance(ar_val, dict):
+                self.arena_record = GladiatorCareerRecord.from_dict(ar_val)
+            elif isinstance(ar_val, GladiatorCareerRecord) or ar_val is None:
+                self.arena_record = ar_val
+            changes.append("🏟️ 투기장 전적 상태 동기화")
+
+        if "active_arena_match" in update:
+            am_val = update["active_arena_match"]
+            from src.world.arena_engine import ArenaMatch
+            if isinstance(am_val, dict):
+                self.active_arena_match = ArenaMatch.from_dict(am_val)
+            elif isinstance(am_val, ArenaMatch) or am_val is None:
+                self.active_arena_match = am_val
+            changes.append("⚔️ 투기장 결투 매치 동기화")
+
 
         # 19. Morale & Surrender Threshold
 
@@ -2749,6 +2806,91 @@ Player Inventory: {inv_str}{memory_block}{npc_beliefs_block}{rumor_block}{cosmo_
                 state.active_campsite = camp_raw
         else:
             state.active_campsite = None
+
+        # Faith State & Deities DB
+        faith_raw = raw.get("faith_state")
+        if faith_raw:
+            from src.world.faith_engine import PlayerFaithState
+            if isinstance(faith_raw, dict):
+                state.faith_state = PlayerFaithState.from_dict(faith_raw)
+            elif isinstance(faith_raw, PlayerFaithState):
+                state.faith_state = faith_raw
+        else:
+            state.faith_state = None
+
+        deities_raw = raw.get("deities_db", {})
+        state.deities_db = {}
+        if isinstance(deities_raw, dict):
+            from src.world.faith_engine import DeityProfile
+            for d_id, d_data in deities_raw.items():
+                if isinstance(d_data, dict):
+                    state.deities_db[d_id] = DeityProfile.from_dict(d_data)
+                elif isinstance(d_data, DeityProfile):
+                    state.deities_db[d_id] = d_data
+
+        # Pioneering Domains & Dynasty Lineage
+        state.pioneering_domains = {}
+        dom_raw = raw.get("pioneering_domains", {})
+        if isinstance(dom_raw, dict):
+            from src.world.domain_engine import DomainPioneeringState
+            for dom_id, dom_data in dom_raw.items():
+                if isinstance(dom_data, dict):
+                    state.pioneering_domains[dom_id] = DomainPioneeringState.from_dict(dom_data)
+                elif isinstance(dom_data, DomainPioneeringState):
+                    state.pioneering_domains[dom_id] = dom_data
+
+        lineage_raw = raw.get("dynasty_lineage")
+        if lineage_raw:
+            from src.world.lineage_engine import FamilyTree
+            if isinstance(lineage_raw, dict):
+                state.dynasty_lineage = FamilyTree.from_dict(lineage_raw)
+            elif isinstance(lineage_raw, FamilyTree):
+                state.dynasty_lineage = lineage_raw
+        else:
+            state.dynasty_lineage = None
+
+        # Gambling Record
+        gambling_raw = raw.get("gambling_record")
+        if gambling_raw:
+            from src.world.gambling_engine import PlayerGamblingRecord
+            if isinstance(gambling_raw, dict):
+                state.gambling_record = PlayerGamblingRecord.from_dict(gambling_raw)
+            elif isinstance(gambling_raw, PlayerGamblingRecord):
+                state.gambling_record = gambling_raw
+        else:
+            state.gambling_record = None
+
+        # Black Market Auction State
+        auction_raw = raw.get("auction_state")
+        if auction_raw:
+            from src.world.auction_engine import BlackMarketAuctionState
+            if isinstance(auction_raw, dict):
+                state.auction_state = BlackMarketAuctionState.from_dict(auction_raw)
+            elif isinstance(auction_raw, BlackMarketAuctionState):
+                state.auction_state = auction_raw
+        else:
+            state.auction_state = None
+
+        # Gladiator Arena State
+        arena_raw = raw.get("arena_record")
+        if arena_raw:
+            from src.world.arena_engine import GladiatorCareerRecord
+            if isinstance(arena_raw, dict):
+                state.arena_record = GladiatorCareerRecord.from_dict(arena_raw)
+            elif isinstance(arena_raw, GladiatorCareerRecord):
+                state.arena_record = arena_raw
+        else:
+            state.arena_record = None
+
+        match_raw = raw.get("active_arena_match")
+        if match_raw:
+            from src.world.arena_engine import ArenaMatch
+            if isinstance(match_raw, dict):
+                state.active_arena_match = ArenaMatch.from_dict(match_raw)
+            elif isinstance(match_raw, ArenaMatch):
+                state.active_arena_match = match_raw
+        else:
+            state.active_arena_match = None
 
         return state
 

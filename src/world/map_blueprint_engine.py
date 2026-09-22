@@ -528,7 +528,8 @@ class MapBlueprintEngine:
             prompt_lines.append(f"## 3. 국가/권역 [{blueprint.target_name}] 내부 정주지 3D 고도 배치 (Settlements)")
             for s in blueprint.settlements_3d:
                 pin_mark = " (★ 플레이어 현재 위치)" if s.get("is_current_player_base") else ""
-                prompt_lines.append(f"- 마을 [{s['name']}]{pin_mark}: 좌표=({s['x_km']}km, {s['y_km']}km), 해발={s['elevation_m']}m, 성벽등급={s['wall_defense_tier']}")
+                wall_tier = s.get("wall_defense_tier", "기본 방벽")
+                prompt_lines.append(f"- 마을 [{s['name']}]{pin_mark}: 좌표=({s['x_km']}km, {s['y_km']}km), 해발={s['elevation_m']}m, 성벽등급={wall_tier}")
             prompt_lines.append("\n## 4. 지형을 따라 굽이치는 3D 도로망 및 경사도 (Road Slopes & Hazards)")
             for rd in blueprint.roads_3d:
                 prompt_lines.append(f"- 도로 [{rd['origin_name']} -> {rd['destination_name']}]: 유형={rd['road_type']}, 거리={rd['distance_km']}km, 고도차={rd['delta_elevation_m']}m, 경사각={rd['slope_degree']}도, 위험도={rd['hazard_level']}")
